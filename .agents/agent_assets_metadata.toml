@@ -1,0 +1,8 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "N0ApzpgbZTg5_zEZpMVcV"
+uri = "file://NEXGUILD_BLUEPRINT.md"
+type = "text"
+title = "NexGuild Complete Project Blueprint"
