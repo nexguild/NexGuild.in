@@ -12,3 +12,9 @@ id = "MGcByz1RWJ1tUJr4iMDM_"
 uri = "file://UI_ARCHITECTURE.md"
 type = "text"
 title = "NexGuild UI Architecture Document"
+
+[[outputs]]
+id = "txBy6Pti41FbGy9NOudKG"
+uri = "file://DATABASE_SCHEMA.md"
+type = "text"
+title = "NexGuild Database Schema Document"
