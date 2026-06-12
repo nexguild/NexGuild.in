@@ -6,3 +6,9 @@ id = "N0ApzpgbZTg5_zEZpMVcV"
 uri = "file://NEXGUILD_BLUEPRINT.md"
 type = "text"
 title = "NexGuild Complete Project Blueprint"
+
+[[outputs]]
+id = "MGcByz1RWJ1tUJr4iMDM_"
+uri = "file://UI_ARCHITECTURE.md"
+type = "text"
+title = "NexGuild UI Architecture Document"
