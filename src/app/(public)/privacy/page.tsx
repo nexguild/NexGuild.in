@@ -14,7 +14,7 @@ export default function PrivacyPage() {
           <p>Your data is used to operate your account, process earnings, review submissions, and send service-related notifications. We do not sell your data to third parties.</p>
           <h2 className="text-xl font-semibold text-[var(--text-primary)]">Data Retention</h2>
           <p>We retain your data for as long as your account is active. You may request deletion by contacting support.</p>
-          <p className="text-[var(--text-muted)] text-xs mt-8">For questions about this policy, contact us at hello@nexguild.in.</p>
+          <p className="text-[var(--text-muted)] text-xs mt-8">For questions about this policy, contact us at nexguild.in@gmail.com.</p>
         </div>
       </div>
     </div>

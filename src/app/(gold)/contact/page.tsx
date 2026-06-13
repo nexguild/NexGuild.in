@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Button } from "@/components/ui/button";
 import { FadeIn } from "@/components/ui/fade-in";
-import { Mail, Clock, MessageCircle, Linkedin } from "lucide-react";
+import { Mail, Clock, MessageCircle, Linkedin, Send } from "lucide-react";
 
 export const metadata: Metadata = { title: "Contact — NexGuild" };
 
@@ -115,6 +115,8 @@ export default function ContactPage() {
 
             {/* Info Panel */}
             <FadeIn delay={100} className="space-y-4">
+
+              {/* WhatsApp */}
               <div className="rounded-xl border border-[var(--border-default)] bg-[var(--surface-subtle)] p-6 card-hover">
                 <div className="flex items-center gap-3 mb-3">
                   <div className="h-9 w-9 rounded-lg bg-[var(--brand-100)] flex items-center justify-center">
@@ -133,6 +135,7 @@ export default function ContactPage() {
                 </a>
               </div>
 
+              {/* Email */}
               <div className="rounded-xl border border-[var(--border-default)] bg-[var(--surface-subtle)] p-6 card-hover">
                 <div className="flex items-center gap-3 mb-3">
                   <div className="h-9 w-9 rounded-lg bg-[var(--brand-100)] flex items-center justify-center">
@@ -141,14 +144,17 @@ export default function ContactPage() {
                   <h3 className="font-semibold text-white">Email</h3>
                 </div>
                 <a
-                  href="mailto:hello@nexguild.in"
+                  href="mailto:nexguild.in@gmail.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="text-sm text-[var(--brand-500)] hover:text-[var(--brand-400)] transition-colors"
                 >
-                  hello@nexguild.in
+                  nexguild.in@gmail.com
                 </a>
                 <p className="text-xs text-[var(--text-muted)] mt-1">For all inquiries</p>
               </div>
 
+              {/* LinkedIn */}
               <div className="rounded-xl border border-[var(--border-default)] bg-[var(--surface-subtle)] p-6 card-hover">
                 <div className="flex items-center gap-3 mb-3">
                   <div className="h-9 w-9 rounded-lg bg-[var(--brand-100)] flex items-center justify-center">
@@ -157,15 +163,35 @@ export default function ContactPage() {
                   <h3 className="font-semibold text-white">LinkedIn</h3>
                 </div>
                 <a
-                  href="https://linkedin.com/company/nexguild"
+                  href="https://www.linkedin.com/in/somen-biswas-410727215"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-sm text-[var(--brand-500)] hover:text-[var(--brand-400)] transition-colors"
                 >
-                  linkedin.com/company/nexguild →
+                  linkedin.com/in/somen-biswas →
                 </a>
               </div>
 
+              {/* Telegram */}
+              <div className="rounded-xl border border-[var(--border-default)] bg-[var(--surface-subtle)] p-6 card-hover">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="h-9 w-9 rounded-lg bg-[var(--brand-100)] flex items-center justify-center">
+                    <Send className="h-4 w-4 text-[var(--brand-500)]" />
+                  </div>
+                  <h3 className="font-semibold text-white">Telegram</h3>
+                </div>
+                <p className="text-sm text-[var(--text-secondary)] mb-3">Chat with us on Telegram.</p>
+                <a
+                  href="https://t.me/nexguild"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-[var(--brand-500)] hover:text-[var(--brand-400)] transition-colors"
+                >
+                  t.me/nexguild →
+                </a>
+              </div>
+
+              {/* Response Time */}
               <div className="rounded-xl border border-[var(--border-default)] bg-[var(--surface-subtle)] p-6 card-hover">
                 <div className="flex items-center gap-3 mb-3">
                   <div className="h-9 w-9 rounded-lg bg-[var(--brand-100)] flex items-center justify-center">

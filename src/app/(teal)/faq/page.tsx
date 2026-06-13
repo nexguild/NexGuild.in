@@ -46,7 +46,7 @@ const FAQ_SECTIONS = [
   {
     section: "Account & Support",
     faqs: [
-      { q: "How do I contact support?",              a: "Use the Contact page on our website, message us on WhatsApp, or email hello@nexguild.in. We respond within 24 hours." },
+      { q: "How do I contact support?",              a: "Use the Contact page on our website, message us on WhatsApp, or email nexguild.in@gmail.com. We respond within 24 hours." },
       { q: "Can I use multiple accounts?",           a: "No. Multiple accounts are against NexGuild's Terms of Service and will result in a permanent ban. One account per person." },
       { q: "What happens if I'm banned?",            a: "Banned accounts lose all pending and available balances. If you believe a ban was made in error, contact us within 7 days with evidence." },
     ],

@@ -12,7 +12,7 @@ export default function CookiesPage() {
           <p>These are required for the platform to function. They handle authentication sessions and security tokens. You cannot opt out of these while using the platform.</p>
           <h2 className="text-xl font-semibold text-[var(--text-primary)]">Analytics Cookies</h2>
           <p>We may use privacy-friendly analytics to understand how visitors use the platform. No personal data is included in analytics.</p>
-          <p className="text-[var(--text-muted)] text-xs mt-8">For questions about our cookie usage, contact us at hello@nexguild.in.</p>
+          <p className="text-[var(--text-muted)] text-xs mt-8">For questions about our cookie usage, contact us at nexguild.in@gmail.com.</p>
         </div>
       </div>
     </div>

@@ -91,10 +91,12 @@ export default function AboutPage() {
             </p>
             <div className="flex flex-wrap gap-4">
               <a
-                href="mailto:hello@nexguild.in"
+                href="mailto:nexguild.in@gmail.com"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 h-10 px-5 rounded-lg border border-[var(--brand-500)] text-[var(--brand-500)] text-sm font-medium hover:bg-[var(--brand-100)] transition-colors"
               >
-                hello@nexguild.in
+                nexguild.in@gmail.com
               </a>
               <a
                 href="https://wa.me/919382008513"
@@ -102,7 +104,23 @@ export default function AboutPage() {
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 h-10 px-5 rounded-lg bg-[#25D366] text-white text-sm font-medium hover:bg-[#20bb5a] transition-colors"
               >
-                WhatsApp Us
+                WhatsApp
+              </a>
+              <a
+                href="https://t.me/nexguild"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 h-10 px-5 rounded-lg bg-[#229ED9] text-white text-sm font-medium hover:opacity-90 transition-colors"
+              >
+                Telegram
+              </a>
+              <a
+                href="https://www.linkedin.com/in/somen-biswas-410727215"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 h-10 px-5 rounded-lg border border-[var(--border-default)] text-[var(--text-secondary)] text-sm font-medium hover:text-white hover:border-white/30 transition-colors"
+              >
+                LinkedIn
               </a>
             </div>
           </FadeIn>
