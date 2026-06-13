@@ -16,25 +16,26 @@ const LEGAL_LINKS = [
 
 export function PublicFooter() {
   return (
-    <footer className="bg-[var(--surface-card)] border-t border-[var(--border-default)]">
+    <footer className="border-t border-[var(--border-default)] bg-[var(--surface-card)]">
       <div className="mx-auto max-w-container px-6 py-12">
         <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-4">
+
           {/* Brand */}
           <div className="lg:col-span-1">
-            <Link href="/" className="flex items-center gap-2 mb-3">
-              <div className="h-8 w-8 rounded-lg bg-[var(--brand-500)] flex items-center justify-center flex-shrink-0">
-                <span className="text-white font-bold text-sm">N</span>
-              </div>
-              <span className="font-bold text-lg text-[var(--text-primary)] tracking-tight">NexGuild</span>
+            <Link href="/" className="inline-flex items-center mb-3">
+              <span className="font-bold text-xl tracking-tight">
+                <span className="text-white">Nex</span>
+                <span className="text-[var(--brand-500)]">Guild</span>
+              </span>
             </Link>
             <p className="text-sm text-[var(--text-secondary)] leading-relaxed">
               Real human data for organizations. Real earnings for contributors.
             </p>
           </div>
 
-          {/* Platform Links */}
+          {/* Platform */}
           <div>
-            <h4 className="text-sm font-semibold text-[var(--text-primary)] mb-4 uppercase tracking-wide">
+            <h4 className="text-xs font-semibold text-[var(--text-muted)] mb-4 uppercase tracking-wider">
               Platform
             </h4>
             <ul className="space-y-3">
@@ -51,9 +52,9 @@ export function PublicFooter() {
             </ul>
           </div>
 
-          {/* Legal Links */}
+          {/* Legal */}
           <div>
-            <h4 className="text-sm font-semibold text-[var(--text-primary)] mb-4 uppercase tracking-wide">
+            <h4 className="text-xs font-semibold text-[var(--text-muted)] mb-4 uppercase tracking-wider">
               Legal
             </h4>
             <ul className="space-y-3">
@@ -70,10 +71,10 @@ export function PublicFooter() {
             </ul>
           </div>
 
-          {/* Support */}
+          {/* Contact */}
           <div>
-            <h4 className="text-sm font-semibold text-[var(--text-primary)] mb-4 uppercase tracking-wide">
-              Support
+            <h4 className="text-xs font-semibold text-[var(--text-muted)] mb-4 uppercase tracking-wider">
+              Contact
             </h4>
             <ul className="space-y-3">
               <li>
@@ -86,18 +87,17 @@ export function PublicFooter() {
               </li>
               <li>
                 <a
-                  href="mailto:support@nexguild.com"
-                  className="text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
+                  href="mailto:hello@nexguild.com"
+                  className="text-sm text-[var(--text-secondary)] hover:text-[var(--brand-500)] transition-colors"
                 >
-                  support@nexguild.com
+                  hello@nexguild.com
                 </a>
               </li>
             </ul>
           </div>
         </div>
 
-        {/* Bottom Bar */}
-        <div className="mt-12 pt-6 border-t border-[var(--border-default)]">
+        <div className="mt-10 pt-6 border-t border-[var(--border-default)]">
           <p className="text-sm text-[var(--text-muted)]">
             © {new Date().getFullYear()} NexGuild. All rights reserved.
           </p>

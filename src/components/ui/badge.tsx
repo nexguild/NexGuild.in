@@ -15,11 +15,11 @@ interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
 
 const variantClasses: Record<BadgeVariant, string> = {
   neutral: "bg-[var(--surface-subtle)] text-[var(--text-secondary)]",
-  success: "bg-success-50 text-success-700 dark:bg-[rgba(34,197,94,0.12)] dark:text-[#4ADE80]",
-  warning: "bg-warning-50 text-warning-700 dark:bg-[rgba(245,158,11,0.12)] dark:text-[#FCD34D]",
-  danger:  "bg-danger-50  text-danger-700  dark:bg-[rgba(239,68,68,0.12)]  dark:text-[#F87171]",
-  info:    "bg-info-50    text-info-700    dark:bg-[rgba(59,130,246,0.12)]  dark:text-[#93C5FD]",
-  brand:   "bg-[var(--brand-50)] text-[var(--brand-700)]",
+  success: "bg-[var(--badge-success-bg)] text-[var(--badge-success-text)]",
+  warning: "bg-[var(--badge-warning-bg)] text-[var(--badge-warning-text)]",
+  danger:  "bg-[var(--badge-danger-bg)] text-[var(--badge-danger-text)]",
+  info:    "bg-[var(--badge-info-bg)] text-[var(--badge-info-text)]",
+  brand:   "bg-[var(--badge-brand-bg)] text-[var(--badge-brand-text)]",
 };
 
 export function Badge({ variant = "neutral", className, children, ...props }: BadgeProps) {

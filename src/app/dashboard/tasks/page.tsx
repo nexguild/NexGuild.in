@@ -74,7 +74,7 @@ export default function TasksPage() {
                   <td className="px-4 py-3"><Badge variant={cfg.variant}>{cfg.label}</Badge></td>
                   <td className="px-4 py-3 text-right font-semibold text-[var(--text-primary)]">
                     {task.status === "approved" ? (
-                      <span className="text-success-700 dark:text-[#4ADE80]">{formatCurrency(task.payout)}</span>
+                      <span className="text-[var(--success-text)]">{formatCurrency(task.payout)}</span>
                     ) : task.status === "submitted" ? (
                       <span className="text-[var(--text-muted)]">Pending</span>
                     ) : (

@@ -1,115 +1,27 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* ─── Light Theme Tokens ──────────────────────────────────────── */
-:root {
-  /* Brand */
-  --brand-50:  #EEF2FF;
-  --brand-100: #E0E7FF;
-  --brand-200: #C7D2FE;
-  --brand-400: #818CF8;
-  --brand-500: #6366F1;
-  --brand-600: #4F46E5;
-  --brand-700: #4338CA;
-  --brand-900: #1E1B4B;
-
-  /* Surfaces */
-  --surface-page:    #F9FAFB;
-  --surface-card:    #FFFFFF;
-  --surface-subtle:  #F3F4F6;
-  --surface-overlay: rgba(0,0,0,0.40);
-
-  /* Borders */
-  --border-default: #E5E7EB;
-  --border-strong:  #D1D5DB;
-  --border-focus:   #6366F1;
-
-  /* Text */
-  --text-primary:   #111827;
-  --text-secondary: #6B7280;
-  --text-muted:     #9CA3AF;
-  --text-inverse:   #FFFFFF;
-  --text-link:      #6366F1;
-
-  /* Sidebar */
-  --sidebar-bg:          #FFFFFF;
-  --sidebar-item-hover:  #EEF2FF;
-  --sidebar-item-active: #EEF2FF;
-  --sidebar-text:        #374151;
-  --sidebar-text-muted:  #9CA3AF;
-  --sidebar-active-text: #4F46E5;
-
-  /* Admin Sidebar */
-  --admin-sidebar-bg:          #111827;
-  --admin-sidebar-text:        #D1D5DB;
-  --admin-sidebar-text-muted:  #6B7280;
-  --admin-sidebar-item-hover:  rgba(255,255,255,0.06);
-  --admin-sidebar-item-active: rgba(99,102,241,0.20);
-  --admin-sidebar-active-text: #A5B4FC;
-}
-
-/* ─── Dark Theme Tokens ───────────────────────────────────────── */
-.dark {
-  --brand-50:  rgba(99,102,241,0.15);
-  --brand-100: rgba(99,102,241,0.20);
-  --brand-200: #3730A3;
-  --brand-400: #818CF8;
-  --brand-500: #6366F1;
-  --brand-600: #818CF8;
-  --brand-700: #A5B4FC;
-  --brand-900: #C7D2FE;
-
-  --surface-page:    #0F1117;
-  --surface-card:    #1A1D27;
-  --surface-subtle:  #13161F;
-  --surface-overlay: rgba(0,0,0,0.65);
-
-  --border-default: #2A2E3E;
-  --border-strong:  #3A3F54;
-  --border-focus:   #818CF8;
-
-  --text-primary:   #F1F3F9;
-  --text-secondary: #8B92A5;
-  --text-muted:     #5C6370;
-  --text-inverse:   #111827;
-  --text-link:      #818CF8;
-
-  --sidebar-bg:          #111318;
-  --sidebar-item-hover:  rgba(255,255,255,0.05);
-  --sidebar-item-active: rgba(99,102,241,0.15);
-  --sidebar-text:        #C1C8D9;
-  --sidebar-text-muted:  #5C6370;
-  --sidebar-active-text: #818CF8;
-
-  --admin-sidebar-bg:          #0A0C10;
-  --admin-sidebar-text:        #C1C8D9;
-  --admin-sidebar-text-muted:  #5C6370;
-  --admin-sidebar-item-hover:  rgba(255,255,255,0.05);
-  --admin-sidebar-item-active: rgba(99,102,241,0.20);
-  --admin-sidebar-active-text: #A5B4FC;
-}
-
-/* ─── Base ────────────────────────────────────────────────────── */
+/* ─── Base ───────────────────────────────────────────────────── */
 @layer base {
   * { box-sizing: border-box; border-color: var(--border-default); }
 
   html {
+    scroll-behavior: smooth;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
 
   body {
-    background-color: var(--surface-page);
+    background-color: #0D0D0D;
     color: var(--text-primary);
-    transition: background-color 0.2s ease, color 0.2s ease;
   }
 
   ::selection {
-    background-color: var(--brand-100);
-    color: var(--brand-700);
+    background-color: var(--brand-200);
+    color: var(--text-primary);
   }
 
   :focus-visible {
@@ -119,7 +31,234 @@
   }
 }
 
-/* ─── Utilities ───────────────────────────────────────────────── */
+/* ─── Gold Theme  (Client · Admin) ──────────────────────────── */
+.theme-gold {
+  color-scheme: dark;
+
+  --surface-page:    #0D0D0D;
+  --surface-card:    #111111;
+  --surface-subtle:  #161616;
+  --surface-overlay: rgba(0,0,0,0.82);
+  --glass-bg:        rgba(11,11,11,0.84);
+  --glass-border:    rgba(255,255,255,0.07);
+
+  --border-default:  #222222;
+  --border-strong:   #2e2e2e;
+  --border-focus:    #F59E0B;
+
+  --text-primary:    #FFFFFF;
+  --text-secondary:  rgba(255,255,255,0.62);
+  --text-muted:      rgba(255,255,255,0.36);
+  --text-inverse:    #0D0D0D;
+  --text-link:       #F59E0B;
+
+  --brand-50:        rgba(245,158,11,0.07);
+  --brand-100:       rgba(245,158,11,0.12);
+  --brand-200:       rgba(245,158,11,0.22);
+  --brand-400:       #FCD34D;
+  --brand-500:       #F59E0B;
+  --brand-600:       #D97706;
+  --brand-700:       #B45309;
+  --brand-900:       #78350F;
+
+  --glow-hero:         radial-gradient(ellipse 80% 50% at 50% -5%, rgba(245,158,11,0.11) 0%, transparent 70%);
+  --card-shadow:       0 0 0 1px rgba(245,158,11,0.07), 0 4px 20px rgba(0,0,0,0.5);
+  --card-shadow-hover: 0 0 0 1px rgba(245,158,11,0.30), 0 12px 36px rgba(245,158,11,0.07), 0 4px 20px rgba(0,0,0,0.6);
+
+  --success-text:  #4ADE80;
+  --warning-text:  #FCD34D;
+  --danger-text:   #F87171;
+  --info-text:     #60A5FA;
+
+  --badge-success-bg:   rgba(74,222,128,0.12);
+  --badge-success-text: #4ADE80;
+  --badge-warning-bg:   rgba(245,158,11,0.12);
+  --badge-warning-text: #FCD34D;
+  --badge-danger-bg:    rgba(239,68,68,0.12);
+  --badge-danger-text:  #F87171;
+  --badge-info-bg:      rgba(59,130,246,0.12);
+  --badge-info-text:    #93C5FD;
+  --badge-brand-bg:     var(--brand-100);
+  --badge-brand-text:   var(--brand-500);
+
+  --sidebar-bg:             #0D0D0D;
+  --sidebar-item-hover:     rgba(245,158,11,0.06);
+  --sidebar-item-active:    rgba(245,158,11,0.12);
+  --sidebar-text:           rgba(255,255,255,0.56);
+  --sidebar-text-muted:     rgba(255,255,255,0.28);
+  --sidebar-active-text:    #F59E0B;
+  --admin-sidebar-bg:       #0D0D0D;
+  --admin-sidebar-text:     rgba(255,255,255,0.56);
+  --admin-sidebar-text-muted: rgba(255,255,255,0.28);
+  --admin-sidebar-item-hover:  rgba(245,158,11,0.06);
+  --admin-sidebar-item-active: rgba(245,158,11,0.12);
+  --admin-sidebar-active-text: #F59E0B;
+}
+
+/* ─── Teal Theme  (Contributor · Dashboard · Auth) ──────────── */
+.theme-teal {
+  color-scheme: dark;
+
+  --surface-page:    #0A1628;
+  --surface-card:    #0d1f38;
+  --surface-subtle:  #0f2440;
+  --surface-overlay: rgba(0,0,0,0.72);
+  --glass-bg:        rgba(9,19,36,0.88);
+  --glass-border:    rgba(255,255,255,0.07);
+
+  --border-default:  #1e3a5f;
+  --border-strong:   #2a4f7a;
+  --border-focus:    #14b8a6;
+
+  --text-primary:    #FFFFFF;
+  --text-secondary:  rgba(255,255,255,0.62);
+  --text-muted:      rgba(255,255,255,0.36);
+  --text-inverse:    #0A1628;
+  --text-link:       #14b8a6;
+
+  --brand-50:        rgba(20,184,166,0.07);
+  --brand-100:       rgba(20,184,166,0.12);
+  --brand-200:       rgba(20,184,166,0.22);
+  --brand-400:       #5eead4;
+  --brand-500:       #14b8a6;
+  --brand-600:       #0d9488;
+  --brand-700:       #0f766e;
+  --brand-900:       #134e4a;
+
+  --glow-hero:         radial-gradient(ellipse 80% 50% at 50% -5%, rgba(20,184,166,0.10) 0%, transparent 70%);
+  --card-shadow:       0 0 0 1px rgba(20,184,166,0.07), 0 4px 20px rgba(0,0,0,0.4);
+  --card-shadow-hover: 0 0 0 1px rgba(20,184,166,0.30), 0 12px 36px rgba(20,184,166,0.07), 0 4px 20px rgba(0,0,0,0.5);
+
+  --success-text:  #4ADE80;
+  --warning-text:  #FCD34D;
+  --danger-text:   #F87171;
+  --info-text:     #60A5FA;
+
+  --badge-success-bg:   rgba(74,222,128,0.12);
+  --badge-success-text: #4ADE80;
+  --badge-warning-bg:   rgba(245,158,11,0.12);
+  --badge-warning-text: #FCD34D;
+  --badge-danger-bg:    rgba(239,68,68,0.12);
+  --badge-danger-text:  #F87171;
+  --badge-info-bg:      rgba(59,130,246,0.12);
+  --badge-info-text:    #93C5FD;
+  --badge-brand-bg:     var(--brand-100);
+  --badge-brand-text:   var(--brand-500);
+
+  --sidebar-bg:          #0d1f38;
+  --sidebar-item-hover:  rgba(20,184,166,0.06);
+  --sidebar-item-active: rgba(20,184,166,0.12);
+  --sidebar-text:        rgba(255,255,255,0.56);
+  --sidebar-text-muted:  rgba(255,255,255,0.28);
+  --sidebar-active-text: #14b8a6;
+  --admin-sidebar-bg:    #0d1f38;
+  --admin-sidebar-text:  rgba(255,255,255,0.56);
+  --admin-sidebar-text-muted: rgba(255,255,255,0.28);
+  --admin-sidebar-item-hover:  rgba(20,184,166,0.06);
+  --admin-sidebar-item-active: rgba(20,184,166,0.12);
+  --admin-sidebar-active-text: #14b8a6;
+}
+
+/* ─── Legacy :root  (legal pages · fallback) ────────────────── */
+:root {
+  --brand-50:  #EEF2FF;
+  --brand-100: #E0E7FF;
+  --brand-200: #C7D2FE;
+  --brand-400: #818CF8;
+  --brand-500: #6366F1;
+  --brand-600: #4F46E5;
+  --brand-700: #4338CA;
+  --brand-900: #1E1B4B;
+
+  --surface-page:    #F9FAFB;
+  --surface-card:    #FFFFFF;
+  --surface-subtle:  #F3F4F6;
+  --surface-overlay: rgba(0,0,0,0.40);
+  --glass-bg:        rgba(255,255,255,0.85);
+  --glass-border:    rgba(0,0,0,0.08);
+
+  --border-default: #E5E7EB;
+  --border-strong:  #D1D5DB;
+  --border-focus:   #6366F1;
+
+  --text-primary:   #111827;
+  --text-secondary: #6B7280;
+  --text-muted:     #9CA3AF;
+  --text-inverse:   #FFFFFF;
+  --text-link:      #6366F1;
+
+  --glow-hero:         none;
+  --card-shadow:       none;
+  --card-shadow-hover: 0 4px 16px rgba(0,0,0,0.08);
+
+  --success-text:  #15803D;
+  --warning-text:  #B45309;
+  --danger-text:   #B91C1C;
+  --info-text:     #1D4ED8;
+
+  --badge-success-bg:   #f0fdf4;
+  --badge-success-text: #15803d;
+  --badge-warning-bg:   #fffbeb;
+  --badge-warning-text: #b45309;
+  --badge-danger-bg:    #fef2f2;
+  --badge-danger-text:  #b91c1c;
+  --badge-info-bg:      #eff6ff;
+  --badge-info-text:    #1d4ed8;
+  --badge-brand-bg:     var(--brand-50);
+  --badge-brand-text:   var(--brand-700);
+
+  --sidebar-bg:          #FFFFFF;
+  --sidebar-item-hover:  #EEF2FF;
+  --sidebar-item-active: #EEF2FF;
+  --sidebar-text:        #374151;
+  --sidebar-text-muted:  #9CA3AF;
+  --sidebar-active-text: #4F46E5;
+  --admin-sidebar-bg:          #111827;
+  --admin-sidebar-text:        #D1D5DB;
+  --admin-sidebar-text-muted:  #6B7280;
+  --admin-sidebar-item-hover:  rgba(255,255,255,0.06);
+  --admin-sidebar-item-active: rgba(99,102,241,0.20);
+  --admin-sidebar-active-text: #A5B4FC;
+}
+
+/* ─── Component Utilities ────────────────────────────────────── */
+@layer components {
+  .card-hover {
+    transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+    box-shadow: var(--card-shadow);
+  }
+  .card-hover:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--card-shadow-hover);
+    border-color: var(--brand-500) !important;
+  }
+
+  .glass-nav {
+    background: var(--glass-bg);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--glass-border);
+  }
+
+  .gradient-text {
+    background: linear-gradient(135deg, var(--brand-400) 0%, var(--brand-500) 55%, var(--brand-600) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .hero-glow {
+    background-image: var(--glow-hero);
+  }
+
+  .accent-pill {
+    background: var(--brand-100);
+    color: var(--brand-500);
+    border: 1px solid var(--brand-200);
+  }
+}
+
+/* ─── Layout Utilities ───────────────────────────────────────── */
 @layer utilities {
   .text-balance { text-wrap: balance; }
 
@@ -134,10 +273,6 @@
     border-radius: 9999px;
   }
 
-  .sidebar-bg       { background-color: var(--sidebar-bg); }
-  .admin-sidebar-bg { background-color: var(--admin-sidebar-bg); }
-
-  /* sidebar offset utilities — matches spacing tokens */
   .pl-sidebar       { padding-left: 240px; }
   .pl-sidebar-admin { padding-left: 260px; }
   .left-sidebar     { left: 240px; }

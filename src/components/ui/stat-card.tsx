@@ -26,7 +26,7 @@ export function StatCard({ label, value, icon, trend, trendUp, className }: Stat
             <p
               className={cn(
                 "text-xs mt-1 font-medium",
-                trendUp ? "text-success-700 dark:text-[#4ADE80]" : "text-[var(--text-muted)]"
+                trendUp ? "text-[var(--success-text)]" : "text-[var(--text-muted)]"
               )}
             >
               {trend}

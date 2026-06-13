@@ -78,10 +78,10 @@ export default function SettingsPage() {
       </section>
 
       {/* Danger Zone */}
-      <section className="rounded-lg border border-danger-500 bg-danger-50 dark:bg-[rgba(239,68,68,0.05)] divide-y divide-danger-500/20">
+      <section className="rounded-lg border border-[var(--danger-text)] bg-[rgba(239,68,68,0.05)] divide-y divide-[rgba(239,68,68,0.15)]">
         <div className="px-6 py-4">
-          <h2 className="font-semibold text-danger-700">Danger Zone</h2>
-          <p className="text-xs text-danger-700/70 mt-1">These actions are irreversible. Proceed with caution.</p>
+          <h2 className="font-semibold text-[var(--danger-text)]">Danger Zone</h2>
+          <p className="text-xs text-[var(--danger-text)] opacity-70 mt-1">These actions are irreversible. Proceed with caution.</p>
         </div>
         <div className="px-6 py-4 flex items-center justify-between gap-4">
           <div>

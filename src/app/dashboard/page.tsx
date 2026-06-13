@@ -19,10 +19,10 @@ const ACTIVE_TASKS = [
 ];
 
 const RECENT_ACTIVITY = [
-  { icon: CheckCircle, color: "text-success-700", label: "Survey approved", amount: "+$1.20", time: new Date(Date.now() - 1000 * 60 * 40) },
-  { icon: CheckCircle, color: "text-success-700", label: "Image tagging batch approved", amount: "+$0.16", time: new Date(Date.now() - 1000 * 60 * 60 * 3) },
-  { icon: Clock,       color: "text-warning-700", label: "Product description submitted", amount: "Pending", time: new Date(Date.now() - 1000 * 60 * 60 * 5) },
-  { icon: Wallet,      color: "text-info-500",    label: "Lootably offerwall earnings", amount: "+$0.85", time: new Date(Date.now() - 1000 * 60 * 60 * 8) },
+  { icon: CheckCircle, color: "text-[var(--success-text)]", label: "Survey approved", amount: "+$1.20", time: new Date(Date.now() - 1000 * 60 * 40) },
+  { icon: CheckCircle, color: "text-[var(--success-text)]", label: "Image tagging batch approved", amount: "+$0.16", time: new Date(Date.now() - 1000 * 60 * 60 * 3) },
+  { icon: Clock,       color: "text-[var(--warning-text)]", label: "Product description submitted", amount: "Pending", time: new Date(Date.now() - 1000 * 60 * 60 * 5) },
+  { icon: Wallet,      color: "text-[var(--info-text)]",    label: "Lootably offerwall earnings", amount: "+$0.85", time: new Date(Date.now() - 1000 * 60 * 60 * 8) },
 ];
 
 const FEATURED_OPPS = [
@@ -87,7 +87,7 @@ export default function DashboardHome() {
                     </div>
                   </div>
                   <div className="flex items-center gap-3 flex-shrink-0 ml-3">
-                    <span className="text-sm font-semibold text-success-700 dark:text-[#4ADE80]">{task.payout}</span>
+                    <span className="text-sm font-semibold text-[var(--success-text)]">{task.payout}</span>
                     <Button size="sm" variant="secondary">Continue</Button>
                   </div>
                 </li>
@@ -110,11 +110,11 @@ export default function DashboardHome() {
           <div className="space-y-4 mb-6">
             <div>
               <p className="text-xs text-[var(--text-muted)] uppercase tracking-wide mb-1">Available</p>
-              <p className="text-3xl font-bold text-[var(--text-primary)]">{formatCurrency(38.45)}</p>
+              <p className="text-3xl font-bold text-white">{formatCurrency(38.45)}</p>
             </div>
             <div>
               <p className="text-xs text-[var(--text-muted)] uppercase tracking-wide mb-1">Pending</p>
-              <p className="text-lg font-semibold text-warning-700 dark:text-[#FCD34D]">{formatCurrency(8.75)}</p>
+              <p className="text-lg font-semibold text-[var(--warning-text)]">{formatCurrency(8.75)}</p>
             </div>
           </div>
           <Button className="w-full" asChild>
@@ -157,7 +157,7 @@ export default function DashboardHome() {
                   <span className="text-sm text-[var(--text-primary)]">{item.label}</span>
                 </div>
                 <div className="flex items-center gap-4 flex-shrink-0">
-                  <span className={`text-sm font-semibold ${item.amount.startsWith("+") ? "text-success-700 dark:text-[#4ADE80]" : "text-[var(--text-muted)]"}`}>
+                  <span className={`text-sm font-semibold ${item.amount.startsWith("+") ? "text-[var(--success-text)]" : "text-[var(--text-muted)]"}`}>
                     {item.amount}
                   </span>
                   <span className="text-xs text-[var(--text-muted)]">{timeAgo(item.time)}</span>

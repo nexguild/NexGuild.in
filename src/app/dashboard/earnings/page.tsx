@@ -72,7 +72,7 @@ export default function EarningsPage() {
                 <td className="px-4 py-3 text-[var(--text-muted)] whitespace-nowrap">{tx.date}</td>
                 <td className="px-4 py-3 font-medium text-[var(--text-primary)]">{tx.source}</td>
                 <td className="px-4 py-3 text-[var(--text-secondary)]">{tx.type}</td>
-                <td className={`px-4 py-3 text-right font-semibold ${tx.amount < 0 ? "text-danger-700" : "text-success-700 dark:text-[#4ADE80]"}`}>
+                <td className={`px-4 py-3 text-right font-semibold ${tx.amount < 0 ? "text-[var(--danger-text)]" : "text-[var(--success-text)]"}`}>
                   {tx.amount < 0 ? `-${formatCurrency(Math.abs(tx.amount))}` : `+${formatCurrency(tx.amount)}`}
                 </td>
                 <td className="px-4 py-3">

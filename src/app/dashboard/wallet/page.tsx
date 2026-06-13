@@ -48,7 +48,7 @@ export default function WalletPage() {
           <div className="flex items-center gap-2 mb-3">
             <p className="text-sm font-medium text-[var(--text-secondary)]">Pending Balance</p>
           </div>
-          <p className="text-4xl font-bold text-warning-700 dark:text-[#FCD34D] mb-2">{formatCurrency(8.75)}</p>
+          <p className="text-4xl font-bold text-[var(--warning-text)] mb-2">{formatCurrency(8.75)}</p>
           <p className="text-xs text-[var(--text-muted)]">Clears after submission review. Not yet withdrawable.</p>
         </div>
       </div>

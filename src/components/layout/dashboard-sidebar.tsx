@@ -95,7 +95,7 @@ export function DashboardSidebar() {
 
       {/* Log Out */}
       <div className="px-3 py-4 border-t border-[var(--border-default)]">
-        <button className="flex items-center gap-3 h-10 px-3 w-full rounded-md text-sm font-medium text-[var(--text-secondary)] hover:text-danger-700 hover:bg-danger-50 dark:hover:bg-[rgba(239,68,68,0.08)] transition-colors">
+        <button className="flex items-center gap-3 h-10 px-3 w-full rounded-md text-sm font-medium text-[var(--text-secondary)] hover:text-[var(--danger-text)] hover:bg-[rgba(239,68,68,0.08)] transition-colors">
           <LogOut className="h-4 w-4 flex-shrink-0" />
           Log Out
         </button>

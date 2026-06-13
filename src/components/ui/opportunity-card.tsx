@@ -65,7 +65,7 @@ export function OpportunityCard({
     >
       <div className="flex items-start justify-between gap-2 mb-3">
         <Badge variant={typeVariants[type]}>{typeLabels[type]}</Badge>
-        <span className="text-base font-bold text-success-700 dark:text-[#4ADE80] whitespace-nowrap">
+        <span className="text-base font-bold text-[var(--success-text)] whitespace-nowrap">
           {payout}
         </span>
       </div>
