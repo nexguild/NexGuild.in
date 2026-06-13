@@ -1,6 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { formatDate, formatCurrency } from "@/lib/utils";
+import { formatCurrency } from "@/lib/utils";
 import type { BadgeVariant } from "@/components/ui/badge";
 
 const TABS = ["In Progress", "Submitted", "Approved", "Rejected"];
