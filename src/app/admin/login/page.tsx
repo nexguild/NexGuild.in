@@ -32,21 +32,25 @@ export default function AdminLoginPage() {
       return;
     }
 
-    // Step 2: verify admin role
-    const { data: profile, error: profileError } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("id", data.user.id)
-      .single();
-
-    if (profileError) {
+    // Step 2: verify admin role via server-side API (bypasses RLS)
+    let isAdmin = false;
+    try {
+      const session = (await supabase.auth.getSession()).data.session;
+      const res = await fetch("/api/auth/admin-check", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ access_token: session?.access_token }),
+      });
+      const json = await res.json();
+      isAdmin = json.isAdmin === true;
+    } catch {
       await supabase.auth.signOut();
       setError("Unable to verify account permissions. Please contact support.");
       setLoading(false);
       return;
     }
 
-    if (profile?.role !== "admin") {
+    if (!isAdmin) {
       await supabase.auth.signOut();
       setError("Access denied. This account does not have admin privileges.");
       setLoading(false);

@@ -4,6 +4,20 @@ import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 
+async function checkIsAdmin(accessToken: string): Promise<boolean> {
+  try {
+    const res = await fetch("/api/auth/admin-check", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ access_token: accessToken }),
+    });
+    const json = await res.json();
+    return json.isAdmin === true;
+  } catch {
+    return false;
+  }
+}
+
 export function AdminAuthGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -12,23 +26,12 @@ export function AdminAuthGuard({ children }: { children: React.ReactNode }) {
   const isLoginPage = pathname === "/admin/login";
 
   useEffect(() => {
-    // Always reset while we re-check — prevents stale "ready" bleeding through
     setReady(false);
 
     if (isLoginPage) {
-      // If already authenticated as admin, skip login form
+      // Auto-redirect already-authenticated admins past the login form
       supabase.auth.getSession().then(async ({ data: { session } }) => {
-        if (!session) {
-          setReady(true);
-          return;
-        }
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("role")
-          .eq("id", session.user.id)
-          .single();
-
-        if (profile?.role === "admin") {
+        if (session && await checkIsAdmin(session.access_token)) {
           router.replace("/admin");
         } else {
           setReady(true);
@@ -37,8 +40,7 @@ export function AdminAuthGuard({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    // Protected admin pages
-    async function checkAdmin() {
+    async function verifyAdmin() {
       const { data: { session } } = await supabase.auth.getSession();
 
       if (!session) {
@@ -46,21 +48,9 @@ export function AdminAuthGuard({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      const { data: profile, error: profileError } = await supabase
-        .from("profiles")
-        .select("role")
-        .eq("id", session.user.id)
-        .single();
+      const isAdmin = await checkIsAdmin(session.access_token);
 
-      if (profileError) {
-        // Table not set up or RLS error — send to login without signing out
-        console.error("[AdminAuthGuard] profile query error:", profileError.message);
-        router.replace("/admin/login");
-        return;
-      }
-
-      if (profile?.role !== "admin") {
-        // Valid session but not an admin — sign out and redirect
+      if (!isAdmin) {
         await supabase.auth.signOut();
         router.replace("/admin/login");
         return;
@@ -69,7 +59,7 @@ export function AdminAuthGuard({ children }: { children: React.ReactNode }) {
       setReady(true);
     }
 
-    checkAdmin();
+    verifyAdmin();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       if (event === "SIGNED_OUT") {
