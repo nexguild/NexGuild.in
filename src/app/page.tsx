@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
+import { NexGuildLogo } from "@/components/ui/nexguild-logo";
 
 /* ── Per-panel particle canvas ─────────────────────────────────── */
 interface Dot { x: number; y: number; vx: number; vy: number; r: number; }
@@ -106,10 +107,9 @@ export default function LandingPage() {
     <div className="root">
 
       {/* ── Logo ───────────────────────────────────────────────── */}
-      <Link href="/" className="logo-wrap">
-        <span className="l-nex">Nex</span><span className="l-guild">Guild</span>
-        <span className="l-dot" />
-      </Link>
+      <div className="logo-wrap">
+        <NexGuildLogo variant="landing" theme="gold" />
+      </div>
 
       {/* ── Split ──────────────────────────────────────────────── */}
       <div className="split">
@@ -209,20 +209,11 @@ export default function LandingPage() {
         /* ── Logo ─────────────────────────────────────────────── */
         .logo-wrap {
           position: absolute; top: 0; left: 0; right: 0; z-index: 50;
-          display: flex; align-items: center; justify-content: center; gap: 1px;
-          padding-top: 20px; text-decoration: none; pointer-events: auto;
+          display: flex; align-items: center; justify-content: center;
+          padding-top: 14px; pointer-events: auto;
         }
-        .l-nex, .l-guild {
-          font-size: 21px; font-weight: 800; letter-spacing: -0.04em; line-height: 1;
-          transition: opacity 0.2s;
-        }
-        .logo-wrap:hover .l-nex, .logo-wrap:hover .l-guild { opacity: 0.75; }
-        .l-nex   { color: #fff; }
-        .l-guild { color: #F59E0B; }
-        .l-dot   {
-          width: 5px; height: 5px; border-radius: 50%;
-          background: #14b8a6; margin-left: 3px; margin-bottom: 5px; flex-shrink: 0;
-        }
+        .logo-wrap a { opacity: 0.90; transition: opacity 0.2s; }
+        .logo-wrap a:hover { opacity: 1; }
 
         /* ── Split ───────────────────────────────────────────── */
         .split {
@@ -417,8 +408,7 @@ export default function LandingPage() {
           .body { padding: 14px 18px; }
           .acts { gap: 10px; margin-bottom: 12px; }
           .note { font-size: 10px; }
-          .logo-wrap { padding-top: 10px; }
-          .l-nex, .l-guild { font-size: 18px; }
+          .logo-wrap { padding-top: 8px; }
           canvas { display: none; }
         }
         @media (max-width: 380px) {

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { NexGuildLogo } from "@/components/ui/nexguild-logo";
 
 const PLATFORM_LINKS = [
   { label: "For Organizations", href: "/client" },
@@ -23,12 +24,9 @@ export function PublicFooter() {
 
           {/* Brand */}
           <div className="lg:col-span-1">
-            <Link href="/" className="inline-flex items-center mb-4">
-              <span className="font-bold text-xl tracking-tight">
-                <span className="text-white">Nex</span>
-                <span className="text-[var(--brand-500)]">Guild</span>
-              </span>
-            </Link>
+            <div className="mb-5">
+              <NexGuildLogo variant="footer" theme="gold" />
+            </div>
             <p className="text-sm text-[var(--text-secondary)] leading-relaxed mb-5">
               Digital Workforce Community — connecting organizations with human-powered contributors.
             </p>

@@ -6,6 +6,7 @@ import { useState, useEffect } from "react";
 import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { NexGuildLogo } from "@/components/ui/nexguild-logo";
 
 const NAV_LINKS = [
   { label: "Services",      href: "/for-organizations" },
@@ -44,12 +45,7 @@ export function PublicHeader() {
         <div className="mx-auto max-w-container px-6 h-full flex items-center justify-between">
 
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-0 flex-shrink-0 group">
-            <span className="font-bold text-xl tracking-tight leading-none select-none">
-              <span className="text-white">Nex</span>
-              <span className="text-[var(--brand-500)] transition-colors duration-200 group-hover:text-[var(--brand-400)]">Guild</span>
-            </span>
-          </Link>
+          <NexGuildLogo variant="navbar" theme="gold" />
 
           {/* Desktop Nav */}
           <nav className="hidden lg:flex items-center gap-1">
@@ -115,10 +111,7 @@ export function PublicHeader() {
         )}
       >
         <div className="flex items-center justify-between px-6 h-16 border-b border-[var(--border-default)]">
-          <span className="font-bold text-[var(--text-primary)]">
-            <span className="text-white">Nex</span>
-            <span className="text-[var(--brand-500)]">Guild</span>
-          </span>
+          <NexGuildLogo variant="navbar" theme="gold" />
           <button
             onClick={() => setMobileOpen(false)}
             className="h-9 w-9 flex items-center justify-center rounded-md text-[var(--text-secondary)] hover:bg-white/5"
