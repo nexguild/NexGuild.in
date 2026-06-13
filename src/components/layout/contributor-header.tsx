@@ -41,8 +41,16 @@ export function ContributorHeader() {
       >
         <div className="mx-auto max-w-container px-6 h-full flex items-center justify-between">
 
-          {/* Logo — links to landing page */}
-          <NexGuildLogo theme="teal" />
+          {/* Logo + Home link */}
+          <div className="flex items-center gap-3 flex-shrink-0">
+            <NexGuildLogo theme="teal" />
+            <Link
+              href="/"
+              className="hidden sm:inline-flex items-center gap-1 text-[11px] font-medium text-white/30 hover:text-[#14b8a6] transition-colors"
+            >
+              ← Home
+            </Link>
+          </div>
 
           {/* Desktop Nav */}
           <nav className="hidden lg:flex items-center gap-1">

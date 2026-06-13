@@ -106,8 +106,14 @@ export default function EarnPage() {
 
           <FadeIn delay={80}>
             <h1
-              className="font-extrabold tracking-tight leading-[1.1] text-white mb-6 text-center overflow-hidden"
-              style={{ fontSize: "clamp(36px, 6vw, 72px)" }}
+              className="font-extrabold tracking-tight leading-[1.1] text-white mb-6 text-center"
+              style={{
+                fontSize: "clamp(32px, 5vw, 60px)",
+                overflow: "hidden",
+                maxWidth: "100%",
+                wordBreak: "break-word",
+                overflowWrap: "break-word",
+              }}
             >
               <TypingHeadline />
             </h1>

@@ -321,11 +321,12 @@ export default function LandingPage() {
         .tg-teal { color: #14b8a6; background: rgba(20,184,166,0.09); border: 1px solid rgba(20,184,166,0.20); }
 
         .hl {
-          font-size: clamp(26px,3.4vw,50px); font-weight: 800; color: #fff;
+          font-size: clamp(24px,3vw,46px); font-weight: 800; color: #fff;
           line-height: 1.10; letter-spacing: -0.03em; margin-bottom: 18px;
         }
-        .em-gold { font-style: normal; color: #F59E0B; }
-        .em-teal { font-style: normal; color: #14b8a6; }
+        /* white-space: nowrap keeps "Into Real Money." on one line */
+        .em-gold { font-style: normal; color: #F59E0B; white-space: nowrap; }
+        .em-teal { font-style: normal; color: #14b8a6; white-space: nowrap; }
 
         .sub {
           font-size: clamp(13px,1.1vw,15px); line-height: 1.72;
