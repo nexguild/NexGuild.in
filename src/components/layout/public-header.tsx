@@ -9,9 +9,10 @@ import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { cn } from "@/lib/utils";
 
 const NAV_LINKS = [
+  { label: "Services",         href: "/for-organizations" },
   { label: "How It Works",     href: "/how-it-works" },
   { label: "Opportunities",    href: "/opportunities" },
-  { label: "For Organizations",href: "/for-organizations" },
+  { label: "Start Earning",    href: "/earn" },
   { label: "About",            href: "/about" },
 ];
 

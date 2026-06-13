@@ -1,9 +1,10 @@
 import Link from "next/link";
 
 const PLATFORM_LINKS = [
+  { label: "For Organizations", href: "/for-organizations" },
+  { label: "Start Earning",     href: "/earn" },
   { label: "How It Works",      href: "/how-it-works" },
   { label: "Opportunities",     href: "/opportunities" },
-  { label: "For Organizations", href: "/for-organizations" },
   { label: "About",             href: "/about" },
 ];
 
@@ -27,7 +28,7 @@ export function PublicFooter() {
               <span className="font-bold text-lg text-[var(--text-primary)] tracking-tight">NexGuild</span>
             </Link>
             <p className="text-sm text-[var(--text-secondary)] leading-relaxed">
-              Earn by Contributing. Grow by Participating.
+              Real human data for organizations. Real earnings for contributors.
             </p>
           </div>
 
