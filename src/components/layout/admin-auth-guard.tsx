@@ -12,11 +12,32 @@ export function AdminAuthGuard({ children }: { children: React.ReactNode }) {
   const isLoginPage = pathname === "/admin/login";
 
   useEffect(() => {
+    // Always reset while we re-check — prevents stale "ready" bleeding through
+    setReady(false);
+
     if (isLoginPage) {
-      setReady(true);
+      // If already authenticated as admin, skip login form
+      supabase.auth.getSession().then(async ({ data: { session } }) => {
+        if (!session) {
+          setReady(true);
+          return;
+        }
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("role")
+          .eq("id", session.user.id)
+          .single();
+
+        if (profile?.role === "admin") {
+          router.replace("/admin");
+        } else {
+          setReady(true);
+        }
+      });
       return;
     }
 
+    // Protected admin pages
     async function checkAdmin() {
       const { data: { session } } = await supabase.auth.getSession();
 
@@ -25,14 +46,21 @@ export function AdminAuthGuard({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      // Check that the user has admin role in the profiles table
-      const { data: profile } = await supabase
+      const { data: profile, error: profileError } = await supabase
         .from("profiles")
         .select("role")
         .eq("id", session.user.id)
         .single();
 
+      if (profileError) {
+        // Table not set up or RLS error — send to login without signing out
+        console.error("[AdminAuthGuard] profile query error:", profileError.message);
+        router.replace("/admin/login");
+        return;
+      }
+
       if (profile?.role !== "admin") {
+        // Valid session but not an admin — sign out and redirect
         await supabase.auth.signOut();
         router.replace("/admin/login");
         return;
@@ -43,8 +71,9 @@ export function AdminAuthGuard({ children }: { children: React.ReactNode }) {
 
     checkAdmin();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (!session && !isLoginPage) {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "SIGNED_OUT") {
+        setReady(false);
         router.replace("/admin/login");
       }
     });

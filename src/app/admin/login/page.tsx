@@ -20,23 +20,31 @@ export default function AdminLoginPage() {
     setError("");
     setLoading(true);
 
+    // Step 1: authenticate
     const { data, error: authError } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
 
-    if (authError) {
+    if (authError || !data.user) {
       setError("Incorrect email or password.");
       setLoading(false);
       return;
     }
 
-    // Verify admin role
-    const { data: profile } = await supabase
+    // Step 2: verify admin role
+    const { data: profile, error: profileError } = await supabase
       .from("profiles")
       .select("role")
       .eq("id", data.user.id)
       .single();
+
+    if (profileError) {
+      await supabase.auth.signOut();
+      setError("Unable to verify account permissions. Please contact support.");
+      setLoading(false);
+      return;
+    }
 
     if (profile?.role !== "admin") {
       await supabase.auth.signOut();
@@ -45,7 +53,8 @@ export default function AdminLoginPage() {
       return;
     }
 
-    router.push("/admin");
+    // Step 3: replace history so back button won't return to login
+    router.replace("/admin");
   }
 
   return (
