@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(rm -f \"src/app/\\(public\\)/page.tsx\")",
+      "Bash(rm -f \"src/app/\\(public\\)/for-organizations/page.tsx\")",
+      "Bash(rm -f \"src/app/\\(public\\)/about/page.tsx\")",
+      "Bash(rm -f \"src/app/\\(public\\)/contact/page.tsx\")",
+      "Bash(rm -f \"src/app/\\(public\\)/earn/page.tsx\")"
+    ]
+  }
+}
