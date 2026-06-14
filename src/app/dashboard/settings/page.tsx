@@ -1,11 +1,25 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { supabase } from "@/lib/supabase";
 
 export default function SettingsPage() {
+  const [email, setEmail] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function fetchEmail() {
+      const { data: { user } } = await supabase.auth.getUser();
+      setEmail(user?.email ?? null);
+    }
+    fetchEmail();
+  }, []);
+
   return (
     <div className="space-y-6 max-w-2xl">
       <div>
         <h1 className="text-2xl font-bold text-[var(--text-primary)] mb-1">Settings</h1>
-        <p className="text-sm text-[var(--text-secondary)]">Manage your account preferences and payout methods.</p>
+        <p className="text-sm text-[var(--text-secondary)]">Manage your account preferences.</p>
       </div>
 
       {/* Account */}
@@ -13,42 +27,21 @@ export default function SettingsPage() {
         <div className="px-6 py-4">
           <h2 className="font-semibold text-[var(--text-primary)]">Account</h2>
         </div>
-        {[
-          { label: "Email", value: "alex.johnson@example.com" },
-          { label: "Password", value: "••••••••••••" },
-        ].map((item) => (
-          <div key={item.label} className="px-6 py-4 flex items-center justify-between gap-4">
-            <div>
-              <p className="text-sm font-medium text-[var(--text-primary)]">{item.label}</p>
-              <p className="text-sm text-[var(--text-muted)]">{item.value}</p>
-            </div>
-            <Button variant="secondary" size="sm">Change</Button>
+        <div className="px-6 py-4 flex items-center justify-between gap-4">
+          <div>
+            <p className="text-sm font-medium text-[var(--text-primary)]">Email</p>
+            <p className="text-sm text-[var(--text-muted)]">
+              {email === null ? "Loading…" : email}
+            </p>
           </div>
-        ))}
-      </section>
-
-      {/* Payout Methods */}
-      <section className="rounded-lg border border-[var(--border-default)] bg-[var(--surface-card)] divide-y divide-[var(--border-default)]">
-        <div className="px-6 py-4">
-          <h2 className="font-semibold text-[var(--text-primary)]">Payout Methods</h2>
+          <Button variant="secondary" size="sm" disabled>Change</Button>
         </div>
-        {[
-          { label: "UPI",           value: "Not connected" },
-          { label: "Bank Transfer", value: "Not connected" },
-          { label: "PayPal",        value: "Not connected" },
-        ].map((item) => (
-          <div key={item.label} className="px-6 py-4 flex items-center justify-between gap-4">
-            <div>
-              <p className="text-sm font-medium text-[var(--text-primary)]">{item.label}</p>
-              <p className="text-sm text-[var(--text-muted)]">{item.value}</p>
-            </div>
-            <Button variant="secondary" size="sm">
-              {item.value === "Not connected" ? "Connect" : "Edit"}
-            </Button>
+        <div className="px-6 py-4 flex items-center justify-between gap-4">
+          <div>
+            <p className="text-sm font-medium text-[var(--text-primary)]">Password</p>
+            <p className="text-sm text-[var(--text-muted)]">••••••••••••</p>
           </div>
-        ))}
-        <div className="px-6 py-4">
-          <Button variant="ghost" size="sm">+ Add payout method</Button>
+          <Button variant="secondary" size="sm" disabled>Change</Button>
         </div>
       </section>
 
@@ -59,7 +52,7 @@ export default function SettingsPage() {
         </div>
         {[
           { label: "Task approved",      desc: "Get notified when a submission is approved" },
-          { label: "Withdrawal status",  desc: "Updates on your withdrawal requests" },
+          { label: "Voucher delivered",  desc: "Updates when your voucher request is fulfilled" },
           { label: "New opportunities",  desc: "Alerts for high-paying new tasks" },
         ].map((item) => (
           <div key={item.label} className="px-6 py-4 flex items-center justify-between gap-4">
@@ -87,7 +80,7 @@ export default function SettingsPage() {
         <div className="px-6 py-4 flex items-center justify-between gap-4">
           <div>
             <p className="text-sm font-medium text-[var(--text-primary)]">Deactivate Account</p>
-            <p className="text-xs text-[var(--text-muted)]">Disable your account. Any pending balance will be frozen.</p>
+            <p className="text-xs text-[var(--text-muted)]">Disable your account. Any pending NexCoins balance will be frozen.</p>
           </div>
           <Button variant="destructive" size="sm">Deactivate</Button>
         </div>
