@@ -153,7 +153,6 @@ export default function StorePage() {
     });
 
     if (rpcError) {
-      // RPC not created yet — fall back to direct update
       console.warn("[store] decrement_nexcoins RPC unavailable, falling back:", rpcError.message);
       const { error: updateError } = await supabase
         .from("profiles")
@@ -167,8 +166,13 @@ export default function StorePage() {
       }
     }
 
-    // Update local balance immediately
-    setNexcoins((prev) => Math.max(0, (prev ?? 0) - confirmItem.coins));
+    // Refetch actual balance from DB to reflect the true deducted value
+    const { data: freshProfile } = await supabase
+      .from("profiles")
+      .select("nexcoins")
+      .eq("id", user.id)
+      .single();
+    setNexcoins(freshProfile?.nexcoins ?? Math.max(0, (nexcoins ?? 0) - confirmItem.coins));
 
     // 3. Log coin transaction
     await supabase.from("coin_transactions").insert({

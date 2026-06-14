@@ -433,7 +433,43 @@ CREATE POLICY "Service role manages tickets"
 GRANT ALL ON support_tickets TO authenticated;
 GRANT ALL ON support_tickets TO service_role;
 
--- ── 15. Storage buckets (run in Supabase Dashboard → Storage) ────
+-- Admin access to all support tickets (add after support_tickets table was created)
+CREATE POLICY "Admins manage all tickets"
+  ON support_tickets FOR ALL TO authenticated
+  USING (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin'));
+
+-- ── 16. Ticket messages (conversation thread) ───────────────────────
+CREATE TABLE IF NOT EXISTS ticket_messages (
+  id          UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  ticket_id   UUID REFERENCES support_tickets(id) ON DELETE CASCADE,
+  sender_id   UUID REFERENCES profiles(id),
+  sender_type TEXT NOT NULL CHECK (sender_type IN ('contributor', 'admin')),
+  message     TEXT NOT NULL,
+  created_at  TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE ticket_messages ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users view own ticket messages"
+  ON ticket_messages FOR SELECT TO authenticated
+  USING (ticket_id IN (SELECT id FROM support_tickets WHERE contributor_id = auth.uid()));
+
+CREATE POLICY "Users insert own messages"
+  ON ticket_messages FOR INSERT TO authenticated
+  WITH CHECK (auth.uid() = sender_id);
+
+CREATE POLICY "Admins manage all messages"
+  ON ticket_messages FOR ALL TO authenticated
+  USING (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin'));
+
+CREATE POLICY "Service role manages messages"
+  ON ticket_messages FOR ALL TO service_role
+  USING (true) WITH CHECK (true);
+
+GRANT ALL ON ticket_messages TO authenticated;
+GRANT ALL ON ticket_messages TO service_role;
+
+-- ── 17. Storage buckets (run in Supabase Dashboard → Storage) ────
 -- Create bucket "submissions" — public read, authenticated write
 -- Create bucket "assignments" — public read, authenticated write
 -- Or run via SQL:

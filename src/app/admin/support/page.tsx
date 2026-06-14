@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
-  Headphones, Search, ChevronDown, ChevronUp,
-  CheckCircle2, X, Loader2, Send,
+  Headphones, Search, ArrowLeft, Send,
+  CheckCircle2, X, Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -15,12 +15,18 @@ interface Ticket {
   message: string;
   category: string;
   status: string;
-  priority: string;
   admin_reply: string | null;
   replied_at: string | null;
   created_at: string;
   updated_at: string;
   profiles: { full_name: string | null; email: string | null } | null;
+}
+
+interface TicketMessage {
+  id: string;
+  sender_type: string;
+  message: string;
+  created_at: string;
 }
 
 const CATEGORIES: Record<string, string> = {
@@ -37,20 +43,32 @@ const STATUS_META: Record<string, { label: string; variant: "success" | "warning
 const TABS = ["open", "replied", "closed"] as const;
 type Tab = typeof TABS[number];
 
+function fmtTime(ts: string) {
+  return new Date(ts).toLocaleString("en-IN", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+}
+
 export default function AdminSupportPage() {
-  const [tickets, setTickets]       = useState<Ticket[]>([]);
-  const [loading, setLoading]       = useState(true);
-  const [activeTab, setActiveTab]   = useState<Tab>("open");
-  const [search, setSearch]         = useState("");
-  const [expanded, setExpanded]     = useState<string | null>(null);
-  const [replies, setReplies]       = useState<Record<string, string>>({});
-  const [acting, setActing]         = useState<string | null>(null);
-  const [token, setToken]           = useState<string | null>(null);
+  // List state
+  const [tickets, setTickets]     = useState<Ticket[]>([]);
+  const [loading, setLoading]     = useState(true);
+  const [activeTab, setActiveTab] = useState<Tab>("open");
+  const [search, setSearch]       = useState("");
+  const [token, setToken]         = useState<string | null>(null);
+  const [adminId, setAdminId]     = useState<string | null>(null);
+
+  // Conversation state
+  const [openTicket, setOpenTicket] = useState<Ticket | null>(null);
+  const [messages, setMessages]     = useState<TicketMessage[]>([]);
+  const [loadingMsgs, setLoadingMsgs] = useState(false);
+  const [replyText, setReplyText]   = useState("");
+  const [sending, setSending]       = useState(false);
+  const msgEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     async function init() {
       const { data: { session } } = await supabase.auth.getSession();
       setToken(session?.access_token ?? null);
+      setAdminId(session?.user.id ?? null);
       await fetchTickets();
     }
     init();
@@ -60,47 +78,80 @@ export default function AdminSupportPage() {
   async function fetchTickets() {
     const { data, error } = await supabase
       .from("support_tickets")
-      .select("id, subject, message, category, status, priority, admin_reply, replied_at, created_at, updated_at, profiles(full_name, email)")
+      .select("id, subject, message, category, status, admin_reply, replied_at, created_at, updated_at, profiles(full_name, email)")
       .order("created_at", { ascending: false });
-
-    if (error) console.error("[admin/support] fetch error:", error.message);
+    if (error) console.error("[admin/support] fetch:", error.message);
     setTickets((data as unknown as Ticket[]) ?? []);
     setLoading(false);
   }
 
-  async function callApi(ticketId: string, reply?: string, closeTicket?: boolean) {
-    setActing(ticketId);
+  // Load messages when ticket is opened
+  useEffect(() => {
+    if (!openTicket) { setMessages([]); return; }
+    let channel: ReturnType<typeof supabase.channel> | null = null;
+
+    async function loadMsgs() {
+      setLoadingMsgs(true);
+      const { data, error } = await supabase
+        .from("ticket_messages")
+        .select("id, sender_type, message, created_at")
+        .eq("ticket_id", openTicket!.id)
+        .order("created_at", { ascending: true });
+      if (error) console.error("[admin/support] messages fetch:", error.message);
+      setMessages((data as TicketMessage[]) ?? []);
+      setLoadingMsgs(false);
+      setTimeout(() => msgEndRef.current?.scrollIntoView({ behavior: "auto" }), 60);
+    }
+    loadMsgs();
+
+    channel = supabase
+      .channel(`tmsg-admin:${openTicket.id}`)
+      .on("postgres_changes", {
+        event: "INSERT", schema: "public", table: "ticket_messages",
+        filter: `ticket_id=eq.${openTicket.id}`,
+      }, (payload) => {
+        setMessages((prev) => {
+          if (prev.find((m) => m.id === (payload.new as TicketMessage).id)) return prev;
+          return [...prev, payload.new as TicketMessage];
+        });
+        setTimeout(() => msgEndRef.current?.scrollIntoView({ behavior: "smooth" }), 60);
+      })
+      .subscribe();
+
+    return () => { if (channel) supabase.removeChannel(channel); };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [openTicket?.id]);
+
+  async function handleSend(closeTicket = false) {
+    if (!openTicket || !token) return;
+    if (!replyText.trim() && !closeTicket) return;
+    setSending(true);
 
     const res = await fetch("/api/admin/reply-ticket", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      },
-      body: JSON.stringify({ ticketId, reply, closeTicket }),
+      method:  "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body:    JSON.stringify({ ticketId: openTicket.id, reply: replyText.trim() || undefined, closeTicket }),
     });
 
     if (res.ok) {
-      const { status: newStatus } = await res.json();
-      setTickets((prev) =>
-        prev.map((t) =>
-          t.id === ticketId
-            ? {
-                ...t,
-                status:      newStatus,
-                admin_reply: reply ?? t.admin_reply,
-                replied_at:  reply ? new Date().toISOString() : t.replied_at,
-                updated_at:  new Date().toISOString(),
-              }
-            : t
-        )
-      );
-      if (reply) setReplies((prev) => ({ ...prev, [ticketId]: "" }));
+      const { status: newStatus, message: newMsg } = await res.json();
+      const updatedTicket = { ...openTicket, status: newStatus, ...(replyText.trim() ? { admin_reply: replyText.trim() } : {}) };
+      setOpenTicket(updatedTicket);
+      setTickets((prev) => prev.map((t) => t.id === openTicket.id ? updatedTicket : t));
+
+      if (newMsg) {
+        setMessages((prev) => {
+          if (prev.find((m) => m.id === (newMsg as TicketMessage).id)) return prev;
+          return [...prev, newMsg as TicketMessage];
+        });
+        setReplyText("");
+        setTimeout(() => msgEndRef.current?.scrollIntoView({ behavior: "smooth" }), 60);
+      }
     } else {
-      const data = await res.json().catch(() => ({}));
-      alert(data.error ?? "Action failed — check server logs.");
+      const d = await res.json().catch(() => ({}));
+      alert(d.error ?? "Action failed — check server logs.");
     }
-    setActing(null);
+    setSending(false);
   }
 
   const counts: Record<Tab, number> = {
@@ -112,25 +163,146 @@ export default function AdminSupportPage() {
   const filtered = tickets.filter((t) => {
     if (t.status !== activeTab) return false;
     if (!search) return true;
-    const q = search.toLowerCase();
+    const q    = search.toLowerCase();
     const name  = (t.profiles as { full_name: string | null } | null)?.full_name?.toLowerCase() ?? "";
     const email = (t.profiles as { email: string | null } | null)?.email?.toLowerCase() ?? "";
-    return (
-      t.subject.toLowerCase().includes(q) ||
-      name.includes(q) ||
-      email.includes(q)
-    );
+    return t.subject.toLowerCase().includes(q) || name.includes(q) || email.includes(q);
   });
 
+  // ── Conversation view ────────────────────────────────────────────────
+  if (openTicket) {
+    const st       = STATUS_META[openTicket.status] ?? STATUS_META.open;
+    const isClosed = openTicket.status === "closed";
+    const name     = (openTicket.profiles as { full_name: string | null } | null)?.full_name ?? "Contributor";
+    const email    = (openTicket.profiles as { email: string | null } | null)?.email ?? "";
+
+    return (
+      <div className="flex flex-col h-[calc(100vh-4rem-2rem)] -m-6">
+        {/* Header */}
+        <div className="flex items-center gap-3 px-4 h-14 border-b border-[var(--border-default)] bg-[var(--surface-card)] flex-shrink-0">
+          <button
+            onClick={() => { setOpenTicket(null); setReplyText(""); }}
+            className="h-8 w-8 flex items-center justify-center rounded-md text-[var(--text-secondary)] hover:bg-[var(--surface-subtle)] hover:text-[var(--text-primary)] transition-colors"
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </button>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-[var(--text-primary)] truncate">{openTicket.subject}</p>
+            <p className="text-xs text-[var(--text-muted)]">
+              {name}{email ? ` · ${email}` : ""} · {CATEGORIES[openTicket.category] ?? openTicket.category}
+            </p>
+          </div>
+          <Badge variant={st.variant}>{st.label}</Badge>
+        </div>
+
+        {/* Messages */}
+        <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3 bg-[var(--surface-page)]">
+          {/* Original ticket message */}
+          <div className="flex justify-start">
+            <div className="max-w-[82%] sm:max-w-[70%]">
+              <p className="text-xs text-[var(--text-muted)] mb-1 ml-1">{name}</p>
+              <div className="bg-[var(--surface-card)] border border-[var(--border-default)] text-[var(--text-primary)] px-4 py-2.5 rounded-2xl rounded-tl-sm">
+                <p className="text-sm whitespace-pre-wrap leading-relaxed">{openTicket.message}</p>
+              </div>
+              <p className="text-[10px] text-[var(--text-muted)] mt-1">{fmtTime(openTicket.created_at)}</p>
+            </div>
+          </div>
+
+          {/* Thread messages */}
+          {loadingMsgs ? (
+            <div className="flex justify-center py-4">
+              <Loader2 className="h-5 w-5 animate-spin text-[var(--text-muted)]" />
+            </div>
+          ) : (
+            <>
+              {/* Backwards-compat: show legacy admin_reply if no thread messages */}
+              {messages.length === 0 && openTicket.admin_reply && (
+                <div className="flex justify-end">
+                  <div className="max-w-[82%] sm:max-w-[70%]">
+                    <p className="text-xs text-[var(--text-muted)] mb-1 text-right mr-1">You (legacy reply)</p>
+                    <div className="bg-[var(--brand-500)] text-white px-4 py-2.5 rounded-2xl rounded-tr-sm">
+                      <p className="text-sm whitespace-pre-wrap leading-relaxed">{openTicket.admin_reply}</p>
+                    </div>
+                    {openTicket.replied_at && (
+                      <p className="text-[10px] text-[var(--text-muted)] mt-1 text-right">{fmtTime(openTicket.replied_at)}</p>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {messages.map((msg) => {
+                const isAdmin = msg.sender_type === "admin";
+                const label   = isAdmin ? "You" : name;
+                return (
+                  <div key={msg.id} className={`flex ${isAdmin ? "justify-end" : "justify-start"}`}>
+                    <div className="max-w-[82%] sm:max-w-[70%]">
+                      <p className={`text-xs text-[var(--text-muted)] mb-1 ${isAdmin ? "text-right mr-1" : "ml-1"}`}>{label}</p>
+                      <div className={`px-4 py-2.5 rounded-2xl ${
+                        isAdmin
+                          ? "bg-[var(--brand-500)] text-white rounded-tr-sm"
+                          : "bg-[var(--surface-card)] border border-[var(--border-default)] text-[var(--text-primary)] rounded-tl-sm"
+                      }`}>
+                        <p className="text-sm whitespace-pre-wrap leading-relaxed">{msg.message}</p>
+                      </div>
+                      <p className={`text-[10px] text-[var(--text-muted)] mt-1 ${isAdmin ? "text-right" : "text-left"}`}>
+                        {fmtTime(msg.created_at)}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
+            </>
+          )}
+
+          {isClosed && (
+            <p className="text-xs text-center text-[var(--text-muted)] py-2">— Ticket closed —</p>
+          )}
+          <div ref={msgEndRef} />
+        </div>
+
+        {/* Reply input + actions */}
+        {!isClosed && (
+          <div className="border-t border-[var(--border-default)] px-4 py-3 bg-[var(--surface-card)] flex-shrink-0 space-y-2">
+            <div className="flex gap-2 items-end">
+              <textarea
+                rows={2}
+                value={replyText}
+                onChange={(e) => setReplyText(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
+                placeholder="Reply to contributor… (Enter to send)"
+                className="flex-1 resize-none px-3 py-2.5 rounded-xl border border-[var(--border-default)] bg-[var(--surface-subtle)] text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--border-focus)]"
+              />
+              <Button
+                size="sm" className="flex-shrink-0 h-10 w-10 p-0"
+                disabled={!replyText.trim() || sending} onClick={() => handleSend()}
+              >
+                {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+              </Button>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                size="sm" variant="ghost"
+                className="text-[var(--text-muted)] hover:text-[var(--text-primary)] text-xs"
+                disabled={sending} onClick={() => handleSend(true)}
+              >
+                <CheckCircle2 className="h-3.5 w-3.5" />
+                {replyText.trim() ? "Send & Close" : "Close Ticket"}
+              </Button>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // ── Ticket list view ─────────────────────────────────────────────────
   return (
     <div className="space-y-6">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-[var(--text-primary)]">Support Tickets</h1>
-          <p className="text-sm text-[var(--text-secondary)]">
-            {counts.open} open · {counts.replied} replied · {counts.closed} closed
-          </p>
-        </div>
+      <div>
+        <h1 className="text-2xl font-bold text-[var(--text-primary)]">Support Tickets</h1>
+        <p className="text-sm text-[var(--text-secondary)]">
+          {counts.open} open · {counts.replied} replied · {counts.closed} closed
+        </p>
       </div>
 
       {/* Tabs */}
@@ -159,15 +331,13 @@ export default function AdminSupportPage() {
       <div className="flex items-center gap-2 h-9 px-3 rounded-md border border-[var(--border-default)] bg-[var(--surface-card)] max-w-sm">
         <Search className="h-4 w-4 text-[var(--text-muted)] flex-shrink-0" />
         <input
-          type="text"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          type="text" value={search} onChange={(e) => setSearch(e.target.value)}
           placeholder="Search contributor or subject…"
           className="flex-1 bg-transparent text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none"
         />
       </div>
 
-      {/* Ticket list */}
+      {/* List */}
       {loading ? (
         <div className="space-y-3">
           {[1, 2, 3].map((i) => (
@@ -181,20 +351,16 @@ export default function AdminSupportPage() {
           {search && <p className="text-sm text-[var(--text-secondary)]">No results for &quot;{search}&quot;</p>}
         </div>
       ) : (
-        <ul className="space-y-3">
+        <ul className="space-y-2">
           {filtered.map((t) => {
-            const st        = STATUS_META[t.status] ?? STATUS_META.open;
-            const isOpen    = expanded === t.id;
-            const name      = (t.profiles as { full_name: string | null } | null)?.full_name ?? "Unknown";
-            const email     = (t.profiles as { email: string | null } | null)?.email ?? "—";
-            const replyText = replies[t.id] ?? "";
-
+            const st    = STATUS_META[t.status] ?? STATUS_META.open;
+            const name  = (t.profiles as { full_name: string | null } | null)?.full_name ?? "Unknown";
+            const email = (t.profiles as { email: string | null } | null)?.email ?? "—";
             return (
-              <li key={t.id} className="rounded-lg border border-[var(--border-default)] bg-[var(--surface-card)] overflow-hidden">
-                {/* Row */}
+              <li key={t.id}>
                 <button
-                  className="w-full px-5 py-4 flex items-center gap-4 text-left hover:bg-[var(--surface-subtle)] transition-colors"
-                  onClick={() => setExpanded(isOpen ? null : t.id)}
+                  className="w-full rounded-lg border border-[var(--border-default)] bg-[var(--surface-card)] px-5 py-4 flex items-center gap-4 text-left hover:bg-[var(--surface-subtle)] transition-colors"
+                  onClick={() => setOpenTicket(t)}
                 >
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-semibold text-[var(--text-primary)] truncate">{t.subject}</p>
@@ -203,84 +369,8 @@ export default function AdminSupportPage() {
                       {new Date(t.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
                     </p>
                   </div>
-                  <div className="flex items-center gap-3 flex-shrink-0">
-                    <Badge variant={st.variant}>{st.label}</Badge>
-                    {isOpen
-                      ? <ChevronUp className="h-4 w-4 text-[var(--text-muted)]" />
-                      : <ChevronDown className="h-4 w-4 text-[var(--text-muted)]" />}
-                  </div>
+                  <Badge variant={st.variant}>{st.label}</Badge>
                 </button>
-
-                {/* Expanded detail */}
-                {isOpen && (
-                  <div className="border-t border-[var(--border-default)] px-5 pb-5 pt-4 space-y-5">
-                    {/* Contributor message */}
-                    <div>
-                      <p className="text-xs font-medium text-[var(--text-secondary)] uppercase tracking-wider mb-2">Message</p>
-                      <p className="text-sm text-[var(--text-primary)] whitespace-pre-wrap bg-[var(--surface-subtle)] rounded-lg px-4 py-3 leading-relaxed">
-                        {t.message}
-                      </p>
-                    </div>
-
-                    {/* Existing reply */}
-                    {t.admin_reply && (
-                      <div>
-                        <p className="text-xs font-medium text-green-400 uppercase tracking-wider mb-2">
-                          Your Reply {t.replied_at && `· ${new Date(t.replied_at).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}`}
-                        </p>
-                        <p className="text-sm text-[var(--text-primary)] whitespace-pre-wrap bg-green-500/5 border border-green-500/20 rounded-lg px-4 py-3 leading-relaxed">
-                          {t.admin_reply}
-                        </p>
-                      </div>
-                    )}
-
-                    {/* Reply / close actions */}
-                    {t.status !== "closed" && (
-                      <div className="space-y-3">
-                        <div>
-                          <label className="block text-xs font-medium text-[var(--text-secondary)] uppercase tracking-wider mb-2">
-                            {t.admin_reply ? "Update Reply" : "Reply to Contributor"}
-                          </label>
-                          <textarea
-                            rows={3}
-                            value={replyText}
-                            onChange={(e) => setReplies((prev) => ({ ...prev, [t.id]: e.target.value }))}
-                            placeholder="Type your reply…"
-                            className="w-full px-3 py-2.5 rounded-lg border border-[var(--border-default)] bg-[var(--surface-subtle)] text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--border-focus)] resize-none"
-                          />
-                        </div>
-                        <div className="flex items-center gap-3 flex-wrap">
-                          <Button
-                            size="sm"
-                            disabled={!replyText.trim() || acting === t.id}
-                            onClick={() => callApi(t.id, replyText.trim())}
-                          >
-                            {acting === t.id
-                              ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                              : <Send className="h-3.5 w-3.5" />}
-                            {t.admin_reply ? "Update Reply" : "Send Reply"}
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="text-[var(--text-muted)] hover:text-[var(--text-primary)]"
-                            disabled={acting === t.id}
-                            onClick={() => callApi(t.id, replyText.trim() || undefined, true)}
-                          >
-                            <X className="h-3.5 w-3.5" /> Close Ticket
-                          </Button>
-                        </div>
-                      </div>
-                    )}
-
-                    {t.status === "closed" && (
-                      <div className="flex items-center gap-2 text-xs text-[var(--text-muted)]">
-                        <CheckCircle2 className="h-4 w-4 text-[var(--text-muted)]" />
-                        Ticket closed · {new Date(t.updated_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
-                      </div>
-                    )}
-                  </div>
-                )}
               </li>
             );
           })}
