@@ -246,3 +246,136 @@ GRANT ALL ON public.profiles TO authenticated, service_role;
 
 -- ── 7. Grant admin role (run manually after creating the user) ─
 -- UPDATE profiles SET role = 'admin' WHERE email = 'your@email.com';
+
+-- ── 8. Assignments table ─────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS assignments (
+  id              UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  task_id         UUID REFERENCES tasks(id)    ON DELETE CASCADE,
+  contributor_id  UUID REFERENCES profiles(id) ON DELETE CASCADE,
+  submission_type TEXT,            -- 'quiz' | 'file'
+  answers         JSONB,           -- { "answer": "..." }
+  file_url        TEXT,
+  status          TEXT DEFAULT 'pending',  -- 'pending' | 'approved' | 'rejected'
+  feedback        TEXT,
+  reviewed_by     UUID REFERENCES profiles(id),
+  submitted_at    TIMESTAMPTZ DEFAULT NOW(),
+  reviewed_at     TIMESTAMPTZ
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS assignments_unique_contributor_task
+  ON assignments(task_id, contributor_id);
+
+ALTER TABLE assignments ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view own assignments"
+  ON assignments FOR SELECT USING (auth.uid() = contributor_id);
+CREATE POLICY "Users can insert own assignment"
+  ON assignments FOR INSERT WITH CHECK (auth.uid() = contributor_id);
+CREATE POLICY "Users can update own assignment"
+  ON assignments FOR UPDATE USING (auth.uid() = contributor_id);
+CREATE POLICY "Admins can manage all assignments"
+  ON assignments FOR ALL
+  USING (EXISTS (SELECT 1 FROM profiles p WHERE p.id = auth.uid() AND p.role = 'admin'));
+
+GRANT ALL ON public.assignments TO authenticated, service_role;
+
+-- ── 9. Submissions table (full version) ──────────────────────────
+CREATE TABLE IF NOT EXISTS submissions (
+  id              UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  task_id         UUID REFERENCES tasks(id)    ON DELETE CASCADE,
+  contributor_id  UUID REFERENCES profiles(id) ON DELETE CASCADE,
+  files           JSONB,
+  notes           TEXT,
+  status          TEXT DEFAULT 'in_progress',  -- 'in_progress' | 'submitted' | 'approved' | 'rejected'
+  coins_awarded   INTEGER,
+  feedback        TEXT,
+  reviewed_by     UUID REFERENCES profiles(id),
+  submitted_at    TIMESTAMPTZ DEFAULT NOW(),
+  reviewed_at     TIMESTAMPTZ
+);
+
+-- Add columns if table already exists with minimal schema
+ALTER TABLE submissions ADD COLUMN IF NOT EXISTS files          JSONB;
+ALTER TABLE submissions ADD COLUMN IF NOT EXISTS notes          TEXT;
+ALTER TABLE submissions ADD COLUMN IF NOT EXISTS coins_awarded  INTEGER;
+ALTER TABLE submissions ADD COLUMN IF NOT EXISTS feedback       TEXT;
+ALTER TABLE submissions ADD COLUMN IF NOT EXISTS reviewed_by    UUID REFERENCES profiles(id);
+ALTER TABLE submissions ADD COLUMN IF NOT EXISTS submitted_at   TIMESTAMPTZ DEFAULT NOW();
+ALTER TABLE submissions ADD COLUMN IF NOT EXISTS reviewed_at    TIMESTAMPTZ;
+
+CREATE UNIQUE INDEX IF NOT EXISTS submissions_unique_contributor_task
+  ON submissions(task_id, contributor_id);
+
+ALTER TABLE submissions ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view own submissions"
+  ON submissions FOR SELECT USING (auth.uid() = contributor_id);
+CREATE POLICY "Users can insert own submission"
+  ON submissions FOR INSERT WITH CHECK (auth.uid() = contributor_id);
+CREATE POLICY "Users can update own submission"
+  ON submissions FOR UPDATE USING (auth.uid() = contributor_id);
+CREATE POLICY "Admins can manage all submissions"
+  ON submissions FOR ALL
+  USING (EXISTS (SELECT 1 FROM profiles p WHERE p.id = auth.uid() AND p.role = 'admin'));
+
+GRANT ALL ON public.submissions TO authenticated, service_role;
+
+-- ── 10. Notifications table ───────────────────────────────────────
+CREATE TABLE IF NOT EXISTS notifications (
+  id          UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id     UUID REFERENCES profiles(id) ON DELETE CASCADE,
+  title       TEXT NOT NULL,
+  message     TEXT,
+  type        TEXT,   -- 'assignment_approved' | 'assignment_rejected' | 'submission_approved' | 'submission_rejected' | 'voucher_delivered' | 'new_task' | 'announcement'
+  is_read     BOOLEAN DEFAULT false,
+  created_at  TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view own notifications"
+  ON notifications FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users can update own notifications"
+  ON notifications FOR UPDATE USING (auth.uid() = user_id);
+CREATE POLICY "Service role can insert notifications"
+  ON notifications FOR INSERT WITH CHECK (true);
+
+GRANT ALL ON public.notifications TO authenticated, service_role;
+
+-- ── 11. Announcements table ───────────────────────────────────────
+CREATE TABLE IF NOT EXISTS announcements (
+  id          UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  title       TEXT NOT NULL,
+  message     TEXT NOT NULL,
+  target      TEXT DEFAULT 'all',   -- 'all' | 'active' | 'new'
+  created_by  UUID REFERENCES profiles(id),
+  created_at  TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE announcements ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Authenticated users can view announcements"
+  ON announcements FOR SELECT USING (auth.role() = 'authenticated');
+CREATE POLICY "Admins can manage announcements"
+  ON announcements FOR ALL
+  USING (EXISTS (SELECT 1 FROM profiles p WHERE p.id = auth.uid() AND p.role = 'admin'));
+
+GRANT ALL ON public.announcements TO authenticated, service_role;
+
+-- ── 12. Admin policies for cross-user operations ──────────────────
+-- Allows admins to update any profile (for crediting coins on approval)
+CREATE POLICY "Admins can update all profiles"
+  ON profiles FOR UPDATE
+  USING (EXISTS (SELECT 1 FROM profiles p WHERE p.id = auth.uid() AND p.role = 'admin'));
+
+-- Allows admins to insert coin transactions on behalf of contributors
+CREATE POLICY "Admins can insert coin transactions"
+  ON coin_transactions FOR INSERT
+  WITH CHECK (EXISTS (SELECT 1 FROM profiles p WHERE p.id = auth.uid() AND p.role = 'admin'));
+
+-- ── 13. Storage buckets (run in Supabase Dashboard → Storage) ────
+-- Create bucket "submissions" — public read, authenticated write
+-- Create bucket "assignments" — public read, authenticated write
+-- Or run via SQL:
+-- INSERT INTO storage.buckets (id, name, public) VALUES ('submissions', 'submissions', true) ON CONFLICT DO NOTHING;
+-- INSERT INTO storage.buckets (id, name, public) VALUES ('assignments', 'assignments', true) ON CONFLICT DO NOTHING;

@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import {
   LayoutDashboard, Users, FolderOpen,
   ClipboardCheck, Layers, Gift, BarChart3,
-  Settings, LogOut, ClipboardList,
+  Settings, LogOut, ClipboardList, GraduationCap, Megaphone,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { NexGuildLogo } from "@/components/ui/nexguild-logo";
@@ -14,19 +14,21 @@ import { supabase } from "@/lib/supabase";
 
 export function AdminSidebar() {
   const pathname = usePathname();
-  const [submissionCount, setSubmissionCount] = useState(0);
-  const [withdrawalCount, setWithdrawalCount] = useState(0);
+  const [submissionCount, setSubmissionCount]   = useState(0);
+  const [withdrawalCount, setWithdrawalCount]   = useState(0);
+  const [assignmentCount, setAssignmentCount]   = useState(0);
 
   useEffect(() => {
     async function fetchCounts() {
       try {
-        const [{ count: wdCount }] = await Promise.all([
-          supabase
-            .from("voucher_requests")
-            .select("*", { count: "exact", head: true })
-            .eq("status", "pending"),
+        const [{ count: wdCount }, { count: subCount }, { count: asnCount }] = await Promise.all([
+          supabase.from("voucher_requests").select("*", { count: "exact", head: true }).eq("status", "pending"),
+          supabase.from("submissions").select("*", { count: "exact", head: true }).eq("status", "submitted"),
+          supabase.from("assignments").select("*", { count: "exact", head: true }).eq("status", "pending"),
         ]);
         setWithdrawalCount(wdCount ?? 0);
+        setSubmissionCount(subCount ?? 0);
+        setAssignmentCount(asnCount ?? 0);
       } catch {
         // silently keep counts at 0 if queries fail
       }
@@ -38,10 +40,12 @@ export function AdminSidebar() {
     { label: "Overview",      href: "/admin",                icon: LayoutDashboard, badge: 0 },
     { label: "Contributors",  href: "/admin/contributors",   icon: Users,           badge: 0 },
     { label: "Tasks",         href: "/admin/tasks",          icon: ClipboardList,   badge: 0 },
-    { label: "Projects",      href: "/admin/projects",       icon: FolderOpen,      badge: 0 },
+    { label: "Projects",       href: "/admin/projects",       icon: FolderOpen,      badge: 0 },
     { label: "Submissions",   href: "/admin/submissions",    icon: ClipboardCheck,  badge: submissionCount },
+    { label: "Assignments",   href: "/admin/assignments",    icon: GraduationCap,   badge: assignmentCount },
     { label: "Offerwalls",    href: "/admin/offerwalls",     icon: Layers,          badge: 0 },
     { label: "Vouchers",      href: "/admin/vouchers",       icon: Gift,            badge: withdrawalCount },
+    { label: "Announcements", href: "/admin/announcements",  icon: Megaphone,       badge: 0 },
     { label: "Finances",      href: "/admin/finances",       icon: BarChart3,       badge: 0 },
     { label: "Settings",      href: "/admin/settings",       icon: Settings,        badge: 0 },
   ];

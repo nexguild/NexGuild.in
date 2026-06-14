@@ -21,7 +21,8 @@
       "Bash(dir /s /b src)",
       "Bash(powershell -Command \"Get-ChildItem -Recurse -Path 'c:\\\\Users\\\\somen\\\\NexGuild.in\\\\src' | Select-Object FullName\")",
       "PowerShell(cd \"c:\\\\Users\\\\somen\\\\NexGuild.in\"; git add src/app/dashboard/page.tsx src/app/dashboard/wallet/page.tsx src/app/dashboard/store/page.tsx src/app/dashboard/earnings/page.tsx src/app/layout.tsx src/app/api/contact/route.ts src/components/ui/contact-form.tsx src/components/ui/ad-banner.tsx public/robots.txt public/sitemap.xml src/app/\\(gold\\)/about/page.tsx src/app/\\(gold\\)/contact/page.tsx src/app/\\(teal\\)/opportunities/page.tsx src/app/\\(teal\\)/how-it-works/page.tsx src/app/\\(teal\\)/earn/page.tsx package.json package-lock.json; git status)",
-      "Bash(git commit *)"
+      "Bash(git commit *)",
+      "Bash(npm run *)"
     ]
   }
 }

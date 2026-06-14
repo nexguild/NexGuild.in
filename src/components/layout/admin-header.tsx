@@ -5,14 +5,19 @@ import { Avatar } from "@/components/ui/avatar";
 import { usePathname } from "next/navigation";
 
 const BREADCRUMBS: Record<string, string[]> = {
-  "/admin":                 ["Overview"],
-  "/admin/contributors":    ["Contributors"],
-  "/admin/projects":        ["Projects"],
-  "/admin/submissions":     ["Submissions"],
-  "/admin/offerwalls":      ["Offerwalls"],
-  "/admin/withdrawals":     ["Withdrawals"],
-  "/admin/finances":        ["Finances"],
-  "/admin/settings":        ["Settings"],
+  "/admin":                   ["Overview"],
+  "/admin/contributors":      ["Contributors"],
+  "/admin/tasks":             ["Tasks"],
+  "/admin/tasks/new":         ["Tasks", "New Task"],
+  "/admin/projects":          ["Projects"],
+  "/admin/submissions":       ["Submissions"],
+  "/admin/assignments":       ["Assignments"],
+  "/admin/offerwalls":        ["Offerwalls"],
+  "/admin/withdrawals":       ["Withdrawals"],
+  "/admin/vouchers":          ["Vouchers"],
+  "/admin/announcements":     ["Announcements"],
+  "/admin/finances":          ["Finances"],
+  "/admin/settings":          ["Settings"],
 };
 
 export function AdminHeader() {
