@@ -469,7 +469,19 @@ CREATE POLICY "Service role manages messages"
 GRANT ALL ON ticket_messages TO authenticated;
 GRANT ALL ON ticket_messages TO service_role;
 
--- ── 17. Storage buckets (run in Supabase Dashboard → Storage) ────
+-- ── 18. Enable Realtime for notifications + ticket_messages ─────────
+-- REPLICA IDENTITY FULL makes Supabase send the full row (old + new) in
+-- change events — required for UPDATE and DELETE subscriptions with filters.
+-- Adding to supabase_realtime publication is what actually enables the feed;
+-- the client-side eventsPerSecond option only controls rate-limiting.
+
+ALTER TABLE notifications    REPLICA IDENTITY FULL;
+ALTER TABLE ticket_messages  REPLICA IDENTITY FULL;
+
+ALTER PUBLICATION supabase_realtime ADD TABLE notifications;
+ALTER PUBLICATION supabase_realtime ADD TABLE ticket_messages;
+
+-- ── 19. Storage buckets (run in Supabase Dashboard → Storage) ────
 -- Create bucket "submissions" — public read, authenticated write
 -- Create bucket "assignments" — public read, authenticated write
 -- Or run via SQL:
