@@ -3,16 +3,16 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  LayoutDashboard, Search, ClipboardList, Wallet, MoreHorizontal,
+  LayoutDashboard, Search, ClipboardList, ShoppingBag, MoreHorizontal,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const TABS = [
-  { label: "Home",         href: "/dashboard",              icon: LayoutDashboard },
-  { label: "Opportunities",href: "/dashboard/opportunities",icon: Search },
-  { label: "Tasks",        href: "/dashboard/tasks",        icon: ClipboardList },
-  { label: "Wallet",       href: "/dashboard/wallet",       icon: Wallet },
-  { label: "More",         href: "/dashboard/profile",      icon: MoreHorizontal },
+  { label: "Home",          href: "/dashboard",               icon: LayoutDashboard },
+  { label: "Opportunities", href: "/dashboard/opportunities",  icon: Search },
+  { label: "Tasks",         href: "/dashboard/tasks",          icon: ClipboardList },
+  { label: "Store",         href: "/dashboard/store",          icon: ShoppingBag },
+  { label: "More",          href: "/dashboard/profile",        icon: MoreHorizontal },
 ];
 
 export function DashboardMobileNav() {

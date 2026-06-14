@@ -4,7 +4,16 @@ import { Button } from "@/components/ui/button";
 import { FadeIn } from "@/components/ui/fade-in";
 import { Lock, ArrowRight } from "lucide-react";
 
-export const metadata: Metadata = { title: "Opportunities — NexGuild" };
+export const metadata: Metadata = {
+  title: "Earning Opportunities — NexGuild",
+  description:
+    "Browse available micro-task categories on NexGuild: audio recording, transcription, image labeling, surveys, and more. Earn NexCoins from home.",
+  openGraph: {
+    title: "Earning Opportunities on NexGuild",
+    description: "Browse micro-task categories and start earning NexCoins from home.",
+    url: "https://nexguild.in/opportunities",
+  },
+};
 
 const CATEGORIES = [
   { icon: "🎙️", label: "Audio Recording",    desc: "Record voice samples and audio prompts for AI training." },
@@ -68,6 +77,16 @@ export default function OpportunitiesPage() {
                 </div>
               </FadeIn>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Ad Banner — replace div with AdBanner component once Adsterra key is ready */}
+      <section className="bg-[var(--surface-page)] py-6 px-6">
+        <div className="mx-auto max-w-container flex justify-center">
+          {/* <AdBanner atKey="YOUR_KEY_HERE" width={728} height={90} /> */}
+          <div className="w-full max-w-[728px] h-[90px] rounded-lg border border-dashed border-[var(--border-default)] bg-[var(--surface-subtle)] flex items-center justify-center">
+            <span className="text-xs text-[var(--text-muted)] uppercase tracking-widest">Advertisement</span>
           </div>
         </div>
       </section>

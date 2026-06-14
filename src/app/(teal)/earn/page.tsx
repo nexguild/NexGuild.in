@@ -192,6 +192,16 @@ export default function EarnPage() {
         </div>
       </section>
 
+      {/* Ad Banner — replace div with AdBanner component once Adsterra key is ready */}
+      <section className="py-6 px-6">
+        <div className="mx-auto max-w-container flex justify-center">
+          {/* <AdBanner atKey="YOUR_KEY_HERE" width={728} height={90} /> */}
+          <div className="w-full max-w-[728px] h-[90px] rounded-lg border border-dashed border-[var(--border-default)] bg-[var(--surface-subtle)] flex items-center justify-center">
+            <span className="text-xs text-white/30 uppercase tracking-widest">Advertisement</span>
+          </div>
+        </div>
+      </section>
+
       {/* ── How It Works ─────────────────────────────────────────── */}
       <section className="py-24 px-6 bg-[var(--surface-subtle)]">
         <div className="mx-auto max-w-container">

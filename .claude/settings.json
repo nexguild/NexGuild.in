@@ -7,7 +7,20 @@
       "Bash(rm -f \"src/app/\\(public\\)/contact/page.tsx\")",
       "Bash(rm -f \"src/app/\\(public\\)/earn/page.tsx\")",
       "PowerShell(cd \"C:\\\\Users\\\\somen\\\\NexGuild.in\"; git add src/app/page.tsx src/app/\\(gold\\)/client/ src/app/\\(gold\\)/services/ src/app/\\(gold\\)/layout.tsx src/app/\\(gold\\)/contact/page.tsx src/app/\\(teal\\)/earn/page.tsx src/app/\\(teal\\)/how-it-works/page.tsx src/app/\\(teal\\)/layout.tsx src/app/\\(teal\\)/opportunities/page.tsx src/app/\\(teal\\)/faq/ src/app/globals.css src/app/\\(auth\\)/signup/page.tsx src/app/dashboard/page.tsx src/app/dashboard/tasks/ src/app/admin/announcements/ src/app/admin/assignments/ src/app/admin/tasks/ src/components/layout/client-header.tsx src/components/layout/contributor-header.tsx src/components/layout/public-footer.tsx; git status --short)",
-      "Bash(git commit -m ' *)"
+      "Bash(git commit -m ' *)",
+      "Bash(git -C \"c:/Users/somen/NexGuild.in\" push)",
+      "Bash(git -C \"c:/Users/somen/NexGuild.in\" add src/app/\\\\\\(teal\\\\\\)/earn/page.tsx)",
+      "Bash(git -C c:/Users/somen/NexGuild.in commit -m ' *)",
+      "Bash(npm install *)",
+      "Bash(node -e \"require\\('@supabase/supabase-js'\\); console.log\\('ok'\\)\")",
+      "PowerShell(Get-NetTCPConnection -LocalPort 5000 -ErrorAction SilentlyContinue | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force -ErrorAction SilentlyContinue }; Write-Host \"Done\")",
+      "PowerShell(Get-NetTCPConnection -LocalPort 5000 -ErrorAction SilentlyContinue | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force -ErrorAction SilentlyContinue }; Write-Host \"Killed\")",
+      "Skill(run)",
+      "Skill(run:*)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:5000/)",
+      "Bash(dir /s /b src)",
+      "Bash(powershell -Command \"Get-ChildItem -Recurse -Path 'c:\\\\Users\\\\somen\\\\NexGuild.in\\\\src' | Select-Object FullName\")",
+      "PowerShell(cd \"c:\\\\Users\\\\somen\\\\NexGuild.in\"; git add src/app/dashboard/page.tsx src/app/dashboard/wallet/page.tsx src/app/dashboard/store/page.tsx src/app/dashboard/earnings/page.tsx src/app/layout.tsx src/app/api/contact/route.ts src/components/ui/contact-form.tsx src/components/ui/ad-banner.tsx public/robots.txt public/sitemap.xml src/app/\\(gold\\)/about/page.tsx src/app/\\(gold\\)/contact/page.tsx src/app/\\(teal\\)/opportunities/page.tsx src/app/\\(teal\\)/how-it-works/page.tsx src/app/\\(teal\\)/earn/page.tsx package.json package-lock.json; git status)"
     ]
   }
 }

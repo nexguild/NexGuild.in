@@ -1,22 +1,18 @@
 import type { Metadata } from "next";
-import { Button } from "@/components/ui/button";
 import { FadeIn } from "@/components/ui/fade-in";
 import { Mail, Clock, MessageCircle, Linkedin, Send } from "lucide-react";
+import { ContactForm } from "@/components/ui/contact-form";
 
-export const metadata: Metadata = { title: "Contact — NexGuild" };
-
-const PROJECT_TYPES = [
-  "Audio Recording",
-  "Transcription",
-  "Data Annotation",
-  "App Testing",
-  "Game Testing",
-  "Surveys",
-  "Social Media Tasks",
-  "Web Research",
-  "Data Collection",
-  "Other",
-];
+export const metadata: Metadata = {
+  title: "Contact NexGuild — Get in Touch",
+  description:
+    "Contact NexGuild for project inquiries, partnership opportunities, or contributor support. Reach us via email, Telegram, or LinkedIn.",
+  openGraph: {
+    title: "Contact NexGuild",
+    description: "Reach us for project inquiries, partnerships, or contributor support.",
+    url: "https://nexguild.in/contact",
+  },
+};
 
 export default function ContactPage() {
   return (
@@ -44,72 +40,7 @@ export default function ContactPage() {
             <div className="lg:col-span-2">
               <FadeIn>
                 <h2 className="text-xl font-semibold text-white mb-6">Send a Message</h2>
-                <form className="space-y-5">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                    <div>
-                      <label className="block text-sm font-medium text-[var(--text-secondary)] mb-1.5">
-                        Full Name <span className="text-[var(--danger-text)]">*</span>
-                      </label>
-                      <input
-                        type="text"
-                        required
-                        placeholder="Your name"
-                        className="w-full h-10 px-3 rounded-lg border border-[var(--border-default)] bg-[var(--surface-subtle)] text-white text-sm placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-500)] focus:border-transparent transition-colors"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-[var(--text-secondary)] mb-1.5">
-                        Email <span className="text-[var(--danger-text)]">*</span>
-                      </label>
-                      <input
-                        type="email"
-                        required
-                        placeholder="you@example.com"
-                        className="w-full h-10 px-3 rounded-lg border border-[var(--border-default)] bg-[var(--surface-subtle)] text-white text-sm placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-500)] focus:border-transparent transition-colors"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-[var(--text-secondary)] mb-1.5">
-                      Organization / Company <span className="text-[var(--text-muted)] font-normal">(optional)</span>
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="Your organization name"
-                      className="w-full h-10 px-3 rounded-lg border border-[var(--border-default)] bg-[var(--surface-subtle)] text-white text-sm placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-500)] focus:border-transparent transition-colors"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-[var(--text-secondary)] mb-1.5">
-                      Project Type <span className="text-[var(--danger-text)]">*</span>
-                    </label>
-                    <select
-                      required
-                      className="w-full h-10 px-3 rounded-lg border border-[var(--border-default)] bg-[var(--surface-subtle)] text-white text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand-500)] focus:border-transparent transition-colors"
-                    >
-                      <option value="">Select a project type</option>
-                      {PROJECT_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-[var(--text-secondary)] mb-1.5">
-                      Message <span className="text-[var(--danger-text)]">*</span>
-                    </label>
-                    <textarea
-                      required
-                      rows={5}
-                      placeholder="Describe your project — task type, approximate volume, deadline, and any special requirements..."
-                      className="w-full px-3 py-2.5 rounded-lg border border-[var(--border-default)] bg-[var(--surface-subtle)] text-white text-sm placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-500)] focus:border-transparent transition-colors resize-y"
-                    />
-                  </div>
-
-                  <Button type="submit" size="lg" className="w-full sm:w-auto">
-                    Send Message
-                  </Button>
-                </form>
+                <ContactForm />
               </FadeIn>
             </div>
 

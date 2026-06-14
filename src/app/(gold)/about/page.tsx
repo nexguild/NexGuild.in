@@ -1,7 +1,16 @@
 import type { Metadata } from "next";
 import { FadeIn } from "@/components/ui/fade-in";
 
-export const metadata: Metadata = { title: "About" };
+export const metadata: Metadata = {
+  title: "About NexGuild — Digital Workforce Community",
+  description:
+    "Learn about NexGuild — our mission, values, and how we connect skilled contributors with clients who need real work done. No fake testimonials, no inflated stats.",
+  openGraph: {
+    title: "About NexGuild",
+    description: "Our mission, values, and how we connect skilled contributors with clients.",
+    url: "https://nexguild.in/about",
+  },
+};
 
 const DIFFERENTIATORS = [
   {

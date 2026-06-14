@@ -3,7 +3,16 @@ import Link from "next/link";
 import { FadeIn } from "@/components/ui/fade-in";
 import { ChevronDown } from "lucide-react";
 
-export const metadata: Metadata = { title: "How It Works — NexGuild Contributors" };
+export const metadata: Metadata = {
+  title: "How It Works — NexGuild",
+  description:
+    "Learn how NexGuild works: sign up free, pick tasks, complete them from home, earn NexCoins, and redeem for Amazon, Flipkart, Paytm vouchers.",
+  openGraph: {
+    title: "How NexGuild Works",
+    description: "Sign up, complete tasks, earn NexCoins, redeem for vouchers.",
+    url: "https://nexguild.in/how-it-works",
+  },
+};
 
 const STEPS = [
   {

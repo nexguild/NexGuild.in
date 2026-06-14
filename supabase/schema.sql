@@ -180,5 +180,60 @@ CREATE OR REPLACE TRIGGER on_auth_user_created
   FOR EACH ROW
   EXECUTE FUNCTION public.handle_new_user();
 
--- ── 5. Grant admin role (run manually after creating the user) ─
+-- ── 5. NexCoins system ────────────────────────────────────────
+-- Run these in Supabase SQL Editor to add the NexCoins system.
+
+-- Add nexcoins balance to profiles
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS nexcoins INTEGER DEFAULT 0;
+
+-- Coin transaction ledger
+CREATE TABLE IF NOT EXISTS coin_transactions (
+  id             UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  contributor_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
+  amount         INTEGER NOT NULL,
+  type           TEXT NOT NULL,   -- 'earned' | 'redeemed'
+  source         TEXT,            -- 'task' | 'offerwall' | 'bonus'
+  description    TEXT,
+  created_at     TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Voucher redemption requests
+CREATE TABLE IF NOT EXISTS voucher_requests (
+  id             UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  contributor_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
+  voucher_type   TEXT NOT NULL,
+  voucher_value  INTEGER,
+  coins_spent    INTEGER NOT NULL,
+  status         TEXT DEFAULT 'pending',  -- 'pending' | 'processing' | 'delivered'
+  voucher_code   TEXT,
+  requested_at   TIMESTAMPTZ DEFAULT NOW(),
+  delivered_at   TIMESTAMPTZ
+);
+
+-- RLS
+ALTER TABLE coin_transactions  ENABLE ROW LEVEL SECURITY;
+ALTER TABLE voucher_requests   ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view own coin transactions"
+  ON coin_transactions FOR SELECT USING (auth.uid() = contributor_id);
+
+CREATE POLICY "Admins can manage coin transactions"
+  ON coin_transactions FOR ALL
+  USING (EXISTS (SELECT 1 FROM profiles p WHERE p.id = auth.uid() AND p.role = 'admin'));
+
+CREATE POLICY "Users can view own voucher requests"
+  ON voucher_requests FOR SELECT USING (auth.uid() = contributor_id);
+
+CREATE POLICY "Users can insert own voucher request"
+  ON voucher_requests FOR INSERT WITH CHECK (auth.uid() = contributor_id);
+
+CREATE POLICY "Admins can manage voucher requests"
+  ON voucher_requests FOR ALL
+  USING (EXISTS (SELECT 1 FROM profiles p WHERE p.id = auth.uid() AND p.role = 'admin'));
+
+-- Grants
+GRANT ALL ON public.coin_transactions TO authenticated, service_role;
+GRANT ALL ON public.voucher_requests  TO authenticated, service_role;
+
+-- ── 6. Grant admin role (run manually after creating the user) ─
 -- UPDATE profiles SET role = 'admin' WHERE email = 'your@email.com';

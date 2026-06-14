@@ -4,18 +4,19 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard, Search, ClipboardList, Layers,
-  TrendingUp, Wallet, User, Settings, LogOut,
+  TrendingUp, ShoppingBag, User, Settings, LogOut,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { NexGuildLogo } from "@/components/ui/nexguild-logo";
+import { supabase } from "@/lib/supabase";
 
 const NAV_ITEMS = [
-  { label: "Dashboard",      href: "/dashboard",              icon: LayoutDashboard },
-  { label: "Opportunities",  href: "/dashboard/opportunities",icon: Search },
-  { label: "My Tasks",       href: "/dashboard/tasks",        icon: ClipboardList },
-  { label: "Offerwall Hub",  href: "/dashboard/offerwalls",   icon: Layers },
-  { label: "Earnings",       href: "/dashboard/earnings",     icon: TrendingUp },
-  { label: "Wallet",         href: "/dashboard/wallet",       icon: Wallet },
+  { label: "Dashboard",      href: "/dashboard",               icon: LayoutDashboard },
+  { label: "Opportunities",  href: "/dashboard/opportunities",  icon: Search },
+  { label: "My Tasks",       href: "/dashboard/tasks",          icon: ClipboardList },
+  { label: "Offerwall Hub",  href: "/dashboard/offerwalls",     icon: Layers },
+  { label: "Earnings",       href: "/dashboard/earnings",       icon: TrendingUp },
+  { label: "Store",          href: "/dashboard/store",          icon: ShoppingBag },
 ];
 
 const ACCOUNT_ITEMS = [
@@ -91,7 +92,10 @@ export function DashboardSidebar() {
 
       {/* Log Out */}
       <div className="px-3 py-4 border-t border-[var(--border-default)]">
-        <button className="flex items-center gap-3 h-10 px-3 w-full rounded-md text-sm font-medium text-[var(--text-secondary)] hover:text-[var(--danger-text)] hover:bg-[rgba(239,68,68,0.08)] transition-colors">
+        <button
+          onClick={() => supabase.auth.signOut()}
+          className="flex items-center gap-3 h-10 px-3 w-full rounded-md text-sm font-medium text-[var(--text-secondary)] hover:text-[var(--danger-text)] hover:bg-[rgba(239,68,68,0.08)] transition-colors"
+        >
           <LogOut className="h-4 w-4 flex-shrink-0" />
           Log Out
         </button>

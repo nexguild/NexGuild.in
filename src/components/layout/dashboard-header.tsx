@@ -10,7 +10,8 @@ const PAGE_TITLES: Record<string, string> = {
   "/dashboard/tasks":         "My Tasks",
   "/dashboard/offerwalls":    "Offerwall Hub",
   "/dashboard/earnings":      "Earnings",
-  "/dashboard/wallet":        "Wallet",
+  "/dashboard/wallet":        "NexCoins",
+  "/dashboard/store":         "Store",
   "/dashboard/profile":       "Profile",
   "/dashboard/settings":      "Settings",
 };

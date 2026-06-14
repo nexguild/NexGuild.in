@@ -42,7 +42,7 @@ export function NexGuildLogo({
 
   // Detailed icon for landing/footer
   const DetailedIcon = () => (
-    <g transform="translate(32, 30)">
+    <g transform="translate(50, 30)">
       {/* Center person */}
       <circle cx="0" cy="0" r="13" fill="none" stroke={accent} strokeWidth="1.5"/>
       <circle cx="0" cy="-5" r="5.5" fill={accent}/>
@@ -150,7 +150,7 @@ export function NexGuildLogo({
       >
         <DetailedIcon />
         <text
-          x="80"
+          x="102"
           y="32"
           fontFamily="Arial, sans-serif"
           fontWeight="900"
@@ -161,9 +161,9 @@ export function NexGuildLogo({
         </text>
         {variant === "footer" && (
           <>
-            <line x1="80" y1="42" x2="230" y2="42" stroke={accent} strokeWidth="0.6" opacity="0.35"/>
+            <line x1="102" y1="42" x2="237" y2="42" stroke={accent} strokeWidth="0.6" opacity="0.35"/>
             <text
-              x="80"
+              x="102"
               y="56"
               fontFamily="Arial, sans-serif"
               fontWeight="300"

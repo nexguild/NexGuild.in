@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 import {
   LayoutDashboard, Users, Briefcase, FolderOpen,
   ClipboardCheck, Layers, ArrowDownCircle, BarChart3,
@@ -9,21 +10,41 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { NexGuildLogo } from "@/components/ui/nexguild-logo";
-
-const NAV_ITEMS = [
-  { label: "Overview",      href: "/admin",                icon: LayoutDashboard, badge: 0 },
-  { label: "Contributors",  href: "/admin/contributors",   icon: Users,           badge: 0 },
-  { label: "Opportunities", href: "/admin/opportunities",  icon: Briefcase,       badge: 0 },
-  { label: "Projects",      href: "/admin/projects",       icon: FolderOpen,      badge: 0 },
-  { label: "Submissions",   href: "/admin/submissions",    icon: ClipboardCheck,  badge: 12 },
-  { label: "Offerwalls",    href: "/admin/offerwalls",     icon: Layers,          badge: 0 },
-  { label: "Withdrawals",   href: "/admin/withdrawals",    icon: ArrowDownCircle, badge: 5 },
-  { label: "Finances",      href: "/admin/finances",       icon: BarChart3,       badge: 0 },
-  { label: "Settings",      href: "/admin/settings",       icon: Settings,        badge: 0 },
-];
+import { supabase } from "@/lib/supabase";
 
 export function AdminSidebar() {
   const pathname = usePathname();
+  const [submissionCount, setSubmissionCount] = useState(0);
+  const [withdrawalCount, setWithdrawalCount] = useState(0);
+
+  useEffect(() => {
+    async function fetchCounts() {
+      try {
+        const [{ count: wdCount }] = await Promise.all([
+          supabase
+            .from("voucher_requests")
+            .select("*", { count: "exact", head: true })
+            .eq("status", "pending"),
+        ]);
+        setWithdrawalCount(wdCount ?? 0);
+      } catch {
+        // silently keep counts at 0 if queries fail
+      }
+    }
+    fetchCounts();
+  }, []);
+
+  const NAV_ITEMS = [
+    { label: "Overview",      href: "/admin",                icon: LayoutDashboard, badge: 0 },
+    { label: "Contributors",  href: "/admin/contributors",   icon: Users,           badge: 0 },
+    { label: "Opportunities", href: "/admin/opportunities",  icon: Briefcase,       badge: 0 },
+    { label: "Projects",      href: "/admin/projects",       icon: FolderOpen,      badge: 0 },
+    { label: "Submissions",   href: "/admin/submissions",    icon: ClipboardCheck,  badge: submissionCount },
+    { label: "Offerwalls",    href: "/admin/offerwalls",     icon: Layers,          badge: 0 },
+    { label: "Withdrawals",   href: "/admin/withdrawals",    icon: ArrowDownCircle, badge: withdrawalCount },
+    { label: "Finances",      href: "/admin/finances",       icon: BarChart3,       badge: 0 },
+    { label: "Settings",      href: "/admin/settings",       icon: Settings,        badge: 0 },
+  ];
 
   function isActive(href: string) {
     if (href === "/admin") return pathname === "/admin";
@@ -70,7 +91,10 @@ export function AdminSidebar() {
 
       {/* Log Out */}
       <div className="px-3 py-4 border-t border-[rgba(255,255,255,0.06)]">
-        <button className="flex items-center gap-3 h-10 px-3 w-full rounded-md text-sm font-medium text-[var(--admin-sidebar-text)] hover:text-white hover:bg-[var(--admin-sidebar-item-hover)] transition-colors">
+        <button
+          onClick={() => supabase.auth.signOut()}
+          className="flex items-center gap-3 h-10 px-3 w-full rounded-md text-sm font-medium text-[var(--admin-sidebar-text)] hover:text-white hover:bg-[var(--admin-sidebar-item-hover)] transition-colors"
+        >
           <LogOut className="h-4 w-4 flex-shrink-0" />
           Log Out
         </button>
