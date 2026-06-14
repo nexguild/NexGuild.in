@@ -132,10 +132,18 @@ export default function PostNewTaskPage() {
           <p className="text-sm text-[var(--text-secondary)]">Require contributors to pass an assignment before accessing this task.</p>
 
           <div className="flex items-center gap-3">
-            <button type="button" role="switch" aria-checked={assignmentReq}
+            <button
+              type="button"
+              role="switch"
+              aria-checked={assignmentReq}
               onClick={() => setAssignmentReq(!assignmentReq)}
-              className={`h-6 w-11 rounded-full relative flex-shrink-0 transition-colors ${assignmentReq ? "bg-[var(--brand-500)]" : "bg-[var(--border-strong)]"}`}>
-              <span className={`absolute top-1 h-4 w-4 rounded-full bg-white transition-transform ${assignmentReq ? "translate-x-5" : "translate-x-1"}`} />
+              style={{ backgroundColor: assignmentReq ? "#14b8a6" : "#4b5563", transition: "background-color 0.2s ease" }}
+              className="h-6 w-11 rounded-full relative flex-shrink-0 focus:outline-none focus:ring-2 focus:ring-[#14b8a6] focus:ring-offset-2"
+            >
+              <span
+                style={{ transform: assignmentReq ? "translateX(22px)" : "translateX(2px)", transition: "transform 0.2s ease" }}
+                className="absolute top-[2px] left-0 h-5 w-5 rounded-full bg-white shadow-md"
+              />
             </button>
             <span className="text-sm text-[var(--text-secondary)]">Require assignment to unlock task</span>
           </div>

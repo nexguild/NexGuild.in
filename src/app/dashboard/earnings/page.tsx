@@ -2,45 +2,71 @@
 
 import { useEffect, useState } from "react";
 import { StatCard } from "@/components/ui/stat-card";
-import { ReceiptText, TrendingUp, Coins } from "lucide-react";
+import { ReceiptText, TrendingUp, Coins, Wallet } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
-interface Earning {
+interface Transaction {
   id: string;
-  source_type: string | null;
-  source_label: string | null;
   amount: number;
-  status: string;
+  type: "earned" | "redeemed";
+  source: string | null;
+  description: string | null;
   created_at: string;
 }
 
-const STATUS_STYLES: Record<string, string> = {
-  pending:   "bg-yellow-500/10 text-yellow-400",
-  confirmed: "bg-green-500/10 text-green-400",
-  rejected:  "bg-red-500/10 text-red-400",
-};
+interface PendingSubmission {
+  id: string;
+  submitted_at: string;
+  tasks: { title: string | null; pay_per_task: number | null } | null;
+}
 
 export default function EarningsPage() {
-  const [earnings, setEarnings] = useState<Earning[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [pending, setPending]           = useState<PendingSubmission[]>([]);
+  const [nexcoins, setNexcoins]         = useState<number>(0);
+  const [loading, setLoading]           = useState(true);
 
   useEffect(() => {
     async function fetchData() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
-      const { data } = await supabase
-        .from("earnings")
-        .select("id, source_type, source_label, amount, status, created_at")
-        .eq("contributor_id", user.id)
-        .order("created_at", { ascending: false });
-      setEarnings(data ?? []);
+
+      const [
+        { data: txns, error: txnErr },
+        { data: subs },
+        { data: profile },
+      ] = await Promise.all([
+        supabase
+          .from("coin_transactions")
+          .select("id, amount, type, source, description, created_at")
+          .eq("contributor_id", user.id)
+          .eq("type", "earned")
+          .order("created_at", { ascending: false }),
+        supabase
+          .from("submissions")
+          .select("id, submitted_at, tasks(title, pay_per_task)")
+          .eq("contributor_id", user.id)
+          .eq("status", "submitted")
+          .order("submitted_at", { ascending: false }),
+        supabase
+          .from("profiles")
+          .select("nexcoins")
+          .eq("id", user.id)
+          .single(),
+      ]);
+
+      if (txnErr) console.error("coin_transactions fetch error:", txnErr.message);
+
+      setTransactions((txns as Transaction[]) ?? []);
+      setPending((subs as unknown as PendingSubmission[]) ?? []);
+      setNexcoins((profile as { nexcoins: number | null } | null)?.nexcoins ?? 0);
       setLoading(false);
     }
     fetchData();
   }, []);
 
-  const totalCoins = earnings.filter((e) => e.status === "confirmed").reduce((s, e) => s + e.amount, 0);
-  const pendingCoins = earnings.filter((e) => e.status === "pending").reduce((s, e) => s + e.amount, 0);
+  const totalEarned = transactions.reduce((s, t) => s + t.amount, 0);
+  const pendingCoins = pending.reduce((s, p) => s + (p.tasks?.pay_per_task ?? 0), 0);
 
   return (
     <div className="space-y-6">
@@ -49,23 +75,61 @@ export default function EarningsPage() {
         <p className="text-sm text-[var(--text-secondary)]">Your complete NexCoins earning history.</p>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
         <StatCard
-          label="Total Confirmed"
-          value={loading ? "—" : totalCoins.toLocaleString() + " coins"}
+          label="Current Balance"
+          value={loading ? "—" : nexcoins.toLocaleString() + " coins"}
+          icon={<Wallet className="h-5 w-5" />}
+        />
+        <StatCard
+          label="Total Earned"
+          value={loading ? "—" : totalEarned.toLocaleString() + " coins"}
           icon={<Coins className="h-5 w-5" />}
         />
         <StatCard
-          label="Pending"
+          label="Pending Review"
           value={loading ? "—" : pendingCoins.toLocaleString() + " coins"}
           icon={<TrendingUp className="h-5 w-5" />}
-          trend="Awaiting review"
+          trend="Awaiting approval"
         />
       </div>
 
+      {/* Pending submissions */}
+      {!loading && pending.length > 0 && (
+        <div className="rounded-lg border border-yellow-500/30 bg-yellow-500/5">
+          <div className="px-5 py-4 border-b border-yellow-500/20">
+            <h2 className="font-semibold text-[var(--text-primary)]">Pending Review</h2>
+            <p className="text-xs text-[var(--text-muted)] mt-0.5">These submissions are awaiting admin approval.</p>
+          </div>
+          <ul className="divide-y divide-yellow-500/10">
+            {pending.map((p) => (
+              <li key={p.id} className="px-5 py-4 flex items-center justify-between gap-4">
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-[var(--text-primary)] truncate">
+                    {p.tasks?.title ?? "Task"}
+                  </p>
+                  <p className="text-xs text-[var(--text-muted)]">
+                    Submitted {new Date(p.submitted_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+                  </p>
+                </div>
+                <div className="flex items-center gap-3 flex-shrink-0">
+                  <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-yellow-500/10 text-yellow-400">
+                    Under Review
+                  </span>
+                  <span className="text-sm font-bold text-yellow-400">
+                    +{(p.tasks?.pay_per_task ?? 0).toLocaleString()} coins
+                  </span>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* Confirmed earnings history */}
       <div className="rounded-lg border border-[var(--border-default)] bg-[var(--surface-card)]">
         <div className="px-5 py-4 border-b border-[var(--border-default)]">
-          <h2 className="font-semibold text-[var(--text-primary)]">Transaction History</h2>
+          <h2 className="font-semibold text-[var(--text-primary)]">Earned History</h2>
         </div>
 
         {loading ? (
@@ -80,31 +144,31 @@ export default function EarningsPage() {
               </div>
             ))}
           </div>
-        ) : earnings.length === 0 ? (
+        ) : transactions.length === 0 ? (
           <div className="py-16 flex flex-col items-center gap-3 text-center">
             <ReceiptText className="h-10 w-10 text-[var(--text-muted)]" />
             <p className="font-semibold text-[var(--text-primary)]">No earnings yet</p>
-            <p className="text-sm text-[var(--text-secondary)]">Complete tasks or offers to start earning NexCoins.</p>
+            <p className="text-sm text-[var(--text-secondary)]">Complete and get tasks approved to earn NexCoins.</p>
           </div>
         ) : (
           <ul className="divide-y divide-[var(--border-default)]">
-            {earnings.map((e) => (
-              <li key={e.id} className="px-5 py-4 flex items-center justify-between gap-4">
+            {transactions.map((t) => (
+              <li key={t.id} className="px-5 py-4 flex items-center justify-between gap-4">
                 <div className="min-w-0">
                   <p className="text-sm font-medium text-[var(--text-primary)] truncate">
-                    {e.source_label ?? e.source_type ?? "Earning"}
+                    {t.description ?? t.source ?? "Task Reward"}
                   </p>
                   <p className="text-xs text-[var(--text-muted)]">
-                    {new Date(e.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
-                    {e.source_type && <span> · {e.source_type}</span>}
+                    {new Date(t.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+                    {t.source && <span> · {t.source}</span>}
                   </p>
                 </div>
                 <div className="flex items-center gap-3 flex-shrink-0">
-                  <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${STATUS_STYLES[e.status] ?? "bg-[var(--surface-subtle)] text-[var(--text-secondary)]"}`}>
-                    {e.status.charAt(0).toUpperCase() + e.status.slice(1)}
+                  <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-green-500/10 text-green-400">
+                    Confirmed
                   </span>
                   <span className="text-sm font-bold text-green-400">
-                    +{e.amount.toLocaleString()} coins
+                    +{t.amount.toLocaleString()} coins
                   </span>
                 </div>
               </li>

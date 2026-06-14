@@ -27,16 +27,23 @@ const QUICK_ACTIONS = [
 ];
 
 export default function DashboardHome() {
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [profile, setProfile]         = useState<Profile | null>(null);
+  const [tasks, setTasks]             = useState<Task[]>([]);
+  const [tasksDone, setTasksDone]     = useState<number>(0);
+  const [approvalRate, setApprovalRate] = useState<number | null>(null);
+  const [loading, setLoading]         = useState(true);
 
   useEffect(() => {
     async function fetchData() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      const [{ data: profileData }, { data: tasksData }] = await Promise.all([
+      const [
+        { data: profileData },
+        { data: tasksData },
+        { count: approvedCount },
+        { count: reviewedCount },
+      ] = await Promise.all([
         supabase
           .from("profiles")
           .select("full_name, nexcoins")
@@ -47,10 +54,28 @@ export default function DashboardHome() {
           .select("id, title, description, task_type, pay_per_task")
           .eq("status", "active")
           .limit(3),
+        // Tasks Done = approved submissions
+        supabase
+          .from("submissions")
+          .select("*", { count: "exact", head: true })
+          .eq("contributor_id", user.id)
+          .eq("status", "approved"),
+        // Approval Rate denominator = all reviewed (approved + rejected)
+        supabase
+          .from("submissions")
+          .select("*", { count: "exact", head: true })
+          .eq("contributor_id", user.id)
+          .in("status", ["approved", "rejected"]),
       ]);
 
       setProfile(profileData ?? { full_name: null, nexcoins: 0 });
       setTasks(tasksData ?? []);
+      setTasksDone(approvedCount ?? 0);
+      setApprovalRate(
+        reviewedCount && reviewedCount > 0
+          ? Math.round(((approvedCount ?? 0) / reviewedCount) * 100)
+          : null
+      );
       setLoading(false);
     }
     fetchData();
@@ -78,11 +103,19 @@ export default function DashboardHome() {
           {loading ? "Welcome back!" : `Welcome back, ${displayName}!`}
         </h1>
         <p className="text-sm text-[var(--text-secondary)] mb-5">Here is your dashboard overview.</p>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <StatCard label="NexCoins"       value={loading ? "—" : (profile?.nexcoins ?? 0).toLocaleString()} />
-          <StatCard label="Tasks Done"     value="—" />
-          <StatCard label="Approval Rate"  value="—" />
-          <StatCard label="Referrals"      value="—" />
+        <div className="grid grid-cols-3 gap-4">
+          <StatCard
+            label="NexCoins"
+            value={loading ? "—" : (profile?.nexcoins ?? 0).toLocaleString()}
+          />
+          <StatCard
+            label="Tasks Done"
+            value={loading ? "—" : tasksDone.toLocaleString()}
+          />
+          <StatCard
+            label="Approval Rate"
+            value={loading ? "—" : approvalRate === null ? "N/A" : approvalRate + "%"}
+          />
         </div>
       </div>
 
@@ -156,7 +189,7 @@ export default function DashboardHome() {
             {tasks.map((task) => (
               <Link
                 key={task.id}
-                href="/dashboard/tasks"
+                href={`/dashboard/tasks/${task.id}`}
                 className="rounded-xl border border-[var(--border-default)] bg-[var(--surface-card)] p-5 card-hover group"
               >
                 <p className="text-xs font-semibold text-[var(--brand-500)] uppercase tracking-wider mb-2">

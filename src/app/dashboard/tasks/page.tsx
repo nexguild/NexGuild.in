@@ -10,7 +10,8 @@ interface Submission {
   id: string;
   task_id: string;
   status: string;
-  created_at: string;
+  submitted_at: string;
+  coins_awarded: number | null;
   tasks: {
     title: string;
     task_type: string | null;
@@ -42,11 +43,13 @@ export default function TasksPage() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      const { data } = await supabase
+      const { data, error: fetchErr } = await supabase
         .from("submissions")
-        .select("id, task_id, status, created_at, tasks(title, task_type, pay_per_task)")
+        .select("id, task_id, status, submitted_at, coins_awarded, tasks(title, task_type, pay_per_task)")
         .eq("contributor_id", user.id)
-        .order("created_at", { ascending: false });
+        .order("submitted_at", { ascending: false });
+
+      if (fetchErr) console.error("submissions fetch error:", fetchErr.message);
 
       setSubmissions((data as unknown as Submission[]) ?? []);
       setLoading(false);
@@ -117,15 +120,19 @@ export default function TasksPage() {
                 </p>
                 <p className="text-xs text-[var(--text-muted)] mt-0.5">
                   {s.tasks?.task_type ?? "Task"} ·{" "}
-                  {new Date(s.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+                  {new Date(s.submitted_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
                 </p>
               </div>
               <div className="flex items-center gap-3 flex-shrink-0">
-                {s.tasks?.pay_per_task != null && (
+                {s.status === "approved" && s.coins_awarded != null ? (
                   <span className="text-xs font-medium text-green-400 hidden sm:block">
+                    +{s.coins_awarded} coins
+                  </span>
+                ) : s.tasks?.pay_per_task != null ? (
+                  <span className="text-xs font-medium text-[var(--text-muted)] hidden sm:block">
                     {s.tasks.pay_per_task} coins
                   </span>
-                )}
+                ) : null}
                 <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${STATUS_STYLES[s.status] ?? "bg-[var(--surface-subtle)] text-[var(--text-secondary)]"}`}>
                   {TABS.find((t) => t.status === s.status)?.label ?? s.status}
                 </span>

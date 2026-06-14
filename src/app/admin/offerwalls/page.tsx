@@ -1,16 +1,52 @@
+"use client";
+
+import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { formatCurrency } from "@/lib/utils";
+import { X, Settings2 } from "lucide-react";
 
-const PROVIDERS = [
-  { name: "CPX Research",  slug: "cpx",     active: false, share: 70, earnings: 0 },
-  { name: "Lootably",      slug: "lootably",active: false, share: 68, earnings: 0 },
-  { name: "AdGem",         slug: "adgem",   active: false, share: 65, earnings: 0 },
-  { name: "Theorem Reach", slug: "theorem", active: false, share: 72, earnings: 0 },
-  { name: "BitLabs",       slug: "bitlabs", active: false, share: 70, earnings: 0 },
+interface Provider {
+  name: string;
+  slug: string;
+  active: boolean;
+  share: number;
+  website: string;
+}
+
+const INITIAL_PROVIDERS: Provider[] = [
+  { name: "CPX Research",  slug: "cpx",     active: false, share: 70, website: "https://www.cpx-research.com" },
+  { name: "Lootably",      slug: "lootably",active: false, share: 68, website: "https://lootably.com" },
+  { name: "AdGem",         slug: "adgem",   active: false, share: 65, website: "https://www.adgem.com" },
+  { name: "Theorem Reach", slug: "theorem", active: false, share: 72, website: "https://www.theoremreach.com" },
+  { name: "BitLabs",       slug: "bitlabs", active: false, share: 70, website: "https://bitlabs.io" },
 ];
 
 export default function AdminOfferwallsPage() {
+  const [providers, setProviders]   = useState<Provider[]>(INITIAL_PROVIDERS);
+  const [configuring, setConfiguring] = useState<Provider | null>(null);
+  const [shareEdit, setShareEdit]   = useState("");
+
+  function toggleActive(slug: string) {
+    setProviders((prev) =>
+      prev.map((p) => p.slug === slug ? { ...p, active: !p.active } : p)
+    );
+  }
+
+  function openConfigure(p: Provider) {
+    setConfiguring(p);
+    setShareEdit(String(p.share));
+  }
+
+  function saveConfig(e: React.FormEvent) {
+    e.preventDefault();
+    if (!configuring) return;
+    const share = Math.min(100, Math.max(0, parseInt(shareEdit) || configuring.share));
+    setProviders((prev) =>
+      prev.map((p) => p.slug === configuring.slug ? { ...p, share } : p)
+    );
+    setConfiguring(null);
+  }
+
   return (
     <div className="space-y-6">
       <div>
@@ -22,13 +58,13 @@ export default function AdminOfferwallsPage() {
         <table className="w-full text-sm min-w-[600px]">
           <thead>
             <tr className="bg-[var(--surface-subtle)] border-b border-[var(--border-default)]">
-              {["Provider","Status","Contributor Share","Platform Share","Earnings","Actions"].map((h) => (
+              {["Provider", "Status", "Contributor Share", "Platform Share", "Actions"].map((h) => (
                 <th key={h} className="text-left px-4 py-3 font-medium text-[var(--text-secondary)] whitespace-nowrap">{h}</th>
               ))}
             </tr>
           </thead>
           <tbody className="divide-y divide-[var(--border-default)]">
-            {PROVIDERS.map((p) => (
+            {providers.map((p) => (
               <tr key={p.slug} className="hover:bg-[var(--surface-subtle)] transition-colors">
                 <td className="px-4 py-3 font-medium text-[var(--text-primary)]">{p.name}</td>
                 <td className="px-4 py-3">
@@ -36,13 +72,16 @@ export default function AdminOfferwallsPage() {
                 </td>
                 <td className="px-4 py-3 text-[var(--text-secondary)]">{p.share}%</td>
                 <td className="px-4 py-3 text-[var(--text-secondary)]">{100 - p.share}%</td>
-                <td className="px-4 py-3 font-semibold text-[var(--text-primary)]">
-                  {p.earnings > 0 ? formatCurrency(p.earnings) : "—"}
-                </td>
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-2">
-                    <Button size="sm" variant="ghost">Configure</Button>
-                    <Button size="sm" variant={p.active ? "secondary" : "ghost"}>
+                    <Button size="sm" variant="ghost" onClick={() => openConfigure(p)}>
+                      <Settings2 className="h-3.5 w-3.5" /> Configure
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant={p.active ? "destructive" : "secondary"}
+                      onClick={() => toggleActive(p.slug)}
+                    >
                       {p.active ? "Disable" : "Enable"}
                     </Button>
                   </div>
@@ -52,6 +91,56 @@ export default function AdminOfferwallsPage() {
           </tbody>
         </table>
       </div>
+
+      <p className="text-xs text-[var(--text-muted)]">
+        Note: Offerwall provider API keys and embed codes are configured in environment variables. Enable/disable controls are saved locally until a settings DB table is implemented.
+      </p>
+
+      {/* Configure Modal */}
+      {configuring && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/60">
+          <div className="w-full max-w-sm bg-[var(--surface-card)] rounded-xl border border-[var(--border-default)] p-6 shadow-xl">
+            <div className="flex items-center justify-between mb-5">
+              <h2 className="text-lg font-semibold text-[var(--text-primary)]">Configure {configuring.name}</h2>
+              <button onClick={() => setConfiguring(null)}><X className="h-5 w-5 text-[var(--text-muted)]" /></button>
+            </div>
+            <form onSubmit={saveConfig} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-[var(--text-primary)] mb-1.5">
+                  Contributor Revenue Share (%)
+                </label>
+                <input
+                  type="number"
+                  min={1}
+                  max={99}
+                  value={shareEdit}
+                  onChange={(e) => setShareEdit(e.target.value)}
+                  className="w-full h-10 px-3 rounded-md border border-[var(--border-strong)] bg-[var(--surface-subtle)] text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--border-focus)]"
+                />
+                <p className="text-xs text-[var(--text-muted)] mt-1.5">
+                  Platform keeps {100 - (parseInt(shareEdit) || configuring.share)}%. Contributors earn {shareEdit || configuring.share}%.
+                </p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-[var(--text-primary)] mb-1.5">Provider Website</label>
+                <a
+                  href={configuring.website}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-[var(--brand-500)] hover:underline"
+                >
+                  {configuring.website}
+                </a>
+                <p className="text-xs text-[var(--text-muted)] mt-1">Set your API key in <code className="font-mono">.env.local</code></p>
+              </div>
+              <div className="flex gap-3">
+                <Button type="button" variant="ghost" className="flex-1" onClick={() => setConfiguring(null)}>Cancel</Button>
+                <Button type="submit" className="flex-1">Save</Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

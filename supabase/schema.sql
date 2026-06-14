@@ -373,7 +373,22 @@ CREATE POLICY "Admins can insert coin transactions"
   ON coin_transactions FOR INSERT
   WITH CHECK (EXISTS (SELECT 1 FROM profiles p WHERE p.id = auth.uid() AND p.role = 'admin'));
 
--- ── 13. Storage buckets (run in Supabase Dashboard → Storage) ────
+-- ── 13. Helper functions ─────────────────────────────────────────
+-- Atomic nexcoins increment — avoids race conditions on concurrent approvals.
+-- SECURITY DEFINER lets service_role call it even without direct UPDATE grants.
+CREATE OR REPLACE FUNCTION increment_nexcoins(p_contributor_id UUID, p_coins INTEGER)
+RETURNS void
+LANGUAGE sql
+SECURITY DEFINER
+AS $$
+  UPDATE profiles
+  SET nexcoins = COALESCE(nexcoins, 0) + p_coins
+  WHERE id = p_contributor_id;
+$$;
+
+GRANT EXECUTE ON FUNCTION increment_nexcoins(UUID, INTEGER) TO service_role;
+
+-- ── 14. Storage buckets (run in Supabase Dashboard → Storage) ────
 -- Create bucket "submissions" — public read, authenticated write
 -- Create bucket "assignments" — public read, authenticated write
 -- Or run via SQL:
