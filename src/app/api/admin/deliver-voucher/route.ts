@@ -132,9 +132,9 @@ export async function POST(req: NextRequest) {
     // ── Insert in-app notification ───────────────────────────────
     const { error: notifErr } = await admin.from("notifications").insert({
       user_id: vr.contributor_id,
-      title:   "Your Voucher is Ready!",
-      message: `Your ${voucherType} has been delivered. Code: ${code}`,
-      type:    "voucher_delivered",
+      title:   "Voucher Delivered!",
+      message: `Your ${voucherType} code is ready. Check My Vouchers in your dashboard.`,
+      type:    "voucher",
     });
     if (notifErr) console.error("[deliver-voucher] notification error:", notifErr.message);
 

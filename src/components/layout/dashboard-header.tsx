@@ -14,6 +14,7 @@ const PAGE_TITLES: Record<string, string> = {
   "/dashboard/earnings":      "Earnings",
   "/dashboard/wallet":        "NexCoins",
   "/dashboard/store":         "Store",
+  "/dashboard/vouchers":      "My Vouchers",
   "/dashboard/profile":       "Profile",
   "/dashboard/settings":      "Settings",
 };
@@ -24,6 +25,7 @@ const TYPE_COLORS: Record<string, string> = {
   assignment_approved:  "text-green-400",
   assignment_rejected:  "text-red-400",
   voucher_delivered:    "text-[var(--brand-500)]",
+  voucher:              "text-[var(--brand-500)]",
   new_task:             "text-blue-400",
   announcement:         "text-[var(--brand-500)]",
 };
@@ -82,7 +84,12 @@ export function DashboardHeader() {
 
   async function markAllRead() {
     if (!userId) return;
-    await supabase.from("notifications").update({ is_read: true }).eq("user_id", userId).eq("is_read", false);
+    // Update DB first, then local state — keeps them in sync
+    await supabase
+      .from("notifications")
+      .update({ is_read: true })
+      .eq("user_id", userId)
+      .eq("is_read", false);
     setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
   }
 
@@ -92,10 +99,7 @@ export function DashboardHeader() {
   }
 
   function handleBellClick() {
-    setOpen((v) => {
-      if (!v && userId) fetchNotifications(userId); // refresh on open
-      return !v;
-    });
+    setOpen((v) => !v);
   }
 
   return (

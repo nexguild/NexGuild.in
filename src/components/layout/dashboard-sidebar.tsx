@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard, Search, ClipboardList, Layers,
-  TrendingUp, ShoppingBag, User, Settings, LogOut,
+  TrendingUp, ShoppingBag, Gift, User, Settings, LogOut,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { NexGuildLogo } from "@/components/ui/nexguild-logo";
@@ -17,6 +17,7 @@ const NAV_ITEMS = [
   { label: "Offerwall Hub",  href: "/dashboard/offerwalls",     icon: Layers },
   { label: "Earnings",       href: "/dashboard/earnings",       icon: TrendingUp },
   { label: "Store",          href: "/dashboard/store",          icon: ShoppingBag },
+  { label: "My Vouchers",   href: "/dashboard/vouchers",       icon: Gift },
 ];
 
 const ACCOUNT_ITEMS = [

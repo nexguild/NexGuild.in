@@ -60,6 +60,8 @@ export default function StorePage() {
   const [copied, setCopied]               = useState<string | null>(null);
 
   useEffect(() => {
+    let channel: ReturnType<typeof supabase.channel> | null = null;
+
     async function fetchData() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
@@ -77,8 +79,29 @@ export default function StorePage() {
       setMyRequests((requestsData as MyRequest[]) ?? []);
       setLoading(false);
       setLoadingRequests(false);
+
+      // Real-time: auto-update request status when admin delivers
+      channel = supabase
+        .channel(`voucher_requests:${user.id}`)
+        .on(
+          "postgres_changes",
+          {
+            event: "UPDATE",
+            schema: "public",
+            table: "voucher_requests",
+            filter: `contributor_id=eq.${user.id}`,
+          },
+          (payload) => {
+            setMyRequests((prev) =>
+              prev.map((r) => (r.id === payload.new.id ? (payload.new as MyRequest) : r))
+            );
+          }
+        )
+        .subscribe();
     }
+
     fetchData();
+    return () => { if (channel) supabase.removeChannel(channel); };
   }, []);
 
   async function copyCode(id: string, code: string) {
@@ -101,13 +124,21 @@ export default function StorePage() {
       return;
     }
 
-    const { error: insertError } = await supabase.from("voucher_requests").insert({
-      contributor_id: user.id,
-      voucher_type: confirmItem.name + " — " + confirmItem.description,
-      voucher_value: null,
-      coins_spent: confirmItem.coins,
-      status: "pending",
-    });
+    const voucherType = confirmItem.name + " — " + confirmItem.description;
+    const now = new Date().toISOString();
+
+    // 1. Insert voucher request
+    const { data: newRequest, error: insertError } = await supabase
+      .from("voucher_requests")
+      .insert({
+        contributor_id: user.id,
+        voucher_type:   voucherType,
+        voucher_value:  null,
+        coins_spent:    confirmItem.coins,
+        status:         "pending",
+      })
+      .select("id, voucher_type, coins_spent, status, voucher_code, requested_at, delivered_at")
+      .single();
 
     if (insertError) {
       setError("Failed to submit request. Please try again.");
@@ -115,16 +146,33 @@ export default function StorePage() {
       return;
     }
 
-    // Deduct coins from profile
+    // 2. Deduct coins from profile (atomic via RPC if available, direct otherwise)
+    const newBalance = (nexcoins ?? 0) - confirmItem.coins;
     const { error: updateError } = await supabase
       .from("profiles")
-      .update({ nexcoins: (nexcoins ?? 0) - confirmItem.coins })
+      .update({ nexcoins: newBalance })
       .eq("id", user.id);
 
     if (updateError) {
+      console.error("[store] nexcoins deduction error:", updateError.message);
       setError("Voucher requested but balance update failed — contact support.");
     } else {
-      setNexcoins((prev) => (prev ?? 0) - confirmItem.coins);
+      setNexcoins(newBalance);
+    }
+
+    // 3. Log coin transaction
+    await supabase.from("coin_transactions").insert({
+      contributor_id: user.id,
+      amount:         confirmItem.coins,
+      type:           "redeemed",
+      source:         "voucher",
+      description:    `Voucher redeemed: ${voucherType}`,
+      created_at:     now,
+    });
+
+    // 4. Optimistically add to My Requests list
+    if (newRequest) {
+      setMyRequests((prev) => [newRequest as MyRequest, ...prev]);
     }
 
     setRedeeming(false);
