@@ -146,19 +146,29 @@ export default function StorePage() {
       return;
     }
 
-    // 2. Deduct coins from profile (atomic via RPC if available, direct otherwise)
-    const newBalance = (nexcoins ?? 0) - confirmItem.coins;
-    const { error: updateError } = await supabase
-      .from("profiles")
-      .update({ nexcoins: newBalance })
-      .eq("id", user.id);
+    // 2. Atomic deduction via SQL function (prevents double-spend; no-op if balance insufficient)
+    const { error: rpcError } = await supabase.rpc("decrement_nexcoins", {
+      p_contributor_id: user.id,
+      p_coins:          confirmItem.coins,
+    });
 
-    if (updateError) {
-      console.error("[store] nexcoins deduction error:", updateError.message);
-      setError("Voucher requested but balance update failed — contact support.");
-    } else {
-      setNexcoins(newBalance);
+    if (rpcError) {
+      // RPC not created yet — fall back to direct update
+      console.warn("[store] decrement_nexcoins RPC unavailable, falling back:", rpcError.message);
+      const { error: updateError } = await supabase
+        .from("profiles")
+        .update({ nexcoins: (nexcoins ?? 0) - confirmItem.coins })
+        .eq("id", user.id);
+      if (updateError) {
+        console.error("[store] fallback nexcoins deduction error:", updateError.message);
+        setError("Voucher requested but balance update failed — contact support.");
+        setRedeeming(false);
+        return;
+      }
     }
+
+    // Update local balance immediately
+    setNexcoins((prev) => Math.max(0, (prev ?? 0) - confirmItem.coins));
 
     // 3. Log coin transaction
     await supabase.from("coin_transactions").insert({

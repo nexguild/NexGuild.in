@@ -388,6 +388,22 @@ $$;
 
 GRANT EXECUTE ON FUNCTION increment_nexcoins(UUID, INTEGER) TO service_role;
 
+-- Atomic nexcoins decrement — called from contributor store redemption.
+-- WHERE nexcoins >= p_coins prevents going negative (double-spend guard).
+CREATE OR REPLACE FUNCTION decrement_nexcoins(p_contributor_id UUID, p_coins INTEGER)
+RETURNS void
+LANGUAGE sql
+SECURITY DEFINER
+AS $$
+  UPDATE profiles
+  SET nexcoins = COALESCE(nexcoins, 0) - p_coins
+  WHERE id = p_contributor_id
+    AND COALESCE(nexcoins, 0) >= p_coins;
+$$;
+
+GRANT EXECUTE ON FUNCTION decrement_nexcoins(UUID, INTEGER) TO service_role;
+GRANT EXECUTE ON FUNCTION decrement_nexcoins(UUID, INTEGER) TO authenticated;
+
 -- ── 14. Storage buckets (run in Supabase Dashboard → Storage) ────
 -- Create bucket "submissions" — public read, authenticated write
 -- Create bucket "assignments" — public read, authenticated write
