@@ -1,9 +1,19 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Coins, ShoppingBag, Gift, CheckCircle, X, Loader2 } from "lucide-react";
+import { Coins, ShoppingBag, Gift, CheckCircle, X, Loader2, Copy, Check, Clock, PackageCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
+
+interface MyRequest {
+  id: string;
+  voucher_type: string;
+  coins_spent: number;
+  status: string;
+  voucher_code: string | null;
+  requested_at: string;
+  delivered_at: string | null;
+}
 
 interface VoucherItem {
   id: string;
@@ -31,29 +41,51 @@ const VOUCHERS: VoucherItem[] = [
 
 const CATEGORIES = ["All", ...Array.from(new Set(VOUCHERS.map((v) => v.category)))];
 
+const REQUEST_STATUS: Record<string, { label: string; style: string; icon: React.ReactNode }> = {
+  pending:    { label: "Pending",    style: "bg-yellow-500/10 text-yellow-400",  icon: <Clock className="h-3.5 w-3.5" /> },
+  processing: { label: "Processing", style: "bg-blue-500/10 text-blue-400",     icon: <Loader2 className="h-3.5 w-3.5 animate-spin" /> },
+  delivered:  { label: "Delivered",  style: "bg-green-500/10 text-green-400",   icon: <PackageCheck className="h-3.5 w-3.5" /> },
+};
+
 export default function StorePage() {
-  const [nexcoins, setNexcoins] = useState<number | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [nexcoins, setNexcoins]           = useState<number | null>(null);
+  const [loading, setLoading]             = useState(true);
   const [selectedCategory, setSelectedCategory] = useState("All");
-  const [confirmItem, setConfirmItem] = useState<VoucherItem | null>(null);
-  const [redeeming, setRedeeming] = useState(false);
-  const [successItem, setSuccessItem] = useState<VoucherItem | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [confirmItem, setConfirmItem]     = useState<VoucherItem | null>(null);
+  const [redeeming, setRedeeming]         = useState(false);
+  const [successItem, setSuccessItem]     = useState<VoucherItem | null>(null);
+  const [error, setError]                 = useState<string | null>(null);
+  const [myRequests, setMyRequests]       = useState<MyRequest[]>([]);
+  const [loadingRequests, setLoadingRequests] = useState(true);
+  const [copied, setCopied]               = useState<string | null>(null);
 
   useEffect(() => {
-    async function fetchBalance() {
+    async function fetchData() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
-      const { data } = await supabase
-        .from("profiles")
-        .select("nexcoins")
-        .eq("id", user.id)
-        .single();
-      setNexcoins(data?.nexcoins ?? 0);
+
+      const [{ data: profileData }, { data: requestsData }] = await Promise.all([
+        supabase.from("profiles").select("nexcoins").eq("id", user.id).single(),
+        supabase
+          .from("voucher_requests")
+          .select("id, voucher_type, coins_spent, status, voucher_code, requested_at, delivered_at")
+          .eq("contributor_id", user.id)
+          .order("requested_at", { ascending: false }),
+      ]);
+
+      setNexcoins(profileData?.nexcoins ?? 0);
+      setMyRequests((requestsData as MyRequest[]) ?? []);
       setLoading(false);
+      setLoadingRequests(false);
     }
-    fetchBalance();
+    fetchData();
   }, []);
+
+  async function copyCode(id: string, code: string) {
+    await navigator.clipboard.writeText(code);
+    setCopied(id);
+    setTimeout(() => setCopied(null), 2000);
+  }
 
   async function handleRedeem() {
     if (!confirmItem) return;
@@ -235,12 +267,93 @@ export default function StorePage() {
             <h2 className="text-lg font-semibold text-[var(--text-primary)] mb-2">Request Submitted!</h2>
             <p className="text-sm text-[var(--text-secondary)] mb-1">{successItem.name}</p>
             <p className="text-xs text-[var(--text-muted)] mb-6">
-              Your voucher will be delivered to your registered email within 24–48 hours.
+              Your voucher will be delivered to your registered email within 24–48 hours. Track it below in My Requests.
             </p>
             <Button className="w-full" onClick={() => setSuccessItem(null)}>Done</Button>
           </div>
         </div>
       )}
+
+      {/* ── My Requests ──────────────────────────────────────────── */}
+      <div>
+        <h2 className="text-base font-semibold text-[var(--text-primary)] mb-4">My Requests</h2>
+
+        {loadingRequests ? (
+          <div className="space-y-2">
+            {[1, 2].map((i) => (
+              <div key={i} className="h-20 rounded-lg border border-[var(--border-default)] bg-[var(--surface-card)] animate-pulse" />
+            ))}
+          </div>
+        ) : myRequests.length === 0 ? (
+          <div className="rounded-lg border border-[var(--border-default)] bg-[var(--surface-card)] py-12 flex flex-col items-center gap-3 text-center">
+            <Gift className="h-8 w-8 text-[var(--text-muted)]" />
+            <p className="text-sm text-[var(--text-secondary)]">No redemption requests yet. Redeem a voucher above.</p>
+          </div>
+        ) : (
+          <ul className="space-y-3">
+            {myRequests.map((r) => {
+              const st = REQUEST_STATUS[r.status] ?? REQUEST_STATUS.pending;
+              const isDelivered = r.status === "delivered";
+              return (
+                <li
+                  key={r.id}
+                  className={`rounded-xl border bg-[var(--surface-card)] p-5 transition-colors ${
+                    isDelivered ? "border-green-500/30" : "border-[var(--border-default)]"
+                  }`}
+                >
+                  <div className="flex items-start justify-between gap-4 flex-wrap">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-semibold text-[var(--text-primary)] truncate">{r.voucher_type}</p>
+                      <p className="text-xs text-[var(--text-muted)] mt-0.5">
+                        {r.coins_spent.toLocaleString()} coins ·{" "}
+                        {new Date(r.requested_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+                        {r.delivered_at && (
+                          <span className="text-green-400">
+                            {" "}· Delivered {new Date(r.delivered_at).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}
+                          </span>
+                        )}
+                      </p>
+                    </div>
+                    <span className={`inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full flex-shrink-0 ${st.style}`}>
+                      {st.icon}
+                      {st.label}
+                    </span>
+                  </div>
+
+                  {isDelivered && r.voucher_code && (
+                    <div className="mt-4 rounded-lg border border-green-500/20 bg-green-500/5 p-4">
+                      <p className="text-xs text-green-400/70 uppercase tracking-wider mb-2 font-medium">Your Voucher Code</p>
+                      <div className="flex items-center gap-3">
+                        <code className="flex-1 text-lg font-bold font-mono text-green-400 tracking-widest break-all">
+                          {r.voucher_code}
+                        </code>
+                        <button
+                          onClick={() => copyCode(r.id, r.voucher_code!)}
+                          className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-green-500/10 hover:bg-green-500/20 text-green-400 text-xs font-medium transition-colors"
+                        >
+                          {copied === r.id ? (
+                            <><Check className="h-3.5 w-3.5" /> Copied!</>
+                          ) : (
+                            <><Copy className="h-3.5 w-3.5" /> Copy Code</>
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {!isDelivered && (
+                    <p className="mt-3 text-xs text-[var(--text-muted)]">
+                      {r.status === "pending"
+                        ? "Your request is being reviewed. Voucher will be emailed within 24–48 hours."
+                        : "Your voucher is being processed. You will receive it shortly."}
+                    </p>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </div>
     </div>
   );
 }

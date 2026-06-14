@@ -55,22 +55,31 @@ export default function VouchersPage() {
 
     setDelivering(req.id);
 
-    const { error } = await supabase
-      .from("voucher_requests")
-      .update({
-        status: "delivered",
-        voucher_code: code,
-        delivered_at: new Date().toISOString(),
-      })
-      .eq("id", req.id);
+    const { data: { session } } = await supabase.auth.getSession();
+    const token = session?.access_token;
 
-    if (!error) {
+    const res = await fetch("/api/admin/deliver-voucher", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify({ requestId: req.id, voucherCode: code }),
+    });
+
+    if (res.ok) {
       setRequests((prev) =>
         prev.map((r) =>
-          r.id === req.id ? { ...r, status: "delivered", voucher_code: code, delivered_at: new Date().toISOString() } : r
+          r.id === req.id
+            ? { ...r, status: "delivered", voucher_code: code, delivered_at: new Date().toISOString() }
+            : r
         )
       );
+    } else {
+      const data = await res.json().catch(() => ({}));
+      alert(data.error ?? "Failed to deliver voucher. Check server logs.");
     }
+
     setDelivering(null);
   }
 
