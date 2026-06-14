@@ -114,27 +114,34 @@ export function DashboardHeader() {
 
   function markAllRead() {
     if (!userIdRef.current) return;
-    // Update both state variables synchronously — no await, no re-derive
+    // Synchronous local update — badge clears immediately, no re-derive possible
     setUnreadCount(0);
     setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
-    // Persist to DB in background — fire and forget
-    supabase
-      .from("notifications")
-      .update({ is_read: true })
-      .eq("user_id", userIdRef.current)
-      .eq("is_read", false)
-      .then(({ error }) => { if (error) console.error("[notifications] markAllRead:", error.message); });
+    // Persist to DB in background. No boolean filter — just mark all owned rows read.
+    // count:"exact" lets us catch silent 0-row updates (e.g. RLS blocking the write).
+    void (async () => {
+      const { error, count } = await supabase
+        .from("notifications")
+        .update({ is_read: true }, { count: "exact" })
+        .eq("user_id", userIdRef.current!);
+      if (error) {
+        console.error("[notifications] markAllRead DB error:", error.message, error);
+      } else if (count === 0) {
+        console.warn("[notifications] markAllRead: 0 rows updated — check RLS UPDATE policy on notifications table");
+      }
+    })();
   }
 
   function markRead(id: string) {
     setNotifications((prev) => prev.map((n) => n.id === id ? { ...n, is_read: true } : n));
     setUnreadCount((prev) => Math.max(0, prev - 1));
-    // Persist in background — fire and forget
-    supabase
-      .from("notifications")
-      .update({ is_read: true })
-      .eq("id", id)
-      .then(({ error }) => { if (error) console.error("[notifications] markRead:", error.message); });
+    void (async () => {
+      const { error } = await supabase
+        .from("notifications")
+        .update({ is_read: true })
+        .eq("id", id);
+      if (error) console.error("[notifications] markRead DB error:", error.message);
+    })();
   }
 
   return (

@@ -334,9 +334,18 @@ CREATE TABLE IF NOT EXISTS notifications (
 ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Users can view own notifications"
-  ON notifications FOR SELECT USING (auth.uid() = user_id);
+  ON notifications FOR SELECT TO authenticated USING (auth.uid() = user_id);
+
+-- UPDATE policy needs both USING (row filter) and WITH CHECK (post-update check).
+-- Without WITH CHECK some Postgres versions silently reject the write.
+-- If upgrading from an older schema, run:
+--   DROP POLICY "Users can update own notifications" ON notifications;
+-- then recreate with the block below.
 CREATE POLICY "Users can update own notifications"
-  ON notifications FOR UPDATE USING (auth.uid() = user_id);
+  ON notifications FOR UPDATE TO authenticated
+  USING (auth.uid() = user_id)
+  WITH CHECK (auth.uid() = user_id);
+
 CREATE POLICY "Service role can insert notifications"
   ON notifications FOR INSERT WITH CHECK (true);
 
