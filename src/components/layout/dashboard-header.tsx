@@ -47,22 +47,22 @@ export function DashboardHeader() {
 
   const [open, setOpen]                   = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [userId, setUserId]               = useState<string | null>(null);
+  // Separate state — never derived, never recalculated on re-render.
+  // Only four things ever touch this: initial fetch, realtime INSERT, markRead, markAllRead.
+  const [unreadCount, setUnreadCount]     = useState(0);
+  const userIdRef                         = useRef<string | null>(null);
   const ref                               = useRef<HTMLDivElement>(null);
 
-  const unreadCount = notifications.filter((n) => !n.is_read).length;
-
-  // Fetch once on mount + subscribe to new inserts via realtime.
-  // Never re-fetch on bell open or route change — local state is the source of truth.
+  // Fetch ONCE on mount + realtime INSERT subscription.
+  // Bell open/close and route changes never trigger a re-fetch.
   useEffect(() => {
-    // channel ref lives inside the effect so cleanup always removes the right one
     let channel: ReturnType<typeof supabase.channel> | null = null;
 
     async function init() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      setUserId(user.id);
+      userIdRef.current = user.id;
 
       const { data, error } = await supabase
         .from("notifications")
@@ -71,37 +71,36 @@ export function DashboardHeader() {
         .order("created_at", { ascending: false })
         .limit(30);
 
-      if (error) console.error("[notifications] fetch:", error.message);
-      else setNotifications((data as Notification[]) ?? []);
+      if (error) {
+        console.error("[notifications] fetch:", error.message);
+        return;
+      }
 
-      // Realtime: prepend new notifications as they arrive
+      const list = (data as Notification[]) ?? [];
+      setNotifications(list);
+      // Set count once from DB — this is the only time we derive it
+      setUnreadCount(list.filter((n) => !n.is_read).length);
+
+      // Realtime: new inserts only — increment count, prepend to list
       channel = supabase
         .channel(`notifications-${user.id}`)
         .on(
           "postgres_changes",
-          {
-            event:  "INSERT",
-            schema: "public",
-            table:  "notifications",
-            filter: `user_id=eq.${user.id}`,
-          },
+          { event: "INSERT", schema: "public", table: "notifications", filter: `user_id=eq.${user.id}` },
           (payload) => {
             setNotifications((prev) => [payload.new as Notification, ...prev]);
+            setUnreadCount((prev) => prev + 1);
           }
         )
         .subscribe();
     }
 
     init();
-
-    return () => {
-      if (channel) supabase.removeChannel(channel);
-    };
-  // Empty deps: intentional — run once on mount, clean up on unmount
+    return () => { if (channel) supabase.removeChannel(channel); };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Close on outside click
+  // Close dropdown on outside click
   useEffect(() => {
     function handleClick(e: MouseEvent) {
       if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
@@ -110,27 +109,32 @@ export function DashboardHeader() {
     return () => document.removeEventListener("mousedown", handleClick);
   }, [open]);
 
-  // Close on route change
+  // Close dropdown on route change — no fetch, state is preserved
   useEffect(() => { setOpen(false); }, [pathname]);
 
-  async function markAllRead() {
-    if (!userId) return;
-    // Optimistic: update UI immediately so the badge disappears at once
+  function markAllRead() {
+    if (!userIdRef.current) return;
+    // Update both state variables synchronously — no await, no re-derive
+    setUnreadCount(0);
     setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
-    // Persist to DB — fire and forget (UI is already correct)
-    const { error } = await supabase
+    // Persist to DB in background — fire and forget
+    supabase
       .from("notifications")
       .update({ is_read: true })
-      .eq("user_id", userId)
-      .eq("is_read", false);
-    if (error) console.error("[notifications] markAllRead:", error.message);
+      .eq("user_id", userIdRef.current)
+      .eq("is_read", false)
+      .then(({ error }) => { if (error) console.error("[notifications] markAllRead:", error.message); });
   }
 
-  async function markRead(id: string) {
-    // Optimistic update first, then persist
+  function markRead(id: string) {
     setNotifications((prev) => prev.map((n) => n.id === id ? { ...n, is_read: true } : n));
-    const { error } = await supabase.from("notifications").update({ is_read: true }).eq("id", id);
-    if (error) console.error("[notifications] markRead:", error.message);
+    setUnreadCount((prev) => Math.max(0, prev - 1));
+    // Persist in background — fire and forget
+    supabase
+      .from("notifications")
+      .update({ is_read: true })
+      .eq("id", id)
+      .then(({ error }) => { if (error) console.error("[notifications] markRead:", error.message); });
   }
 
   return (
