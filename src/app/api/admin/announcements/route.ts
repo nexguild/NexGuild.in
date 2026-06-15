@@ -26,38 +26,61 @@ export async function POST(req: NextRequest) {
   const { admin, userId } = ctx;
   const targetVal = target ?? "all";
 
+  // Insert the announcement record
   const { data: ann, error: insertErr } = await admin
     .from("announcements")
     .insert({ title: title.trim(), message: message.trim(), target: targetVal, created_by: userId })
     .select("id, title, message, target, created_at")
     .single();
 
-  if (insertErr) return NextResponse.json({ error: insertErr.message }, { status: 500 });
+  if (insertErr) {
+    console.error("[announcements] insert error:", insertErr.message);
+    return NextResponse.json({ error: insertErr.message }, { status: 500 });
+  }
 
-  const { data: targetUsers } = await admin
-    .from("profiles")
-    .select("id, status, joined_at")
-    .eq("role", "contributor");
+  // Build the profiles query based on target
+  let query = admin.from("profiles").select("id");
 
-  if (targetUsers) {
+  if (targetVal === "all") {
+    // Everyone: contributors, admins, owners
+    query = query.in("role", ["contributor", "admin", "owner"]);
+  } else if (targetVal === "active") {
+    query = query.eq("role", "contributor").eq("status", "active");
+  } else if (targetVal === "new") {
     const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
-    const eligible = (targetUsers as { id: string; status: string; joined_at: string }[]).filter((u) => {
-      if (targetVal === "all") return true;
-      if (targetVal === "active") return u.status === "active";
-      if (targetVal === "new") return u.joined_at >= thirtyDaysAgo;
-      return true;
-    });
-    if (eligible.length > 0) {
-      await admin.from("notifications").insert(
-        eligible.map((u) => ({
-          user_id: u.id,
-          title: `📢 ${title.trim()}`,
-          message: message.trim(),
-          type: "announcement",
-        }))
-      );
+    query = query.eq("role", "contributor").gte("joined_at", thirtyDaysAgo);
+  } else {
+    query = query.in("role", ["contributor", "admin", "owner"]);
+  }
+
+  const { data: targetUsers, error: usersErr } = await query;
+
+  if (usersErr) {
+    console.error("[announcements] target users query error:", usersErr.message);
+    // Still return success for the announcement — notifications are best-effort
+    return NextResponse.json({ ok: true, announcement: ann, notifsSent: 0 });
+  }
+
+  const userIds = (targetUsers ?? []) as { id: string }[];
+  console.log(`[announcements] target="${targetVal}" → ${userIds.length} users`);
+
+  if (userIds.length > 0) {
+    const notifTitle = `📢 ${title.trim()}`;
+    const rows = userIds.map((u) => ({
+      user_id:  u.id,
+      title:    notifTitle,
+      message:  message.trim(),
+      type:     "announcement",
+      is_read:  false,
+    }));
+
+    const { error: notifErr } = await admin.from("notifications").insert(rows);
+    if (notifErr) {
+      console.error("[announcements] notifications insert error:", notifErr.message);
+    } else {
+      console.log(`[announcements] inserted ${rows.length} notifications`);
     }
   }
 
-  return NextResponse.json({ ok: true, announcement: ann });
+  return NextResponse.json({ ok: true, announcement: ann, notifsSent: userIds.length });
 }
