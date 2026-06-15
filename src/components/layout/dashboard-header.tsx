@@ -2,6 +2,7 @@
 
 import { Bell, ChevronDown, CheckCheck } from "lucide-react";
 import { Avatar } from "@/components/ui/avatar";
+import { NexGuildLogo } from "@/components/ui/nexguild-logo";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/lib/supabase";
@@ -146,7 +147,13 @@ export function DashboardHeader() {
 
   return (
     <header className="h-16 fixed top-0 right-0 left-sidebar z-30 flex items-center justify-between px-6 bg-[var(--surface-card)] border-b border-[var(--border-default)]">
-      <h1 className="text-lg font-semibold text-[var(--text-primary)]">{title}</h1>
+      {/* Mobile: logo (sidebar is hidden). Desktop: page title (sidebar already shows logo). */}
+      <div className="flex items-center">
+        <div className="lg:hidden">
+          <NexGuildLogo theme="teal" />
+        </div>
+        <h1 className="hidden lg:block text-lg font-semibold text-[var(--text-primary)]">{title}</h1>
+      </div>
 
       <div className="flex items-center gap-2">
         {/* Notification Bell */}
