@@ -1,32 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import Link from "next/link";
-import { Send, CheckCircle, Loader2, LifeBuoy } from "lucide-react";
-import { supabase } from "@/lib/supabase";
+import { useState } from "react";
+import { Send, CheckCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-function LoggedInView() {
-  return (
-    <div className="mx-auto max-w-2xl">
-      <Link
-        href="/dashboard/support"
-        className="flex items-center gap-5 rounded-xl border border-[rgba(20,184,166,0.2)] bg-[rgba(20,184,166,0.05)] p-6 group hover:border-[rgba(20,184,166,0.4)] transition-colors"
-      >
-        <div className="h-12 w-12 rounded-xl bg-[rgba(20,184,166,0.12)] flex items-center justify-center flex-shrink-0 group-hover:bg-[rgba(20,184,166,0.2)] transition-colors">
-          <LifeBuoy className="h-6 w-6 text-[#14b8a6]" />
-        </div>
-        <div className="flex-1 min-w-0">
-          <h3 className="font-semibold text-white mb-0.5">Submit a Support Ticket</h3>
-          <p className="text-sm text-white/50">Track your issue with a ticket. We respond within 24 hours.</p>
-          <p className="text-sm text-[#14b8a6] mt-1">Go to Support →</p>
-        </div>
-      </Link>
-    </div>
-  );
-}
-
-function GuestForm() {
+export default function ContributorContactPage() {
   const [name, setName]       = useState("");
   const [email, setEmail]     = useState("");
   const [message, setMessage] = useState("");
@@ -58,7 +36,7 @@ function GuestForm() {
 
   if (success) {
     return (
-      <div className="flex flex-col items-center gap-4 py-12 text-center">
+      <div className="min-h-[60vh] flex flex-col items-center justify-center gap-4 px-6 text-center">
         <div className="h-14 w-14 rounded-full bg-[rgba(20,184,166,0.1)] flex items-center justify-center">
           <CheckCircle className="h-7 w-7 text-[#14b8a6]" />
         </div>
@@ -77,105 +55,77 @@ function GuestForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5 max-w-lg">
-      <div>
-        <label className="block text-sm font-medium text-white mb-1.5">
-          Name <span className="text-[#14b8a6]">*</span>
-        </label>
-        <input
-          type="text"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          required
-          placeholder="Your name"
-          className="w-full h-10 px-3 rounded-md border border-white/10 bg-white/5 text-sm text-white placeholder:text-white/25 focus:outline-none focus:ring-2 focus:ring-[#14b8a6]/40 focus:border-transparent"
-        />
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-white mb-1.5">
-          Email <span className="text-[#14b8a6]">*</span>
-        </label>
-        <input
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-          placeholder="you@email.com"
-          className="w-full h-10 px-3 rounded-md border border-white/10 bg-white/5 text-sm text-white placeholder:text-white/25 focus:outline-none focus:ring-2 focus:ring-[#14b8a6]/40 focus:border-transparent"
-        />
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-white mb-1.5">
-          Message <span className="text-[#14b8a6]">*</span>
-        </label>
-        <textarea
-          value={message}
-          onChange={(e) => setMessage(e.target.value)}
-          required
-          rows={5}
-          placeholder="What would you like to know?"
-          className="w-full px-3 py-2.5 rounded-md border border-white/10 bg-white/5 text-sm text-white placeholder:text-white/25 focus:outline-none focus:ring-2 focus:ring-[#14b8a6]/40 focus:border-transparent resize-y min-h-[120px]"
-        />
-      </div>
-
-      {error && (
-        <p className="text-sm text-red-400 rounded-md bg-red-500/10 px-4 py-3">{error}</p>
-      )}
-
-      <Button type="submit" disabled={loading}>
-        {loading ? (
-          <><Loader2 className="h-4 w-4 animate-spin" /> Sending…</>
-        ) : (
-          <><Send className="h-4 w-4" /> Send Message</>
-        )}
-      </Button>
-    </form>
-  );
-}
-
-export default function ContributorContactPage() {
-  const [loggedIn, setLoggedIn] = useState<boolean | null>(null);
-
-  useEffect(() => {
-    // getUser() validates server-side; getSession() returns stale localStorage tokens
-    supabase.auth.getUser()
-      .then(({ data: { user } }) => setLoggedIn(!!user))
-      .catch(() => setLoggedIn(false));
-  }, []);
-
-  const isLoggedIn  = loggedIn === true;
-  const isGuest     = loggedIn === false;
-
-  return (
     <>
       {/* Hero */}
       <section className="relative overflow-hidden bg-[var(--surface-page)] py-20 px-6">
         <div className="pointer-events-none absolute inset-0 hero-glow" />
         <div className="mx-auto max-w-container relative z-10">
-          <p className="text-[var(--brand-500)] text-sm font-semibold uppercase tracking-widest mb-3">Support</p>
-          <h1 className="text-4xl sm:text-5xl font-bold text-white mb-4 text-balance">
-            {isLoggedIn ? "How Can We Help?" : "Get in Touch"}
-          </h1>
+          <p className="text-[var(--brand-500)] text-sm font-semibold uppercase tracking-widest mb-3">Contact</p>
+          <h1 className="text-4xl sm:text-5xl font-bold text-white mb-4 text-balance">Get in Touch</h1>
           <p className="text-lg text-white/50 max-w-xl leading-relaxed">
-            {isLoggedIn
-              ? "Submit a support ticket or join our community for help from other contributors."
-              : "Have a question before joining? Send us a message and we'll get back to you within 24 hours."}
+            Have a question? Send us a message and we&apos;ll get back to you within 24 hours.
           </p>
         </div>
       </section>
 
-      {/* Content */}
+      {/* Form */}
       <section className="bg-[var(--surface-card)] py-16 px-6">
-        <div className="mx-auto max-w-container">
-          {loggedIn === null && (
-            <div className="h-40 flex items-center justify-center">
-              <Loader2 className="h-6 w-6 animate-spin text-white/20" />
+        <div className="mx-auto max-w-lg">
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <div>
+              <label className="block text-sm font-medium text-white mb-1.5">
+                Name <span className="text-[#14b8a6]">*</span>
+              </label>
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+                placeholder="Your name"
+                className="w-full h-10 px-3 rounded-md border border-white/10 bg-white/5 text-sm text-white placeholder:text-white/25 focus:outline-none focus:ring-2 focus:ring-[#14b8a6]/40 focus:border-transparent"
+              />
             </div>
-          )}
-          {isLoggedIn && <LoggedInView />}
-          {isGuest    && <GuestForm />}
+
+            <div>
+              <label className="block text-sm font-medium text-white mb-1.5">
+                Email <span className="text-[#14b8a6]">*</span>
+              </label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                placeholder="you@email.com"
+                className="w-full h-10 px-3 rounded-md border border-white/10 bg-white/5 text-sm text-white placeholder:text-white/25 focus:outline-none focus:ring-2 focus:ring-[#14b8a6]/40 focus:border-transparent"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-white mb-1.5">
+                Message <span className="text-[#14b8a6]">*</span>
+              </label>
+              <textarea
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                required
+                rows={5}
+                placeholder="What would you like to know?"
+                className="w-full px-3 py-2.5 rounded-md border border-white/10 bg-white/5 text-sm text-white placeholder:text-white/25 focus:outline-none focus:ring-2 focus:ring-[#14b8a6]/40 focus:border-transparent resize-y min-h-[120px]"
+              />
+            </div>
+
+            {error && (
+              <p className="text-sm text-red-400 rounded-md bg-red-500/10 px-4 py-3">{error}</p>
+            )}
+
+            <Button type="submit" disabled={loading}>
+              {loading ? (
+                <><Loader2 className="h-4 w-4 animate-spin" /> Sending…</>
+              ) : (
+                <><Send className="h-4 w-4" /> Send Message</>
+              )}
+            </Button>
+          </form>
         </div>
       </section>
     </>
