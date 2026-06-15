@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Search, ChevronDown, User, Settings, LogOut } from "lucide-react";
+import { Search, ChevronDown, User, Settings, LogOut, Menu } from "lucide-react";
 import { Avatar } from "@/components/ui/avatar";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
@@ -29,7 +29,11 @@ interface AdminProfile {
   role: string;
 }
 
-export function AdminHeader() {
+interface AdminHeaderProps {
+  onMenuToggle: () => void;
+}
+
+export function AdminHeader({ onMenuToggle }: AdminHeaderProps) {
   const pathname  = usePathname();
   const router    = useRouter();
   const crumbs    = BREADCRUMBS[pathname] ?? ["Admin"];
@@ -72,19 +76,30 @@ export function AdminHeader() {
   const isOwner     = profile?.role === "owner";
 
   return (
-    <header className="h-16 fixed top-0 right-0 left-sidebar-admin z-30 flex items-center justify-between px-6 bg-[var(--surface-card)] border-b border-[var(--border-default)]">
-      {/* Breadcrumb */}
-      <nav className="flex items-center gap-2 text-sm">
-        <span className="text-[var(--text-muted)]">Admin</span>
-        {crumbs.map((crumb, i) => (
-          <span key={crumb} className="flex items-center gap-2">
-            <span className="text-[var(--text-muted)]">/</span>
-            <span className={i === crumbs.length - 1 ? "font-semibold text-[var(--text-primary)]" : "text-[var(--text-muted)]"}>
-              {crumb}
+    <header className="h-16 fixed top-0 right-0 left-0 lg:left-sidebar-admin z-30 flex items-center justify-between px-4 sm:px-6 bg-[var(--surface-card)] border-b border-[var(--border-default)]">
+      <div className="flex items-center gap-3">
+        {/* Hamburger — mobile only */}
+        <button
+          onClick={onMenuToggle}
+          className="lg:hidden h-9 w-9 flex items-center justify-center rounded-md hover:bg-[var(--surface-subtle)] transition-colors"
+          aria-label="Toggle menu"
+        >
+          <Menu className="h-5 w-5 text-[var(--text-primary)]" />
+        </button>
+
+        {/* Breadcrumb */}
+        <nav className="flex items-center gap-2 text-sm">
+          <span className="text-[var(--text-muted)]">Admin</span>
+          {crumbs.map((crumb, i) => (
+            <span key={crumb} className="flex items-center gap-2">
+              <span className="text-[var(--text-muted)]">/</span>
+              <span className={i === crumbs.length - 1 ? "font-semibold text-[var(--text-primary)]" : "text-[var(--text-muted)]"}>
+                {crumb}
+              </span>
             </span>
-          </span>
-        ))}
-      </nav>
+          ))}
+        </nav>
+      </div>
 
       <div className="flex items-center gap-3">
         {/* Search */}

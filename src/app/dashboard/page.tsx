@@ -136,7 +136,7 @@ export default function DashboardHome() {
           {loading ? "Welcome back!" : `Welcome back, ${displayName}!`}
         </h1>
         <p className="text-sm text-[var(--text-secondary)] mb-5">Here is your dashboard overview.</p>
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
           <StatCard
             label="NexCoins"
             value={loading ? "—" : (profile?.nexcoins ?? 0).toLocaleString()}
@@ -146,6 +146,7 @@ export default function DashboardHome() {
             value={loading ? "—" : tasksDone.toLocaleString()}
           />
           <StatCard
+            className="col-span-2 sm:col-span-1"
             label="Approval Rate"
             value={loading ? "—" : approvalRate === null ? "N/A" : approvalRate + "%"}
           />

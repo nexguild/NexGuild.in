@@ -6,13 +6,18 @@ import { useEffect, useState } from "react";
 import {
   LayoutDashboard, Users, FolderOpen,
   ClipboardCheck, Layers, Gift, BarChart3,
-  Settings, LogOut, ClipboardList, GraduationCap, Megaphone, Headphones, Tag,
+  Settings, LogOut, ClipboardList, GraduationCap, Megaphone, Headphones, Tag, X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { NexGuildLogo } from "@/components/ui/nexguild-logo";
 import { supabase } from "@/lib/supabase";
 
-export function AdminSidebar() {
+interface AdminSidebarProps {
+  open: boolean;
+  onClose: () => void;
+}
+
+export function AdminSidebar({ open, onClose }: AdminSidebarProps) {
   const pathname = usePathname();
   const [submissionCount, setSubmissionCount]   = useState(0);
   const [withdrawalCount, setWithdrawalCount]   = useState(0);
@@ -40,19 +45,19 @@ export function AdminSidebar() {
   }, []);
 
   const NAV_ITEMS = [
-    { label: "Overview",      href: "/admin",                icon: LayoutDashboard, badge: 0 },
-    { label: "Contributors",  href: "/admin/contributors",   icon: Users,           badge: 0 },
-    { label: "Tasks",         href: "/admin/tasks",          icon: ClipboardList,   badge: 0 },
-    { label: "Projects",       href: "/admin/projects",       icon: FolderOpen,      badge: 0 },
-    { label: "Submissions",   href: "/admin/submissions",    icon: ClipboardCheck,  badge: submissionCount },
-    { label: "Assignments",   href: "/admin/assignments",    icon: GraduationCap,   badge: assignmentCount },
-    { label: "Offerwalls",    href: "/admin/offerwalls",     icon: Layers,          badge: 0 },
-    { label: "Vouchers",         href: "/admin/vouchers",         icon: Gift,    badge: withdrawalCount },
-    { label: "Voucher Catalog",  href: "/admin/voucher-catalog",  icon: Tag,     badge: 0 },
-    { label: "Announcements",    href: "/admin/announcements",    icon: Megaphone, badge: 0 },
-    { label: "Support",       href: "/admin/support",        icon: Headphones,      badge: supportCount },
-    { label: "Finances",      href: "/admin/finances",       icon: BarChart3,       badge: 0 },
-    { label: "Settings",      href: "/admin/settings",       icon: Settings,        badge: 0 },
+    { label: "Overview",         href: "/admin",                 icon: LayoutDashboard, badge: 0 },
+    { label: "Contributors",     href: "/admin/contributors",    icon: Users,           badge: 0 },
+    { label: "Tasks",            href: "/admin/tasks",           icon: ClipboardList,   badge: 0 },
+    { label: "Projects",         href: "/admin/projects",        icon: FolderOpen,      badge: 0 },
+    { label: "Submissions",      href: "/admin/submissions",     icon: ClipboardCheck,  badge: submissionCount },
+    { label: "Assignments",      href: "/admin/assignments",     icon: GraduationCap,   badge: assignmentCount },
+    { label: "Offerwalls",       href: "/admin/offerwalls",      icon: Layers,          badge: 0 },
+    { label: "Vouchers",         href: "/admin/vouchers",        icon: Gift,            badge: withdrawalCount },
+    { label: "Voucher Catalog",  href: "/admin/voucher-catalog", icon: Tag,             badge: 0 },
+    { label: "Announcements",    href: "/admin/announcements",   icon: Megaphone,       badge: 0 },
+    { label: "Support",          href: "/admin/support",         icon: Headphones,      badge: supportCount },
+    { label: "Finances",         href: "/admin/finances",        icon: BarChart3,       badge: 0 },
+    { label: "Settings",         href: "/admin/settings",        icon: Settings,        badge: 0 },
   ];
 
   function isActive(href: string) {
@@ -61,53 +66,79 @@ export function AdminSidebar() {
   }
 
   return (
-    <aside className="fixed left-0 top-0 bottom-0 w-sidebar-admin flex flex-col z-40 admin-sidebar-bg border-r border-[rgba(255,255,255,0.06)]">
-      {/* Logo */}
-      <div className="h-16 flex items-center px-4 border-b border-[rgba(255,255,255,0.06)] flex-shrink-0">
-        <NexGuildLogo theme="gold" href="/admin" />
-      </div>
+    <>
+      {/* Mobile backdrop */}
+      <div
+        className={cn(
+          "fixed inset-0 z-30 bg-black/60 transition-opacity duration-300 lg:hidden",
+          open ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+        )}
+        onClick={onClose}
+        aria-hidden="true"
+      />
 
-      {/* Nav */}
-      <nav className="flex-1 px-3 py-4 overflow-y-auto scrollbar-thin">
-        <ul className="space-y-0.5">
-          {NAV_ITEMS.map((item) => {
-            const Icon = item.icon;
-            const active = isActive(item.href);
-            return (
-              <li key={item.href}>
-                <Link
-                  href={item.href}
-                  className={cn(
-                    "flex items-center gap-3 h-10 px-3 rounded-md text-sm font-medium transition-colors duration-150",
-                    active
-                      ? "bg-[var(--admin-sidebar-item-active)] text-[var(--admin-sidebar-active-text)]"
-                      : "text-[var(--admin-sidebar-text)] hover:bg-[var(--admin-sidebar-item-hover)] hover:text-white"
-                  )}
-                >
-                  <Icon className="h-4 w-4 flex-shrink-0" />
-                  <span className="flex-1">{item.label}</span>
-                  {item.badge > 0 && (
-                    <span className="inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-[var(--brand-500)] text-white text-xs font-bold px-1">
-                      {item.badge}
-                    </span>
-                  )}
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
-      </nav>
+      <aside
+        className={cn(
+          "fixed left-0 top-0 bottom-0 w-sidebar-admin flex flex-col z-40 admin-sidebar-bg border-r border-[rgba(255,255,255,0.06)]",
+          "transition-transform duration-300",
+          open ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+        )}
+      >
+        {/* Logo */}
+        <div className="h-16 flex items-center justify-between px-4 border-b border-[rgba(255,255,255,0.06)] flex-shrink-0">
+          <NexGuildLogo theme="gold" href="/admin" />
+          <button
+            onClick={onClose}
+            className="lg:hidden h-8 w-8 flex items-center justify-center rounded-md text-[var(--admin-sidebar-text)] hover:text-white hover:bg-[var(--admin-sidebar-item-hover)] transition-colors"
+            aria-label="Close menu"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
 
-      {/* Log Out */}
-      <div className="px-3 py-4 border-t border-[rgba(255,255,255,0.06)]">
-        <button
-          onClick={() => supabase.auth.signOut()}
-          className="flex items-center gap-3 h-10 px-3 w-full rounded-md text-sm font-medium text-[var(--admin-sidebar-text)] hover:text-white hover:bg-[var(--admin-sidebar-item-hover)] transition-colors"
-        >
-          <LogOut className="h-4 w-4 flex-shrink-0" />
-          Log Out
-        </button>
-      </div>
-    </aside>
+        {/* Nav */}
+        <nav className="flex-1 px-3 py-4 overflow-y-auto scrollbar-thin">
+          <ul className="space-y-0.5">
+            {NAV_ITEMS.map((item) => {
+              const Icon = item.icon;
+              const active = isActive(item.href);
+              return (
+                <li key={item.href}>
+                  <Link
+                    href={item.href}
+                    onClick={onClose}
+                    className={cn(
+                      "flex items-center gap-3 h-10 px-3 rounded-md text-sm font-medium transition-colors duration-150",
+                      active
+                        ? "bg-[var(--admin-sidebar-item-active)] text-[var(--admin-sidebar-active-text)]"
+                        : "text-[var(--admin-sidebar-text)] hover:bg-[var(--admin-sidebar-item-hover)] hover:text-white"
+                    )}
+                  >
+                    <Icon className="h-4 w-4 flex-shrink-0" />
+                    <span className="flex-1">{item.label}</span>
+                    {item.badge > 0 && (
+                      <span className="inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-[var(--brand-500)] text-white text-xs font-bold px-1">
+                        {item.badge}
+                      </span>
+                    )}
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </nav>
+
+        {/* Log Out */}
+        <div className="px-3 py-4 border-t border-[rgba(255,255,255,0.06)]">
+          <button
+            onClick={() => supabase.auth.signOut()}
+            className="flex items-center gap-3 h-10 px-3 w-full rounded-md text-sm font-medium text-[var(--admin-sidebar-text)] hover:text-white hover:bg-[var(--admin-sidebar-item-hover)] transition-colors"
+          >
+            <LogOut className="h-4 w-4 flex-shrink-0" />
+            Log Out
+          </button>
+        </div>
+      </aside>
+    </>
   );
 }

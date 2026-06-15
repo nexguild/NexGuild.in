@@ -39,20 +39,32 @@ export default function PostNewTaskPage() {
     setSaving(true);
     setError(null);
 
-    const { error: dbError } = await supabase.from("tasks").insert({
-      title: title.trim(),
-      task_type: taskType,
-      description: description.trim(),
-      requirements: requirements.trim() || null,
-      pay_per_task: payPerTask ? parseFloat(payPerTask) : null,
-      total_slots: totalSlots ? parseInt(totalSlots) : null,
-      deadline: deadline || null,
-      assignment_required: assignmentReq,
-      assignment_type: assignmentReq ? assignmentType : null,
-      status,
+    const { data: { session } } = await supabase.auth.getSession();
+    const token = session?.access_token;
+    if (!token) { setError("Not authenticated."); setSaving(false); return; }
+
+    const res = await fetch("/api/admin/tasks", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        title: title.trim(),
+        task_type: taskType,
+        description: description.trim(),
+        requirements: requirements.trim() || null,
+        pay_per_task: payPerTask ? parseFloat(payPerTask) : null,
+        total_slots: totalSlots ? parseInt(totalSlots) : null,
+        deadline: deadline || null,
+        assignment_required: assignmentReq,
+        assignment_type: assignmentReq ? assignmentType : null,
+        status,
+      }),
     });
 
-    if (dbError) { setError(dbError.message); setSaving(false); return; }
+    const data = await res.json();
+    if (!res.ok) { setError(data.error ?? "Failed to create task."); setSaving(false); return; }
     router.push("/admin/tasks");
   }
 

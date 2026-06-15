@@ -133,16 +133,16 @@ export default function EarnPage() {
           </FadeIn>
 
           <FadeIn delay={240}>
-            <div className="flex flex-wrap items-center justify-center gap-4 mb-10">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-10">
               <Link
                 href="/signup"
-                className="h-12 px-8 inline-flex items-center rounded-xl bg-[var(--brand-500)] text-[var(--text-inverse)] text-base font-bold hover:bg-[var(--brand-400)] transition-all duration-200 hover:scale-105 hover:shadow-[0_0_32px_rgba(20,184,166,0.4)]"
+                className="w-full sm:w-auto h-12 px-8 inline-flex items-center justify-center rounded-xl bg-[var(--brand-500)] text-[var(--text-inverse)] text-base font-bold hover:bg-[var(--brand-400)] transition-all duration-200 hover:scale-105 hover:shadow-[0_0_32px_rgba(20,184,166,0.4)]"
               >
                 Join Free →
               </Link>
               <Link
                 href="/opportunities"
-                className="h-12 px-8 inline-flex items-center rounded-xl border border-[var(--border-strong)] text-white/70 text-base font-medium hover:text-white hover:border-[var(--brand-500)] transition-colors"
+                className="w-full sm:w-auto h-12 px-8 inline-flex items-center justify-center rounded-xl border border-[var(--border-strong)] text-white/70 text-base font-medium hover:text-white hover:border-[var(--brand-500)] transition-colors"
               >
                 See Opportunities
               </Link>
@@ -272,7 +272,7 @@ export default function EarnPage() {
         <div className="mx-auto max-w-container">
           <FadeIn>
             <div
-              className="rounded-2xl p-12 text-center relative overflow-hidden"
+              className="rounded-2xl p-6 sm:p-12 text-center relative overflow-hidden"
               style={{
                 background: "linear-gradient(135deg, #000f1f 0%, #0A1628 40%, #0A1628 60%, #001a12 100%)",
                 border: "1px solid rgba(20,184,166,0.18)",

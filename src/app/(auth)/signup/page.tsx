@@ -62,6 +62,13 @@ export default function SignupPage() {
       return;
     }
 
+    // Fire-and-forget welcome email (non-blocking)
+    fetch("/api/auth/welcome", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, name: fullName }),
+    }).catch(() => {});
+
     // Supabase may require email confirmation — redirect to dashboard anyway;
     // the auth guard will handle unconfirmed sessions if email confirmation is off.
     router.push("/dashboard");

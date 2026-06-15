@@ -4,7 +4,16 @@ import { Button } from "@/components/ui/button";
 import { FadeIn } from "@/components/ui/fade-in";
 import { ArrowRight, CheckCircle, FileText, Users, BarChart3 } from "lucide-react";
 
-export const metadata: Metadata = { title: "For Organizations" };
+export const metadata: Metadata = {
+  title: "For Organizations — NexGuild",
+  description:
+    "NexGuild is a fully managed contributor platform for organisations. We handle recruiting, task distribution, quality review, and delivery — so you don't have to.",
+  openGraph: {
+    title: "For Organizations — NexGuild",
+    description: "Fully managed human data work at scale. You define the requirements, we deliver.",
+    url: "https://nexguild.in/for-organizations",
+  },
+};
 
 const WORK_TYPES = [
   { icon: "📊", label: "Research & Surveys",     desc: "Targeted participant recruitment and response collection at scale." },

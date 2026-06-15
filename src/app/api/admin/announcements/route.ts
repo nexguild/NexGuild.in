@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase-server";
+import { FROM_NOREPLY, getResend, announcementHtml } from "@/lib/email";
 
 async function verifyAdmin(req: NextRequest) {
   const token = req.headers.get("authorization")?.replace("Bearer ", "");
@@ -38,11 +39,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: insertErr.message }, { status: 500 });
   }
 
-  // Build the profiles query based on target
-  let query = admin.from("profiles").select("id");
+  // Build profiles query based on target
+  let query = admin.from("profiles").select("id, full_name, email");
 
   if (targetVal === "all") {
-    // Everyone: contributors, admins, owners
     query = query.in("role", ["contributor", "admin", "owner"]);
   } else if (targetVal === "active") {
     query = query.eq("role", "contributor").eq("status", "active");
@@ -57,30 +57,49 @@ export async function POST(req: NextRequest) {
 
   if (usersErr) {
     console.error("[announcements] target users query error:", usersErr.message);
-    // Still return success for the announcement — notifications are best-effort
     return NextResponse.json({ ok: true, announcement: ann, notifsSent: 0 });
   }
 
-  const userIds = (targetUsers ?? []) as { id: string }[];
-  console.log(`[announcements] target="${targetVal}" → ${userIds.length} users`);
+  const users = (targetUsers ?? []) as { id: string; full_name: string | null; email: string | null }[];
+  console.log(`[announcements] target="${targetVal}" → ${users.length} users`);
 
-  if (userIds.length > 0) {
+  let notifsSent = 0;
+  if (users.length > 0) {
     const notifTitle = `📢 ${title.trim()}`;
-    const rows = userIds.map((u) => ({
-      user_id:  u.id,
-      title:    notifTitle,
-      message:  message.trim(),
-      type:     "announcement",
-      is_read:  false,
+    const rows = users.map((u) => ({
+      user_id: u.id,
+      title:   notifTitle,
+      message: message.trim(),
+      type:    "announcement",
+      is_read: false,
     }));
 
     const { error: notifErr } = await admin.from("notifications").insert(rows);
     if (notifErr) {
       console.error("[announcements] notifications insert error:", notifErr.message);
     } else {
+      notifsSent = rows.length;
       console.log(`[announcements] inserted ${rows.length} notifications`);
+    }
+
+    // ── Email blast ────────────────────────────────────────────────────────
+    const resend = getResend();
+    if (resend) {
+      const withEmail = users.filter((u) => !!u.email);
+      const emails = withEmail.map((u) => ({
+        from:    FROM_NOREPLY,
+        to:      u.email!,
+        subject: `[NexGuild] ${title.trim()}`,
+        html:    announcementHtml(u.full_name ?? "Contributor", title.trim(), message.trim()),
+      }));
+
+      const CHUNK = 100;
+      for (let i = 0; i < emails.length; i += CHUNK) {
+        const { error: batchErr } = await resend.batch.send(emails.slice(i, i + CHUNK));
+        if (batchErr) console.error("[announcements] batch email error:", batchErr);
+      }
     }
   }
 
-  return NextResponse.json({ ok: true, announcement: ann, notifsSent: userIds.length });
+  return NextResponse.json({ ok: true, announcement: ann, notifsSent });
 }

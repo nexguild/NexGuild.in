@@ -337,4 +337,7 @@
   .left-sidebar-admin { left: 260px; }
   .w-sidebar        { width: 240px; }
   .w-sidebar-admin  { width: 260px; }
+
+  .sidebar-bg       { background-color: var(--sidebar-bg); }
+  .admin-sidebar-bg { background-color: var(--admin-sidebar-bg); }
 }

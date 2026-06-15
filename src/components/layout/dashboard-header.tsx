@@ -1,8 +1,7 @@
 "use client";
 
-import { Bell, ChevronDown, CheckCheck, User, Settings, LogOut } from "lucide-react";
+import { Bell, ChevronDown, CheckCheck, User, Settings, LogOut, Menu } from "lucide-react";
 import { Avatar } from "@/components/ui/avatar";
-import { NexGuildLogo } from "@/components/ui/nexguild-logo";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -59,7 +58,11 @@ interface Notification {
   created_at: string;
 }
 
-export function DashboardHeader() {
+interface DashboardHeaderProps {
+  onMenuToggle: () => void;
+}
+
+export function DashboardHeader({ onMenuToggle }: DashboardHeaderProps) {
   const pathname = usePathname();
   const router   = useRouter();
   const title    = PAGE_TITLES[pathname] ?? "Dashboard";
@@ -185,13 +188,17 @@ export function DashboardHeader() {
   }
 
   return (
-    <header className="h-16 fixed top-0 right-0 left-0 lg:left-[240px] z-30 flex items-center justify-between px-6 bg-[var(--surface-card)] border-b border-[var(--border-default)]">
-      {/* Mobile: logo. Desktop: page title. */}
-      <div className="flex items-center">
-        <div className="lg:hidden">
-          <NexGuildLogo theme="teal" />
-        </div>
-        <h1 className="hidden lg:block text-lg font-semibold text-[var(--text-primary)]">{title}</h1>
+    <header className="h-16 fixed top-0 right-0 left-0 lg:left-sidebar z-30 flex items-center justify-between px-4 sm:px-6 bg-[var(--surface-card)] border-b border-[var(--border-default)]">
+      <div className="flex items-center gap-3">
+        {/* Hamburger — mobile only */}
+        <button
+          onClick={onMenuToggle}
+          className="lg:hidden h-9 w-9 flex items-center justify-center rounded-md hover:bg-[var(--surface-subtle)] transition-colors"
+          aria-label="Toggle menu"
+        >
+          <Menu className="h-5 w-5 text-[var(--text-primary)]" />
+        </button>
+        <h1 className="text-lg font-semibold text-[var(--text-primary)]">{title}</h1>
       </div>
 
       <div className="flex items-center gap-2">

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { FROM_NOREPLY, getResend, taskApprovedHtml, taskRejectedHtml } from "@/lib/email";
 
 export async function POST(req: NextRequest) {
   const admin = createClient(
@@ -59,11 +60,11 @@ export async function POST(req: NextRequest) {
       const { error: e1 } = await admin
         .from("submissions")
         .update({
-          status:       "approved",
+          status:        "approved",
           coins_awarded: coins,
-          feedback:     feedback ?? null,
-          reviewed_by:  user.id,
-          reviewed_at:  now,
+          feedback:      feedback ?? null,
+          reviewed_by:   user.id,
+          reviewed_at:   now,
         })
         .eq("id", submissionId);
 
@@ -73,7 +74,6 @@ export async function POST(req: NextRequest) {
       }
 
       // 2. Atomic nexcoins increment via SQL function
-      //    UPDATE profiles SET nexcoins = COALESCE(nexcoins, 0) + coins WHERE id = contributor_id
       const { error: e2 } = await admin.rpc("increment_nexcoins", {
         p_contributor_id: sub.contributor_id,
         p_coins:          coins,
@@ -81,7 +81,6 @@ export async function POST(req: NextRequest) {
 
       if (e2) {
         console.error("[review-submission] increment_nexcoins:", e2.message);
-        // RPC missing — fall back to fetch-then-update
         const { data: p } = await admin
           .from("profiles")
           .select("nexcoins")
@@ -108,18 +107,42 @@ export async function POST(req: NextRequest) {
         source:         "task",
         description:    `Task approved: ${taskTitle}`,
       });
-
       if (e3) console.error("[review-submission] coin_transactions insert:", e3.message);
 
-      // 4. Notify contributor (non-critical)
+      // 4. Notify contributor (in-app)
       const { error: e4 } = await admin.from("notifications").insert({
         user_id: sub.contributor_id,
         title:   "Submission Approved!",
         message: `Your submission for "${taskTitle}" was approved. +${coins} NexCoins added.`,
         type:    "submission_approved",
       });
-
       if (e4) console.error("[review-submission] notification insert:", e4.message);
+
+      // 5. Email (non-critical — fetch updated profile for balance)
+      const resend = getResend();
+      if (resend) {
+        const { data: contrib } = await admin
+          .from("profiles")
+          .select("full_name, email, nexcoins")
+          .eq("id", sub.contributor_id)
+          .single();
+
+        const p = contrib as { full_name: string | null; email: string | null; nexcoins: number | null } | null;
+        if (p?.email) {
+          const { error: emailErr } = await resend.emails.send({
+            from:    FROM_NOREPLY,
+            to:      p.email,
+            subject: `Your submission was approved! +${coins} NexCoins`,
+            html:    taskApprovedHtml(
+              p.full_name ?? "Contributor",
+              taskTitle,
+              coins,
+              p.nexcoins ?? coins,
+            ),
+          });
+          if (emailErr) console.error("[review-submission] email error:", emailErr);
+        }
+      }
 
       return NextResponse.json({ success: true, coins_awarded: coins });
     }
@@ -144,8 +167,28 @@ export async function POST(req: NextRequest) {
         message: `Your submission for "${taskTitle}" was not approved.${feedback ? ` Reason: ${feedback}` : ""} You can re-submit.`,
         type:    "submission_rejected",
       });
-
       if (e2) console.error("[review-submission] reject notification:", e2.message);
+
+      // Email (non-critical)
+      const resend = getResend();
+      if (resend) {
+        const { data: contrib } = await admin
+          .from("profiles")
+          .select("full_name, email")
+          .eq("id", sub.contributor_id)
+          .single();
+
+        const p = contrib as { full_name: string | null; email: string | null } | null;
+        if (p?.email) {
+          const { error: emailErr } = await resend.emails.send({
+            from:    FROM_NOREPLY,
+            to:      p.email,
+            subject: `Submission feedback — ${taskTitle}`,
+            html:    taskRejectedHtml(p.full_name ?? "Contributor", taskTitle, feedback ?? null),
+          });
+          if (emailErr) console.error("[review-submission] reject email error:", emailErr);
+        }
+      }
 
       return NextResponse.json({ success: true });
     }

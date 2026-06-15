@@ -4,7 +4,16 @@ import { Button } from "@/components/ui/button";
 import { FadeIn } from "@/components/ui/fade-in";
 import { ArrowRight } from "lucide-react";
 
-export const metadata: Metadata = { title: "Services — NexGuild" };
+export const metadata: Metadata = {
+  title: "Services — NexGuild",
+  description:
+    "Explore NexGuild's full range of managed services: audio recording, transcription, data annotation, app testing, content moderation, and more — delivered at scale.",
+  openGraph: {
+    title: "Services — NexGuild",
+    description: "Human-powered data services, fully managed. Audio, transcription, annotation, testing and more.",
+    url: "https://nexguild.in/services",
+  },
+};
 
 const SERVICE_GROUPS = [
   {

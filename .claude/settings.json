@@ -33,7 +33,18 @@
       "Read(//tmp/**)",
       "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:5000)",
       "PowerShell(netstat -ano)",
-      "PowerShell(cd \"c:\\\\Users\\\\somen\\\\NexGuild.in\"; git add src/components/layout/gold-footer.tsx src/components/layout/teal-footer.tsx src/app/\\(gold\\)/layout.tsx src/app/\\(teal\\)/layout.tsx src/app/\\(gold\\)/about/page.tsx src/app/\\(gold\\)/contact/page.tsx \"src/app/\\(teal\\)/earn/about/page.tsx\" \"src/app/\\(teal\\)/earn/contact/page.tsx\" src/components/layout/client-header.tsx src/components/layout/contributor-header.tsx; git status --short)"
+      "PowerShell(cd \"c:\\\\Users\\\\somen\\\\NexGuild.in\"; git add src/components/layout/gold-footer.tsx src/components/layout/teal-footer.tsx src/app/\\(gold\\)/layout.tsx src/app/\\(teal\\)/layout.tsx src/app/\\(gold\\)/about/page.tsx src/app/\\(gold\\)/contact/page.tsx \"src/app/\\(teal\\)/earn/about/page.tsx\" \"src/app/\\(teal\\)/earn/contact/page.tsx\" src/components/layout/client-header.tsx src/components/layout/contributor-header.tsx; git status --short)",
+      "Bash(grep -i \"RESEND\\\\|resend\" .env.local)",
+      "Bash(grep -i \"RESEND\\\\|resend\" .env)",
+      "Bash(xargs wc -l)",
+      "Bash(mkdir -p \"c:/Users/somen/NexGuild.in/src/app/admin/contributors/[id]\")",
+      "Bash(mkdir -p \"c:/Users/somen/NexGuild.in/src/app/api/admin/contributors/[id]\" && mkdir -p \"c:/Users/somen/NexGuild.in/src/app/api/admin/settings\" && mkdir -p \"c:/Users/somen/NexGuild.in/src/app/api/admin/deduct-coins\" && mkdir -p \"c:/Users/somen/NexGuild.in/src/app/api/admin/projects\" && mkdir -p \"c:/Users/somen/NexGuild.in/src/app/admin/projects/new\" && mkdir -p \"c:/Users/somen/NexGuild.in/src/app/maintenance\")",
+      "Skill(code-review)",
+      "Skill(code-review:*)"
+    ],
+    "additionalDirectories": [
+      "c:\\Users\\somen\\NexGuild.in\\src\\app\\admin\\contributors",
+      "c:\\Users\\somen\\NexGuild.in\\src\\app\\api\\admin\\contributors"
     ]
   }
 }

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { Resend } from "resend";
 
 const TO_EMAIL   = "nexguild.in@gmail.com";
-const FROM_EMAIL = "contact@nexguild.in";
+const FROM_EMAIL = "noreply@nexguild.in";
 
 export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => null);
