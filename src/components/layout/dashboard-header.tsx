@@ -1,9 +1,10 @@
 "use client";
 
-import { Bell, ChevronDown, CheckCheck } from "lucide-react";
+import { Bell, ChevronDown, CheckCheck, User, Settings, LogOut } from "lucide-react";
 import { Avatar } from "@/components/ui/avatar";
 import { NexGuildLogo } from "@/components/ui/nexguild-logo";
-import { usePathname } from "next/navigation";
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/lib/supabase";
 
@@ -44,18 +45,20 @@ interface Notification {
 
 export function DashboardHeader() {
   const pathname = usePathname();
+  const router   = useRouter();
   const title    = PAGE_TITLES[pathname] ?? "Dashboard";
 
   const [open, setOpen]                   = useState(false);
+  const [menuOpen, setMenuOpen]           = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
-  // Separate state — never derived, never recalculated on re-render.
-  // Only four things ever touch this: initial fetch, realtime INSERT, markRead, markAllRead.
   const [unreadCount, setUnreadCount]     = useState(0);
+  const [userName, setUserName]           = useState<string | null>(null);
+  const [userInitials, setUserInitials]   = useState("?");
   const userIdRef                         = useRef<string | null>(null);
-  const ref                               = useRef<HTMLDivElement>(null);
+  const bellRef                           = useRef<HTMLDivElement>(null);
+  const menuRef                           = useRef<HTMLDivElement>(null);
 
-  // Fetch ONCE on mount + realtime INSERT subscription.
-  // Bell open/close and route changes never trigger a re-fetch.
+  // Fetch once on mount: notifications + user name for avatar
   useEffect(() => {
     let channel: ReturnType<typeof supabase.channel> | null = null;
 
@@ -65,12 +68,25 @@ export function DashboardHeader() {
 
       userIdRef.current = user.id;
 
-      const { data, error } = await supabase
-        .from("notifications")
-        .select("id, title, message, type, is_read, created_at")
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false })
-        .limit(30);
+      // Fetch profile name and notifications in parallel
+      const [{ data: profileData }, { data, error }] = await Promise.all([
+        supabase.from("profiles").select("full_name").eq("id", user.id).single(),
+        supabase
+          .from("notifications")
+          .select("id, title, message, type, is_read, created_at")
+          .eq("user_id", user.id)
+          .order("created_at", { ascending: false })
+          .limit(30),
+      ]);
+
+      // Set user name and initials
+      const name = profileData?.full_name ?? user.email ?? "";
+      setUserName(name);
+      setUserInitials(
+        name
+          ? name.split(" ").map((n: string) => n[0]).join("").slice(0, 2).toUpperCase()
+          : "?"
+      );
 
       if (error) {
         console.error("[notifications] fetch:", error.message);
@@ -79,10 +95,8 @@ export function DashboardHeader() {
 
       const list = (data as Notification[]) ?? [];
       setNotifications(list);
-      // Set count once from DB — this is the only time we derive it
       setUnreadCount(list.filter((n) => !n.is_read).length);
 
-      // Realtime: new inserts only — increment count, prepend to list
       channel = supabase
         .channel(`notifications-${user.id}`)
         .on(
@@ -101,35 +115,30 @@ export function DashboardHeader() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Close dropdown on outside click
+  // Close both dropdowns on outside click
   useEffect(() => {
     function handleClick(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+      if (bellRef.current && !bellRef.current.contains(e.target as Node)) setOpen(false);
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setMenuOpen(false);
     }
-    if (open) document.addEventListener("mousedown", handleClick);
+    if (open || menuOpen) document.addEventListener("mousedown", handleClick);
     return () => document.removeEventListener("mousedown", handleClick);
-  }, [open]);
+  }, [open, menuOpen]);
 
-  // Close dropdown on route change — no fetch, state is preserved
-  useEffect(() => { setOpen(false); }, [pathname]);
+  // Close dropdowns on route change
+  useEffect(() => { setOpen(false); setMenuOpen(false); }, [pathname]);
 
   function markAllRead() {
     if (!userIdRef.current) return;
-    // Synchronous local update — badge clears immediately, no re-derive possible
     setUnreadCount(0);
     setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
-    // Persist to DB in background. No boolean filter — just mark all owned rows read.
-    // count:"exact" lets us catch silent 0-row updates (e.g. RLS blocking the write).
     void (async () => {
       const { error, count } = await supabase
         .from("notifications")
         .update({ is_read: true }, { count: "exact" })
         .eq("user_id", userIdRef.current!);
-      if (error) {
-        console.error("[notifications] markAllRead DB error:", error.message, error);
-      } else if (count === 0) {
-        console.warn("[notifications] markAllRead: 0 rows updated — check RLS UPDATE policy on notifications table");
-      }
+      if (error) console.error("[notifications] markAllRead DB error:", error.message, error);
+      else if (count === 0) console.warn("[notifications] markAllRead: 0 rows updated — check RLS UPDATE policy on notifications table");
     })();
   }
 
@@ -137,17 +146,19 @@ export function DashboardHeader() {
     setNotifications((prev) => prev.map((n) => n.id === id ? { ...n, is_read: true } : n));
     setUnreadCount((prev) => Math.max(0, prev - 1));
     void (async () => {
-      const { error } = await supabase
-        .from("notifications")
-        .update({ is_read: true })
-        .eq("id", id);
+      const { error } = await supabase.from("notifications").update({ is_read: true }).eq("id", id);
       if (error) console.error("[notifications] markRead DB error:", error.message);
     })();
   }
 
+  async function handleSignOut() {
+    await supabase.auth.signOut();
+    router.push("/login");
+  }
+
   return (
     <header className="h-16 fixed top-0 right-0 left-0 lg:left-[240px] z-30 flex items-center justify-between px-6 bg-[var(--surface-card)] border-b border-[var(--border-default)]">
-      {/* Mobile: logo (sidebar is hidden). Desktop: page title (sidebar already shows logo). */}
+      {/* Mobile: logo. Desktop: page title. */}
       <div className="flex items-center">
         <div className="lg:hidden">
           <NexGuildLogo theme="teal" />
@@ -157,7 +168,7 @@ export function DashboardHeader() {
 
       <div className="flex items-center gap-2">
         {/* Notification Bell */}
-        <div ref={ref} className="relative">
+        <div ref={bellRef} className="relative">
           <button
             onClick={() => setOpen((v) => !v)}
             className="relative h-9 w-9 flex items-center justify-center rounded-md text-[var(--text-secondary)] hover:bg-[var(--surface-subtle)] hover:text-[var(--text-primary)] transition-colors"
@@ -173,7 +184,6 @@ export function DashboardHeader() {
 
           {open && (
             <div className="absolute right-0 top-11 w-80 max-h-[480px] flex flex-col rounded-xl border border-[var(--border-default)] bg-[var(--surface-card)] shadow-xl overflow-hidden">
-              {/* Header */}
               <div className="px-4 py-3 border-b border-[var(--border-default)] flex items-center justify-between flex-shrink-0">
                 <span className="text-sm font-semibold text-[var(--text-primary)]">
                   Notifications {unreadCount > 0 && <span className="text-[var(--brand-500)]">({unreadCount})</span>}
@@ -188,7 +198,6 @@ export function DashboardHeader() {
                 )}
               </div>
 
-              {/* Notifications list */}
               <div className="flex-1 overflow-y-auto">
                 {notifications.length === 0 ? (
                   <div className="py-10 flex flex-col items-center gap-2 text-center px-4">
@@ -230,10 +239,48 @@ export function DashboardHeader() {
         </div>
 
         {/* User Menu */}
-        <button className="flex items-center gap-2 h-9 px-2 rounded-md hover:bg-[var(--surface-subtle)] transition-colors">
-          <Avatar name="?" size="sm" />
-          <ChevronDown className="h-4 w-4 text-[var(--text-muted)]" />
-        </button>
+        <div ref={menuRef} className="relative">
+          <button
+            onClick={() => setMenuOpen((v) => !v)}
+            className="flex items-center gap-2 h-9 px-2 rounded-md hover:bg-[var(--surface-subtle)] transition-colors"
+            aria-label="User menu"
+          >
+            <Avatar name={userInitials} size="sm" />
+            <span className="hidden sm:block text-sm font-medium text-[var(--text-primary)] max-w-[100px] truncate">
+              {userName ? userName.split(" ")[0] : ""}
+            </span>
+            <ChevronDown className={`h-4 w-4 text-[var(--text-muted)] transition-transform duration-200 ${menuOpen ? "rotate-180" : ""}`} />
+          </button>
+
+          {menuOpen && (
+            <div className="absolute right-0 top-11 w-48 rounded-xl border border-[var(--border-default)] bg-[var(--surface-card)] shadow-xl overflow-hidden z-50">
+              <Link
+                href="/dashboard/profile"
+                onClick={() => setMenuOpen(false)}
+                className="flex items-center gap-3 px-4 py-3 text-sm text-[var(--text-primary)] hover:bg-[var(--surface-subtle)] transition-colors"
+              >
+                <User className="h-4 w-4 text-[var(--text-muted)]" />
+                View Profile
+              </Link>
+              <Link
+                href="/dashboard/settings"
+                onClick={() => setMenuOpen(false)}
+                className="flex items-center gap-3 px-4 py-3 text-sm text-[var(--text-primary)] hover:bg-[var(--surface-subtle)] transition-colors"
+              >
+                <Settings className="h-4 w-4 text-[var(--text-muted)]" />
+                Settings
+              </Link>
+              <div className="border-t border-[var(--border-default)]" />
+              <button
+                onClick={handleSignOut}
+                className="w-full flex items-center gap-3 px-4 py-3 text-sm text-red-400 hover:bg-red-500/5 transition-colors"
+              >
+                <LogOut className="h-4 w-4" />
+                Log Out
+              </button>
+            </div>
+          )}
+        </div>
       </div>
     </header>
   );

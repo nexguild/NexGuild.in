@@ -88,6 +88,8 @@ export default function ProfilePage() {
     setProfile((prev) => prev
       ? { ...prev, full_name: editName.trim() || null, country: editCountry || null, phone: editPhone.trim() || null }
       : prev);
+    setSaving(false);
+    setShowEdit(false);
   }
 
   async function addSkill(e: React.FormEvent) {
@@ -99,7 +101,9 @@ export default function ProfilePage() {
     setSkillSaving(true);
     const updated = [...current, skill];
     const { error } = await supabase.from("profiles").update({ skills: updated }).eq("id", userId);
-    if (!error) {
+    if (error) {
+      console.error("[profile] addSkill error:", error.message);
+    } else {
       setProfile((prev) => prev ? { ...prev, skills: updated } : prev);
       setSkillInput("");
     }
@@ -111,8 +115,7 @@ export default function ProfilePage() {
     const updated = (profile?.skills ?? []).filter((s) => s !== skill);
     const { error } = await supabase.from("profiles").update({ skills: updated }).eq("id", userId);
     if (!error) setProfile((prev) => prev ? { ...prev, skills: updated } : prev);
-    setSaving(false);
-    setShowEdit(false);
+    else console.error("[profile] removeSkill error:", error.message);
   }
 
   const displayName = profile?.full_name ?? email ?? "—";
