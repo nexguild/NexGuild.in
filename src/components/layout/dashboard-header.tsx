@@ -146,7 +146,7 @@ export function DashboardHeader() {
   }
 
   return (
-    <header className="h-16 fixed top-0 right-0 left-sidebar z-30 flex items-center justify-between px-6 bg-[var(--surface-card)] border-b border-[var(--border-default)]">
+    <header className="h-16 fixed top-0 right-0 left-0 lg:left-[240px] z-30 flex items-center justify-between px-6 bg-[var(--surface-card)] border-b border-[var(--border-default)]">
       {/* Mobile: logo (sidebar is hidden). Desktop: page title (sidebar already shows logo). */}
       <div className="flex items-center">
         <div className="lg:hidden">
