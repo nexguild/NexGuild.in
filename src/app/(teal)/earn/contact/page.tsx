@@ -161,9 +161,10 @@ export default function ContributorContactPage() {
   const [loggedIn, setLoggedIn] = useState<boolean | null>(null);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setLoggedIn(!!session?.user);
-    });
+    // getUser() validates server-side; getSession() returns stale localStorage tokens
+    supabase.auth.getUser()
+      .then(({ data: { user } }) => setLoggedIn(!!user))
+      .catch(() => setLoggedIn(false));
   }, []);
 
   const isLoggedIn  = loggedIn === true;
