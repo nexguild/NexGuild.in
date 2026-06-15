@@ -6,8 +6,6 @@ import { useState, useEffect } from "react";
 import { Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { NexGuildLogo } from "@/components/ui/nexguild-logo";
-import { supabase } from "@/lib/supabase";
-
 const NAV_LINKS = [
   { label: "Home",          href: "/earn" },
   { label: "Opportunities", href: "/opportunities" },
@@ -19,17 +17,6 @@ export function ContributorHeader() {
   const pathname = usePathname();
   const [scrolled, setScrolled]     = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [logoHref, setLogoHref]     = useState("/earn");
-
-  useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      setLogoHref(user ? "/dashboard" : "/earn");
-    });
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => {
-      setLogoHref(session?.user ? "/dashboard" : "/earn");
-    });
-    return () => subscription.unsubscribe();
-  }, []);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 48);
@@ -56,7 +43,7 @@ export function ContributorHeader() {
 
           {/* Logo */}
           <div className="flex items-center flex-shrink-0">
-            <NexGuildLogo theme="teal" href={logoHref} />
+            <NexGuildLogo theme="teal" href="/earn" />
           </div>
 
           {/* Desktop Nav */}
@@ -128,7 +115,7 @@ export function ContributorHeader() {
         )}
       >
         <div className="flex items-center justify-between px-6 h-16 border-b border-[#1e3a5f]">
-          <NexGuildLogo theme="teal" href={logoHref} />
+          <NexGuildLogo theme="teal" href="/earn" />
           <button
             onClick={() => setMobileOpen(false)}
             className="h-9 w-9 flex items-center justify-center rounded-md text-white/60 hover:bg-white/5"
