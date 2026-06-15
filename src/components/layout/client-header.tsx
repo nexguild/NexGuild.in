@@ -6,6 +6,7 @@ import { useState, useEffect } from "react";
 import { Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { NexGuildLogo } from "@/components/ui/nexguild-logo";
+import { supabase } from "@/lib/supabase";
 
 const NAV_LINKS = [
   { label: "Home",         href: "/client" },
@@ -19,6 +20,17 @@ export function ClientHeader() {
   const pathname = usePathname();
   const [scrolled, setScrolled]     = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [logoHref, setLogoHref]     = useState("/client");
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setLogoHref(session ? "/dashboard" : "/client");
+    });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => {
+      setLogoHref(session ? "/dashboard" : "/client");
+    });
+    return () => subscription.unsubscribe();
+  }, []);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 48);
@@ -45,7 +57,7 @@ export function ClientHeader() {
 
           {/* Logo */}
           <div className="flex items-center flex-shrink-0">
-            <NexGuildLogo theme="gold" href="/client" />
+            <NexGuildLogo theme="gold" href={logoHref} />
           </div>
 
           {/* Desktop Nav */}
@@ -111,7 +123,7 @@ export function ClientHeader() {
         )}
       >
         <div className="flex items-center justify-between px-6 h-16 border-b border-[#222222]">
-          <NexGuildLogo theme="gold" href="/client" />
+          <NexGuildLogo theme="gold" href={logoHref} />
           <button
             onClick={() => setMobileOpen(false)}
             className="h-9 w-9 flex items-center justify-center rounded-md text-white/60 hover:bg-white/5"
