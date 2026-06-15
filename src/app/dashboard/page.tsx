@@ -61,12 +61,14 @@ export default function DashboardHome() {
         supabase.from("submissions").select("*", { count: "exact", head: true }).eq("contributor_id", user.id).eq("status", "approved"),
         supabase.from("submissions").select("*", { count: "exact", head: true }).eq("contributor_id", user.id).in("status", ["approved", "rejected"]),
         // Latest unread announcement notification
+        // Use neq("is_read", true) instead of eq("is_read", false) so rows
+        // where is_read IS NULL (db default before explicit false) are also returned
         supabase
           .from("notifications")
           .select("id, title, message, created_at")
           .eq("user_id", user.id)
           .eq("type", "announcement")
-          .eq("is_read", false)
+          .neq("is_read", true)
           .order("created_at", { ascending: false })
           .limit(1),
       ]);
@@ -84,6 +86,7 @@ export default function DashboardHome() {
       );
 
       const notif = (announcementData as unknown as AnnouncementNotif[] | null)?.[0] ?? null;
+      console.log("[dashboard] announcement notif:", notif);
       setBanner(notif);
       setLoading(false);
     }

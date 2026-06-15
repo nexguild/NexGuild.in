@@ -3,13 +3,13 @@ import Link from "next/link";
 
 export const metadata: Metadata = { title: "Under Maintenance — NexGuild" };
 
-const SECTION_LABELS: Record<string, string> = {
-  org:          "Organization Services",
-  contributor:  "Contributor Platform",
-  dashboard:    "Contributor Dashboard",
-  store:        "NexGuild Store",
-  offerwalls:   "Offerwalls",
-  signup:       "New Registrations",
+const SECTION_META: Record<string, { label: string; backHref: string; backLabel: string }> = {
+  org:         { label: "Organization Services", backHref: "/",          backLabel: "Back to Home" },
+  contributor: { label: "Contributor Platform",  backHref: "/",          backLabel: "Back to Home" },
+  dashboard:   { label: "Contributor Dashboard", backHref: "/earn",      backLabel: "Back to Earn" },
+  store:       { label: "NexGuild Store",         backHref: "/dashboard", backLabel: "Back to Dashboard" },
+  offerwalls:  { label: "Offerwalls",             backHref: "/dashboard", backLabel: "Back to Dashboard" },
+  signup:      { label: "New Registrations",      backHref: "/",          backLabel: "Back to Home" },
 };
 
 export default async function SectionMaintenancePage({
@@ -18,7 +18,7 @@ export default async function SectionMaintenancePage({
   params: Promise<{ section: string }>;
 }) {
   const { section } = await params;
-  const label = SECTION_LABELS[section] ?? "This Section";
+  const meta  = SECTION_META[section] ?? { label: "This Section", backHref: "/", backLabel: "Back to Home" };
 
   return (
     <div className="min-h-screen bg-[#06111f] flex flex-col items-center justify-center px-6 text-center">
@@ -34,17 +34,17 @@ export default async function SectionMaintenancePage({
       </div>
 
       <h1 className="text-3xl font-bold text-white mb-3">Under Maintenance</h1>
-      <p className="text-white/70 text-lg mb-2">{label}</p>
+      <p className="text-white/70 text-lg mb-2">{meta.label}</p>
       <p className="text-white/50 max-w-sm leading-relaxed mb-8">
         We&apos;re making improvements to bring you a better experience. We&apos;ll be back soon!
       </p>
 
       <div className="flex items-center gap-3 flex-wrap justify-center">
         <Link
-          href="/"
+          href={meta.backHref}
           className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-[rgba(20,184,166,0.1)] border border-[rgba(20,184,166,0.25)] text-[#14b8a6] text-sm font-medium hover:bg-[rgba(20,184,166,0.2)] transition-colors"
         >
-          ← Back to Home
+          ← {meta.backLabel}
         </Link>
       </div>
 
