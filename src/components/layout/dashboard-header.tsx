@@ -54,6 +54,7 @@ export function DashboardHeader() {
   const [unreadCount, setUnreadCount]     = useState(0);
   const [userName, setUserName]           = useState<string | null>(null);
   const [userInitials, setUserInitials]   = useState("?");
+  const [avatarUrl, setAvatarUrl]         = useState<string | null>(null);
   const userIdRef                         = useRef<string | null>(null);
   const bellRef                           = useRef<HTMLDivElement>(null);
   const menuRef                           = useRef<HTMLDivElement>(null);
@@ -68,9 +69,9 @@ export function DashboardHeader() {
 
       userIdRef.current = user.id;
 
-      // Fetch profile name and notifications in parallel
+      // Fetch profile name, avatar, and notifications in parallel
       const [{ data: profileData }, { data, error }] = await Promise.all([
-        supabase.from("profiles").select("full_name").eq("id", user.id).single(),
+        supabase.from("profiles").select("full_name, avatar_url").eq("id", user.id).single(),
         supabase
           .from("notifications")
           .select("id, title, message, type, is_read, created_at")
@@ -79,7 +80,7 @@ export function DashboardHeader() {
           .limit(30),
       ]);
 
-      // Set user name and initials
+      // Set user name, initials, and avatar
       const name = profileData?.full_name ?? user.email ?? "";
       setUserName(name);
       setUserInitials(
@@ -87,6 +88,7 @@ export function DashboardHeader() {
           ? name.split(" ").map((n: string) => n[0]).join("").slice(0, 2).toUpperCase()
           : "?"
       );
+      if (profileData?.avatar_url) setAvatarUrl(profileData.avatar_url);
 
       if (error) {
         console.error("[notifications] fetch:", error.message);
@@ -245,7 +247,7 @@ export function DashboardHeader() {
             className="flex items-center gap-2 h-9 px-2 rounded-md hover:bg-[var(--surface-subtle)] transition-colors"
             aria-label="User menu"
           >
-            <Avatar name={userInitials} size="sm" />
+            <Avatar src={avatarUrl} name={userInitials} size="sm" />
             <span className="hidden sm:block text-sm font-medium text-[var(--text-primary)] max-w-[100px] truncate">
               {userName ? userName.split(" ")[0] : ""}
             </span>

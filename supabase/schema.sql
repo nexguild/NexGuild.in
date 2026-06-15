@@ -242,6 +242,30 @@ GRANT ALL ON public.voucher_requests  TO authenticated, service_role;
 ALTER TABLE profiles ADD COLUMN IF NOT EXISTS skills            TEXT[]  DEFAULT '{}';
 ALTER TABLE profiles ADD COLUMN IF NOT EXISTS notification_prefs JSONB  DEFAULT '{"task_approved":true,"voucher_delivered":true,"new_opportunities":true}';
 ALTER TABLE profiles ADD COLUMN IF NOT EXISTS phone             TEXT;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS avatar_url        TEXT;
+
+-- ── Storage: avatars bucket ────────────────────────────────────────
+-- Run once to create the public bucket for profile pictures.
+-- INSERT INTO storage.buckets (id, name, public)
+-- VALUES ('avatars', 'avatars', true)
+-- ON CONFLICT (id) DO NOTHING;
+--
+-- Storage RLS policies (run after bucket is created):
+-- CREATE POLICY "Avatar public read"
+--   ON storage.objects FOR SELECT TO public
+--   USING (bucket_id = 'avatars');
+--
+-- CREATE POLICY "Users upload own avatar"
+--   ON storage.objects FOR INSERT TO authenticated
+--   WITH CHECK (bucket_id = 'avatars' AND auth.uid()::text = (storage.foldername(name))[1]);
+--
+-- CREATE POLICY "Users update own avatar"
+--   ON storage.objects FOR UPDATE TO authenticated
+--   USING (bucket_id = 'avatars' AND auth.uid()::text = (storage.foldername(name))[1]);
+--
+-- CREATE POLICY "Users delete own avatar"
+--   ON storage.objects FOR DELETE TO authenticated
+--   USING (bucket_id = 'avatars' AND auth.uid()::text = (storage.foldername(name))[1]);
 
 GRANT ALL ON public.profiles TO authenticated, service_role;
 
