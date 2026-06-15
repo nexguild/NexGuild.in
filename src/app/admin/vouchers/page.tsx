@@ -36,6 +36,7 @@ export default function VouchersPage() {
   const [search, setSearch] = useState("");
   const [codes, setCodes] = useState<Record<string, string>>({});
   const [delivering, setDelivering] = useState<string | null>(null);
+  const [deliverErrors, setDeliverErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
     async function fetchRequests() {
@@ -51,9 +52,10 @@ export default function VouchersPage() {
 
   async function markDelivered(req: VoucherRequest) {
     const code = codes[req.id]?.trim();
-    if (!code) { alert("Enter a voucher code first."); return; }
+    if (!code) return;
 
     setDelivering(req.id);
+    setDeliverErrors((prev) => { const next = { ...prev }; delete next[req.id]; return next; });
 
     const { data: { session } } = await supabase.auth.getSession();
     const token = session?.access_token;
@@ -77,7 +79,7 @@ export default function VouchersPage() {
       );
     } else {
       const data = await res.json().catch(() => ({}));
-      alert(data.error ?? "Failed to deliver voucher. Check server logs.");
+      setDeliverErrors((prev) => ({ ...prev, [req.id]: data.error ?? "Failed to deliver voucher. Check server logs." }));
     }
 
     setDelivering(null);
@@ -169,20 +171,25 @@ export default function VouchersPage() {
               </div>
 
               {req.status !== "delivered" && (
-                <div className="mt-4 flex items-center gap-2">
-                  <input
-                    type="text"
-                    value={codes[req.id] ?? ""}
-                    onChange={(e) => setCodes((prev) => ({ ...prev, [req.id]: e.target.value }))}
-                    placeholder="Enter voucher code…"
-                    className="flex-1 h-9 px-3 rounded-md border border-[var(--border-strong)] bg-[var(--surface-subtle)] text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--border-focus)] focus:border-transparent"
-                  />
-                  <Button size="sm" disabled={delivering === req.id || !codes[req.id]?.trim()}
-                    onClick={() => markDelivered(req)}>
-                    {delivering === req.id
-                      ? <Loader2 className="h-4 w-4 animate-spin" />
-                      : <><CheckCircle className="h-4 w-4" /> Mark Delivered</>}
-                  </Button>
+                <div className="mt-4 space-y-1.5">
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      value={codes[req.id] ?? ""}
+                      onChange={(e) => setCodes((prev) => ({ ...prev, [req.id]: e.target.value }))}
+                      placeholder="Enter voucher code…"
+                      className="flex-1 h-9 px-3 rounded-md border border-[var(--border-strong)] bg-[var(--surface-subtle)] text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--border-focus)] focus:border-transparent"
+                    />
+                    <Button size="sm" disabled={delivering === req.id || !codes[req.id]?.trim()}
+                      onClick={() => markDelivered(req)}>
+                      {delivering === req.id
+                        ? <Loader2 className="h-4 w-4 animate-spin" />
+                        : <><CheckCircle className="h-4 w-4" /> Mark Delivered</>}
+                    </Button>
+                  </div>
+                  {deliverErrors[req.id] && (
+                    <p className="text-xs text-red-400">{deliverErrors[req.id]}</p>
+                  )}
                 </div>
               )}
             </div>

@@ -47,6 +47,7 @@ export default function ContributorsPage() {
       const { data } = await supabase
         .from("profiles")
         .select("id, full_name, email, country, status, nexcoins, joined_at")
+        .neq("role", "admin")
         .order("joined_at", { ascending: false });
       setContributors(data ?? []);
       setLoading(false);

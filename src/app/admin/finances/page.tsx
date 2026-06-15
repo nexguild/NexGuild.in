@@ -61,11 +61,8 @@ export default function FinancesPage() {
       setActiveContributors(profiles?.length ?? 0);
       setPendingSubmissions(pendingSubs?.length ?? 0);
 
-      // Build monthly buckets from coin_transactions
+      // Build monthly buckets from approvedSubs and vouchers
       const buckets: Record<string, MonthBucket> = {};
-      for (const txn of (earnedTxns ?? []) as { amount: number; created_at?: string }[]) {
-        // coin_transactions don't have created_at in our select, rebuild from approvedSubs
-      }
       for (const sub of (approvedSubs ?? []) as { coins_awarded: number | null; submitted_at: string }[]) {
         const d     = new Date(sub.submitted_at);
         const key   = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;

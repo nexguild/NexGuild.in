@@ -62,6 +62,7 @@ export default function AdminSupportPage() {
   const [loadingMsgs, setLoadingMsgs] = useState(false);
   const [replyText, setReplyText]   = useState("");
   const [sending, setSending]       = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
   const msgEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -126,6 +127,7 @@ export default function AdminSupportPage() {
     if (!openTicket || !token) return;
     if (!replyText.trim() && !closeTicket) return;
     setSending(true);
+    setActionError(null);
 
     const res = await fetch("/api/admin/reply-ticket", {
       method:  "POST",
@@ -149,7 +151,7 @@ export default function AdminSupportPage() {
       }
     } else {
       const d = await res.json().catch(() => ({}));
-      alert(d.error ?? "Action failed — check server logs.");
+      setActionError(d.error ?? "Action failed — check server logs.");
     }
     setSending(false);
   }
@@ -263,6 +265,9 @@ export default function AdminSupportPage() {
         {/* Reply input + actions */}
         {!isClosed && (
           <div className="border-t border-[var(--border-default)] px-4 py-3 bg-[var(--surface-card)] flex-shrink-0 space-y-2">
+            {actionError && (
+              <p className="text-xs text-red-400 bg-red-500/10 px-3 py-2 rounded-md">{actionError}</p>
+            )}
             <div className="flex gap-2 items-end">
               <textarea
                 rows={2}

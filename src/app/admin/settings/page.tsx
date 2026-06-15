@@ -73,6 +73,11 @@ export default function AdminSettingsPage() {
   const [couponErr, setCouponErr]           = useState<string | null>(null);
 
   useEffect(() => {
+    const saved = localStorage.getItem("nexguild:maintenance");
+    if (saved !== null) setMaintenance(saved === "true");
+  }, []);
+
+  useEffect(() => {
     async function load() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
@@ -199,7 +204,11 @@ export default function AdminSettingsPage() {
               {maintenance ? "Dashboard is in maintenance mode — contributors cannot access it." : "Dashboard is live and accessible to contributors."}
             </p>
           </div>
-          <Toggle on={maintenance} onToggle={() => setMaintenance((v) => !v)} />
+          <Toggle on={maintenance} onToggle={() => {
+            const next = !maintenance;
+            setMaintenance(next);
+            localStorage.setItem("nexguild:maintenance", String(next));
+          }} />
         </div>
       </section>
 
