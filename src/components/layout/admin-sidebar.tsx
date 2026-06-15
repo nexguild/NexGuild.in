@@ -64,7 +64,7 @@ export function AdminSidebar() {
     <aside className="fixed left-0 top-0 bottom-0 w-sidebar-admin flex flex-col z-40 admin-sidebar-bg border-r border-[rgba(255,255,255,0.06)]">
       {/* Logo */}
       <div className="h-16 flex items-center px-4 border-b border-[rgba(255,255,255,0.06)] flex-shrink-0">
-        <NexGuildLogo theme="gold" />
+        <NexGuildLogo theme="gold" href="/admin" />
       </div>
 
       {/* Nav */}

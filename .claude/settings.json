@@ -22,7 +22,18 @@
       "Bash(powershell -Command \"Get-ChildItem -Recurse -Path 'c:\\\\Users\\\\somen\\\\NexGuild.in\\\\src' | Select-Object FullName\")",
       "PowerShell(cd \"c:\\\\Users\\\\somen\\\\NexGuild.in\"; git add src/app/dashboard/page.tsx src/app/dashboard/wallet/page.tsx src/app/dashboard/store/page.tsx src/app/dashboard/earnings/page.tsx src/app/layout.tsx src/app/api/contact/route.ts src/components/ui/contact-form.tsx src/components/ui/ad-banner.tsx public/robots.txt public/sitemap.xml src/app/\\(gold\\)/about/page.tsx src/app/\\(gold\\)/contact/page.tsx src/app/\\(teal\\)/opportunities/page.tsx src/app/\\(teal\\)/how-it-works/page.tsx src/app/\\(teal\\)/earn/page.tsx package.json package-lock.json; git status)",
       "Bash(git commit *)",
-      "Bash(npm run *)"
+      "Bash(npm run *)",
+      "PowerShell(cd \"C:\\\\Users\\\\somen\\\\NexGuild.in\"; Start-Process powershell -ArgumentList '-NoExit', '-Command', 'cd \"C:\\\\Users\\\\somen\\\\NexGuild.in\"; npm run dev' -WindowStyle Minimized; Start-Sleep -Seconds 8; $null)",
+      "PowerShell($r = Invoke-WebRequest -Uri \"http://localhost:3000\" -TimeoutSec 15 -UseBasicParsing -ErrorAction SilentlyContinue; if \\($r\\) { \"HTTP $\\($r.StatusCode\\) — $\\($r.Content.Length\\) bytes\" } else { \"not ready yet\" })",
+      "PowerShell(Start-Sleep -Seconds 10; $r = Invoke-WebRequest -Uri \"http://localhost:3000\" -TimeoutSec 20 -UseBasicParsing -ErrorAction SilentlyContinue; if \\($r\\) { \"HTTP $\\($r.StatusCode\\)\" } else { \"still not ready\" })",
+      "PowerShell(cd \"C:\\\\Users\\\\somen\\\\NexGuild.in\"; $env:NODE_ENV = \"development\"; Start-Job -ScriptBlock { Set-Location \"C:\\\\Users\\\\somen\\\\NexGuild.in\"; npm run dev 2>&1 } -Name \"nextdev\" | Out-Null; \"Job started\")",
+      "PowerShell(Receive-Job -Name \"nextdev\" -Keep)",
+      "Bash(echo \"PID: $!\")",
+      "Bash(sleep 18 && cat /tmp/nextjs.log)",
+      "Read(//tmp/**)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:5000)",
+      "PowerShell(netstat -ano)",
+      "PowerShell(cd \"c:\\\\Users\\\\somen\\\\NexGuild.in\"; git add src/components/layout/gold-footer.tsx src/components/layout/teal-footer.tsx src/app/\\(gold\\)/layout.tsx src/app/\\(teal\\)/layout.tsx src/app/\\(gold\\)/about/page.tsx src/app/\\(gold\\)/contact/page.tsx \"src/app/\\(teal\\)/earn/about/page.tsx\" \"src/app/\\(teal\\)/earn/contact/page.tsx\" src/components/layout/client-header.tsx src/components/layout/contributor-header.tsx; git status --short)"
     ]
   }
 }

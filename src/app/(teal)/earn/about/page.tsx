@@ -3,36 +3,36 @@ import Link from "next/link";
 import { FadeIn } from "@/components/ui/fade-in";
 
 export const metadata: Metadata = {
-  title: "About NexGuild — Managed Data Services for Organisations",
+  title: "About NexGuild — Earn by Contributing",
   description:
-    "NexGuild partners with organisations to deliver high-quality human data at scale. Audio, transcription, annotation, and more — fully managed, zero overhead for your team.",
+    "NexGuild is a community where anyone can earn real money by completing simple tasks — audio recording, transcription, app testing, and more. Free to join.",
   openGraph: {
-    title: "About NexGuild",
-    description: "Managed data services for organisations. We handle everything — you get results.",
-    url: "https://nexguild.in/about",
+    title: "About NexGuild — For Contributors",
+    description: "Join India's contributor community. Complete tasks, earn NexCoins, redeem for real rewards.",
+    url: "https://nexguild.in/earn/about",
   },
 };
 
-const PILLARS = [
+const VALUES = [
   {
-    title: "Fully Managed Delivery",
-    desc: "You brief us once. We handle recruitment, task distribution, quality review, and delivery. Your team never manages contributors directly.",
+    title: "Anyone Can Join",
+    desc: "No qualifications required. If you have a smartphone and some free time, you can start earning NexCoins today.",
   },
   {
-    title: "Built-in Quality Control",
-    desc: "Every submission goes through structured review before delivery. We reject low-quality work so your datasets stay clean.",
+    title: "Know Before You Start",
+    desc: "Every task shows the NexCoin reward upfront. No hidden deductions, no bait-and-switch after you submit.",
   },
   {
-    title: "Transparent Pricing",
-    desc: "No hidden fees, no surprise invoices. You know the cost before we start. We scope the project and stick to it.",
+    title: "Real Rewards",
+    desc: "NexCoins redeem directly for Amazon, Flipkart, Google Play, and Zomato vouchers. No points that expire useless.",
   },
   {
-    title: "No Inflated Claims",
-    desc: "No fake testimonials, no invented statistics. Our reputation is built on real client results, delivered without shortcuts.",
+    title: "Fair Quality Review",
+    desc: "We review submissions for quality — not to find excuses to reject. Good work gets rewarded consistently.",
   },
 ];
 
-export default function AboutPage() {
+export default function ContributorAboutPage() {
   return (
     <>
       {/* Hero */}
@@ -42,41 +42,41 @@ export default function AboutPage() {
           <FadeIn>
             <p className="text-[var(--brand-500)] text-sm font-semibold uppercase tracking-widest mb-3">About</p>
             <h1 className="text-4xl sm:text-5xl font-bold text-white mb-4 text-balance max-w-2xl">
-              We Do the Heavy Lifting.<br />You Get the Data.
+              Turn Free Time<br />Into Real Earnings.
             </h1>
             <p className="text-lg text-[var(--text-secondary)] max-w-xl leading-relaxed">
-              NexGuild is a managed contributor platform. Organisations brief us with data requirements, and we handle everything else — end to end.
+              NexGuild gives anyone a straightforward way to earn income by completing real tasks — no experience required, no commute needed.
             </p>
           </FadeIn>
         </div>
       </section>
 
-      {/* What we do */}
+      {/* Our story */}
       <section className="bg-[var(--surface-card)] py-16 px-6">
         <div className="mx-auto max-w-prose">
           <FadeIn>
-            <h2 className="text-2xl font-bold text-white mb-6">What We Do</h2>
+            <h2 className="text-2xl font-bold text-white mb-6">Why We Built This</h2>
             <p className="text-[var(--text-secondary)] leading-relaxed mb-4">
-              We run a structured contributor network that completes audio recording, transcription, data annotation, image collection, and other human-powered tasks on behalf of organisations.
+              Most earning platforms are packed with fake promises, impossible withdrawal thresholds, or tasks that pay almost nothing. We built NexGuild to be different.
             </p>
             <p className="text-[var(--text-secondary)] leading-relaxed mb-4">
-              Unlike freelance platforms, you don't post jobs or manage people. You describe what you need, we scope the project, assemble the right contributors, run quality control, and deliver clean output.
+              Every task on NexGuild is real work — audio recordings for AI training, transcription, app reviews, web research. Organisations actually pay for this work, and we pass a fair share directly to contributors as NexCoins.
             </p>
             <p className="text-[var(--text-secondary)] leading-relaxed">
-              We are India-based, working with AI companies, research teams, and digital agencies that need reliable human data without the overhead of managing a distributed workforce themselves.
+              We are India-based and built for Indian contributors. NexCoins redeem for vouchers you can actually use — Amazon, Flipkart, Zomato, Google Play.
             </p>
           </FadeIn>
         </div>
       </section>
 
-      {/* Pillars */}
+      {/* Values */}
       <section className="bg-[var(--surface-page)] py-16 px-6">
         <div className="mx-auto max-w-container">
           <FadeIn>
-            <h2 className="text-2xl font-bold text-white mb-10">How We Work</h2>
+            <h2 className="text-2xl font-bold text-white mb-10">What We Stand For</h2>
           </FadeIn>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-            {PILLARS.map((item, i) => (
+            {VALUES.map((item, i) => (
               <FadeIn key={item.title} delay={i * 80}>
                 <div className="rounded-xl border border-[var(--border-default)] bg-[var(--surface-card)] p-6 h-full card-hover">
                   <div className="w-8 h-0.5 bg-[var(--brand-500)] mb-4" />
@@ -93,22 +93,22 @@ export default function AboutPage() {
       <section className="bg-[var(--surface-card)] py-16 px-6">
         <div className="mx-auto max-w-prose">
           <FadeIn>
-            <h2 className="text-2xl font-bold text-white mb-4">Have a Project in Mind?</h2>
+            <h2 className="text-2xl font-bold text-white mb-4">Ready to Start?</h2>
             <p className="text-[var(--text-secondary)] leading-relaxed mb-8">
-              Tell us what you need. We will review your requirements and get back within 2 business days with a scope and timeline.
+              Sign up for free, browse available tasks, and start earning NexCoins today. No waiting period, no approval process.
             </p>
             <div className="flex flex-wrap gap-4">
               <Link
-                href="/contact"
-                className="inline-flex items-center gap-2 h-11 px-6 rounded-lg bg-[var(--brand-500)] text-[#0c0800] text-sm font-semibold hover:opacity-90 transition-opacity"
+                href="/signup"
+                className="inline-flex items-center gap-2 h-11 px-6 rounded-lg bg-[#14b8a6] text-[#0A1628] text-sm font-semibold hover:bg-[#5eead4] transition-colors"
               >
-                Contact Us
+                Sign Up Free →
               </Link>
               <Link
-                href="/services"
+                href="/opportunities"
                 className="inline-flex items-center gap-2 h-11 px-6 rounded-lg border border-[var(--border-default)] text-[var(--text-secondary)] text-sm font-medium hover:text-white hover:border-white/30 transition-colors"
               >
-                View Services
+                Browse Opportunities
               </Link>
             </div>
           </FadeIn>

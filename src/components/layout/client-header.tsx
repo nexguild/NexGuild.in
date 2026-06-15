@@ -6,8 +6,6 @@ import { useState, useEffect } from "react";
 import { Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { NexGuildLogo } from "@/components/ui/nexguild-logo";
-import { supabase } from "@/lib/supabase";
-
 const NAV_LINKS = [
   { label: "Home",         href: "/client" },
   { label: "Services",     href: "/services" },
@@ -20,17 +18,6 @@ export function ClientHeader() {
   const pathname = usePathname();
   const [scrolled, setScrolled]     = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [logoHref, setLogoHref]     = useState("/client");
-
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setLogoHref(session ? "/dashboard" : "/client");
-    });
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => {
-      setLogoHref(session ? "/dashboard" : "/client");
-    });
-    return () => subscription.unsubscribe();
-  }, []);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 48);
@@ -57,7 +44,7 @@ export function ClientHeader() {
 
           {/* Logo */}
           <div className="flex items-center flex-shrink-0">
-            <NexGuildLogo theme="gold" href={logoHref} />
+            <NexGuildLogo theme="gold" href="/client" />
           </div>
 
           {/* Desktop Nav */}
@@ -84,7 +71,7 @@ export function ClientHeader() {
               href="/earn"
               className="text-xs text-white/40 hover:text-white/70 transition-colors"
             >
-              Are you a contributor? →
+              Looking to earn? →
             </Link>
             <Link
               href="/contact"
@@ -123,7 +110,7 @@ export function ClientHeader() {
         )}
       >
         <div className="flex items-center justify-between px-6 h-16 border-b border-[#222222]">
-          <NexGuildLogo theme="gold" href={logoHref} />
+          <NexGuildLogo theme="gold" href="/client" />
           <button
             onClick={() => setMobileOpen(false)}
             className="h-9 w-9 flex items-center justify-center rounded-md text-white/60 hover:bg-white/5"
@@ -154,7 +141,7 @@ export function ClientHeader() {
             href="/earn"
             className="flex items-center h-11 px-3 rounded-md text-sm text-white/40 hover:text-white/70 hover:bg-white/5 transition-colors"
           >
-            Are you a contributor? →
+            Looking to earn? →
           </Link>
           <Link
             href="/contact"

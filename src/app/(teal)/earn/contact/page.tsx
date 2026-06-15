@@ -1,20 +1,20 @@
 import type { Metadata } from "next";
 import { FadeIn } from "@/components/ui/fade-in";
-import { Mail, Clock, MessageCircle, Linkedin, Send } from "lucide-react";
+import { Mail, Clock, MessageCircle, Send } from "lucide-react";
 import { ContactForm } from "@/components/ui/contact-form";
 
 export const metadata: Metadata = {
-  title: "Contact NexGuild — Project Enquiries",
+  title: "Contact NexGuild — Contributor Support",
   description:
-    "Get in touch to discuss your data project requirements. We work with organisations on audio, transcription, annotation, and human-powered digital tasks.",
+    "Need help with your NexGuild account, task questions, or coin withdrawals? Reach out to our support team — we respond within 24 hours.",
   openGraph: {
-    title: "Contact NexGuild",
-    description: "Discuss your project requirements with us. We respond within 2 business days.",
-    url: "https://nexguild.in/contact",
+    title: "Contact NexGuild — Contributor Support",
+    description: "Questions about earning, tasks, or your account? We're here to help.",
+    url: "https://nexguild.in/earn/contact",
   },
 };
 
-export default function ContactPage() {
+export default function ContributorContactPage() {
   return (
     <>
       {/* Hero */}
@@ -22,10 +22,10 @@ export default function ContactPage() {
         <div className="pointer-events-none absolute inset-0 hero-glow" />
         <div className="mx-auto max-w-container relative z-10">
           <FadeIn>
-            <p className="text-[var(--brand-500)] text-sm font-semibold uppercase tracking-widest mb-3">Contact</p>
-            <h1 className="text-4xl sm:text-5xl font-bold text-white mb-4 text-balance">Let&apos;s Talk About Your Project</h1>
+            <p className="text-[var(--brand-500)] text-sm font-semibold uppercase tracking-widest mb-3">Support</p>
+            <h1 className="text-4xl sm:text-5xl font-bold text-white mb-4 text-balance">We&apos;re Here to Help</h1>
             <p className="text-lg text-[var(--text-secondary)] max-w-xl leading-relaxed">
-              Tell us what you need. We&apos;ll review your requirements and respond within 2 business days with a clear scope and timeline.
+              Have a question about tasks, NexCoins, or your account? Send us a message — we respond within 24 hours.
             </p>
           </FadeIn>
         </div>
@@ -47,6 +47,25 @@ export default function ContactPage() {
             {/* Info Panel */}
             <FadeIn delay={100} className="space-y-4">
 
+              {/* Telegram */}
+              <div className="rounded-xl border border-[var(--border-default)] bg-[var(--surface-subtle)] p-6 card-hover">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="h-9 w-9 rounded-lg bg-[var(--brand-100)] flex items-center justify-center">
+                    <Send className="h-4 w-4 text-[var(--brand-500)]" />
+                  </div>
+                  <h3 className="font-semibold text-white">Telegram Community</h3>
+                </div>
+                <p className="text-sm text-[var(--text-secondary)] mb-3">Join our Telegram group for the fastest help and task updates.</p>
+                <a
+                  href="https://t.me/nexguild"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-[var(--brand-500)] hover:text-[var(--brand-400)] transition-colors"
+                >
+                  Join t.me/nexguild →
+                </a>
+              </div>
+
               {/* WhatsApp */}
               <div className="rounded-xl border border-[var(--border-default)] bg-[var(--surface-subtle)] p-6 card-hover">
                 <div className="flex items-center gap-3 mb-3">
@@ -55,7 +74,7 @@ export default function ContactPage() {
                   </div>
                   <h3 className="font-semibold text-white">WhatsApp</h3>
                 </div>
-                <p className="text-sm text-[var(--text-secondary)] mb-3">Fastest way to reach us for project discussions.</p>
+                <p className="text-sm text-[var(--text-secondary)] mb-3">Direct support for account or payment questions.</p>
                 <a
                   href="https://wa.me/919382008513"
                   target="_blank"
@@ -80,43 +99,7 @@ export default function ContactPage() {
                 >
                   nexguild.in@gmail.com
                 </a>
-                <p className="text-xs text-[var(--text-muted)] mt-1">For project enquiries and partnerships</p>
-              </div>
-
-              {/* LinkedIn */}
-              <div className="rounded-xl border border-[var(--border-default)] bg-[var(--surface-subtle)] p-6 card-hover">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="h-9 w-9 rounded-lg bg-[var(--brand-100)] flex items-center justify-center">
-                    <Linkedin className="h-4 w-4 text-[var(--brand-500)]" />
-                  </div>
-                  <h3 className="font-semibold text-white">LinkedIn</h3>
-                </div>
-                <a
-                  href="https://www.linkedin.com/in/somen-biswas-410727215"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-sm text-[var(--brand-500)] hover:text-[var(--brand-400)] transition-colors"
-                >
-                  linkedin.com/in/somen-biswas →
-                </a>
-              </div>
-
-              {/* Telegram */}
-              <div className="rounded-xl border border-[var(--border-default)] bg-[var(--surface-subtle)] p-6 card-hover">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="h-9 w-9 rounded-lg bg-[var(--brand-100)] flex items-center justify-center">
-                    <Send className="h-4 w-4 text-[var(--brand-500)]" />
-                  </div>
-                  <h3 className="font-semibold text-white">Telegram</h3>
-                </div>
-                <a
-                  href="https://t.me/nexguild"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-sm text-[var(--brand-500)] hover:text-[var(--brand-400)] transition-colors"
-                >
-                  t.me/nexguild →
-                </a>
+                <p className="text-xs text-[var(--text-muted)] mt-1">For account issues and disputes</p>
               </div>
 
               {/* Response Time */}
@@ -128,7 +111,7 @@ export default function ContactPage() {
                   <h3 className="font-semibold text-white">Response Time</h3>
                 </div>
                 <p className="text-sm text-[var(--text-secondary)]">
-                  Project enquiries: within 2 business days. We review every brief carefully before responding.
+                  We respond to all contributor queries within 24 hours. For urgent issues, Telegram is the fastest channel.
                 </p>
               </div>
             </FadeIn>

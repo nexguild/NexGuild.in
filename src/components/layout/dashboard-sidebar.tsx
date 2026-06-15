@@ -38,7 +38,7 @@ export function DashboardSidebar() {
     <aside className="fixed left-0 top-0 bottom-0 w-sidebar flex flex-col z-40 sidebar-bg border-r border-[var(--border-default)]">
       {/* Logo */}
       <div className="h-16 flex items-center px-4 border-b border-[var(--border-default)] flex-shrink-0">
-        <NexGuildLogo theme="teal" />
+        <NexGuildLogo theme="teal" href="/dashboard" />
       </div>
 
       {/* Main Nav */}

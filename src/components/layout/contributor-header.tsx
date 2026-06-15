@@ -22,11 +22,11 @@ export function ContributorHeader() {
   const [logoHref, setLogoHref]     = useState("/earn");
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setLogoHref(session ? "/dashboard" : "/earn");
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setLogoHref(user ? "/dashboard" : "/earn");
     });
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => {
-      setLogoHref(session ? "/dashboard" : "/earn");
+      setLogoHref(session?.user ? "/dashboard" : "/earn");
     });
     return () => subscription.unsubscribe();
   }, []);
@@ -83,7 +83,7 @@ export function ContributorHeader() {
               href="/client"
               className="text-xs text-white/40 hover:text-white/70 transition-colors"
             >
-              Are you an organization? →
+              For organizations →
             </Link>
             <Link
               href="/login"
@@ -159,7 +159,7 @@ export function ContributorHeader() {
             href="/client"
             className="flex items-center h-11 px-3 rounded-md text-sm text-white/40 hover:text-white/70 hover:bg-white/5 transition-colors"
           >
-            Are you an organization? →
+            For organizations →
           </Link>
           <Link
             href="/login"
