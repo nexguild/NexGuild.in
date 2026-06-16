@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Search, Lock, Globe, Coins, Users, Clock, X, ChevronRight, CheckCircle2, Star } from "lucide-react";
+import { Search, Lock, Globe, Coins, Users, Clock, X, ChevronRight, CheckCircle2, Star, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
@@ -97,6 +97,7 @@ export default function OpportunitiesPage() {
   const [tncTask, setTncTask]       = useState<Task | null>(null);
   const [tncChecked, setTncChecked] = useState(false);
   const [starting, setStarting]     = useState(false);
+  const [retrying, setRetrying]     = useState<string | null>(null);
 
   useEffect(() => {
     const id = setInterval(() => setNow(new Date()), 1000);
@@ -251,9 +252,26 @@ export default function OpportunitiesPage() {
             const assignRejected   = task.assignment_required && assignStatus === "rejected";
             const isResubmitNeeded = subStatus === "resubmit_requested";
 
-            function handleCardClick() {
+            async function handleCardClick() {
               if (isFull) return;
-              if (assignRejected) { router.push(`/dashboard/tasks/${task.id}`); return; }
+              if (assignRejected) {
+                if (!userId || retrying) return;
+                setRetrying(task.id);
+                await supabase
+                  .from("assignments")
+                  .delete()
+                  .eq("task_id", task.id)
+                  .eq("contributor_id", userId)
+                  .eq("status", "rejected");
+                setAssignmentMap((prev) => {
+                  const next = { ...prev };
+                  delete next[task.id];
+                  return next;
+                });
+                setRetrying(null);
+                router.push(`/dashboard/tasks/${task.id}`);
+                return;
+              }
               if (subStatus === "in_progress" || subStatus === "rejected" || isResubmitNeeded) {
                 router.push(`/dashboard/tasks/${task.id}/work`); return;
               }
@@ -380,7 +398,7 @@ export default function OpportunitiesPage() {
                   ) : (
                     <button
                       onClick={handleCardClick}
-                      disabled={isFull}
+                      disabled={isFull || retrying === task.id}
                       className={`w-full h-9 rounded-lg text-sm font-bold flex items-center justify-center gap-1 transition-all duration-150 ${
                         isFull
                           ? "bg-[var(--surface-subtle)] text-[var(--text-muted)] cursor-not-allowed"
@@ -395,12 +413,14 @@ export default function OpportunitiesPage() {
                           : "bg-[var(--brand-500)] text-black hover:brightness-105 active:scale-[0.98]"
                       }`}
                     >
-                      {isResubmitNeeded ? "Resubmit →" :
+                      {retrying === task.id ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : isResubmitNeeded ? "Resubmit →" :
                        subStatus === "in_progress" ? "Continue" :
                        subStatus === "rejected" ? "Retry" :
                        assignRejected ? "Retry Assignment →" :
                        "Get Started"}
-                      {!isResubmitNeeded && <ChevronRight className="h-4 w-4" />}
+                      {!isResubmitNeeded && retrying !== task.id && <ChevronRight className="h-4 w-4" />}
                     </button>
                   )}
                 </div>
