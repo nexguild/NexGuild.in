@@ -13,6 +13,7 @@ interface Profile {
   joined_at: string | null;
   nexcoins: number;
   skills: string[] | null;
+  languages: string[] | null;
   avatar_url: string | null;
 }
 
@@ -35,8 +36,10 @@ export default function ProfilePage() {
 
   // Edit modal state
   const [showEdit, setShowEdit]     = useState(false);
-  const [skillInput, setSkillInput] = useState("");
+  const [skillInput, setSkillInput]   = useState("");
   const [skillSaving, setSkillSaving] = useState(false);
+  const [langInput, setLangInput]     = useState("");
+  const [langSaving, setLangSaving]   = useState(false);
   const [editName, setEditName]     = useState("");
   const [editCountry, setEditCountry] = useState("");
   const [editPhone, setEditPhone]   = useState("");
@@ -52,11 +55,11 @@ export default function ProfilePage() {
 
       const { data } = await supabase
         .from("profiles")
-        .select("full_name, country, phone, joined_at, nexcoins, skills, avatar_url")
+        .select("full_name, country, phone, joined_at, nexcoins, skills, languages, avatar_url")
         .eq("id", user.id)
         .single();
 
-      setProfile(data ?? { full_name: null, country: null, phone: null, joined_at: null, nexcoins: 0, skills: [], avatar_url: null });
+      setProfile(data ?? { full_name: null, country: null, phone: null, joined_at: null, nexcoins: 0, skills: [], languages: [], avatar_url: null });
       setLoading(false);
     }
     fetchProfile();
@@ -177,6 +180,32 @@ export default function ProfilePage() {
     const { error } = await supabase.from("profiles").update({ skills: updated }).eq("id", userId);
     if (!error) setProfile((prev) => prev ? { ...prev, skills: updated } : prev);
     else console.error("[profile] removeSkill error:", error.message);
+  }
+
+  async function addLanguage(e: React.FormEvent) {
+    e.preventDefault();
+    const lang = langInput.trim();
+    if (!lang || !userId) return;
+    const current = profile?.languages ?? [];
+    if (current.includes(lang)) { setLangInput(""); return; }
+    setLangSaving(true);
+    const updated = [...current, lang];
+    const { error } = await supabase.from("profiles").update({ languages: updated }).eq("id", userId);
+    if (error) {
+      console.error("[profile] addLanguage error:", error.message);
+    } else {
+      setProfile((prev) => prev ? { ...prev, languages: updated } : prev);
+      setLangInput("");
+    }
+    setLangSaving(false);
+  }
+
+  async function removeLanguage(lang: string) {
+    if (!userId) return;
+    const updated = (profile?.languages ?? []).filter((l) => l !== lang);
+    const { error } = await supabase.from("profiles").update({ languages: updated }).eq("id", userId);
+    if (!error) setProfile((prev) => prev ? { ...prev, languages: updated } : prev);
+    else console.error("[profile] removeLanguage error:", error.message);
   }
 
   const displayName = profile?.full_name ?? email ?? "—";
@@ -303,6 +332,34 @@ export default function ProfilePage() {
           </Button>
         </form>
         <p className="text-xs text-[var(--text-muted)] mt-2">Skills help match you with relevant project opportunities.</p>
+      </div>
+
+      {/* Languages */}
+      <div className="rounded-lg border border-[var(--border-default)] bg-[var(--surface-card)] p-6">
+        <h3 className="font-semibold text-[var(--text-primary)] mb-1">Languages</h3>
+        <p className="text-xs text-[var(--text-muted)] mb-4">Add languages you speak fluently — used to match you with language-specific tasks.</p>
+        <div className="flex flex-wrap gap-2 mb-4 min-h-[28px]">
+          {(profile?.languages ?? []).map((lang) => (
+            <span key={lang} className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-500/10 text-blue-400 text-sm font-medium">
+              {lang}
+              <button onClick={() => removeLanguage(lang)} className="hover:text-red-400 transition-colors leading-none ml-0.5">×</button>
+            </span>
+          ))}
+          {!loading && (profile?.languages ?? []).length === 0 && (
+            <p className="text-sm text-[var(--text-muted)]">No languages added yet.</p>
+          )}
+        </div>
+        <form onSubmit={addLanguage} className="flex gap-2">
+          <input
+            value={langInput}
+            onChange={(e) => setLangInput(e.target.value)}
+            placeholder="e.g. English, Hindi, Tamil…"
+            className="flex-1 h-9 px-3 rounded-md border border-[var(--border-strong)] bg-[var(--surface-subtle)] text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--border-focus)] focus:border-transparent"
+          />
+          <Button type="submit" size="sm" disabled={langSaving || !langInput.trim()}>
+            {langSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+          </Button>
+        </form>
       </div>
 
       {/* Reputation */}

@@ -22,8 +22,7 @@ const LANGUAGES = [
   "Japanese", "Korean", "Chinese (Simplified)", "Filipino",
 ];
 
-const VALIDATION_TIMES = ["24 hours", "48 hours", "72 hours", "5 days", "7 days"];
-const PAYMENT_TIMES    = ["48 hours", "72 hours", "5 days", "7 days", "14 days"];
+const TIME_OPTIONS = ["48 hours", "7 days", "14 days", "30 days", "45 days", "60 days"];
 
 interface TaskStep {
   title: string;
@@ -31,10 +30,24 @@ interface TaskStep {
   submitType: "text" | "file" | "none";
   placeholder: string;
   acceptedFiles: string;
+  url: string;
+}
+
+interface QuizQuestion {
+  question: string;
+  a: string;
+  b: string;
+  c: string;
+  d: string;
+  correct: "a" | "b" | "c" | "d";
 }
 
 function newStep(): TaskStep {
-  return { title: "", description: "", submitType: "text", placeholder: "", acceptedFiles: "" };
+  return { title: "", description: "", submitType: "text", placeholder: "", acceptedFiles: "", url: "" };
+}
+
+function newQuestion(): QuizQuestion {
+  return { question: "", a: "", b: "", c: "", d: "", correct: "a" };
 }
 
 function Toggle({ value, onChange, label, description }: {
@@ -83,8 +96,11 @@ export default function PostNewTaskPage() {
   const [deadline, setDeadline]         = useState("");
 
   // Assignment gate
-  const [assignmentReq, setAssignmentReq]   = useState(false);
-  const [assignmentType, setAssignmentType] = useState("quiz");
+  const [assignmentReq, setAssignmentReq]           = useState(false);
+  const [assignmentType, setAssignmentType]         = useState<"text" | "file" | "quiz">("text");
+  const [assignmentInstructions, setAssignmentInstructions] = useState("");
+  const [quizQuestions, setQuizQuestions]           = useState<QuizQuestion[]>([newQuestion()]);
+  const [passingScore, setPassingScore]             = useState("70");
 
   // Targeting
   const [requiredLanguage, setRequiredLanguage] = useState("Any");
@@ -95,7 +111,7 @@ export default function PostNewTaskPage() {
   const [isPrivate, setIsPrivate]   = useState(false);
   const [isFeatured, setIsFeatured] = useState(false);
   const [validationTime, setValidationTime] = useState("48 hours");
-  const [paymentTime, setPaymentTime]       = useState("72 hours");
+  const [paymentTime, setPaymentTime]       = useState("7 days");
 
   // T&C
   const [terms, setTerms] = useState("");
@@ -114,30 +130,29 @@ export default function PostNewTaskPage() {
     if (s && !requiredSkills.includes(s)) setRequiredSkills((prev) => [...prev, s]);
     setSkillInput("");
   }
-
   function removeSkill(skill: string) {
     setRequiredSkills((prev) => prev.filter((s) => s !== skill));
   }
 
   // ── Steps ─────────────────────────────────────────────────────────────────
-  function addStep() {
-    setSteps((prev) => [...prev, newStep()]);
-  }
-
-  function removeStep(i: number) {
-    setSteps((prev) => prev.filter((_, j) => j !== i));
-  }
-
+  function addStep() { setSteps((prev) => [...prev, newStep()]); }
+  function removeStep(i: number) { setSteps((prev) => prev.filter((_, j) => j !== i)); }
   function updateStep(i: number, key: keyof TaskStep, val: string) {
     setSteps((prev) => prev.map((s, j) => j === i ? { ...s, [key]: val } : s));
   }
-
   function moveStep(i: number, dir: "up" | "down") {
     const next = [...steps];
     const target = dir === "up" ? i - 1 : i + 1;
     if (target < 0 || target >= next.length) return;
     [next[i], next[target]] = [next[target], next[i]];
     setSteps(next);
+  }
+
+  // ── Quiz questions ────────────────────────────────────────────────────────
+  function addQuestion() { setQuizQuestions((prev) => [...prev, newQuestion()]); }
+  function removeQuestion(i: number) { setQuizQuestions((prev) => prev.filter((_, j) => j !== i)); }
+  function updateQuestion(i: number, key: keyof QuizQuestion, val: string) {
+    setQuizQuestions((prev) => prev.map((q, j) => j === i ? { ...q, [key]: val } : q));
   }
 
   // ── Submit ────────────────────────────────────────────────────────────────
@@ -156,12 +171,17 @@ export default function PostNewTaskPage() {
     const stepsPayload = steps
       .filter((s) => s.title.trim())
       .map((s) => ({
-        title:        s.title.trim(),
-        description:  s.description.trim(),
-        submitType:   s.submitType,
-        placeholder:  s.placeholder.trim() || undefined,
+        title:         s.title.trim(),
+        description:   s.description.trim(),
+        submitType:    s.submitType,
+        placeholder:   s.placeholder.trim() || undefined,
         acceptedFiles: s.acceptedFiles.trim() || undefined,
+        url:           s.url.trim() || undefined,
       }));
+
+    const questionsPayload = assignmentType === "quiz"
+      ? quizQuestions.filter((q) => q.question.trim() && q.a.trim() && q.b.trim())
+      : [];
 
     const res = await fetch("/api/admin/tasks", {
       method: "POST",
@@ -170,23 +190,26 @@ export default function PostNewTaskPage() {
         "Authorization": `Bearer ${token}`,
       },
       body: JSON.stringify({
-        title:               title.trim(),
-        task_type:           taskType,
-        description:         description.trim(),
-        requirements:        requirements.trim() || null,
-        pay_per_task:        payPerTask ? parseFloat(payPerTask) : null,
-        total_slots:         totalSlots ? parseInt(totalSlots) : null,
-        deadline:            deadline || null,
-        assignment_required: assignmentReq,
-        assignment_type:     assignmentReq ? assignmentType : null,
-        required_language:   requiredLanguage,
-        required_skills:     requiredSkills,
-        is_private:          isPrivate,
-        is_featured:         isFeatured,
-        validation_time:     validationTime,
-        payment_time:        paymentTime,
-        terms:               terms.trim() || null,
-        steps:               stepsPayload.length > 0 ? stepsPayload : [],
+        title:                       title.trim(),
+        task_type:                   taskType,
+        description:                 description.trim(),
+        requirements:                requirements.trim() || null,
+        pay_per_task:                payPerTask ? parseFloat(payPerTask) : null,
+        total_slots:                 totalSlots ? parseInt(totalSlots) : null,
+        deadline:                    deadline || null,
+        assignment_required:         assignmentReq,
+        assignment_type:             assignmentReq ? assignmentType : null,
+        assignment_instructions:     assignmentReq ? assignmentInstructions.trim() || null : null,
+        assignment_questions:        assignmentReq && assignmentType === "quiz" ? questionsPayload : [],
+        assignment_passing_score:    assignmentReq && assignmentType === "quiz" ? parseInt(passingScore) || 70 : 70,
+        required_language:           requiredLanguage,
+        required_skills:             requiredSkills,
+        is_private:                  isPrivate,
+        is_featured:                 isFeatured,
+        validation_time:             validationTime,
+        payment_time:                paymentTime,
+        terms:                       terms.trim() || null,
+        steps:                       stepsPayload.length > 0 ? stepsPayload : [],
         status,
       }),
     });
@@ -269,6 +292,180 @@ export default function PostNewTaskPage() {
           </div>
         </section>
 
+        {/* ── Assignment Gate ────────────────────────────────────────────── */}
+        <section className="rounded-xl border border-[var(--border-default)] bg-[var(--surface-card)] p-6 space-y-5">
+          <div>
+            <h2 className="font-bold text-[var(--text-primary)]">Assignment Gate</h2>
+            <p className="text-xs text-[var(--text-secondary)] mt-0.5">
+              Require contributors to pass a screening assignment before they can start working.
+            </p>
+          </div>
+
+          <Toggle
+            value={assignmentReq}
+            onChange={setAssignmentReq}
+            label="Require assignment to unlock this task"
+          />
+
+          {assignmentReq && (
+            <div className="space-y-5 pt-1">
+              {/* Assignment Type */}
+              <div>
+                <label className={labelClass}>Assignment Type</label>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  {([
+                    { value: "text",  label: "Text Response",        desc: "Contributor writes an answer" },
+                    { value: "file",  label: "File Upload",          desc: "Contributor uploads a sample" },
+                    { value: "quiz",  label: "Quiz (Multiple Choice)", desc: "Contributor answers questions" },
+                  ] as const).map(({ value, label, desc }) => (
+                    <label
+                      key={value}
+                      className={`flex flex-col gap-1 p-3 rounded-lg border cursor-pointer transition-colors ${
+                        assignmentType === value
+                          ? "border-[var(--brand-500)] bg-[rgba(20,184,166,0.05)]"
+                          : "border-[var(--border-default)] hover:border-[var(--border-strong)]"
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="assignment_type"
+                        value={value}
+                        checked={assignmentType === value}
+                        onChange={() => setAssignmentType(value)}
+                        className="sr-only"
+                      />
+                      <span className={`text-sm font-semibold ${assignmentType === value ? "text-[var(--brand-500)]" : "text-[var(--text-primary)]"}`}>
+                        {label}
+                      </span>
+                      <span className="text-xs text-[var(--text-muted)]">{desc}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {/* Assignment Instructions */}
+              <div>
+                <label className={labelClass}>Assignment Instructions</label>
+                <textarea
+                  value={assignmentInstructions}
+                  onChange={(e) => setAssignmentInstructions(e.target.value)}
+                  rows={3}
+                  placeholder={
+                    assignmentType === "file"
+                      ? "e.g. Record a 30-second audio sample in Bengali and upload it as an MP3 file."
+                      : assignmentType === "quiz"
+                      ? "e.g. Answer the following questions to demonstrate your transcription knowledge."
+                      : "e.g. In 2-3 sentences, describe your experience with audio transcription."
+                  }
+                  className={textareaClass}
+                />
+              </div>
+
+              {/* Quiz question builder */}
+              {assignmentType === "quiz" && (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-bold text-[var(--text-primary)]">Quiz Questions</p>
+                      <p className="text-xs text-[var(--text-muted)] mt-0.5">Add up to 10 multiple-choice questions.</p>
+                    </div>
+                    <Button type="button" size="sm" variant="secondary" onClick={addQuestion}
+                      disabled={quizQuestions.length >= 10}>
+                      <Plus className="h-4 w-4" /> Add Question
+                    </Button>
+                  </div>
+
+                  {quizQuestions.map((q, i) => (
+                    <div key={i} className="rounded-lg border border-[var(--border-default)] bg-[var(--surface-subtle)] p-4 space-y-3">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider">
+                          Question {i + 1}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => removeQuestion(i)}
+                          disabled={quizQuestions.length <= 1}
+                          className="p-1 rounded hover:bg-red-500/10 text-[var(--text-muted)] hover:text-red-400 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Question</label>
+                        <input
+                          type="text"
+                          value={q.question}
+                          onChange={(e) => updateQuestion(i, "question", e.target.value)}
+                          placeholder="e.g. Which audio format has the best quality-to-size ratio?"
+                          className={inputClass}
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        {(["a", "b", "c", "d"] as const).map((opt) => (
+                          <div key={opt}>
+                            <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1 uppercase">
+                              Option {opt.toUpperCase()}
+                            </label>
+                            <input
+                              type="text"
+                              value={q[opt]}
+                              onChange={(e) => updateQuestion(i, opt, e.target.value)}
+                              placeholder={`Option ${opt.toUpperCase()}…`}
+                              className={inputClass}
+                            />
+                          </div>
+                        ))}
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Correct Answer</label>
+                        <div className="flex gap-3">
+                          {(["a", "b", "c", "d"] as const).map((opt) => (
+                            <label key={opt} className="flex items-center gap-1.5 cursor-pointer">
+                              <input
+                                type="radio"
+                                name={`correct-${i}`}
+                                value={opt}
+                                checked={q.correct === opt}
+                                onChange={() => updateQuestion(i, "correct", opt)}
+                                className="accent-[var(--brand-500)]"
+                              />
+                              <span className={`text-sm font-bold ${q.correct === opt ? "text-[var(--brand-500)]" : "text-[var(--text-muted)]"}`}>
+                                {opt.toUpperCase()}
+                              </span>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+
+                  {/* Passing score */}
+                  <div className="flex items-center gap-4">
+                    <div className="flex-1 max-w-[180px]">
+                      <label className={labelClass}>Passing Score (%)</label>
+                      <input
+                        type="number"
+                        value={passingScore}
+                        onChange={(e) => setPassingScore(e.target.value)}
+                        min={0}
+                        max={100}
+                        placeholder="70"
+                        className={inputClass}
+                      />
+                    </div>
+                    <p className="text-xs text-[var(--text-muted)] mt-5 flex-1">
+                      Contributors must score at least {passingScore || "70"}% to be eligible for approval.
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </section>
+
         {/* ── Targeting ──────────────────────────────────────────────────── */}
         <section className="rounded-xl border border-[var(--border-default)] bg-[var(--surface-card)] p-6 space-y-5">
           <div>
@@ -320,7 +517,7 @@ export default function PostNewTaskPage() {
             value={isPrivate}
             onChange={setIsPrivate}
             label="Private Task"
-            description="Show a PRIVATE badge. Combines with Assignment Gate to require approval before access."
+            description="Show a PRIVATE badge. Works with Assignment Gate to require approval before access."
           />
 
           <Toggle
@@ -334,39 +531,15 @@ export default function PostNewTaskPage() {
             <div>
               <label className={labelClass}>Review Time</label>
               <select value={validationTime} onChange={(e) => setValidationTime(e.target.value)} className={inputClass}>
-                {VALIDATION_TIMES.map((t) => <option key={t} value={t}>{t}</option>)}
+                {TIME_OPTIONS.map((t) => <option key={t} value={t}>{t}</option>)}
               </select>
             </div>
             <div>
               <label className={labelClass}>Payment After Approval</label>
               <select value={paymentTime} onChange={(e) => setPaymentTime(e.target.value)} className={inputClass}>
-                {PAYMENT_TIMES.map((t) => <option key={t} value={t}>{t}</option>)}
+                {TIME_OPTIONS.map((t) => <option key={t} value={t}>{t}</option>)}
               </select>
             </div>
-          </div>
-        </section>
-
-        {/* ── Assignment Gate ────────────────────────────────────────────── */}
-        <section className="rounded-xl border border-[var(--border-default)] bg-[var(--surface-card)] p-6 space-y-5">
-          <div>
-            <h2 className="font-bold text-[var(--text-primary)]">Assignment Gate</h2>
-            <p className="text-xs text-[var(--text-secondary)] mt-0.5">
-              Require contributors to submit an assignment before they can start working.
-            </p>
-          </div>
-
-          <Toggle
-            value={assignmentReq}
-            onChange={setAssignmentReq}
-            label="Require assignment to unlock"
-          />
-
-          <div className={assignmentReq ? "" : "opacity-40 pointer-events-none"}>
-            <label className={labelClass}>Assignment Type</label>
-            <select value={assignmentType} onChange={(e) => setAssignmentType(e.target.value)} className={inputClass}>
-              <option value="quiz">Quiz</option>
-              <option value="file">File Upload</option>
-            </select>
           </div>
         </section>
 
@@ -375,10 +548,9 @@ export default function PostNewTaskPage() {
           <div>
             <h2 className="font-bold text-[var(--text-primary)]">Terms & Conditions</h2>
             <p className="text-xs text-[var(--text-secondary)] mt-0.5">
-              Add task-specific rules shown in the T&C popup. One rule per line.
+              Task-specific rules shown in the T&C popup. One rule per line.
             </p>
           </div>
-
           <textarea
             value={terms}
             onChange={(e) => setTerms(e.target.value)}
@@ -387,7 +559,7 @@ export default function PostNewTaskPage() {
             className={textareaClass}
           />
           <p className="text-xs text-[var(--text-muted)]">
-            These are shown in addition to NexGuild's default rules. Leave blank if no special conditions apply.
+            These appear alongside NexGuild's default rules. Leave blank if no special conditions apply.
           </p>
         </section>
 
@@ -397,7 +569,7 @@ export default function PostNewTaskPage() {
             <div>
               <h2 className="font-bold text-[var(--text-primary)]">Task Steps</h2>
               <p className="text-xs text-[var(--text-secondary)] mt-0.5">
-                Break the task into sequential steps. If left empty, contributors submit one form with notes + files.
+                Break the task into guided steps. Leave empty for a classic submit form.
               </p>
             </div>
             <Button type="button" size="sm" variant="secondary" onClick={addStep}>
@@ -405,135 +577,103 @@ export default function PostNewTaskPage() {
             </Button>
           </div>
 
-          {steps.length === 0 && (
+          {steps.length === 0 ? (
             <div className="rounded-lg border border-dashed border-[var(--border-default)] py-8 text-center">
-              <p className="text-sm text-[var(--text-muted)]">No steps yet — click "Add Step" to build a guided workflow.</p>
-              <p className="text-xs text-[var(--text-muted)] mt-1">Leave empty for a classic submit form.</p>
+              <p className="text-sm text-[var(--text-muted)]">No steps — contributors submit notes + files in one form.</p>
             </div>
+          ) : (
+            steps.map((step, i) => (
+              <div key={i} className="rounded-lg border border-[var(--border-default)] bg-[var(--surface-subtle)] p-4 space-y-4">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <GripVertical className="h-4 w-4 text-[var(--text-muted)]" />
+                    <span className="text-sm font-bold text-[var(--text-primary)]">Step {i + 1}</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <button type="button" onClick={() => moveStep(i, "up")} disabled={i === 0}
+                      className="p-1.5 rounded hover:bg-[var(--border-default)] text-[var(--text-muted)] disabled:opacity-30 disabled:cursor-not-allowed transition-colors">
+                      <ChevronUp className="h-3.5 w-3.5" />
+                    </button>
+                    <button type="button" onClick={() => moveStep(i, "down")} disabled={i === steps.length - 1}
+                      className="p-1.5 rounded hover:bg-[var(--border-default)] text-[var(--text-muted)] disabled:opacity-30 disabled:cursor-not-allowed transition-colors">
+                      <ChevronDown className="h-3.5 w-3.5" />
+                    </button>
+                    <button type="button" onClick={() => removeStep(i)}
+                      className="p-1.5 rounded hover:bg-red-500/10 text-[var(--text-muted)] hover:text-red-400 transition-colors">
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">
+                    Step Title <span className="text-[var(--danger-text)]">*</span>
+                  </label>
+                  <input type="text" value={step.title}
+                    onChange={(e) => updateStep(i, "title", e.target.value)}
+                    placeholder="e.g. Record your audio" className={inputClass} />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Description</label>
+                  <textarea value={step.description}
+                    onChange={(e) => updateStep(i, "description", e.target.value)}
+                    rows={2}
+                    placeholder="Explain what the contributor needs to do in this step…"
+                    className={textareaClass} />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-2">Submit Type</label>
+                  <div className="flex gap-4">
+                    {(["text", "file", "none"] as const).map((t) => (
+                      <label key={t} className="flex items-center gap-2 cursor-pointer">
+                        <input type="radio" name={`step-type-${i}`} value={t}
+                          checked={step.submitType === t}
+                          onChange={() => updateStep(i, "submitType", t)}
+                          className="accent-[var(--brand-500)]" />
+                        <span className="text-sm text-[var(--text-secondary)] capitalize">
+                          {t === "none" ? "Mark Complete" : t}
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
+                {step.submitType === "text" && (
+                  <div>
+                    <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Placeholder text</label>
+                    <input type="text" value={step.placeholder}
+                      onChange={(e) => updateStep(i, "placeholder", e.target.value)}
+                      placeholder="e.g. Paste the link to your recording here…"
+                      className={inputClass} />
+                  </div>
+                )}
+                {step.submitType === "file" && (
+                  <div>
+                    <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Accepted file types</label>
+                    <input type="text" value={step.acceptedFiles}
+                      onChange={(e) => updateStep(i, "acceptedFiles", e.target.value)}
+                      placeholder="e.g. .mp3,.wav,.ogg (blank = any)"
+                      className={inputClass} />
+                  </div>
+                )}
+                <div>
+                  <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">
+                    External Link <span className="text-[var(--text-muted)] font-normal">(optional — shown as a button on the step card)</span>
+                  </label>
+                  <input type="url" value={step.url}
+                    onChange={(e) => updateStep(i, "url", e.target.value)}
+                    placeholder="https://discord.gg/… or https://example.com/download"
+                    className={inputClass} />
+                </div>
+              </div>
+            ))
           )}
 
-          {steps.map((step, i) => (
-            <div
-              key={i}
-              className="rounded-lg border border-[var(--border-default)] bg-[var(--surface-subtle)] p-4 space-y-4"
-            >
-              {/* Step header */}
-              <div className="flex items-center justify-between gap-2">
-                <div className="flex items-center gap-2">
-                  <GripVertical className="h-4 w-4 text-[var(--text-muted)]" />
-                  <span className="text-sm font-bold text-[var(--text-primary)]">Step {i + 1}</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <button
-                    type="button"
-                    onClick={() => moveStep(i, "up")}
-                    disabled={i === 0}
-                    className="p-1.5 rounded hover:bg-[var(--border-default)] text-[var(--text-muted)] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                  >
-                    <ChevronUp className="h-3.5 w-3.5" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => moveStep(i, "down")}
-                    disabled={i === steps.length - 1}
-                    className="p-1.5 rounded hover:bg-[var(--border-default)] text-[var(--text-muted)] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                  >
-                    <ChevronDown className="h-3.5 w-3.5" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => removeStep(i)}
-                    className="p-1.5 rounded hover:bg-red-500/10 text-[var(--text-muted)] hover:text-red-400 transition-colors"
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </button>
-                </div>
-              </div>
-
-              {/* Title */}
-              <div>
-                <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">
-                  Step Title <span className="text-[var(--danger-text)]">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={step.title}
-                  onChange={(e) => updateStep(i, "title", e.target.value)}
-                  placeholder="e.g. Record your audio"
-                  className={inputClass}
-                />
-              </div>
-
-              {/* Description */}
-              <div>
-                <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Description</label>
-                <textarea
-                  value={step.description}
-                  onChange={(e) => updateStep(i, "description", e.target.value)}
-                  rows={2}
-                  placeholder="Explain what the contributor needs to do in this step…"
-                  className={textareaClass}
-                />
-              </div>
-
-              {/* Submit Type */}
-              <div>
-                <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-2">Submit Type</label>
-                <div className="flex gap-3">
-                  {(["text", "file", "none"] as const).map((t) => (
-                    <label key={t} className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="radio"
-                        name={`step-type-${i}`}
-                        value={t}
-                        checked={step.submitType === t}
-                        onChange={() => updateStep(i, "submitType", t)}
-                        className="accent-[var(--brand-500)]"
-                      />
-                      <span className="text-sm text-[var(--text-secondary)] capitalize">
-                        {t === "none" ? "Mark Complete" : t}
-                      </span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-
-              {/* Text options */}
-              {step.submitType === "text" && (
-                <div>
-                  <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Placeholder text</label>
-                  <input
-                    type="text"
-                    value={step.placeholder}
-                    onChange={(e) => updateStep(i, "placeholder", e.target.value)}
-                    placeholder="e.g. Paste the link to your recording here…"
-                    className={inputClass}
-                  />
-                </div>
-              )}
-
-              {/* File options */}
-              {step.submitType === "file" && (
-                <div>
-                  <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Accepted file types</label>
-                  <input
-                    type="text"
-                    value={step.acceptedFiles}
-                    onChange={(e) => updateStep(i, "acceptedFiles", e.target.value)}
-                    placeholder="e.g. .mp3,.wav,.ogg (leave blank for any)"
-                    className={inputClass}
-                  />
-                </div>
-              )}
-            </div>
-          ))}
-
           {steps.length > 0 && (
-            <button
-              type="button"
-              onClick={addStep}
-              className="w-full py-2.5 rounded-lg border border-dashed border-[var(--border-default)] text-sm text-[var(--text-muted)] hover:text-[var(--brand-500)] hover:border-[var(--brand-500)] transition-colors flex items-center justify-center gap-1.5"
-            >
+            <button type="button" onClick={addStep}
+              className="w-full py-2.5 rounded-lg border border-dashed border-[var(--border-default)] text-sm text-[var(--text-muted)] hover:text-[var(--brand-500)] hover:border-[var(--brand-500)] transition-colors flex items-center justify-center gap-1.5">
               <Plus className="h-4 w-4" /> Add Another Step
             </button>
           )}

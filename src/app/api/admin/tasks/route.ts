@@ -32,6 +32,7 @@ export async function POST(req: NextRequest) {
       is_private, is_featured,
       validation_time, payment_time,
       terms, steps,
+      assignment_instructions, assignment_questions, assignment_passing_score,
       status,
     } = body as {
       title: string;
@@ -43,6 +44,9 @@ export async function POST(req: NextRequest) {
       deadline?: string;
       assignment_required?: boolean;
       assignment_type?: string;
+      assignment_instructions?: string;
+      assignment_questions?: object[];
+      assignment_passing_score?: number;
       required_language?: string;
       required_skills?: string[];
       is_private?: boolean;
@@ -70,7 +74,10 @@ export async function POST(req: NextRequest) {
         total_slots: total_slots ?? null,
         deadline: deadline || null,
         assignment_required: assignment_required ?? false,
-        assignment_type: assignment_required ? (assignment_type ?? "quiz") : null,
+        assignment_type: assignment_required ? (assignment_type ?? "text") : null,
+        assignment_instructions: assignment_required ? (assignment_instructions ?? null) : null,
+        assignment_questions: assignment_required ? (assignment_questions ?? []) : [],
+        assignment_passing_score: assignment_passing_score ?? 70,
         required_language: required_language ?? "Any",
         required_skills: required_skills ?? [],
         is_private: is_private ?? false,

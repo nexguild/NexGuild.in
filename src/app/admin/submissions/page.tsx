@@ -60,14 +60,17 @@ export default function AdminSubmissionsPage() {
   useEffect(() => {
     async function load() {
       const { data: { session } } = await supabase.auth.getSession();
-      setToken(session?.access_token ?? null);
+      const tok = session?.access_token ?? null;
+      setToken(tok);
+      if (!tok) { setLoading(false); return; }
 
-      const { data } = await supabase
-        .from("submissions")
-        .select("id, contributor_id, status, notes, files, coins_awarded, feedback, submitted_at, tasks(id, title, pay_per_task), profiles(full_name, email)")
-        .order("submitted_at", { ascending: false });
-
-      setSubmissions((data as unknown as Submission[]) ?? []);
+      const res = await fetch("/api/admin/submissions", {
+        headers: { Authorization: `Bearer ${tok}` },
+      });
+      if (res.ok) {
+        const json = await res.json();
+        setSubmissions((json.submissions ?? []) as Submission[]);
+      }
       setLoading(false);
     }
     load();
