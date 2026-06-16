@@ -254,15 +254,15 @@ export default function OpportunitiesPage() {
 
             async function handleCardClick() {
               if (isFull) return;
-              if (assignRejected) {
+              // Assignment-required + any rejection scenario → delete assignment, start fresh
+              if (task.assignment_required && (assignRejected || subStatus === "rejected")) {
                 if (!userId || retrying) return;
                 setRetrying(task.id);
                 await supabase
                   .from("assignments")
                   .delete()
                   .eq("task_id", task.id)
-                  .eq("contributor_id", userId)
-                  .eq("status", "rejected");
+                  .eq("contributor_id", userId);
                 setAssignmentMap((prev) => {
                   const next = { ...prev };
                   delete next[task.id];
@@ -404,10 +404,10 @@ export default function OpportunitiesPage() {
                           ? "bg-[var(--surface-subtle)] text-[var(--text-muted)] cursor-not-allowed"
                           : isResubmitNeeded
                           ? "bg-orange-500/10 text-orange-400 border border-orange-500/20 hover:bg-orange-500/20"
+                          : (assignRejected || (task.assignment_required && subStatus === "rejected"))
+                          ? "bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20"
                           : subStatus === "rejected"
                           ? "bg-orange-500/10 text-orange-400 border border-orange-500/20 hover:bg-orange-500/20"
-                          : assignRejected
-                          ? "bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20"
                           : subStatus === "in_progress"
                           ? "bg-[rgba(20,184,166,0.1)] text-[var(--brand-500)] border border-[rgba(20,184,166,0.2)] hover:bg-[rgba(20,184,166,0.15)]"
                           : "bg-[var(--brand-500)] text-black hover:brightness-105 active:scale-[0.98]"
@@ -417,8 +417,8 @@ export default function OpportunitiesPage() {
                         <Loader2 className="h-4 w-4 animate-spin" />
                       ) : isResubmitNeeded ? "Resubmit →" :
                        subStatus === "in_progress" ? "Continue" :
+                       (assignRejected || (task.assignment_required && subStatus === "rejected")) ? "Retry Assignment →" :
                        subStatus === "rejected" ? "Retry" :
-                       assignRejected ? "Retry Assignment →" :
                        "Get Started"}
                       {!isResubmitNeeded && retrying !== task.id && <ChevronRight className="h-4 w-4" />}
                     </button>

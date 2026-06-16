@@ -21,11 +21,10 @@ interface Submission {
 }
 
 const TABS = [
-  { label: "In Progress",        status: "in_progress" },
-  { label: "Submitted",          status: "submitted" },
-  { label: "Needs Resubmission", status: "resubmit_requested" },
-  { label: "Approved",           status: "approved" },
-  { label: "Rejected",           status: "rejected" },
+  { label: "In Progress", status: "in_progress" },
+  { label: "Submitted",   status: "submitted" },
+  { label: "Approved",    status: "approved" },
+  { label: "Rejected",    status: "rejected" },
 ];
 
 const STATUS_STYLES: Record<string, string> = {
@@ -59,7 +58,6 @@ export default function TasksPage() {
     fetchSubmissions();
   }, []);
 
-  const resubmitCount = submissions.filter((s) => s.status === "resubmit_requested").length;
   const filtered = submissions.filter((s) => s.status === activeTab);
 
   return (
@@ -82,11 +80,6 @@ export default function TasksPage() {
             }`}
           >
             {tab.label}
-            {tab.status === "resubmit_requested" && resubmitCount > 0 && (
-              <span className="ml-1.5 inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-orange-500/20 text-orange-400 text-xs font-bold px-1">
-                {resubmitCount}
-              </span>
-            )}
           </button>
         ))}
       </div>
