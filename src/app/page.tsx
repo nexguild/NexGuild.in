@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-
+import { motion } from "framer-motion";
 /* ── Arrow icon ────────────────────────────────────────────────── */
 function Arrow() {
   return (
@@ -77,28 +77,71 @@ export default function LandingPage() {
           onMouseEnter={() => setHov("left")}
           onMouseLeave={() => setHov(null)}
         >
-            <div className="aurora aurora-gold-1" />
-          <div className="aurora aurora-gold-2" />
-
+            {/* গোল্ডেন ব্যাকগ্রাউন্ড আভা ১ */}
+            <motion.div 
+              className="aurora aurora-gold-1" 
+              animate={{ 
+                transform: [
+                  "translate(0px, 0px)", 
+                  "translate(50px, -60px)", 
+                  "translate(-30px, 40px)", 
+                  "translate(0px, 0px)"
+                ]
+              }}
+              transition={{ 
+                duration: 4, 
+                repeat: Infinity, 
+                ease: "easeInOut" 
+              }}
+            />
+            
+            {/* গোল্ডেন ব্যাকগ্রাউন্ড আভা ২ */}
+            <motion.div 
+              className="aurora aurora-gold-2" 
+              animate={{ 
+                transform: [
+                  "translate(0px, 0px)", 
+                  "translate(-40px, 50px)", 
+                  "translate(60px, -40px)", 
+                  "translate(0px, 0px)"
+                ]
+              }}
+              transition={{ 
+                duration: 5, 
+                repeat: Infinity, 
+                ease: "easeInOut" 
+              }}
+            />
           {/* Vignette */}
           <div className="vig" />
 
           <div className="body">
             <span className="tag tg-gold">For Organizations</span>
-            <h2 className="hl">
-              Scale Your<br />
-              <em className="em-gold">Data Projects.</em>
-            </h2>
-            <p className="sub">
-              We recruit, brief, and manage a contributor team for
-              audio, transcription, annotation and more — end to end.
-            </p>
-            <div className="acts">
-              <Link href="/client"              className="btn btn-gold"><Arrow /> Explore Services</Link>
-              <Link href="/client/how-it-works" className="lnk lnk-gold">How it works →</Link>
-            </div>
-            <p className="note">No account needed · Contact us directly</p>
-          </div>
+            <motion.h2 
+  className="hl"
+  initial={{ opacity: 0, y: 20 }}
+  animate={{ opacity: 1, y: 0 }}
+  transition={{ duration: 0.6 }}
+>
+  Scale Your<br />
+  <em className="em-gold">Data Projects.</em>
+</motion.h2>
+<motion.div
+  initial={{ opacity: 0, y: 15 }}
+  animate={{ opacity: 1, y: 0 }}
+  transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
+>
+  <p className="sub">
+    We recruit, brief, and manage a contributor team for
+    audio, transcription, annotation and more – end to end.
+  </p>
+  <div className="acts">
+    <Link href="/client" className="btn btn-gold"><Arrow /> Explore Services</Link>
+    <Link href="/client/how-it-works" className="lnk lnk-gold">How it works →</Link>
+  </div>
+  <p className="note">No account needed · Contact us directly</p>
+</motion.div>
+</div>
         </section>
 
         {/* Divider */}
@@ -116,25 +159,36 @@ export default function LandingPage() {
         >
           <div className="aurora aurora-teal-1" />
           <div className="aurora aurora-teal-2" />
-
-          {/* Vignette */}
           <div className="vig" />
 
           <div className="body">
             <span className="tag tg-teal">For Contributors</span>
-            <h2 className="hl">
+            
+            <motion.h2 
+              className="hl"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+            >
               Turn Free Time<br />
               <em className="em-teal">Into Real Money.</em>
-            </h2>
-            <p className="sub">
-              Complete simple tasks from your phone — recording,
-              testing, transcribing — and redeem NexCoins for gift vouchers.
-            </p>
-            <div className="acts">
-              <Link href="/earn"         className="btn btn-teal"><Arrow /> Start Earning</Link>
-              <Link href="/how-it-works" className="lnk lnk-teal">How it works →</Link>
-            </div>
-            <p className="note">Free to join · 100+ active contributors</p>
+            </motion.h2>
+
+            <motion.div
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
+            >
+              <p className="sub">
+                Complete simple tasks from your phone — recording,
+                testing, transcribing — and redeem NexCoins for gift vouchers.
+              </p>
+              <div className="acts">
+                <Link href="/earn" className="btn btn-teal"><Arrow /> Start Earning</Link>
+                <Link href="/how-it-works" className="lnk lnk-teal">How it works →</Link>
+              </div>
+              <p className="note">Free to join · 100+ active contributors</p>
+            </motion.div>
           </div>
         </section>
       </div>
@@ -206,26 +260,26 @@ export default function LandingPage() {
           width: min(60vw, 600px); height: min(60vw, 600px);
           background: rgba(245, 158, 11, 0.25);
           bottom: -20%; left: 5%;
-          animation: auroraDrift 25s ease-in-out infinite alternate;
+           animation: auroraDrift 25s ease-in-out infinite alternate; 
         }
         .aurora-gold-2 {
           width: min(50vw, 500px); height: min(50vw, 500px);
           background: rgba(245, 158, 11, 0.25);
           top: -10%; right: 5%;
-          animation: auroraDrift 20s ease-in-out infinite alternate-reverse;
+           animation: auroraDrift 20s ease-in-out infinite alternate-reverse; 
         }
 
         .aurora-teal-1 {
           width: min(60vw, 600px); height: min(60vw, 600px);
           background: rgba(20, 184, 166, 0.20);
           bottom: -20%; right: 5%;
-          animation: auroraDrift 25s ease-in-out infinite alternate-reverse;
+           animation: auroraDrift 25s ease-in-out infinite alternate-reverse; 
         }
         .aurora-teal-2 {
           width: min(50vw, 500px); height: min(50vw, 500px);
           background: rgba(20, 184, 166, 0.20);
           top: -8%; left: 5%;
-          animation: auroraDrift 22s ease-in-out infinite alternate;
+           animation: auroraDrift 22s ease-in-out infinite alternate; 
         }
 
         /* Brighten blobs on hover */
@@ -397,7 +451,18 @@ export default function LandingPage() {
           .hl  { font-size: 19px; }
           .btn { width: 100%; }
         }
-      `}</style>
+          @keyframes auroraDrift {
+  0% {
+    transform: translate(0px, 0px) scale(1);
+  }
+  50% {
+    transform: translate(40px, -50px) scale(1.1);
+  }
+  100% {
+    transform: translate(-20px, 30px) scale(0.95);
+  }
+}
+`}</style>
     </div>
   );
 }

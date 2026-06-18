@@ -47,6 +47,17 @@ const TRUST_BADGES = [
   { icon: "⚡", label: "Instant Vouchers" },
 ];
 
+// Teal Aurora Glow Animation
+const auroraStyle = `
+  @keyframes float-aurora {
+    0%, 100% { transform: translateY(0px) translateX(0px); }
+    50% { transform: translateY(-20px) translateX(10px); }
+  }
+  .aurora-glow {
+    animation: float-aurora 8s ease-in-out infinite alternate;
+  }
+`;
+
 function TypingHeadline() {
   const [index, setIndex] = useState(0);
   const [visible, setVisible] = useState(true);
@@ -75,8 +86,12 @@ function TypingHeadline() {
         wordBreak: "break-word",
         overflowWrap: "break-word",
         textAlign: "center",
+        fontFamily: "'Instrument Serif', serif",
+        fontSize: "clamp(32px, 5vw, 64px)",
+        fontWeight: 900,
+        letterSpacing: "-0.02em",
+        color: "#1C1917",
       }}
-      className="gradient-text"
     >
       {TYPING_TEXTS[index]}
     </span>
@@ -86,22 +101,41 @@ function TypingHeadline() {
 export default function EarnPage() {
   return (
     <>
+      <style>{auroraStyle}</style>
+      
       {/* ── Hero ─────────────────────────────────────────────────── */}
-      <section className="relative hero-glow overflow-hidden">
+      <section 
+        className="relative overflow-hidden min-h-screen flex items-center justify-center"
+        style={{ backgroundColor: "#F0FAFA" }}
+      >
+        {/* Aurora Glow Blob Background */}
         <div
           aria-hidden
+          className="aurora-glow absolute inset-0 pointer-events-none"
           style={{
-            position: "absolute", inset: 0, zIndex: 0,
-            backgroundImage: "radial-gradient(circle, rgba(20,184,166,0.12) 1px, transparent 1px)",
-            backgroundSize: "32px 32px",
-            mask: "radial-gradient(ellipse 80% 60% at 50% 0%, black 40%, transparent 100%)",
-            WebkitMask: "radial-gradient(ellipse 80% 60% at 50% 0%, black 40%, transparent 100%)",
+            position: "absolute",
+            width: "600px",
+            height: "600px",
+            borderRadius: "50%",
+            background: "radial-gradient(circle, rgba(20,184,166,0.12) 0%, transparent 70%)",
+            filter: "blur(120px)",
+            top: "-200px",
+            left: "50%",
+            transform: "translateX(-50%)",
+            zIndex: 0,
           }}
         />
-        <div className="relative z-10 mx-auto max-w-container px-6 pt-28 pb-20 text-center">
+
+        <div className="relative z-10 mx-auto max-w-container px-6 py-28 text-center">
           <FadeIn>
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[var(--brand-100)] border border-[var(--brand-200)] mb-8">
-              <span className="text-xs font-semibold text-[var(--brand-500)] uppercase tracking-wider">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-8"
+              style={{
+                background: "rgba(255,255,255,0.75)",
+                backdropFilter: "blur(12px)",
+                border: "1.5px solid rgba(13,148,136,0.2)",
+              }}
+            >
+              <span className="text-xs font-semibold text-teal-700 uppercase tracking-wider">
                 Join 100+ Active Contributors
               </span>
             </div>
@@ -109,16 +143,13 @@ export default function EarnPage() {
 
           <FadeIn delay={80}>
             <h1
-              className="font-extrabold tracking-tight leading-[1.1] text-white mb-6 text-center"
+              className="leading-[1.1] mb-6 text-center w-full max-w-3xl mx-auto"
               style={{
-                fontSize: "clamp(32px, 5vw, 64px)",
-                width: "100%",
-                maxWidth: "100%",
-                overflow: "hidden",
-                whiteSpace: "normal",
-                wordBreak: "break-word",
-                textAlign: "center",
-                padding: "0 20px",
+                fontFamily: "'Instrument Serif', serif",
+                fontSize: "clamp(40px, 5vw, 72px)",
+                fontWeight: 900,
+                letterSpacing: "-0.02em",
+                color: "#1C1917",
               }}
             >
               <TypingHeadline />
@@ -126,7 +157,10 @@ export default function EarnPage() {
           </FadeIn>
 
           <FadeIn delay={160}>
-            <p className="text-lg sm:text-xl text-white/55 leading-relaxed max-w-2xl mx-auto mb-10 text-balance">
+            <p 
+              className="text-lg sm:text-xl leading-relaxed max-w-2xl mx-auto mb-10 text-balance"
+              style={{ color: "#44403C" }}
+            >
               NexGuild connects you with real paid tasks from real organizations.
               Work from your phone. Redeem NexCoins for gift vouchers.
             </p>
@@ -136,13 +170,41 @@ export default function EarnPage() {
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-10">
               <Link
                 href="/signup"
-                className="w-full sm:w-auto h-12 px-8 inline-flex items-center justify-center rounded-xl bg-[var(--brand-500)] text-[var(--text-inverse)] text-base font-bold hover:bg-[var(--brand-400)] transition-all duration-200 hover:scale-105 hover:shadow-[0_0_32px_rgba(20,184,166,0.4)]"
+                className="w-full sm:w-auto h-12 px-8 inline-flex items-center justify-center rounded-full font-bold text-base transition-all duration-200"
+                style={{
+                  background: "rgba(255,255,255,0.72)",
+                  backdropFilter: "blur(12px)",
+                  border: "1.5px solid rgba(13,148,136,0.35)",
+                  color: "#134E4A",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = "rgba(13,148,136,0.65)";
+                  e.currentTarget.style.transform = "translateY(-2px)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = "rgba(13,148,136,0.35)";
+                  e.currentTarget.style.transform = "translateY(0)";
+                }}
               >
                 Join Free →
               </Link>
               <Link
                 href="/opportunities"
-                className="w-full sm:w-auto h-12 px-8 inline-flex items-center justify-center rounded-xl border border-[var(--border-strong)] text-white/70 text-base font-medium hover:text-white hover:border-[var(--brand-500)] transition-colors"
+                className="w-full sm:w-auto h-12 px-8 inline-flex items-center justify-center rounded-full font-medium text-base transition-all duration-200"
+                style={{
+                  background: "rgba(255,255,255,0.72)",
+                  backdropFilter: "blur(12px)",
+                  border: "1.5px solid rgba(13,148,136,0.2)",
+                  color: "#115E59",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = "rgba(13,148,136,0.65)";
+                  e.currentTarget.style.transform = "translateY(-2px)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = "rgba(13,148,136,0.2)";
+                  e.currentTarget.style.transform = "translateY(0)";
+                }}
               >
                 See Opportunities
               </Link>
@@ -152,7 +214,13 @@ export default function EarnPage() {
               {TRUST_BADGES.map((b) => (
                 <span
                   key={b.label}
-                  className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[var(--surface-card)] border border-[var(--border-default)] text-xs text-white/60"
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-medium"
+                  style={{
+                    background: "rgba(255,255,255,0.75)",
+                    backdropFilter: "blur(12px)",
+                    border: "1.5px solid rgba(13,148,136,0.2)",
+                    color: "#44403C",
+                  }}
                 >
                   <span>{b.icon}</span>{b.label}
                 </span>
@@ -163,14 +231,20 @@ export default function EarnPage() {
       </section>
 
       {/* ── Earning Ways ─────────────────────────────────────────── */}
-      <section className="py-24 px-6">
+      <section className="py-24 px-6" style={{ backgroundColor: "#F0FAFA" }}>
         <div className="mx-auto max-w-container">
           <FadeIn>
             <div className="text-center mb-14">
-              <h2 className="text-4xl sm:text-5xl font-extrabold text-white tracking-tight mb-4">
+              <h2 
+                className="text-4xl sm:text-5xl font-extrabold tracking-tight mb-4"
+                style={{
+                  fontFamily: "'Instrument Serif', serif",
+                  color: "#1C1917",
+                }}
+              >
                 Multiple Ways to Earn
               </h2>
-              <p className="text-white/50 text-lg max-w-xl mx-auto">
+              <p className="text-lg max-w-xl mx-auto" style={{ color: "#44403C" }}>
                 11 categories of paid tasks. New projects added regularly.
               </p>
             </div>
@@ -179,12 +253,24 @@ export default function EarnPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {EARNING_WAYS.map((way, i) => (
               <FadeIn key={way.name} delay={i * 40}>
-                <div className="card-hover group rounded-xl border border-[var(--border-default)] bg-[var(--surface-card)] p-5 flex flex-col gap-3 cursor-default">
-                  <span className="text-3xl leading-none">{way.icon}</span>
-                  <h3 className="font-semibold text-white text-base group-hover:text-[var(--brand-500)] transition-colors">
+                <div 
+                  className="group rounded-2xl p-6 flex flex-col gap-4 cursor-default transition-all duration-200 hover:shadow-lg hover:scale-[1.02]"
+                  style={{
+                    background: "rgba(255,255,255,0.75)",
+                    backdropFilter: "blur(12px)",
+                    border: "1.5px solid rgba(13,148,136,0.2)",
+                  }}
+                >
+                  <span className="text-4xl leading-none">{way.icon}</span>
+                  <h3 
+                    className="font-bold text-lg group-hover:underline transition-colors"
+                    style={{ color: "#1C1917" }}
+                  >
                     {way.name}
                   </h3>
-                  <p className="text-sm text-white/50 leading-relaxed">{way.desc}</p>
+                  <p className="text-sm leading-relaxed" style={{ color: "#44403C" }}>
+                    {way.desc}
+                  </p>
                 </div>
               </FadeIn>
             ))}
@@ -193,24 +279,39 @@ export default function EarnPage() {
       </section>
 
       {/* Ad Banner — replace div with AdBanner component once Adsterra key is ready */}
-      <section className="py-6 px-6">
+      <section className="py-6 px-6" style={{ backgroundColor: "#F0FAFA" }}>
         <div className="mx-auto max-w-container flex justify-center">
           {/* <AdBanner atKey="YOUR_KEY_HERE" width={728} height={90} /> */}
-          <div className="w-full max-w-[728px] h-[90px] rounded-lg border border-dashed border-[var(--border-default)] bg-[var(--surface-subtle)] flex items-center justify-center">
-            <span className="text-xs text-white/30 uppercase tracking-widest">Advertisement</span>
+          <div 
+            className="w-full max-w-[728px] h-[90px] rounded-2xl flex items-center justify-center transition-all"
+            style={{
+              background: "rgba(255,255,255,0.75)",
+              backdropFilter: "blur(12px)",
+              border: "1.5px solid rgba(13,148,136,0.2)",
+            }}
+          >
+            <span className="text-xs uppercase tracking-widest" style={{ color: "#94A3B8" }}>
+              Advertisement
+            </span>
           </div>
         </div>
       </section>
 
       {/* ── How It Works ─────────────────────────────────────────── */}
-      <section className="py-24 px-6 bg-[var(--surface-subtle)]">
+      <section className="py-24 px-6" style={{ backgroundColor: "#F0FAFA" }}>
         <div className="mx-auto max-w-container">
           <FadeIn>
             <div className="text-center mb-14">
-              <h2 className="text-4xl sm:text-5xl font-extrabold text-white tracking-tight mb-4">
+              <h2 
+                className="text-4xl sm:text-5xl font-extrabold tracking-tight mb-4"
+                style={{
+                  fontFamily: "'Instrument Serif', serif",
+                  color: "#1C1917",
+                }}
+              >
                 How It Works
               </h2>
-              <p className="text-white/50 text-lg max-w-lg mx-auto">
+              <p className="text-lg max-w-lg mx-auto" style={{ color: "#44403C" }}>
                 Five simple steps from sign-up to your first voucher redemption.
               </p>
             </div>
@@ -219,16 +320,43 @@ export default function EarnPage() {
           <div className="flex flex-col gap-4 max-w-3xl mx-auto">
             {STEPS.map((step, i) => (
               <FadeIn key={step.title} delay={i * 80}>
-                <div className="flex gap-5 p-5 rounded-xl border border-[var(--border-default)] bg-[var(--surface-card)] hover:border-[var(--brand-500)] transition-colors">
-                  <div className="w-12 h-12 rounded-full bg-[var(--brand-100)] border border-[var(--brand-200)] flex items-center justify-center flex-shrink-0 text-xl">
+                <div 
+                  className="flex gap-5 p-6 rounded-2xl hover:shadow-lg transition-all duration-200"
+                  style={{
+                    background: "rgba(255,255,255,0.75)",
+                    backdropFilter: "blur(12px)",
+                    border: "1.5px solid rgba(13,148,136,0.2)",
+                  }}
+                >
+                  <div 
+                    className="w-12 h-12 rounded-full border flex items-center justify-center flex-shrink-0 text-xl font-bold"
+                    style={{
+                      background: "rgba(255,255,255,0.75)",
+                      backdropFilter: "blur(12px)",
+                      border: "1.5px solid rgba(13,148,136,0.2)",
+                    }}
+                  >
                     {step.icon}
                   </div>
                   <div className="flex flex-col justify-center">
-                    <span className="text-xs font-bold text-[var(--brand-500)] uppercase tracking-wider mb-1">
+                    <span 
+                      className="text-xs font-bold uppercase tracking-wider mb-1"
+                      style={{ color: "#115E59", fontStyle: "italic" }}
+                    >
                       Step {i + 1}
                     </span>
-                    <h3 className="font-bold text-white mb-1">{step.title}</h3>
-                    <p className="text-sm text-white/50 leading-relaxed">{step.desc}</p>
+                    <h3 
+                      className="font-bold mb-1 text-lg"
+                      style={{
+                        fontFamily: "'Instrument Serif', serif",
+                        color: "#1C1917",
+                      }}
+                    >
+                      {step.title}
+                    </h3>
+                    <p className="text-sm leading-relaxed" style={{ color: "#44403C" }}>
+                      {step.desc}
+                    </p>
                   </div>
                 </div>
               </FadeIn>
@@ -238,27 +366,50 @@ export default function EarnPage() {
       </section>
 
       {/* ── Why Join ─────────────────────────────────────────────── */}
-      <section className="py-24 px-6">
+      <section className="py-24 px-6" style={{ backgroundColor: "#F0FAFA" }}>
         <div className="mx-auto max-w-container">
           <FadeIn>
             <div className="text-center mb-14">
-              <h2 className="text-4xl sm:text-5xl font-extrabold text-white tracking-tight mb-4">
+              <h2 
+                className="text-4xl sm:text-5xl font-extrabold tracking-tight mb-4"
+                style={{
+                  fontFamily: "'Instrument Serif', serif",
+                  color: "#1C1917",
+                }}
+              >
                 Why Join NexGuild?
               </h2>
-              <p className="text-white/50 text-lg max-w-lg mx-auto">
+              <p className="text-lg max-w-lg mx-auto" style={{ color: "#44403C" }}>
                 Built for contributors in India and beyond.
               </p>
             </div>
           </FadeIn>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             {WHY_JOIN.map((w, i) => (
               <FadeIn key={w.title} delay={i * 70}>
-                <div className="card-hover rounded-xl border border-[var(--border-default)] bg-[var(--surface-card)] p-7 flex gap-5">
-                  <span className="text-3xl flex-shrink-0 mt-0.5">{w.icon}</span>
+                <div 
+                  className="p-8 flex gap-5 rounded-2xl transition-all duration-200 hover:shadow-lg hover:scale-[1.02]"
+                  style={{
+                    background: "rgba(255,255,255,0.75)",
+                    backdropFilter: "blur(12px)",
+                    border: "1.5px solid rgba(13,148,136,0.2)",
+                  }}
+                >
+                  <span className="text-4xl flex-shrink-0 mt-0.5">{w.icon}</span>
                   <div>
-                    <h3 className="font-bold text-white text-lg mb-2">{w.title}</h3>
-                    <p className="text-sm text-white/50 leading-relaxed">{w.desc}</p>
+                    <h3 
+                      className="font-bold text-lg mb-2"
+                      style={{
+                        fontFamily: "'Instrument Serif', serif",
+                        color: "#1C1917",
+                      }}
+                    >
+                      {w.title}
+                    </h3>
+                    <p className="text-sm leading-relaxed" style={{ color: "#44403C" }}>
+                      {w.desc}
+                    </p>
                   </div>
                 </div>
               </FadeIn>
@@ -268,35 +419,65 @@ export default function EarnPage() {
       </section>
 
       {/* ── CTA ─────────────────────────────────────────────────── */}
-      <section className="py-24 px-6 bg-[var(--surface-subtle)]">
-        <div className="mx-auto max-w-container">
+      <section className="py-24 px-6 relative overflow-hidden" style={{ backgroundColor: "#F0FAFA" }}>
+        {/* Aurora Glow Blob */}
+        <div
+          aria-hidden
+          className="aurora-glow absolute inset-0 pointer-events-none"
+          style={{
+            position: "absolute",
+            width: "500px",
+            height: "500px",
+            borderRadius: "50%",
+            background: "radial-gradient(circle, rgba(20,184,166,0.08) 0%, transparent 70%)",
+            filter: "blur(120px)",
+            bottom: "-150px",
+            right: "-100px",
+            zIndex: 0,
+          }}
+        />
+
+        <div className="mx-auto max-w-container relative z-10">
           <FadeIn>
             <div
-              className="rounded-2xl p-6 sm:p-12 text-center relative overflow-hidden"
+              className="rounded-2xl p-8 sm:p-16 text-center overflow-hidden relative"
               style={{
-                background: "linear-gradient(135deg, #000f1f 0%, #0A1628 40%, #0A1628 60%, #001a12 100%)",
-                border: "1px solid rgba(20,184,166,0.18)",
+                background: "linear-gradient(160deg, #F6FDFD 0%, #E6FAF9 100%)",
+                border: "1.5px solid rgba(13,148,136,0.2)",
               }}
             >
-              <div
-                aria-hidden
-                style={{
-                  position: "absolute", inset: 0, zIndex: 0, pointerEvents: "none",
-                  background: "radial-gradient(ellipse 60% 70% at 50% 50%, rgba(20,184,166,0.07) 0%, transparent 70%)",
-                }}
-              />
               <div className="relative z-10">
                 <div className="text-5xl mb-6">🚀</div>
-                <h2 className="text-3xl sm:text-4xl font-extrabold text-white mb-4 tracking-tight">
+                <h2 
+                  className="text-3xl sm:text-4xl font-extrabold mb-4 tracking-tight"
+                  style={{
+                    fontFamily: "'Instrument Serif', serif",
+                    color: "#1C1917",
+                  }}
+                >
                   Join Our Growing Community
                 </h2>
-                <p className="text-white/55 text-lg mb-10 max-w-lg mx-auto">
+                <p className="text-lg mb-10 max-w-lg mx-auto" style={{ color: "#44403C" }}>
                   Join our growing community of contributors across India.
                   New tasks added regularly.
                 </p>
                 <Link
                   href="/signup"
-                  className="h-12 px-10 inline-flex items-center rounded-xl bg-[var(--brand-500)] text-[var(--text-inverse)] text-base font-bold hover:bg-[var(--brand-400)] transition-all duration-200 hover:scale-105 hover:shadow-[0_0_32px_rgba(20,184,166,0.4)]"
+                  className="h-12 px-10 inline-flex items-center rounded-full font-bold text-base transition-all duration-200"
+                  style={{
+                    background: "rgba(255,255,255,0.72)",
+                    backdropFilter: "blur(12px)",
+                    border: "1.5px solid rgba(13,148,136,0.35)",
+                    color: "#134E4A",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.borderColor = "rgba(13,148,136,0.65)";
+                    e.currentTarget.style.transform = "translateY(-2px)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.borderColor = "rgba(13,148,136,0.35)";
+                    e.currentTarget.style.transform = "translateY(0)";
+                  }}
                 >
                   Join Free Today →
                 </Link>
