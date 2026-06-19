@@ -53,30 +53,40 @@ const FAQS = [
 
 export default function HowItWorksPage() {
   return (
-    <>
-      {/* Hero */}
-      <section className="relative hero-glow overflow-hidden">
+    <div style={{ background: "#EBFBFA", color: "#1E293B", minHeight: "100vh" }}>
+      
+      {/* ── Hero Section ─────────────────────────────────────────── */}
+      <section className="relative overflow-hidden pt-24 pb-12 px-6">
         <div
           aria-hidden
           style={{
             position: "absolute", inset: 0, zIndex: 0,
-            backgroundImage: "radial-gradient(circle, rgba(20,184,166,0.10) 1px, transparent 1px)",
+            backgroundImage: "radial-gradient(circle, rgba(13,148,136,0.12) 1px, transparent 1px)",
             backgroundSize: "32px 32px",
             mask: "radial-gradient(ellipse 80% 60% at 50% 0%, black 40%, transparent 100%)",
             WebkitMask: "radial-gradient(ellipse 80% 60% at 50% 0%, black 40%, transparent 100%)",
           }}
         />
-        <div className="relative z-10 mx-auto max-w-container px-6 pt-28 pb-16 text-center">
+        <div className="relative z-10 mx-auto max-w-container text-center">
           <FadeIn>
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[var(--brand-100)] border border-[var(--brand-200)] mb-6">
-              <span className="text-xs font-semibold text-[var(--brand-500)] uppercase tracking-wider">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full mb-6"
+              style={{
+                background: "rgba(255,255,255,0.5)",
+                backdropFilter: "blur(12px)",
+                border: "1.5px solid rgba(13,148,136,0.18)",
+              }}
+            >
+              <span className="text-xs font-bold text-[#115E59] uppercase tracking-wider">
                 For Contributors
               </span>
             </div>
-            <h1 className="text-4xl sm:text-5xl font-extrabold text-white tracking-tight mb-4 text-balance">
+            <h1 
+              className="text-4xl sm:text-6xl font-black text-[#0F3D36] tracking-tight mb-4"
+              style={{ fontFamily: "'Instrument Serif', serif" }}
+            >
               How It Works
             </h1>
-            <p className="text-lg text-white/55 max-w-xl mx-auto leading-relaxed">
+            <p className="text-base sm:text-lg text-stone-600 max-w-xl mx-auto leading-relaxed text-balance">
               Five simple steps from sign-up to your first voucher redemption.
               Work from your phone. Redeem NexCoins for gift vouchers.
             </p>
@@ -84,39 +94,65 @@ export default function HowItWorksPage() {
         </div>
       </section>
 
-      {/* Steps */}
-      <section className="py-20 px-6">
+      {/* ── Steps List ───────────────────────────────────────────── */}
+      <section className="py-16 px-6">
         <div className="mx-auto max-w-3xl">
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-5">
             {STEPS.map((step, i) => (
               <FadeIn key={step.title} delay={i * 80}>
-                <div className="flex gap-5 p-6 rounded-xl border border-[var(--border-default)] bg-[var(--surface-card)] hover:border-[var(--brand-500)] transition-colors group">
-                  <div className="w-14 h-14 rounded-full bg-[var(--brand-100)] border border-[var(--brand-200)] flex items-center justify-center flex-shrink-0 text-2xl group-hover:scale-110 transition-transform">
+                <div 
+                  className="flex gap-5 p-6 rounded-2xl cursor-pointer transition-all duration-300 hover:translate-y-[-3px] hover:bg-white hover:shadow-sm border"
+                  style={{
+                    background: "rgba(255,255,255,0.45)",
+                    border: "1.5px solid rgba(13,148,136,0.12)",
+                    backdropFilter: "blur(12px)",
+                  }}
+                >
+                  <div 
+                    className="w-14 h-14 rounded-full flex items-center justify-center flex-shrink-0 text-2xl"
+                    style={{
+                      background: "rgba(13,148,136,0.06)",
+                      border: "1.5px solid rgba(13,148,136,0.15)",
+                    }}
+                  >
                     {step.icon}
                   </div>
                   <div className="flex flex-col justify-center">
-                    <span className="text-xs font-bold text-[var(--brand-500)] uppercase tracking-wider mb-1">
-                      Step {i + 1}
+                    <span className="text-xs font-bold text-[#0D9488] uppercase tracking-wider mb-0.5 italic">
+                      Step 0{i + 1}
                     </span>
-                    <h3 className="font-bold text-white text-base mb-1.5">{step.title}</h3>
-                    <p className="text-sm text-white/50 leading-relaxed">{step.body}</p>
+                    <h3 className="font-bold text-[#0F3D36] text-lg mb-1" style={{ fontFamily: "'Instrument Serif', serif" }}>
+                      {step.title}
+                    </h3>
+                    <p className="text-xs sm:text-sm text-stone-600 leading-relaxed">{step.body}</p>
                   </div>
                 </div>
               </FadeIn>
             ))}
           </div>
 
-          <FadeIn delay={500}>
-            <div className="mt-10 flex flex-col sm:flex-row gap-4">
+          {/* Action Buttons */}
+          <FadeIn delay={400}>
+            <div className="mt-12 flex flex-col sm:flex-row gap-4 justify-center items-center">
               <Link
                 href="/signup"
-                className="h-12 px-8 inline-flex items-center justify-center rounded-xl bg-[var(--brand-500)] text-[var(--text-inverse)] text-base font-bold hover:bg-[var(--brand-400)] transition-colors"
+                className="w-full sm:w-auto h-12 px-8 inline-flex items-center justify-center rounded-full font-bold text-base transition-all duration-300 hover:translate-y-[-3px] hover:shadow-[0_8px_20px_rgba(13,148,136,0.15)]"
+                style={{
+                  background: "linear-gradient(135deg, #10B981 0%, #059669 100%)",
+                  color: "#FFFFFF",
+                }}
               >
                 Create Your Account →
               </Link>
               <Link
                 href="/opportunities"
-                className="h-12 px-8 inline-flex items-center justify-center rounded-xl border border-[var(--border-strong)] text-white/70 text-base font-medium hover:text-white hover:border-[var(--brand-500)] transition-colors"
+                className="w-full sm:w-auto h-12 px-8 inline-flex items-center justify-center rounded-full font-medium text-base transition-all duration-300 hover:translate-y-[-3px] hover:bg-stone-100"
+                style={{
+                  background: "rgba(255,255,255,0.5)",
+                  backdropFilter: "blur(12px)",
+                  border: "1.5px solid rgba(13,148,136,0.25)",
+                  color: "#0F3D36",
+                }}
               >
                 Browse Opportunities
               </Link>
@@ -125,26 +161,34 @@ export default function HowItWorksPage() {
         </div>
       </section>
 
-      {/* Wallet info */}
-      <section className="py-16 px-6 bg-[var(--surface-subtle)]">
+      {/* ── Wallet Info Section ───────────────────────────────────── */}
+      <section className="py-20 px-6" style={{ background: "rgba(255,255,255,0.25)", backdropFilter: "blur(12px)", borderTop: "1px solid rgba(13,148,136,0.06)", borderBottom: "1px solid rgba(13,148,136,0.06)" }}>
         <div className="mx-auto max-w-3xl">
           <FadeIn>
-            <h2 className="text-2xl font-bold text-white mb-8 text-center">NexCoins & Rewards</h2>
+            <h2 className="text-3xl sm:text-4xl font-bold text-[#0F3D36] mb-12 text-center" style={{ fontFamily: "'Instrument Serif', serif" }}>
+              NexCoins & Rewards
+            </h2>
           </FadeIn>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <FadeIn>
-              <div className="rounded-xl border border-[var(--border-default)] bg-[var(--surface-card)] p-6">
-                <h3 className="font-semibold text-white mb-4">NexCoins Balance</h3>
-                <ul className="space-y-3">
+              <div 
+                className="rounded-2xl p-6 h-full border"
+                style={{
+                  background: "rgba(255,255,255,0.45)",
+                  border: "1.5px solid rgba(13,148,136,0.12)",
+                }}
+              >
+                <h3 className="font-bold text-[#0F3D36] text-lg mb-4" style={{ fontFamily: "'Instrument Serif', serif" }}>NexCoins Balance</h3>
+                <ul className="space-y-4">
                   {[
-                    { dot: "warning", label: "Pending NexCoins", desc: "Coins from submitted work still under review." },
-                    { dot: "success", label: "Available NexCoins", desc: "Confirmed coins ready to redeem in the Store." },
+                    { bg: "#EAB308", label: "Pending NexCoins", desc: "Coins from submitted work still under review." },
+                    { bg: "#10B981", label: "Available NexCoins", desc: "Confirmed coins ready to redeem in the Store." },
                   ].map((item) => (
-                    <li key={item.label} className="flex gap-3">
-                      <div className={`h-2 w-2 rounded-full mt-2 flex-shrink-0 ${item.dot === "warning" ? "bg-[var(--warning-text)]" : "bg-[var(--success-text)]"}`} />
+                    <li key={item.label} className="flex gap-3 items-start">
+                      <div className="h-2 w-2 rounded-full mt-2 flex-shrink-0" style={{ backgroundColor: item.bg }} />
                       <div>
-                        <span className="font-medium text-white text-sm">{item.label} — </span>
-                        <span className="text-sm text-white/50">{item.desc}</span>
+                        <span className="font-semibold text-stone-800 text-sm">{item.label} — </span>
+                        <span className="text-xs sm:text-sm text-stone-600 leading-relaxed">{item.desc}</span>
                       </div>
                     </li>
                   ))}
@@ -152,19 +196,25 @@ export default function HowItWorksPage() {
               </div>
             </FadeIn>
             <FadeIn delay={100}>
-              <div className="rounded-xl border border-[var(--border-default)] bg-[var(--surface-card)] p-6">
-                <h3 className="font-semibold text-white mb-4">Voucher Options</h3>
-                <ul className="space-y-3">
+              <div 
+                className="rounded-2xl p-6 h-full border"
+                style={{
+                  background: "rgba(255,255,255,0.45)",
+                  border: "1.5px solid rgba(13,148,136,0.12)",
+                }}
+              >
+                <h3 className="font-bold text-[#0F3D36] text-lg mb-4" style={{ fontFamily: "'Instrument Serif', serif" }}>Voucher Options</h3>
+                <ul className="space-y-4">
                   {[
                     { method: "Amazon Gift Card",  detail: "Delivered by email. Valid on Amazon India." },
                     { method: "Flipkart Gift Card", detail: "Delivered by email. Valid on Flipkart." },
                     { method: "Paytm / PhonePe",   detail: "Wallet vouchers delivered by email." },
                   ].map((m) => (
-                    <li key={m.method} className="flex gap-3">
-                      <div className="h-2 w-2 rounded-full bg-[var(--brand-500)] mt-2 flex-shrink-0" />
+                    <li key={m.method} className="flex gap-3 items-start">
+                      <div className="h-2 w-2 rounded-full bg-[#0D9488] mt-2 flex-shrink-0" />
                       <div>
-                        <span className="font-medium text-white text-sm">{m.method} — </span>
-                        <span className="text-sm text-white/50">{m.detail}</span>
+                        <span className="font-semibold text-stone-800 text-sm">{m.method} — </span>
+                        <span className="text-xs sm:text-sm text-stone-600 leading-relaxed">{m.detail}</span>
                       </div>
                     </li>
                   ))}
@@ -175,34 +225,58 @@ export default function HowItWorksPage() {
         </div>
       </section>
 
-      {/* FAQ */}
+      {/* Ad Banner Segment */}
+      <section className="py-8 px-6">
+        <div className="mx-auto max-w-container flex justify-center">
+          <div 
+            className="w-full max-w-[728px] h-[90px] rounded-2xl flex items-center justify-center"
+            style={{
+              background: "rgba(255,255,255,0.4)",
+              backdropFilter: "blur(12px)",
+              border: "1.5px solid rgba(13,148,136,0.1)",
+            }}
+          >
+            <span className="text-xs uppercase tracking-widest text-stone-400">Advertisement</span>
+          </div>
+        </div>
+      </section>
+
+      {/* ── FAQ Section ──────────────────────────────────────────── */}
       <section className="py-16 px-6">
-        <div className="mx-auto max-w-prose">
+        <div className="mx-auto max-w-2xl">
           <FadeIn>
-            <h2 className="text-2xl font-bold text-white mb-8 text-center">Frequently Asked Questions</h2>
+            <h2 className="text-3xl sm:text-4xl font-bold text-[#0F3D36] mb-12 text-center" style={{ fontFamily: "'Instrument Serif', serif" }}>
+              Frequently Asked Questions
+            </h2>
           </FadeIn>
           <div className="space-y-3">
             {FAQS.map((faq, i) => (
               <FadeIn key={faq.q} delay={i * 40}>
-                <details className="group rounded-xl border border-[var(--border-default)] bg-[var(--surface-card)]">
-                  <summary className="flex items-center justify-between gap-4 cursor-pointer list-none px-5 py-4">
-                    <span className="font-medium text-white text-sm">{faq.q}</span>
-                    <ChevronDown className="h-4 w-4 text-[var(--brand-500)] flex-shrink-0 group-open:rotate-180 transition-transform" />
+                <details 
+                  className="group rounded-2xl border transition-all duration-300"
+                  style={{
+                    background: "rgba(255,255,255,0.45)",
+                    border: "1.5px solid rgba(13,148,136,0.12)",
+                  }}
+                >
+                  <summary className="flex items-center justify-between gap-4 cursor-pointer list-none px-5 py-4 select-none">
+                    <span className="font-bold text-[#0F3D36] text-sm sm:text-base">{faq.q}</span>
+                    <ChevronDown className="h-4 w-4 text-[#0D9488] flex-shrink-0 group-open:rotate-180 transition-transform duration-300" />
                   </summary>
-                  <div className="px-5 pb-4">
-                    <p className="text-sm text-white/50 leading-relaxed">{faq.a}</p>
+                  <div className="px-5 pb-5 pt-1 border-t border-dashed border-stone-200/60 mt-1">
+                    <p className="text-xs sm:text-sm text-stone-600 leading-relaxed">{faq.a}</p>
                   </div>
                 </details>
               </FadeIn>
             ))}
           </div>
-          <FadeIn delay={100} className="mt-8 text-center">
-            <Link href="/faq" className="text-sm text-[var(--brand-500)] hover:underline">
+          <FadeIn delay={100} className="mt-10 text-center">
+            <Link href="/faq" className="text-sm text-[#0D9488] font-semibold hover:underline flex items-center justify-center gap-1">
               View full FAQ →
             </Link>
           </FadeIn>
         </div>
       </section>
-    </>
+    </div>
   );
 }

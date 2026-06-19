@@ -10,9 +10,9 @@ const COMPANY_LINKS = [
 ];
 
 const LEGAL_LINKS = [
-  { label: "Terms of Service", href: "/terms" },
-  { label: "Privacy Policy",   href: "/privacy" },
-  { label: "Cookie Policy",    href: "/cookies" },
+  { label: "Terms of Service", href: "/client/terms" },
+  { label: "Privacy Policy",   href: "/client/privacy" },
+  { label: "Cookie Policy",    href: "/client/cookie-policy" },
 ];
 
 export function GoldFooter() {

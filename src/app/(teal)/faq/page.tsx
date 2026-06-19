@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
 import { FadeIn } from "@/components/ui/fade-in";
 import { ArrowRight, ChevronDown } from "lucide-react";
 
@@ -46,7 +45,7 @@ const FAQ_SECTIONS = [
   {
     section: "Account & Support",
     faqs: [
-      { q: "How do I contact support?",              a: "Use the Contact page on our website, message us on WhatsApp, or email nexguild.in@gmail.com. We respond within 24 hours." },
+      { q: "How do I contact support?",              a: "Use the Contact page on our website or email nexguild.in@gmail.com. We respond within 24 hours." },
       { q: "Can I use multiple accounts?",           a: "No. Multiple accounts are against NexGuild's Terms of Service and will result in a permanent ban. One account per person." },
       { q: "What happens if I'm banned?",            a: "Banned accounts lose all pending and available balances. If you believe a ban was made in error, contact us within 7 days with evidence." },
     ],
@@ -55,41 +54,71 @@ const FAQ_SECTIONS = [
 
 export default function FAQPage() {
   return (
-    <>
-      {/* Hero */}
-      <section className="relative overflow-hidden bg-[var(--surface-page)] py-20 px-6">
-        <div className="pointer-events-none absolute inset-0 hero-glow" />
+    <div style={{ background: "#EBFBFA", color: "#1E293B", minHeight: "100vh" }}>
+      
+      {/* ── Hero Section ─────────────────────────────────────────── */}
+      <section className="relative overflow-hidden py-24 px-6 text-center">
+        {/* Soft Radial Mint Glow */}
+        <div
+          aria-hidden
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background: "radial-gradient(circle, rgba(45,212,191,0.15) 0%, transparent 70%)",
+            filter: "blur(100px)",
+            top: "-150px",
+            left: "50%",
+            transform: "translateX(-50%)",
+          }}
+        />
         <div className="mx-auto max-w-container relative z-10">
           <FadeIn>
-            <p className="text-[var(--brand-500)] text-sm font-semibold uppercase tracking-widest mb-3">FAQ</p>
-            <h1 className="text-4xl sm:text-5xl font-bold text-white mb-4 text-balance">Frequently Asked Questions</h1>
-            <p className="text-lg text-[var(--text-secondary)] max-w-xl leading-relaxed">
+            <p className="text-[#0D9488] text-xs font-bold uppercase tracking-widest mb-3">FAQ</p>
+            <h1 
+              className="text-4xl sm:text-6xl font-black text-[#0F3D36] mb-4 tracking-tight"
+              style={{ fontFamily: "'Instrument Serif', serif" }}
+            >
+              Frequently Asked Questions
+            </h1>
+            <p className="text-base sm:text-lg text-stone-600 max-w-xl mx-auto leading-relaxed text-balance">
               Everything you need to know about earning NexCoins, redeeming vouchers, and how NexGuild works.
             </p>
           </FadeIn>
         </div>
       </section>
 
-      {/* FAQ Sections */}
-      <section className="bg-[var(--surface-card)] py-16 px-6">
-        <div className="mx-auto max-w-prose space-y-12">
+      {/* ── FAQ Sections Wrapper ─────────────────────────────────── */}
+      <section className="py-16 px-6" style={{ background: "rgba(255,255,255,0.25)", backdropFilter: "blur(12px)", borderTop: "1px solid rgba(13,148,136,0.06)", borderBottom: "1px solid rgba(13,148,136,0.06)" }}>
+        <div className="mx-auto max-w-2xl space-y-14">
           {FAQ_SECTIONS.map((section, si) => (
             <FadeIn key={section.section} delay={si * 60}>
               <div>
-                <h2 className="text-lg font-bold text-white mb-5 flex items-center gap-3">
-                  <span className="h-px flex-1 bg-[var(--border-default)]" />
+                {/* Section Header with Premium Lines */}
+                <h2 
+                  className="text-2xl font-bold text-[#0F3D36] mb-6 flex items-center gap-4 select-none"
+                  style={{ fontFamily: "'Instrument Serif', serif" }}
+                >
+                  <span className="h-px flex-1 bg-stone-300/60" />
                   {section.section}
-                  <span className="h-px flex-1 bg-[var(--border-default)]" />
+                  <span className="h-px flex-1 bg-stone-300/60" />
                 </h2>
-                <div className="space-y-2">
+                
+                {/* Accordion List */}
+                <div className="space-y-3">
                   {section.faqs.map((faq) => (
-                    <details key={faq.q} className="group rounded-xl border border-[var(--border-default)] bg-[var(--surface-subtle)]">
-                      <summary className="flex items-center justify-between gap-4 cursor-pointer list-none px-5 py-4">
-                        <span className="font-medium text-white text-sm">{faq.q}</span>
-                        <ChevronDown className="h-4 w-4 text-[var(--brand-500)] flex-shrink-0 group-open:rotate-180 transition-transform" />
+                    <details 
+                      key={faq.q} 
+                      className="group rounded-2xl border transition-all duration-300"
+                      style={{
+                        background: "rgba(255,255,255,0.45)",
+                        border: "1.5px solid rgba(13,148,136,0.12)",
+                      }}
+                    >
+                      <summary className="flex items-center justify-between gap-4 cursor-pointer list-none px-5 py-4 select-none">
+                        <span className="font-bold text-[#0F3D36] text-sm sm:text-base">{faq.q}</span>
+                        <ChevronDown className="h-4 w-4 text-[#0D9488] flex-shrink-0 group-open:rotate-180 transition-transform duration-300" />
                       </summary>
-                      <div className="px-5 pb-4">
-                        <p className="text-sm text-[var(--text-secondary)] leading-relaxed">{faq.a}</p>
+                      <div className="px-5 pb-5 pt-1 border-t border-dashed border-stone-200/60 mt-1">
+                        <p className="text-xs sm:text-sm text-stone-600 leading-relaxed">{faq.a}</p>
                       </div>
                     </details>
                   ))}
@@ -100,27 +129,50 @@ export default function FAQPage() {
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="relative overflow-hidden bg-[var(--surface-page)] py-16 px-6 text-center">
+      {/* ── CTA / Still Have Questions Section ───────────────────── */}
+      <section className="py-20 px-6 text-center relative overflow-hidden">
         <FadeIn>
           <div className="mx-auto max-w-container">
-            <h2 className="text-2xl font-bold text-white mb-3">Still have questions?</h2>
-            <p className="text-[var(--text-secondary)] mb-6 max-w-sm mx-auto">
+            <h2 
+              className="text-3xl sm:text-4xl font-bold text-[#0F3D36] mb-3"
+              style={{ fontFamily: "'Instrument Serif', serif" }}
+            >
+              Still have questions?
+            </h2>
+            <p className="text-sm sm:text-base text-stone-600 mb-8 max-w-md mx-auto">
               Our team is available via WhatsApp or email. We respond within 24 hours.
             </p>
-            <div className="flex flex-wrap gap-3 justify-center">
-              <Button asChild size="lg">
-                <Link href="/contact">
-                  Contact Us <ArrowRight className="h-4 w-4" />
-                </Link>
-              </Button>
-              <Button asChild variant="secondary" size="lg">
-                <Link href="/signup">Join NexGuild</Link>
-              </Button>
+            
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+              {/* Primary Contact Button */}
+              <Link
+                href="/earn/contact"
+                className="w-full sm:w-auto h-12 px-8 inline-flex items-center justify-center rounded-full font-bold text-base transition-all duration-300 hover:translate-y-[-3px] hover:shadow-[0_8px_20px_rgba(13,148,136,0.15)]"
+                style={{
+                  background: "linear-gradient(135deg, #10B981 0%, #059669 100%)",
+                  color: "#FFFFFF",
+                }}
+              >
+                Contact Us <ArrowRight className="ml-2 h-4 w-4" />
+              </Link>
+              
+              {/* Secondary Join Button */}
+              <Link
+                href="/signup"
+                className="w-full sm:w-auto h-12 px-8 inline-flex items-center justify-center rounded-full font-medium text-base transition-all duration-300 hover:translate-y-[-3px] hover:bg-stone-100"
+                style={{
+                  background: "rgba(255,255,255,0.5)",
+                  backdropFilter: "blur(12px)",
+                  border: "1.5px solid rgba(13,148,136,0.25)",
+                  color: "#0F3D36",
+                }}
+              >
+                Join NexGuild
+              </Link>
             </div>
           </div>
         </FadeIn>
       </section>
-    </>
+    </div>
   );
 }

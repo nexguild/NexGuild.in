@@ -16,79 +16,119 @@ export const metadata: Metadata = {
 
 export default function ContactPage() {
   return (
-    <>
-      {/* Hero */}
-      <section className="relative overflow-hidden bg-[var(--surface-page)] py-20 px-6">
-        <div className="pointer-events-none absolute inset-0 hero-glow" />
+    <div style={{ background: "#FAF6EF", color: "#1C1917", minHeight: "100vh" }}>
+      
+      {/* ── Hero Segment with Client Page Matching Orbs ────────────────── */}
+      <section 
+        className="relative overflow-hidden py-20 px-6"
+        style={{ background: "linear-gradient(160deg, #FEF9F0 0%, #FAF3E4 100%)", borderBottom: "1px solid rgba(217,119,6,0.08)" }}
+      >
+        {/* Moving Premium Orbs */}
+        <div aria-hidden style={{ position: "absolute", inset: 0, zIndex: 0, overflow: "hidden" }}>
+          <div
+            style={{
+              position: "absolute",
+              width: "min(60vw, 500px)",
+              height: "min(60vw, 500px)",
+              borderRadius: "50%",
+              background: "rgba(245,158,11,0.20)",
+              filter: "blur(120px)",
+              top: "-20%",
+              left: "-10%",
+              animation: "contactLightDrift 22s ease-in-out infinite alternate",
+            }}
+          />
+          <div
+            style={{
+              position: "absolute",
+              width: "min(50vw, 400px)",
+              height: "min(50vw, 400px)",
+              borderRadius: "50%",
+              background: "rgba(245,158,11,0.15)",
+              filter: "blur(120px)",
+              bottom: "-10%",
+              right: "-5%",
+              animation: "contactLightDrift 18s ease-in-out infinite alternate-reverse",
+            }}
+          />
+        </div>
+
         <div className="mx-auto max-w-container relative z-10">
           <FadeIn>
-            <p className="text-[var(--brand-500)] text-sm font-semibold uppercase tracking-widest mb-3">Contact</p>
-            <h1 className="text-4xl sm:text-5xl font-bold text-white mb-4 text-balance">
+            <p className="text-[#92400E] text-sm font-semibold uppercase tracking-widest mb-3">Contact</p>
+            <h1 
+              className="text-4xl sm:text-5xl font-bold mb-4 text-balance"
+              style={{ fontFamily: "Instrument Serif, serif", color: "#1C1917" }}
+            >
               Let&apos;s Talk About Your Project
             </h1>
-            <p className="text-lg text-[var(--text-secondary)] max-w-xl leading-relaxed">
+            <p className="text-lg text-[#44403C] max-w-xl leading-relaxed">
               Tell us what you need. We review every enquiry and respond within 2 business days with a clear scope and timeline.
             </p>
           </FadeIn>
         </div>
       </section>
 
-      {/* Contact form + quick contact */}
-      <section className="bg-[var(--surface-card)] py-16 px-6">
+      {/* ── Contact Form + Direct Channels ───────────────────────────── */}
+      <section style={{ background: "#FAF6EF", padding: "4rem 1.5rem" }}>
         <div className="mx-auto max-w-container">
           <div className="grid grid-cols-1 lg:grid-cols-5 gap-10">
 
-            {/* Form — takes up 3/5 on large screens */}
+            {/* Message Form Box */}
             <div className="lg:col-span-3">
               <FadeIn>
-                <h2 className="text-xl font-bold text-white mb-6">Send Us a Message</h2>
-                <ContactForm />
+                <h2 className="text-xl font-bold text-[#1C1917] mb-6">Send Us a Message</h2>
+                <div 
+                  className="p-6 sm:p-8 rounded-2xl bg-white/70 backdrop-blur-md border border-stone-200/60 shadow-sm"
+                >
+                  <ContactForm />
+                </div>
               </FadeIn>
             </div>
 
-            {/* Quick contact — takes up 2/5 */}
+            {/* Direct Channel Cards */}
             <div className="lg:col-span-2 space-y-4">
               <FadeIn delay={80}>
-                <h2 className="text-xl font-bold text-white mb-6">Or Reach Us Directly</h2>
+                <h2 className="text-xl font-bold text-[#1C1917] mb-6">Or Reach Us Directly</h2>
 
-                {/* WhatsApp */}
+                {/* WhatsApp Card */}
                 <a
                   href="https://wa.me/919382008513"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-4 rounded-xl border border-[var(--border-default)] bg-[var(--surface-subtle)] p-5 card-hover group transition-colors hover:border-[#25D366]/40"
+                  className="flex items-center gap-4 rounded-xl border border-stone-200/60 bg-white/60 p-5 transition-all duration-300 hover:translate-y-[-2px] hover:bg-white hover:border-[#25D366]/40 hover:shadow-md group"
                 >
                   <div className="h-10 w-10 rounded-xl bg-[#25D366]/10 flex items-center justify-center flex-shrink-0 group-hover:bg-[#25D366]/20 transition-colors">
                     <MessageCircle className="h-5 w-5 text-[#25D366]" />
                   </div>
                   <div className="min-w-0">
-                    <h3 className="font-semibold text-white text-sm mb-0.5">WhatsApp</h3>
-                    <p className="text-xs text-[var(--text-secondary)]">Fastest response — direct project discussions.</p>
-                    <p className="text-xs text-[#25D366] mt-1">Message on WhatsApp →</p>
+                    <h3 className="font-semibold text-[#1C1917] text-sm mb-0.5">WhatsApp</h3>
+                    <p className="text-xs text-[#44403C]">Fastest response — direct project discussions.</p>
+                    <p className="text-xs text-[#25D366] mt-1 font-medium">Message on WhatsApp →</p>
                   </div>
                 </a>
 
-                {/* Email */}
+                {/* Email Card */}
                 <a
                   href="mailto:nexguild.in@gmail.com"
-                  className="flex items-center gap-4 rounded-xl border border-[var(--border-default)] bg-[var(--surface-subtle)] p-5 card-hover group transition-colors hover:border-[var(--brand-500)]/40"
+                  className="flex items-center gap-4 rounded-xl border border-stone-200/60 bg-white/60 p-5 transition-all duration-300 hover:translate-y-[-2px] hover:bg-white hover:border-[#F59E0B]/40 hover:shadow-md group"
                 >
-                  <div className="h-10 w-10 rounded-xl bg-[var(--brand-100)] flex items-center justify-center flex-shrink-0">
-                    <Mail className="h-5 w-5 text-[var(--brand-500)]" />
+                  <div className="h-10 w-10 rounded-xl bg-[#F59E0B]/10 flex items-center justify-center flex-shrink-0 group-hover:bg-[#F59E0B]/20 transition-colors">
+                    <Mail className="h-5 w-5 text-[#92400E]" />
                   </div>
                   <div className="min-w-0">
-                    <h3 className="font-semibold text-white text-sm mb-0.5">Email</h3>
-                    <p className="text-xs text-[var(--text-secondary)]">For project briefs and partnership enquiries.</p>
-                    <p className="text-xs text-[var(--brand-500)] mt-1">nexguild.in@gmail.com →</p>
+                    <h3 className="font-semibold text-[#1C1917] text-sm mb-0.5">Email</h3>
+                    <p className="text-xs text-[#44403C]">For project briefs and partnership enquiries.</p>
+                    <p className="text-xs text-[#92400E] mt-1 font-medium">nexguild.in@gmail.com →</p>
                   </div>
                 </a>
 
-                {/* LinkedIn */}
+                {/* LinkedIn Card */}
                 <a
                   href="https://www.linkedin.com/in/somen-biswas-410727215"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-4 rounded-xl border border-[var(--border-default)] bg-[var(--surface-subtle)] p-5 card-hover group transition-colors hover:border-[#0A66C2]/40"
+                  className="flex items-center gap-4 rounded-xl border border-stone-200/60 bg-white/60 p-5 transition-all duration-300 hover:translate-y-[-2px] hover:bg-white hover:border-[#0A66C2]/40 hover:shadow-md group"
                 >
                   <div className="h-10 w-10 rounded-xl bg-[#0A66C2]/10 flex items-center justify-center flex-shrink-0 group-hover:bg-[#0A66C2]/20 transition-colors">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="#0A66C2">
@@ -96,9 +136,9 @@ export default function ContactPage() {
                     </svg>
                   </div>
                   <div className="min-w-0">
-                    <h3 className="font-semibold text-white text-sm mb-0.5">LinkedIn</h3>
-                    <p className="text-xs text-[var(--text-secondary)]">Connect professionally or send a message.</p>
-                    <p className="text-xs text-[#0A66C2] mt-1">linkedin.com/in/somen-biswas →</p>
+                    <h3 className="font-semibold text-[#1C1917] text-sm mb-0.5">LinkedIn</h3>
+                    <p className="text-xs text-[#44403C]">Connect professionally or send a message.</p>
+                    <p className="text-xs text-[#0A66C2] mt-1 font-medium">linkedin.com/in/somen-biswas →</p>
                   </div>
                 </a>
               </FadeIn>
@@ -106,6 +146,14 @@ export default function ContactPage() {
           </div>
         </div>
       </section>
-    </>
+
+      <style>{`
+        @keyframes contactLightDrift {
+          0% { transform: translate(0px, 0px) scale(1); }
+          50% { transform: translate(8%, -10%) scale(1.15); }
+          100% { transform: translate(-4px, 5px) scale(0.95); }
+        }
+      `}</style>
+    </div>
   );
 }

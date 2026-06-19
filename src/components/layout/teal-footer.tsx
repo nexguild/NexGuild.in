@@ -11,9 +11,9 @@ const COMMUNITY_LINKS = [
 ];
 
 const LEGAL_LINKS = [
-  { label: "Terms of Service", href: "/terms" },
-  { label: "Privacy Policy",   href: "/privacy" },
-  { label: "Cookie Policy",    href: "/cookies" },
+  { label: "Terms of Service", href: "/earn/terms" },
+  { label: "Privacy Policy",   href: "/earn/privacy" },
+  { label: "Cookie Policy",    href: "/earn/cookies" },
 ];
 
 export function TealFooter() {

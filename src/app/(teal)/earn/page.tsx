@@ -26,11 +26,11 @@ const EARNING_WAYS = [
 ];
 
 const STEPS = [
-  { icon: "🆓", title: "Sign Up Free",            desc: "Create your account in 30 seconds. No credit card needed." },
-  { icon: "✅", title: "Complete Your Profile",    desc: "Set your skills, language, and device capabilities." },
-  { icon: "🔎", title: "Browse & Apply for Tasks", desc: "Pick tasks that match your skills and schedule." },
-  { icon: "📤", title: "Submit Your Work",         desc: "Complete the task and submit through the dashboard." },
-  { icon: "🎁", title: "Redeem for Vouchers",       desc: "Exchange NexCoins for Amazon, Flipkart, and more gift vouchers." },
+  { icon: "Free", title: "Sign Up Free",            desc: "Create your account in 30 seconds. No credit card needed." },
+  { icon: "Profile", title: "Complete Your Profile",    desc: "Set your skills, language, and device capabilities." },
+  { icon: "Browse", title: "Browse & Apply for Tasks", desc: "Pick tasks that match your skills and schedule." },
+  { icon: "Submit", title: "Submit Your Work",         desc: "Complete the task and submit through the dashboard." },
+  { icon: "Redeem", title: "Redeem for Vouchers",       desc: "Exchange NexCoins for Amazon, Flipkart, and more gift vouchers." },
 ];
 
 const WHY_JOIN = [
@@ -47,7 +47,7 @@ const TRUST_BADGES = [
   { icon: "⚡", label: "Instant Vouchers" },
 ];
 
-// Teal Aurora Glow Animation
+// Soft Teal Aurora Glow Animation
 const auroraStyle = `
   @keyframes float-aurora {
     0%, 100% { transform: translateY(0px) translateX(0px); }
@@ -87,10 +87,10 @@ function TypingHeadline() {
         overflowWrap: "break-word",
         textAlign: "center",
         fontFamily: "'Instrument Serif', serif",
-        fontSize: "clamp(32px, 5vw, 64px)",
+        fontSize: "clamp(36px, 5.5vw, 68px)",
         fontWeight: 900,
-        letterSpacing: "-0.02em",
-        color: "#1C1917",
+        letterSpacing: "-0.01em",
+        color: "#0F3D36", // Deep Emerald/Teal Tone
       }}
     >
       {TYPING_TEXTS[index]}
@@ -100,24 +100,21 @@ function TypingHeadline() {
 
 export default function EarnPage() {
   return (
-    <>
+    <div style={{ background: "#EBFBFA", color: "#1E293B", minHeight: "100vh" }}>
       <style>{auroraStyle}</style>
       
-      {/* ── Hero ─────────────────────────────────────────────────── */}
-      <section 
-        className="relative overflow-hidden min-h-screen flex items-center justify-center"
-        style={{ backgroundColor: "#F0FAFA" }}
-      >
-        {/* Aurora Glow Blob Background */}
+      {/* ── Hero Section ─────────────────────────────────────────── */}
+      <section className="relative overflow-hidden min-h-[90vh] flex items-center justify-center py-20">
+        {/* Mint Aurora Radial overlay */}
         <div
           aria-hidden
           className="aurora-glow absolute inset-0 pointer-events-none"
           style={{
             position: "absolute",
-            width: "600px",
-            height: "600px",
+            width: "800px",
+            height: "800px",
             borderRadius: "50%",
-            background: "radial-gradient(circle, rgba(20,184,166,0.12) 0%, transparent 70%)",
+            background: "radial-gradient(circle, rgba(45,212,191,0.2) 0%, transparent 70%)",
             filter: "blur(120px)",
             top: "-200px",
             left: "50%",
@@ -126,87 +123,47 @@ export default function EarnPage() {
           }}
         />
 
-        <div className="relative z-10 mx-auto max-w-container px-6 py-28 text-center">
+        <div className="relative z-10 mx-auto max-w-container px-6 text-center">
           <FadeIn>
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-8"
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full mb-8"
               style={{
-                background: "rgba(255,255,255,0.75)",
+                background: "rgba(255,255,255,0.5)",
                 backdropFilter: "blur(12px)",
-                border: "1.5px solid rgba(13,148,136,0.2)",
+                border: "1.5px solid rgba(13,148,136,0.18)",
               }}
             >
-              <span className="text-xs font-semibold text-teal-700 uppercase tracking-wider">
-                Join 100+ Active Contributors
+              <span className="text-xs font-bold text-[#115E59] uppercase tracking-wider">
+                For Contributors
               </span>
             </div>
           </FadeIn>
 
           <FadeIn delay={80}>
-            <h1
-              className="leading-[1.1] mb-6 text-center w-full max-w-3xl mx-auto"
-              style={{
-                fontFamily: "'Instrument Serif', serif",
-                fontSize: "clamp(40px, 5vw, 72px)",
-                fontWeight: 900,
-                letterSpacing: "-0.02em",
-                color: "#1C1917",
-              }}
-            >
+            <h1 className="leading-[1.1] mb-6 text-center w-full max-w-3xl mx-auto">
               <TypingHeadline />
             </h1>
           </FadeIn>
 
           <FadeIn delay={160}>
-            <p 
-              className="text-lg sm:text-xl leading-relaxed max-w-2xl mx-auto mb-10 text-balance"
-              style={{ color: "#44403C" }}
-            >
-              NexGuild connects you with real paid tasks from real organizations.
-              Work from your phone. Redeem NexCoins for gift vouchers.
+            <p className="text-base sm:text-lg leading-relaxed max-w-2xl mx-auto mb-10 text-stone-600 text-balance">
+              Complete simple tasks from your phone — recording, testing, transcribing — and redeem NexCoins for gift vouchers.
             </p>
           </FadeIn>
 
           <FadeIn delay={240}>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-10">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-12">
+              {/* Start Earning - Premium Mint Button */}
               <Link
                 href="/signup"
-                className="w-full sm:w-auto h-12 px-8 inline-flex items-center justify-center rounded-full font-bold text-base transition-all duration-200"
+                className="w-full sm:w-auto h-12 px-10 inline-flex items-center justify-center rounded-full font-bold text-base transition-all duration-300 hover:translate-y-[-3px] hover:shadow-[0_8px_20px_rgba(13,148,136,0.18)]"
                 style={{
-                  background: "rgba(255,255,255,0.72)",
+                  background: "rgba(255, 255, 255, 0.8)",
                   backdropFilter: "blur(12px)",
-                  border: "1.5px solid rgba(13,148,136,0.35)",
-                  color: "#134E4A",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.borderColor = "rgba(13,148,136,0.65)";
-                  e.currentTarget.style.transform = "translateY(-2px)";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.borderColor = "rgba(13,148,136,0.35)";
-                  e.currentTarget.style.transform = "translateY(0)";
+                  border: "1.5px solid rgba(13,148,136,0.25)",
+                  color: "#0F3D36",
                 }}
               >
-                Join Free →
-              </Link>
-              <Link
-                href="/opportunities"
-                className="w-full sm:w-auto h-12 px-8 inline-flex items-center justify-center rounded-full font-medium text-base transition-all duration-200"
-                style={{
-                  background: "rgba(255,255,255,0.72)",
-                  backdropFilter: "blur(12px)",
-                  border: "1.5px solid rgba(13,148,136,0.2)",
-                  color: "#115E59",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.borderColor = "rgba(13,148,136,0.65)";
-                  e.currentTarget.style.transform = "translateY(-2px)";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.borderColor = "rgba(13,148,136,0.2)";
-                  e.currentTarget.style.transform = "translateY(0)";
-                }}
-              >
-                See Opportunities
+                ➔ Start Earning
               </Link>
             </div>
 
@@ -214,12 +171,12 @@ export default function EarnPage() {
               {TRUST_BADGES.map((b) => (
                 <span
                   key={b.label}
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-medium"
+                  className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-medium"
                   style={{
-                    background: "rgba(255,255,255,0.75)",
+                    background: "rgba(255,255,255,0.4)",
                     backdropFilter: "blur(12px)",
-                    border: "1.5px solid rgba(13,148,136,0.2)",
-                    color: "#44403C",
+                    border: "1.5px solid rgba(13,148,136,0.1)",
+                    color: "#334155",
                   }}
                 >
                   <span>{b.icon}</span>{b.label}
@@ -230,45 +187,39 @@ export default function EarnPage() {
         </div>
       </section>
 
-      {/* ── Earning Ways ─────────────────────────────────────────── */}
-      <section className="py-24 px-6" style={{ backgroundColor: "#F0FAFA" }}>
+      {/* ── Earning Ways (Premium Pop-up Cards Group) ─────────────────── */}
+      <section className="py-24 px-6" style={{ background: "rgba(255,255,255,0.25)", backdropFilter: "blur(12px)", borderTop: "1px solid rgba(13,148,136,0.06)", borderBottom: "1px solid rgba(13,148,136,0.06)" }}>
         <div className="mx-auto max-w-container">
           <FadeIn>
-            <div className="text-center mb-14">
+            <div className="text-center mb-16">
               <h2 
-                className="text-4xl sm:text-5xl font-extrabold tracking-tight mb-4"
-                style={{
-                  fontFamily: "'Instrument Serif', serif",
-                  color: "#1C1917",
-                }}
+                className="text-4xl sm:text-5xl font-extrabold tracking-tight mb-4 text-[#0F3D36]"
+                style={{ fontFamily: "'Instrument Serif', serif" }}
               >
                 Multiple Ways to Earn
               </h2>
-              <p className="text-lg max-w-xl mx-auto" style={{ color: "#44403C" }}>
+              <p className="text-sm sm:text-base max-w-xl mx-auto text-stone-600">
                 11 categories of paid tasks. New projects added regularly.
               </p>
             </div>
           </FadeIn>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
             {EARNING_WAYS.map((way, i) => (
-              <FadeIn key={way.name} delay={i * 40}>
+              <FadeIn key={way.name} delay={i * 40} className="h-full">
                 <div 
-                  className="group rounded-2xl p-6 flex flex-col gap-4 cursor-default transition-all duration-200 hover:shadow-lg hover:scale-[1.02]"
+                  className="group rounded-2xl p-6 flex flex-col gap-4 cursor-pointer transition-all duration-300 hover:translate-y-[-4px] hover:bg-white hover:shadow-md border"
                   style={{
-                    background: "rgba(255,255,255,0.75)",
+                    background: "rgba(255,255,255,0.45)",
+                    border: "1.5px solid rgba(13,148,136,0.12)",
                     backdropFilter: "blur(12px)",
-                    border: "1.5px solid rgba(13,148,136,0.2)",
                   }}
                 >
-                  <span className="text-4xl leading-none">{way.icon}</span>
-                  <h3 
-                    className="font-bold text-lg group-hover:underline transition-colors"
-                    style={{ color: "#1C1917" }}
-                  >
+                  <span className="text-4xl leading-none transition-transform duration-300 group-hover:scale-110">{way.icon}</span>
+                  <h3 className="font-bold text-lg text-[#0F3D36] group-hover:text-[#0D9488] transition-colors">
                     {way.name}
                   </h3>
-                  <p className="text-sm leading-relaxed" style={{ color: "#44403C" }}>
+                  <p className="text-xs sm:text-sm text-stone-600 leading-relaxed">
                     {way.desc}
                   </p>
                 </div>
@@ -278,83 +229,69 @@ export default function EarnPage() {
         </div>
       </section>
 
-      {/* Ad Banner — replace div with AdBanner component once Adsterra key is ready */}
-      <section className="py-6 px-6" style={{ backgroundColor: "#F0FAFA" }}>
+      {/* Ad Banner Segment */}
+      <section className="py-8 px-6">
         <div className="mx-auto max-w-container flex justify-center">
-          {/* <AdBanner atKey="YOUR_KEY_HERE" width={728} height={90} /> */}
           <div 
-            className="w-full max-w-[728px] h-[90px] rounded-2xl flex items-center justify-center transition-all"
+            className="w-full max-w-[728px] h-[90px] rounded-2xl flex items-center justify-center"
             style={{
-              background: "rgba(255,255,255,0.75)",
+              background: "rgba(255,255,255,0.4)",
               backdropFilter: "blur(12px)",
-              border: "1.5px solid rgba(13,148,136,0.2)",
+              border: "1.5px solid rgba(13,148,136,0.1)",
             }}
           >
-            <span className="text-xs uppercase tracking-widest" style={{ color: "#94A3B8" }}>
+            <span className="text-xs uppercase tracking-widest text-stone-400">
               Advertisement
             </span>
           </div>
         </div>
       </section>
 
-      {/* ── How It Works ─────────────────────────────────────────── */}
-      <section className="py-24 px-6" style={{ backgroundColor: "#F0FAFA" }}>
+      {/* ── How It Works (Vertical Grid Cards) ─────────────────────────── */}
+      <section className="py-24 px-6" style={{ background: "rgba(255,255,255,0.2)", backdropFilter: "blur(12px)" }}>
         <div className="mx-auto max-w-container">
           <FadeIn>
-            <div className="text-center mb-14">
+            <div className="text-center mb-16">
               <h2 
-                className="text-4xl sm:text-5xl font-extrabold tracking-tight mb-4"
-                style={{
-                  fontFamily: "'Instrument Serif', serif",
-                  color: "#1C1917",
-                }}
+                className="text-4xl sm:text-5xl font-extrabold tracking-tight mb-4 text-[#0F3D36]"
+                style={{ fontFamily: "'Instrument Serif', serif" }}
               >
                 How It Works
               </h2>
-              <p className="text-lg max-w-lg mx-auto" style={{ color: "#44403C" }}>
+              <p className="text-sm sm:text-base max-w-lg mx-auto text-stone-600">
                 Five simple steps from sign-up to your first voucher redemption.
               </p>
             </div>
           </FadeIn>
 
-          <div className="flex flex-col gap-4 max-w-3xl mx-auto">
+          <div className="flex flex-col gap-5 max-w-3xl mx-auto">
             {STEPS.map((step, i) => (
               <FadeIn key={step.title} delay={i * 80}>
                 <div 
-                  className="flex gap-5 p-6 rounded-2xl hover:shadow-lg transition-all duration-200"
+                  className="flex gap-5 p-6 rounded-2xl cursor-pointer transition-all duration-300 hover:translate-y-[-3px] hover:bg-white hover:shadow-sm"
                   style={{
-                    background: "rgba(255,255,255,0.75)",
+                    background: "rgba(255,255,255,0.45)",
+                    border: "1.5px solid rgba(13,148,136,0.12)",
                     backdropFilter: "blur(12px)",
-                    border: "1.5px solid rgba(13,148,136,0.2)",
                   }}
                 >
                   <div 
-                    className="w-12 h-12 rounded-full border flex items-center justify-center flex-shrink-0 text-xl font-bold"
+                    className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-black uppercase text-[#0D9488]"
                     style={{
-                      background: "rgba(255,255,255,0.75)",
-                      backdropFilter: "blur(12px)",
-                      border: "1.5px solid rgba(13,148,136,0.2)",
+                      background: "rgba(13,148,136,0.06)",
+                      border: "1.5px solid rgba(13,148,136,0.15)",
                     }}
                   >
-                    {step.icon}
+                    {i + 1}
                   </div>
                   <div className="flex flex-col justify-center">
-                    <span 
-                      className="text-xs font-bold uppercase tracking-wider mb-1"
-                      style={{ color: "#115E59", fontStyle: "italic" }}
-                    >
-                      Step {i + 1}
+                    <span className="text-xs font-bold uppercase tracking-wider mb-0.5 text-[#0D9488] italic">
+                      Step 0{i + 1}
                     </span>
-                    <h3 
-                      className="font-bold mb-1 text-lg"
-                      style={{
-                        fontFamily: "'Instrument Serif', serif",
-                        color: "#1C1917",
-                      }}
-                    >
+                    <h3 className="font-bold mb-1 text-lg text-[#0F3D36]" style={{ fontFamily: "'Instrument Serif', serif" }}>
                       {step.title}
                     </h3>
-                    <p className="text-sm leading-relaxed" style={{ color: "#44403C" }}>
+                    <p className="text-xs sm:text-sm text-stone-600 leading-relaxed">
                       {step.desc}
                     </p>
                   </div>
@@ -365,21 +302,18 @@ export default function EarnPage() {
         </div>
       </section>
 
-      {/* ── Why Join ─────────────────────────────────────────────── */}
-      <section className="py-24 px-6" style={{ backgroundColor: "#F0FAFA" }}>
+      {/* ── Why Join Section ─────────────────────────────────────────────── */}
+      <section className="py-24 px-6">
         <div className="mx-auto max-w-container">
           <FadeIn>
-            <div className="text-center mb-14">
+            <div className="text-center mb-16">
               <h2 
-                className="text-4xl sm:text-5xl font-extrabold tracking-tight mb-4"
-                style={{
-                  fontFamily: "'Instrument Serif', serif",
-                  color: "#1C1917",
-                }}
+                className="text-4xl sm:text-5xl font-extrabold tracking-tight mb-4 text-[#0F3D36]"
+                style={{ fontFamily: "'Instrument Serif', serif" }}
               >
                 Why Join NexGuild?
               </h2>
-              <p className="text-lg max-w-lg mx-auto" style={{ color: "#44403C" }}>
+              <p className="text-sm sm:text-base max-w-lg mx-auto text-stone-600">
                 Built for contributors in India and beyond.
               </p>
             </div>
@@ -387,27 +321,21 @@ export default function EarnPage() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             {WHY_JOIN.map((w, i) => (
-              <FadeIn key={w.title} delay={i * 70}>
+              <FadeIn key={w.title} delay={i * 70} className="h-full">
                 <div 
-                  className="p-8 flex gap-5 rounded-2xl transition-all duration-200 hover:shadow-lg hover:scale-[1.02]"
+                  className="p-8 flex gap-5 rounded-2xl h-full transition-all duration-300 hover:translate-y-[-4px] hover:bg-white hover:shadow-md"
                   style={{
-                    background: "rgba(255,255,255,0.75)",
+                    background: "rgba(255,255,255,0.45)",
+                    border: "1.5px solid rgba(13,148,136,0.12)",
                     backdropFilter: "blur(12px)",
-                    border: "1.5px solid rgba(13,148,136,0.2)",
                   }}
                 >
                   <span className="text-4xl flex-shrink-0 mt-0.5">{w.icon}</span>
                   <div>
-                    <h3 
-                      className="font-bold text-lg mb-2"
-                      style={{
-                        fontFamily: "'Instrument Serif', serif",
-                        color: "#1C1917",
-                      }}
-                    >
+                    <h3 className="font-bold text-lg mb-2 text-[#0F3D36]" style={{ fontFamily: "'Instrument Serif', serif" }}>
                       {w.title}
                     </h3>
-                    <p className="text-sm leading-relaxed" style={{ color: "#44403C" }}>
+                    <p className="text-xs sm:text-sm text-stone-600 leading-relaxed">
                       {w.desc}
                     </p>
                   </div>
@@ -418,21 +346,21 @@ export default function EarnPage() {
         </div>
       </section>
 
-      {/* ── CTA ─────────────────────────────────────────────────── */}
-      <section className="py-24 px-6 relative overflow-hidden" style={{ backgroundColor: "#F0FAFA" }}>
-        {/* Aurora Glow Blob */}
+      {/* ── CTA Section ─────────────────────────────────────────────────── */}
+      <section className="py-24 px-6 relative overflow-hidden" style={{ borderTop: "1px solid rgba(13,148,136,0.06)" }}>
+        {/* Soft Radial Mint Glow */}
         <div
           aria-hidden
           className="aurora-glow absolute inset-0 pointer-events-none"
           style={{
             position: "absolute",
-            width: "500px",
-            height: "500px",
+            width: "600px",
+            height: "600px",
             borderRadius: "50%",
-            background: "radial-gradient(circle, rgba(20,184,166,0.08) 0%, transparent 70%)",
+            background: "radial-gradient(circle, rgba(45,212,191,0.15) 0%, transparent 70%)",
             filter: "blur(120px)",
-            bottom: "-150px",
-            right: "-100px",
+            bottom: "-200px",
+            right: "-150px",
             zIndex: 0,
           }}
         />
@@ -440,43 +368,33 @@ export default function EarnPage() {
         <div className="mx-auto max-w-container relative z-10">
           <FadeIn>
             <div
-              className="rounded-2xl p-8 sm:p-16 text-center overflow-hidden relative"
+              className="rounded-3xl p-8 sm:p-16 text-center overflow-hidden relative"
               style={{
-                background: "linear-gradient(160deg, #F6FDFD 0%, #E6FAF9 100%)",
-                border: "1.5px solid rgba(13,148,136,0.2)",
+                background: "linear-gradient(160deg, rgba(255,255,255,0.6) 0%, rgba(235,251,250,0.8) 100%)",
+                border: "1.5px solid rgba(13,148,136,0.15)",
+                backdropFilter: "blur(12px)",
+                boxShadow: "0 10px 30px rgba(13,148,136,0.04)"
               }}
             >
               <div className="relative z-10">
                 <div className="text-5xl mb-6">🚀</div>
                 <h2 
-                  className="text-3xl sm:text-4xl font-extrabold mb-4 tracking-tight"
-                  style={{
-                    fontFamily: "'Instrument Serif', serif",
-                    color: "#1C1917",
-                  }}
+                  className="text-3xl sm:text-5xl font-extrabold mb-4 tracking-tight text-[#0F3D36]"
+                  style={{ fontFamily: "'Instrument Serif', serif" }}
                 >
                   Join Our Growing Community
                 </h2>
-                <p className="text-lg mb-10 max-w-lg mx-auto" style={{ color: "#44403C" }}>
-                  Join our growing community of contributors across India.
-                  New tasks added regularly.
+                <p className="text-sm sm:text-base mb-10 max-w-lg mx-auto text-stone-600">
+                  Join our growing community of contributors across India. New tasks added regularly.
                 </p>
                 <Link
                   href="/signup"
-                  className="h-12 px-10 inline-flex items-center rounded-full font-bold text-base transition-all duration-200"
+                  className="h-12 px-10 inline-flex items-center rounded-full font-bold text-base transition-all duration-300 hover:translate-y-[-3px] hover:shadow-[0_8px_20px_rgba(13,148,136,0.15)]"
                   style={{
-                    background: "rgba(255,255,255,0.72)",
+                    background: "rgba(255, 255, 255, 0.8)",
                     backdropFilter: "blur(12px)",
-                    border: "1.5px solid rgba(13,148,136,0.35)",
-                    color: "#134E4A",
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.borderColor = "rgba(13,148,136,0.65)";
-                    e.currentTarget.style.transform = "translateY(-2px)";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.borderColor = "rgba(13,148,136,0.35)";
-                    e.currentTarget.style.transform = "translateY(0)";
+                    border: "1.5px solid rgba(13,148,136,0.25)",
+                    color: "#0F3D36",
                   }}
                 >
                   Join Free Today →
@@ -486,6 +404,6 @@ export default function EarnPage() {
           </FadeIn>
         </div>
       </section>
-    </>
+    </div>
   );
 }

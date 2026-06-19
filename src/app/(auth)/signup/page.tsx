@@ -49,7 +49,6 @@ export default function SignupPage() {
           country,
           referral_code_used: referralCode || null,
         },
-        // After email confirmation, Supabase redirects here — callback page sends the welcome email
         emailRedirectTo: `${window.location.origin}/auth/callback`,
       },
     });
@@ -60,7 +59,7 @@ export default function SignupPage() {
           ? "An account with this email already exists."
           : authError.message
       );
-      setLoading(false);
+      loading && setLoading(false);
       return;
     }
 
@@ -68,21 +67,29 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="w-full max-w-form">
-      <div className="rounded-2xl border border-[var(--border-default)] bg-[var(--surface-card)] p-8 shadow-lg">
-        <h1 className="text-2xl font-bold text-white mb-1">Create your account</h1>
-        <p className="text-sm text-[var(--text-secondary)] mb-7">Free to join. Start earning immediately.</p>
+    <div style={{ background: "#EBFBFA", minHeight: "100vh" }} className="w-full flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+      <div 
+        className="w-full max-w-md rounded-2xl p-8 transition-all duration-300 hover:shadow-lg"
+        style={{
+          background: "rgba(255, 255, 255, 0.65)",
+          border: "1.5px solid rgba(13,148,136,0.18)",
+          backdropFilter: "blur(12px)",
+        }}
+      >
+        <h1 className="text-2xl font-bold text-[#0F3D36] mb-1 tracking-tight">Create your account</h1>
+        <p className="text-sm text-stone-600 mb-7">Free to join. Start earning immediately.</p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {error && (
-            <div className="rounded-lg bg-[var(--danger-bg,#2d1515)] border border-[var(--danger-border,#7f1d1d)] px-4 py-3 text-sm text-[var(--danger-text)]">
+            <div className="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-600">
               {error}
             </div>
           )}
 
+          {/* Full Name */}
           <div>
-            <label className="block text-sm font-medium text-[var(--text-secondary)] mb-1.5">
-              Full Name <span className="text-[var(--danger-text)]">*</span>
+            <label className="block text-sm font-semibold text-[#0F3D36] mb-1.5">
+              Full Name <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
@@ -90,13 +97,15 @@ export default function SignupPage() {
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
               placeholder="Your full name"
-              className="w-full h-10 px-3 rounded-lg border border-[var(--border-default)] bg-[var(--surface-subtle)] text-white text-sm placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--border-focus)] focus:border-transparent transition-colors"
+              style={{ background: "rgba(255,255,255,0.7)", borderColor: "rgba(13,148,136,0.25)" }}
+              className="w-full h-10 px-3 rounded-lg border text-stone-800 text-sm placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-[#0D9488] focus:border-transparent transition-all"
             />
           </div>
 
+          {/* Email */}
           <div>
-            <label className="block text-sm font-medium text-[var(--text-secondary)] mb-1.5">
-              Email <span className="text-[var(--danger-text)]">*</span>
+            <label className="block text-sm font-semibold text-[#0F3D36] mb-1.5">
+              Email <span className="text-red-500">*</span>
             </label>
             <input
               type="email"
@@ -104,13 +113,15 @@ export default function SignupPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="you@example.com"
-              className="w-full h-10 px-3 rounded-lg border border-[var(--border-default)] bg-[var(--surface-subtle)] text-white text-sm placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--border-focus)] focus:border-transparent transition-colors"
+              style={{ background: "rgba(255,255,255,0.7)", borderColor: "rgba(13,148,136,0.25)" }}
+              className="w-full h-10 px-3 rounded-lg border text-stone-800 text-sm placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-[#0D9488] focus:border-transparent transition-all"
             />
           </div>
 
+          {/* Password */}
           <div>
-            <label className="block text-sm font-medium text-[var(--text-secondary)] mb-1.5">
-              Password <span className="text-[var(--danger-text)]">*</span>
+            <label className="block text-sm font-semibold text-[#0F3D36] mb-1.5">
+              Password <span className="text-red-500">*</span>
             </label>
             <div className="relative">
               <input
@@ -119,12 +130,13 @@ export default function SignupPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="At least 8 characters"
-                className="w-full h-10 px-3 pr-10 rounded-lg border border-[var(--border-default)] bg-[var(--surface-subtle)] text-white text-sm placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--border-focus)] focus:border-transparent transition-colors"
+                style={{ background: "rgba(255,255,255,0.7)", borderColor: "rgba(13,148,136,0.25)" }}
+                className="w-full h-10 px-3 pr-10 rounded-lg border text-stone-800 text-sm placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-[#0D9488] focus:border-transparent transition-all"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword((v) => !v)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] hover:text-[var(--text-secondary)]"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600"
                 aria-label={showPassword ? "Hide password" : "Show password"}
               >
                 {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -132,9 +144,10 @@ export default function SignupPage() {
             </div>
           </div>
 
+          {/* Confirm Password */}
           <div>
-            <label className="block text-sm font-medium text-[var(--text-secondary)] mb-1.5">
-              Confirm Password <span className="text-[var(--danger-text)]">*</span>
+            <label className="block text-sm font-semibold text-[#0F3D36] mb-1.5">
+              Confirm Password <span className="text-red-500">*</span>
             </label>
             <input
               type="password"
@@ -142,60 +155,82 @@ export default function SignupPage() {
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               placeholder="Repeat your password"
-              className="w-full h-10 px-3 rounded-lg border border-[var(--border-default)] bg-[var(--surface-subtle)] text-white text-sm placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--border-focus)] focus:border-transparent transition-colors"
+              style={{ background: "rgba(255,255,255,0.7)", borderColor: "rgba(13,148,136,0.25)" }}
+              className="w-full h-10 px-3 rounded-lg border text-stone-800 text-sm placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-[#0D9488] focus:border-transparent transition-all"
             />
           </div>
 
+          {/* Country */}
           <div>
-            <label className="block text-sm font-medium text-[var(--text-secondary)] mb-1.5">
-              Country <span className="text-[var(--danger-text)]">*</span>
+            <label className="block text-sm font-semibold text-[#0F3D36] mb-1.5">
+              Country <span className="text-red-500">*</span>
             </label>
             <select
               required
               value={country}
               onChange={(e) => setCountry(e.target.value)}
-              className="w-full h-10 px-3 rounded-lg border border-[var(--border-default)] bg-[var(--surface-subtle)] text-white text-sm focus:outline-none focus:ring-2 focus:ring-[var(--border-focus)] focus:border-transparent transition-colors"
+              style={{ background: "rgba(255,255,255,0.7)", borderColor: "rgba(13,148,136,0.25)" }}
+              className="w-full h-10 px-3 rounded-lg border text-stone-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#0D9488] focus:border-transparent transition-all cursor-pointer"
             >
-              {COUNTRIES.map((c) => <option key={c} value={c}>{c}</option>)}
+              {COUNTRIES.map((c) => (
+                <option key={c} value={c} className="bg-white text-stone-800">
+                  {c}
+                </option>
+              ))}
             </select>
           </div>
 
+          {/* Referral Code */}
           <div>
-            <label className="block text-sm font-medium text-[var(--text-secondary)] mb-1.5">
-              Referral Code <span className="text-[var(--text-muted)] font-normal">(optional)</span>
+            <label className="block text-sm font-semibold text-[#0F3D36] mb-1.5">
+              Referral Code <span className="text-stone-400 font-normal">(optional)</span>
             </label>
             <input
               type="text"
               value={referralCode}
               onChange={(e) => setReferralCode(e.target.value)}
               placeholder="Enter referral code if you have one"
-              className="w-full h-10 px-3 rounded-lg border border-[var(--border-default)] bg-[var(--surface-subtle)] text-white text-sm placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--border-focus)] focus:border-transparent transition-colors"
+              style={{ background: "rgba(255,255,255,0.7)", borderColor: "rgba(13,148,136,0.25)" }}
+              className="w-full h-10 px-3 rounded-lg border text-stone-800 text-sm placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-[#0D9488] focus:border-transparent transition-all"
             />
           </div>
 
+          {/* Terms & Privacy Checkbox */}
           <div className="flex items-start gap-3 pt-1">
             <input
-              type="checkbox"
-              id="terms"
-              required
-              className="mt-0.5 h-4 w-4 rounded border-[var(--border-default)] accent-[var(--brand-500)]"
-            />
-            <label htmlFor="terms" className="text-sm text-[var(--text-secondary)]">
+  type="checkbox"
+  id="terms"
+  required
+  style={{ transition: "all 0.2s ease" }}
+  className="mt-1 h-4 w-4 appearance-none rounded border border-stone-300 bg-white checked:bg-[#0D9488] checked:border-[#0D9488] focus:ring-2 focus:ring-[#0D9488]/20 focus:outline-none relative cursor-pointer flex-shrink-0
+    before:content-[''] before:absolute before:inset-0 before:flex before:items-center before:justify-center before:text-white before:text-[10px] before:font-black checked:before:content-['✓']"
+/>
+            <label htmlFor="terms" className="text-sm text-stone-600 leading-tight select-none">
               I agree to the{" "}
-              <Link href="/terms" target="_blank" className="text-[var(--text-link)] hover:underline">Terms of Service</Link>
+              <Link href="/terms" target="_blank" className="text-[#0D9488] font-medium hover:underline">Terms of Service</Link>
               {" "}and{" "}
-              <Link href="/privacy" target="_blank" className="text-[var(--text-link)] hover:underline">Privacy Policy</Link>
+              <Link href="/privacy" target="_blank" className="text-[#0D9488] font-medium hover:underline">Privacy Policy</Link>
             </label>
           </div>
 
-          <Button type="submit" size="lg" className="w-full mt-1" disabled={loading}>
+          {/* Submit Button */}
+          <Button 
+            type="submit" 
+            size="lg" 
+            disabled={loading}
+            style={{
+              background: "linear-gradient(135deg, #10B981 0%, #059669 100%)",
+              color: "#FFFFFF",
+            }}
+            className="w-full mt-2 rounded-xl font-bold shadow-sm transition-all duration-300 hover:translate-y-[-2px] hover:shadow-[0_6px_15px_rgba(16,185,129,0.25)]"
+          >
             {loading ? "Creating account…" : "Create Account"}
           </Button>
         </form>
 
-        <p className="text-sm text-center text-[var(--text-secondary)] mt-6">
+        <p className="text-sm text-center text-stone-600 mt-6">
           Already have an account?{" "}
-          <Link href="/login" className="text-[var(--text-link)] font-medium hover:underline">
+          <Link href="/login" className="text-[#0D9488] font-semibold hover:underline">
             Log in
           </Link>
         </p>

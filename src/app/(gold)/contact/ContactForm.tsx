@@ -14,10 +14,11 @@ const BUDGETS = [
 ];
 const TIMELINES = ["ASAP", "Within 2 weeks", "Within 1 month", "1–3 months", "Flexible"];
 
+// 🎨 PREMIUM LIGHT CREAM & STONE THEME CLASSES
 const INPUT_CLS =
-  "w-full h-10 px-3 rounded-lg border border-[var(--border-default)] bg-[var(--surface-subtle)] text-white text-sm placeholder-white/25 focus:outline-none focus:border-[var(--brand-500)] transition-colors";
+  "w-full h-10 px-3 rounded-lg border border-stone-200 bg-white/90 text-stone-900 text-sm placeholder-stone-400 focus:outline-none focus:border-[#F59E0B] focus:ring-1 focus:ring-[#F59E0B]/20 transition-all shadow-sm";
 const SELECT_CLS =
-  "w-full h-10 px-3 rounded-lg border border-[var(--border-default)] bg-[var(--surface-subtle)] text-sm focus:outline-none focus:border-[var(--brand-500)] transition-colors text-white/70";
+  "w-full h-10 px-3 rounded-lg border border-stone-200 bg-white/90 text-sm text-stone-800 focus:outline-none focus:border-[#F59E0B] focus:ring-1 focus:ring-[#F59E0B]/20 transition-all shadow-sm cursor-pointer";
 
 export function ContactForm() {
   const [form, setForm] = useState({
@@ -54,10 +55,10 @@ export function ContactForm() {
 
   if (success) {
     return (
-      <div className="rounded-xl border border-[var(--brand-500)]/30 bg-[var(--brand-100)] p-10 text-center">
-        <CheckCircle className="h-10 w-10 text-[var(--brand-500)] mx-auto mb-4" />
-        <h3 className="text-white font-bold text-lg mb-2">Message Sent!</h3>
-        <p className="text-[var(--text-secondary)] text-sm">
+      <div className="rounded-xl border border-amber-200 bg-amber-50/50 p-10 text-center backdrop-blur-sm">
+        <CheckCircle className="h-10 w-10 text-[#92400E] mx-auto mb-4" />
+        <h3 className="text-stone-900 font-bold text-lg mb-2">Message Sent!</h3>
+        <p className="text-stone-600 text-sm">
           We&apos;ll review your enquiry and get back to you within 2 business days.
         </p>
       </div>
@@ -68,7 +69,7 @@ export function ContactForm() {
     <form onSubmit={submit} className="space-y-4">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="flex flex-col gap-1.5">
-          <label className="text-xs font-medium text-[var(--text-muted)] uppercase tracking-wide">Name *</label>
+          <label className="text-xs font-semibold text-stone-500 uppercase tracking-wide">Name *</label>
           <input
             type="text" required value={form.name}
             onChange={(e) => set("name", e.target.value)}
@@ -77,7 +78,7 @@ export function ContactForm() {
           />
         </div>
         <div className="flex flex-col gap-1.5">
-          <label className="text-xs font-medium text-[var(--text-muted)] uppercase tracking-wide">Email *</label>
+          <label className="text-xs font-semibold text-stone-500 uppercase tracking-wide">Email *</label>
           <input
             type="email" required value={form.email}
             onChange={(e) => set("email", e.target.value)}
@@ -88,7 +89,7 @@ export function ContactForm() {
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <label className="text-xs font-medium text-[var(--text-muted)] uppercase tracking-wide">Company / Organisation</label>
+        <label className="text-xs font-semibold text-stone-500 uppercase tracking-wide">Company / Organisation</label>
         <input
           type="text" value={form.company}
           onChange={(e) => set("company", e.target.value)}
@@ -99,30 +100,30 @@ export function ContactForm() {
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="flex flex-col gap-1.5">
-          <label className="text-xs font-medium text-[var(--text-muted)] uppercase tracking-wide">Project Type</label>
+          <label className="text-xs font-semibold text-stone-500 uppercase tracking-wide">Project Type</label>
           <select value={form.projectType} onChange={(e) => set("projectType", e.target.value)} className={SELECT_CLS}>
-            <option value="">Select type</option>
-            {PROJECT_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
+            <option value="" className="text-stone-400">Select type</option>
+            {PROJECT_TYPES.map((t) => <option key={t} value={t} className="text-stone-900">{t}</option>)}
           </select>
         </div>
         <div className="flex flex-col gap-1.5">
-          <label className="text-xs font-medium text-[var(--text-muted)] uppercase tracking-wide">Budget</label>
+          <label className="text-xs font-semibold text-stone-500 uppercase tracking-wide">Budget</label>
           <select value={form.budget} onChange={(e) => set("budget", e.target.value)} className={SELECT_CLS}>
-            <option value="">Select budget</option>
-            {BUDGETS.map((b) => <option key={b} value={b}>{b}</option>)}
+            <option value="" className="text-stone-400">Select budget</option>
+            {BUDGETS.map((b) => <option key={b} value={b} className="text-stone-900">{b}</option>)}
           </select>
         </div>
         <div className="flex flex-col gap-1.5">
-          <label className="text-xs font-medium text-[var(--text-muted)] uppercase tracking-wide">Timeline</label>
+          <label className="text-xs font-semibold text-stone-500 uppercase tracking-wide">Timeline</label>
           <select value={form.timeline} onChange={(e) => set("timeline", e.target.value)} className={SELECT_CLS}>
-            <option value="">Select timeline</option>
-            {TIMELINES.map((t) => <option key={t} value={t}>{t}</option>)}
+            <option value="" className="text-stone-400">Select timeline</option>
+            {TIMELINES.map((t) => <option key={t} value={t} className="text-stone-900">{t}</option>)}
           </select>
         </div>
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <label className="text-xs font-medium text-[var(--text-muted)] uppercase tracking-wide">Message *</label>
+        <label className="text-xs font-semibold text-stone-500 uppercase tracking-wide">Message *</label>
         <textarea
           required value={form.message}
           onChange={(e) => set("message", e.target.value)}
@@ -132,11 +133,11 @@ export function ContactForm() {
         />
       </div>
 
-      {error && <p className="text-sm text-red-400">{error}</p>}
+      {error && <p className="text-sm text-red-500 font-medium">{error}</p>}
 
       <button
         type="submit" disabled={loading}
-        className="w-full h-11 flex items-center justify-center gap-2 rounded-lg bg-[var(--brand-500)] text-[#0c0800] font-semibold text-sm hover:opacity-90 transition-opacity disabled:opacity-60"
+        className="w-full h-11 flex items-center justify-center gap-2 rounded-lg bg-[#F59E0B] text-white font-semibold text-sm hover:bg-[#D97706] shadow-sm transition-all duration-200 active:scale-[0.99] disabled:opacity-60"
       >
         {loading ? (
           <><Loader2 className="h-4 w-4 animate-spin" /> Sending…</>

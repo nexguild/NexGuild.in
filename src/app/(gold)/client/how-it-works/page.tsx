@@ -54,30 +54,48 @@ const SERVICES_SUMMARY = [
 
 export default function ClientHowItWorksPage() {
   return (
-    <>
-      {/* Hero */}
-      <section className="relative hero-glow overflow-hidden">
-        <div
-          aria-hidden
-          style={{
-            position: "absolute", inset: 0, zIndex: 0,
-            backgroundImage: "radial-gradient(circle, rgba(245,158,11,0.10) 1px, transparent 1px)",
-            backgroundSize: "32px 32px",
-            mask: "radial-gradient(ellipse 80% 60% at 50% 0%, black 40%, transparent 100%)",
-            WebkitMask: "radial-gradient(ellipse 80% 60% at 50% 0%, black 40%, transparent 100%)",
-          }}
-        />
-        <div className="relative z-10 mx-auto max-w-container px-6 pt-28 pb-16 text-center">
+    <div style={{ background: "#FAF6EF", color: "#1C1917", minHeight: "100vh" }}>
+      
+      {/* ── Hero Segment with Floating Orbs & Grid ────────────────────── */}
+      <section 
+        className="relative overflow-hidden py-20 px-6"
+        style={{ background: "linear-gradient(160deg, #FEF9F0 0%, #FAF3E4 100%)" }}
+      >
+        {/* Background Enhancements */}
+        <div aria-hidden style={{ position: "absolute", inset: 0, zIndex: 0, overflow: "hidden" }}>
+          
+          {/* Animated Gold Orb */}
+          <div
+            style={{
+              position: "absolute",
+              width: "min(60vw, 500px)",
+              height: "min(60vw, 500px)",
+              borderRadius: "50%",
+              background: "rgba(245,158,11,0.22)",
+              filter: "blur(120px)",
+              top: "-15%",
+              left: "-5%",
+              animation: "hiwGlowDrift 24s ease-in-out infinite alternate",
+            }}
+          />
+        </div>
+
+        <div className="relative z-10 mx-auto max-w-container px-6 pt-12 text-center">
           <FadeIn>
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[var(--brand-100)] border border-[var(--brand-200)] mb-6">
-              <span className="text-xs font-semibold text-[var(--brand-500)] uppercase tracking-wider">
-                For Organizations
-              </span>
+            <div 
+              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wider mb-6"
+              style={{ background: "rgba(255,255,255,0.8)", border: "1px solid rgba(217,119,6,0.2)", color: "#92400E" }}
+            >
+              For Organizations
             </div>
-            <h1 className="text-4xl sm:text-5xl font-extrabold text-white tracking-tight mb-4 text-balance">
-              Simple Process.<br />Powerful Results.
+            <h1 
+              className="text-4xl sm:text-5xl font-bold mb-4 tracking-tight text-balance"
+              style={{ fontFamily: "Instrument Serif, serif", color: "#1C1917" }}
+            >
+              Simple Process.<br />
+              <span style={{ color: "#92400E", fontStyle: "italic" }}>Powerful Results.</span>
             </h1>
-            <p className="text-lg text-white/55 max-w-xl mx-auto leading-relaxed">
+            <p className="text-lg text-[#44403C] max-w-xl mx-auto leading-relaxed">
               Four steps from project idea to clean, structured deliverables in your inbox.
               We manage everything end to end.
             </p>
@@ -85,63 +103,67 @@ export default function ClientHowItWorksPage() {
         </div>
       </section>
 
-      {/* Steps */}
-      <section className="py-20 px-6">
+      {/* ── Steps Section ────────────────────────────────────────────── */}
+      <section style={{ background: "#FAF6EF", padding: "4rem 1.5rem" }}>
         <div className="mx-auto max-w-container">
           <div className="relative">
             {/* Desktop connecting line */}
-            <div
-              aria-hidden
-              className="hidden lg:block absolute top-8 left-[12.5%] right-[12.5%] h-px bg-gradient-to-r from-transparent via-[var(--brand-500)] to-transparent opacity-25"
-            />
+            
+            
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {STEPS.map((step, i) => (
-                <FadeIn key={step.n} delay={i * 90}>
-                  <div className="flex flex-col items-center text-center p-7 rounded-2xl border border-[var(--border-default)] bg-[var(--surface-card)] hover:border-[var(--brand-500)] transition-colors group card-hover">
-                    <div className="w-16 h-16 rounded-full bg-[var(--brand-100)] border border-[var(--brand-200)] flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                      <span className="text-2xl">{step.icon}</span>
-                    </div>
-                    <span className="text-xs font-bold text-[var(--brand-500)] uppercase tracking-wider mb-2">
-                      Step {step.n}
-                    </span>
-                    <h3 className="font-bold text-white text-lg mb-3">{step.title}</h3>
-                    <p className="text-sm text-white/50 leading-relaxed">{step.body}</p>
-                  </div>
-                </FadeIn>
-              ))}
+  <FadeIn key={step.n} delay={i * 90} className="h-full">
+    <div className="flex flex-col items-center text-center p-6 rounded-2xl h-full border border-stone-200/60 bg-white/60 transition-all duration-300 hover:translate-y-[-4px] hover:bg-white hover:border-amber-200 hover:shadow-md group">
+      <div 
+        className="w-16 h-16 rounded-full flex items-center justify-center mb-4 border transition-transform duration-300 group-hover:scale-110"
+        style={{ background: "rgba(245,158,11,0.06)", borderColor: "rgba(245,158,11,0.2)" }}
+      >
+        <span className="text-2xl">{step.icon}</span>
+      </div>
+      <span className="text-xs font-bold text-[#92400E] uppercase tracking-wider mb-2">
+        Step {step.n}
+      </span>
+      <h3 className="font-bold text-[#1C1917] text-lg mb-2">{step.title}</h3>
+      <p className="text-xs text-[#44403C] leading-relaxed">{step.body}</p>
+    </div>
+  </FadeIn>
+))}
+              
             </div>
           </div>
         </div>
       </section>
 
-      {/* What We Work On */}
-      <section className="py-16 px-6 bg-[var(--surface-subtle)]">
+      {/* ── What We Work On (Pill Badges) ────────────────────────────── */}
+      <section style={{ background: "rgba(255,255,255,0.3)", backdropFilter: "blur(12px)", padding: "4rem 1.5rem", borderTop: "1px solid rgba(217,119,6,0.06)", borderBottom: "1px solid rgba(217,119,6,0.06)" }}>
         <div className="mx-auto max-w-container">
           <FadeIn>
             <div className="text-center mb-10">
-              <h2 className="text-3xl font-extrabold text-white mb-3">What We Work On</h2>
-              <p className="text-white/50 max-w-lg mx-auto">
+              <h2 style={{ fontFamily: "Instrument Serif, serif", color: "#1C1917" }} className="text-3xl font-bold mb-3">What We Work On</h2>
+              <p className="text-[#44403C] max-w-lg mx-auto text-sm">
                 From small samples to large-scale datasets — we support a wide range of project types.
               </p>
             </div>
           </FadeIn>
+          
           <FadeIn delay={100}>
-            <div className="flex flex-wrap justify-center gap-3">
+            <div className="flex flex-wrap justify-center gap-2.5 max-w-3xl mx-auto">
               {SERVICES_SUMMARY.map((s) => (
                 <span
                   key={s}
-                  className="px-4 py-2 rounded-full border border-[var(--border-default)] bg-[var(--surface-card)] text-sm text-white/70"
+                  className="px-4 py-2 rounded-full border border-stone-200 bg-white/70 text-xs font-medium text-stone-700 shadow-sm transition-colors hover:border-amber-200"
                 >
                   {s}
                 </span>
               ))}
             </div>
           </FadeIn>
+
           <FadeIn delay={150}>
             <div className="text-center mt-8">
               <Link
                 href="/services"
-                className="text-sm text-[var(--brand-500)] hover:underline"
+                className="text-sm font-semibold text-[#92400E] hover:text-[#F59E0B] hover:underline transition-colors"
               >
                 View all services →
               </Link>
@@ -150,23 +172,19 @@ export default function ClientHowItWorksPage() {
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="py-20 px-6">
+      {/* ── CTA Segment ────────────────────────────────────────────────── */}
+      <section style={{ background: "#FAF6EF", padding: "4rem 1.5rem" }}>
         <div className="mx-auto max-w-container">
           <FadeIn>
             <div
-              className="rounded-2xl p-6 sm:p-12 text-center relative overflow-hidden"
-              style={{
-                background: "linear-gradient(135deg, #1a0f00 0%, #0D0D0D 40%, #0D0D0D 60%, #1a0800 100%)",
-                border: "1px solid rgba(245,158,11,0.18)",
-              }}
+              className="rounded-3xl p-6 sm:p-12 text-center relative overflow-hidden border border-stone-200/60 bg-white/70 backdrop-blur-md shadow-sm max-w-3xl mx-auto"
             >
-              <div aria-hidden style={{ position: "absolute", inset: 0, zIndex: 0, pointerEvents: "none", background: "radial-gradient(ellipse 60% 70% at 50% 50%, rgba(245,158,11,0.07) 0%, transparent 70%)" }} />
+              <div aria-hidden style={{ position: "absolute", inset: 0, zIndex: 0, pointerEvents: "none", background: "radial-gradient(circle at 50% 50%, rgba(245,158,11,0.05) 0%, transparent 75%)" }} />
               <div className="relative z-10">
-                <h2 className="text-3xl sm:text-4xl font-extrabold text-white mb-4 tracking-tight">
+                <h2 style={{ fontFamily: "Instrument Serif, serif", color: "#1C1917" }} className="text-3xl sm:text-4xl font-bold mb-3">
                   Ready to Start Your Project?
                 </h2>
-                <p className="text-white/55 text-lg mb-10 max-w-lg mx-auto">
+                <p className="text-[#44403C] text-sm mb-8 max-w-lg mx-auto">
                   Contact us today. We respond within 24 hours.
                 </p>
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -174,14 +192,42 @@ export default function ClientHowItWorksPage() {
                     href="https://wa.me/919382008513"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="w-full sm:w-auto h-12 px-8 inline-flex items-center justify-center gap-2 rounded-xl bg-[#25D366] text-white text-base font-semibold hover:bg-[#20bb5a] transition-all duration-200 hover:scale-105"
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: "0.5rem",
+                      height: "3rem",
+                      width: "100%",
+                      maxWidth: "220px",
+                      borderRadius: "999px",
+                      background: "#25D366",
+                      color: "#FFFFFF",
+                      fontWeight: 600,
+                      textDecoration: "none",
+                      boxShadow: "0 4px 12px rgba(37,211,102,0.15)"
+                    }}
+                    className="text-base hover:opacity-95 transition-all hover:translate-y-[-2px]"
                   >
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
                     WhatsApp Us
                   </a>
                   <Link
                     href="/contact"
-                    className="w-full sm:w-auto h-12 px-8 inline-flex items-center justify-center rounded-xl border border-[var(--brand-500)] text-[var(--brand-500)] text-base font-semibold hover:bg-[var(--brand-100)] transition-colors"
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      height: "3rem",
+                      width: "100%",
+                      maxWidth: "220px",
+                      borderRadius: "999px",
+                      border: "1.5px solid rgba(217,119,6,0.3)",
+                      background: "rgba(255,255,255,0.9)",
+                      color: "#92400E",
+                      fontWeight: 600,
+                      textDecoration: "none"
+                    }}
+                    className="text-base hover:bg-white hover:border-amber-400 transition-all hover:translate-y-[-2px] shadow-sm"
                   >
                     Contact Form
                   </Link>
@@ -191,6 +237,13 @@ export default function ClientHowItWorksPage() {
           </FadeIn>
         </div>
       </section>
-    </>
+
+      <style>{`
+        @keyframes hiwGlowDrift {
+          0% { transform: translate(0px, 0px) scale(1); }
+          100% { transform: translate(6%, -8%) scale(1.15); }
+        }
+      `}</style>
+    </div>
   );
 }

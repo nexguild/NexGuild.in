@@ -341,3 +341,19 @@
   .sidebar-bg       { background-color: var(--sidebar-bg); }
   .admin-sidebar-bg { background-color: var(--admin-sidebar-bg); }
 }
+/* ব্রাউজারের অটোফিল ব্যাকগ্রাউন্ড ও অদৃশ্য টেক্সট ফিক্স */
+input:-webkit-autofill,
+input:-webkit-autofill:hover, 
+input:-webkit-autofill:focus,
+select:-webkit-autofill,
+select:-webkit-autofill:hover,
+select:-webkit-autofill:focus,
+textarea:-webkit-autofill,
+textarea:-webkit-autofill:hover,
+textarea:-webkit-autofill:focus {
+  -webkit-text-fill-color: #1C1917 !important; /* টেক্সটের কালার সবসময় সলিড ডার্ক রাখবে */
+  color: #1C1917 !important;
+  -webkit-box-shadow: 0 0 0px 1000px #ffffff inset !important; /* ভেতরের ব্যাকগ্রাউন্ড ধবধবে সাদা রাখবে */
+  box-shadow: 0 0 0px 1000px #ffffff inset !important;
+  transition: background-color 5000s ease-in-out 0s;
+}
