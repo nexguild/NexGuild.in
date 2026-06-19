@@ -66,7 +66,6 @@ export function DashboardHeader({ onMenuToggle }: DashboardHeaderProps) {
   const pathname = usePathname();
   const router   = useRouter();
   const title    = PAGE_TITLES[pathname] ?? "Dashboard";
-
   const [open, setOpen]                   = useState(false);
   const [menuOpen, setMenuOpen]           = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -80,7 +79,8 @@ export function DashboardHeader({ onMenuToggle }: DashboardHeaderProps) {
 
   // Fetch once on mount: notifications + user name for avatar
   useEffect(() => {
-    let channel: ReturnType<typeof supabase.channel> | null = null;
+    // 💡 ১. সুপ্রাবেস রিয়েলটাইম চ্যানেল ট্র্যাক করার জন্য রেফারেন্স লক করলাম
+    const channelRef: { current: ReturnType<typeof supabase.channel> | null } = { current: null };
 
     async function init() {
       const { data: { user } } = await supabase.auth.getUser();
@@ -118,8 +118,16 @@ export function DashboardHeader({ onMenuToggle }: DashboardHeaderProps) {
       setNotifications(list);
       setUnreadCount(list.filter((n) => !n.is_read).length);
 
-      channel = supabase
-        .channel(`notifications-${user.id}`)
+      const channelName = `notifications-${user.id}`;
+
+      const existingChannel = supabase.getChannels().find((ch) => (ch as any).topic === `realtime:${channelName}`);
+if (existingChannel) {
+  await supabase.removeChannel(existingChannel);
+}
+
+      // ৩. এবার একদম ফ্রেশ ভাবে ইভেন্ট অন করে সাবস্ক্রাইব করব
+      const activeChannel = supabase
+        .channel(channelName)
         .on(
           "postgres_changes",
           { event: "INSERT", schema: "public", table: "notifications", filter: `user_id=eq.${user.id}` },
@@ -127,12 +135,20 @@ export function DashboardHeader({ onMenuToggle }: DashboardHeaderProps) {
             setNotifications((prev) => [payload.new as Notification, ...prev]);
             setUnreadCount((prev) => prev + 1);
           }
-        )
-        .subscribe();
+        );
+
+      activeChannel.subscribe();
+      channelRef.current = activeChannel;
     }
 
     init();
-    return () => { if (channel) supabase.removeChannel(channel); };
+
+    // 💡 ৪. সেফ ক্লিনআপ: পেজ লিভ করলে ব্যাকগ্রাউন্ড মেমোরি ক্লিয়ার হবে
+    return () => {
+      if (channelRef.current) {
+        supabase.removeChannel(channelRef.current);
+      }
+    };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -190,7 +206,6 @@ export function DashboardHeader({ onMenuToggle }: DashboardHeaderProps) {
   return (
     <header className="h-16 fixed top-0 right-0 left-0 lg:left-sidebar z-30 flex items-center justify-between px-4 sm:px-6 bg-[var(--surface-card)] border-b border-[var(--border-default)]">
       <div className="flex items-center gap-3">
-        {/* Hamburger — mobile only */}
         <button
           onClick={onMenuToggle}
           className="lg:hidden h-9 w-9 flex items-center justify-center rounded-md hover:bg-[var(--surface-subtle)] transition-colors"
