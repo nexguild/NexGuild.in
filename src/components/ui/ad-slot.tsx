@@ -1,19 +1,34 @@
-// Adsterra disabled 2026-06-21 — poor content quality (gambling/dating ads,
-// no category blocking available on standard publisher account).
-// Placement positions are kept intact for Monetag re-wire once approved.
-//
-// To re-enable an ad network: inject the network's script in useEffect below,
-// render its container div, and add "use client" at the top of this file.
+"use client";
+
+import { useEffect, useRef } from "react";
+
+// Monetag Vignette — active on earn-top only (content quality test, 2026-06-21)
+// Zone 11179049 via n6wxm.com/vignette.min.js
+// Other slots (blog-index-top, blog-post-top, blog-post-end) remain placeholder
+// until earn-page quality check passes.
+const MONETAG_ZONE = "11179049";
+const MONETAG_SRC = "https://n6wxm.com/vignette.min.js";
 
 interface AdSlotProps {
   placement: string;
   className?: string;
 }
 
-export function AdSlot({ placement, className = "" }: AdSlotProps) {
-  // Returning null keeps the slot invisible without breaking page layout.
-  // Swap this return for actual ad markup when Monetag (or another network) is ready.
-  void placement;
-  void className;
+export function AdSlot({ placement }: AdSlotProps) {
+  const injected = useRef(false);
+
+  useEffect(() => {
+    if (placement !== "earn-top") return;
+    if (injected.current) return;
+    injected.current = true;
+
+    // Replicates Monetag's own embed:
+    // (function(s){s.dataset.zone=...,s.src=...})(body.appendChild(createElement('script')))
+    const s = document.createElement("script");
+    (document.body || document.documentElement).appendChild(s);
+    s.dataset.zone = MONETAG_ZONE;
+    s.src = MONETAG_SRC;
+  }, [placement]);
+
   return null;
 }
