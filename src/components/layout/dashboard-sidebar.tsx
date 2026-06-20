@@ -23,7 +23,7 @@ const NAV_ITEMS = [
   { label: "Offerwall Hub",  href: "/dashboard/offerwalls",     icon: Layers },
   { label: "Earnings",       href: "/dashboard/earnings",       icon: TrendingUp },
   { label: "NexCoins",       href: "/dashboard/wallet",         icon: Wallet },
-  { label: "Store",          href: "/dashboard/store",          icon: ShoppingBag },
+  { label: "NexStore",       href: "/dashboard/store",          icon: ShoppingBag },
   { label: "My Vouchers",    href: "/dashboard/vouchers",       icon: Gift },
   { label: "Community",      href: "/dashboard/community",      icon: Users },
   { label: "Announcements",  href: "/dashboard/announcements",  icon: Megaphone },
@@ -64,10 +64,10 @@ export function DashboardSidebar({ open, onClose }: DashboardSidebarProps) {
       >
         {/* Logo */}
         <div className="h-16 flex items-center justify-between px-4 border-b border-[var(--border-default)] flex-shrink-0">
-          <NexGuildLogo theme="teal" href="/dashboard" />
+          <NexGuildLogo theme="light" href="/dashboard" />
           <button
             onClick={onClose}
-            className="lg:hidden h-8 w-8 flex items-center justify-center rounded-md text-[var(--sidebar-text)] hover:text-white hover:bg-[var(--sidebar-item-hover)] transition-colors"
+            className="lg:hidden h-8 w-8 flex items-center justify-center rounded-md text-[var(--sidebar-text)] hover:text-[var(--text-primary)] hover:bg-[var(--sidebar-item-hover)] transition-colors"
             aria-label="Close menu"
           >
             <X className="h-4 w-4" />

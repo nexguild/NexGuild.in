@@ -38,6 +38,12 @@ export default function SignupPage() {
       return;
     }
 
+    const emailDomain = email.toLowerCase().split("@")[1];
+    if (!["gmail.com", "outlook.com"].includes(emailDomain)) {
+      setError("Please sign up with a Gmail or Outlook email address.");
+      return;
+    }
+
     setLoading(true);
 
     const { error: authError } = await supabase.auth.signUp({
@@ -57,6 +63,8 @@ export default function SignupPage() {
       setError(
         authError.message.includes("already registered")
           ? "An account with this email already exists."
+          : authError.message.includes("SIGNUP_DOMAIN_NOT_ALLOWED") || authError.message.includes("Database error")
+          ? "Please sign up with a Gmail or Outlook email address."
           : authError.message
       );
       loading && setLoading(false);
@@ -81,7 +89,14 @@ export default function SignupPage() {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {error && (
-            <div className="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-600">
+            <div
+              className="error-msg rounded-lg px-4 py-3 text-sm text-red-600"
+              style={{
+                backgroundColor: "#fef2f2",
+                border: "1px solid #fecaca",
+                boxShadow: "none",
+              }}
+            >
               {error}
             </div>
           )}

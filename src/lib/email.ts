@@ -1,10 +1,105 @@
 import { Resend } from "resend";
+import { SupabaseClient } from "@supabase/supabase-js";
 
 export const FROM_NOREPLY = "NexGuild <noreply@nexguild.in>";
 
 export function getResend(): Resend | null {
   if (!process.env.RESEND_API_KEY) return null;
   return new Resend(process.env.RESEND_API_KEY);
+}
+
+// ─── Admin notification emails ────────────────────────────────────────────────
+// Sends role-based notification emails to admin-tier users. Fire-and-forget —
+// failures are logged but never thrown so they can't break the caller.
+export async function notifyAdmins(
+  adminClient: SupabaseClient,
+  event: "new_submission" | "new_voucher_request" | "new_support_ticket",
+  payload: {
+    contributorName: string;
+    detail: string;     // task title / voucher type / ticket subject
+    actionUrl: string;  // deep link to the admin page
+  }
+): Promise<void> {
+  const resend = getResend();
+  if (!resend) return;
+
+  const rolesByEvent: Record<typeof event, string[]> = {
+    new_submission:      ["owner", "admin", "reviewer"],
+    new_voucher_request: ["owner", "admin", "finance"],
+    new_support_ticket:  ["owner", "admin", "support"],
+  };
+
+  const eventLabels: Record<typeof event, string> = {
+    new_submission:      "New Task Submission",
+    new_voucher_request: "New Voucher Redemption Request",
+    new_support_ticket:  "New Support Ticket",
+  };
+
+  const roles = rolesByEvent[event];
+  const label = eventLabels[event];
+
+  try {
+    const { data: admins } = await adminClient
+      .from("profiles")
+      .select("email, full_name")
+      .in("role", roles)
+      .not("email", "is", null);
+
+    if (!admins || admins.length === 0) return;
+
+    const emailsToSend = (admins as { email: string; full_name: string | null }[]).filter((a) => a.email);
+
+    for (const admin of emailsToSend) {
+      resend.emails.send({
+        from:    FROM_NOREPLY,
+        to:      admin.email,
+        subject: `[NexGuild Admin] ${label}: ${payload.detail}`,
+        html: adminNotifHtml(label, payload.contributorName, payload.detail, payload.actionUrl),
+      }).catch((e: unknown) => console.error("[notifyAdmins] email error:", e));
+    }
+  } catch (e) {
+    console.error("[notifyAdmins] error:", e);
+  }
+}
+
+function adminNotifHtml(eventLabel: string, contributorName: string, detail: string, actionUrl: string): string {
+  const n = contributorName.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  const d = detail.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  return `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8"></head>
+<body style="margin:0;padding:0;background:#0f0f0f;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#0f0f0f;padding:32px 16px;">
+  <tr><td align="center">
+    <table width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;background:#1a1a1a;border-radius:12px;overflow:hidden;border:1px solid #2a2a2a;">
+      <tr>
+        <td style="background:linear-gradient(135deg,#02b491,#029470);padding:20px 28px;">
+          <p style="margin:0;font-size:11px;font-weight:700;color:rgba(255,255,255,0.7);text-transform:uppercase;letter-spacing:1.5px;">NexGuild Admin Alert</p>
+          <h1 style="margin:4px 0 0;font-size:18px;font-weight:800;color:#fff;">${eventLabel}</h1>
+        </td>
+      </tr>
+      <tr>
+        <td style="padding:24px 28px;">
+          <table width="100%" cellpadding="0" cellspacing="0" style="font-size:14px;margin-bottom:20px;">
+            <tr><td style="padding:6px 0;color:#737373;width:130px;">From</td><td style="padding:6px 0;color:#e5e5e5;font-weight:600;">${n}</td></tr>
+            <tr><td style="padding:6px 0;color:#737373;">Detail</td><td style="padding:6px 0;color:#e5e5e5;">${d}</td></tr>
+          </table>
+          <table cellpadding="0" cellspacing="0">
+            <tr><td style="background:#02b491;border-radius:8px;">
+              <a href="${actionUrl}" style="display:inline-block;padding:11px 22px;font-size:13px;font-weight:700;color:#fff;text-decoration:none;">View in Admin →</a>
+            </td></tr>
+          </table>
+        </td>
+      </tr>
+      <tr>
+        <td style="padding:14px 28px;border-top:1px solid #2a2a2a;text-align:center;">
+          <p style="margin:0;font-size:11px;color:#444;">NexGuild · <a href="https://nexguild.in/admin" style="color:#444;text-decoration:none;">nexguild.in/admin</a></p>
+        </td>
+      </tr>
+    </table>
+  </td></tr>
+</table>
+</body></html>`;
 }
 
 function esc(s: string): string {

@@ -4,6 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import { Bell, Plus, Loader2, CheckCircle2, Megaphone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
+import { usePageGuard } from "@/components/layout/admin-auth-guard";
+import { ADMIN_ROLES } from "@/lib/admin-permissions";
 
 interface Announcement {
   id: string;
@@ -24,6 +26,8 @@ const TARGET_LABELS: Record<string, string> = {
 
 export default function AdminAnnouncementsPage() {
   const tokenRef = useRef<string | null>(null);
+  const allowed = usePageGuard(ADMIN_ROLES.UPPER);
+
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [loading, setLoading]   = useState(true);
   const [title, setTitle]       = useState("");
@@ -82,6 +86,7 @@ export default function AdminAnnouncementsPage() {
     setTimeout(() => setSent(false), 4000);
   }
 
+  if (!allowed) return null;
   return (
     <div className="space-y-8 max-w-3xl">
       <div>

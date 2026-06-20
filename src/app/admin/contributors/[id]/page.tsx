@@ -8,6 +8,8 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
+import { usePageGuard } from "@/components/layout/admin-auth-guard";
+import { ADMIN_ROLES } from "@/lib/admin-permissions";
 
 interface Profile {
   id: string;
@@ -16,6 +18,11 @@ interface Profile {
   country: string | null;
   status: string;
   nexcoins: number;
+  xp: number | null;
+  level: number | null;
+  current_streak: number | null;
+  longest_streak: number | null;
+  last_streak_claim_date: string | null;
   joined_at: string | null;
 }
 
@@ -50,6 +57,8 @@ const STATUS_STYLES: Record<string, string> = {
 
 export default function ContributorDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const tokenRef = useRef<string | null>(null);
+  const allowed = usePageGuard(ADMIN_ROLES.USERS);
+
   const [id, setId]                     = useState<string | null>(null);
   const [profile, setProfile]           = useState<Profile | null>(null);
   const [submissions, setSubmissions]   = useState<Submission[]>([]);
@@ -206,6 +215,7 @@ export default function ContributorDetailPage({ params }: { params: Promise<{ id
   const approvedSubs = submissions.filter((s) => s.status === "approved");
   const totalEarned  = approvedSubs.reduce((sum, s) => sum + (s.coins_awarded ?? 0), 0);
 
+  if (!allowed) return null;
   return (
     <div className="space-y-6 max-w-3xl">
       <Link href="/admin/contributors" className="inline-flex items-center gap-2 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors">
@@ -269,6 +279,50 @@ export default function ContributorDetailPage({ params }: { params: Promise<{ id
             </div>
           ))}
         </div>
+      </div>
+
+      {/* ── Level & Activity ──────────────────────────────────────── */}
+      <div className="rounded-xl border border-[var(--border-default)] bg-[var(--surface-card)] p-6">
+        <h2 className="font-semibold text-[var(--text-primary)] mb-4">Level &amp; Activity</h2>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          {[
+            { label: "Level",          value: profile.level ?? 1 },
+            { label: "Total XP",       value: (profile.xp ?? 0).toLocaleString() },
+            { label: "Current Streak", value: `${profile.current_streak ?? 0}d` },
+            { label: "Longest Streak", value: `${profile.longest_streak ?? 0}d` },
+          ].map((s) => (
+            <div key={s.label} className="rounded-lg bg-[var(--surface-subtle)] px-4 py-3">
+              <p className="text-xs text-[var(--text-muted)] mb-1">{s.label}</p>
+              <p className="text-lg font-bold text-[var(--text-primary)]">{s.value}</p>
+            </div>
+          ))}
+        </div>
+        {(() => {
+          const xp    = profile.xp ?? 0;
+          const level = profile.level ?? 1;
+          const xpInLevel   = xp % 1000;
+          const xpNeeded    = 1000;
+          const pct         = Math.round((xpInLevel / xpNeeded) * 100);
+          const lastClaim   = profile.last_streak_claim_date;
+          return (
+            <div className="mt-4 space-y-3">
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-xs text-[var(--text-muted)]">XP Progress — Level {level} → {level + 1}</span>
+                  <span className="text-xs font-medium text-[var(--text-primary)]">{xpInLevel} / {xpNeeded}</span>
+                </div>
+                <div className="h-2 rounded-full bg-[var(--surface-subtle)] overflow-hidden">
+                  <div className="h-full rounded-full bg-[var(--brand-500)] transition-all" style={{ width: `${pct}%` }} />
+                </div>
+              </div>
+              {lastClaim && (
+                <p className="text-xs text-[var(--text-muted)]">
+                  Last streak claim: {new Date(lastClaim).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+                </p>
+              )}
+            </div>
+          );
+        })()}
       </div>
 
       {/* ── Recent Submissions ─────────────────────────────────────── */}

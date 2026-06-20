@@ -6,6 +6,8 @@ import Link from "next/link";
 import { ArrowLeft, Loader2, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
+import { usePageGuard } from "@/components/layout/admin-auth-guard";
+import { ADMIN_ROLES } from "@/lib/admin-permissions";
 
 const TASK_TYPES = [
   "Audio Recording", "Transcription", "Data Annotation", "App Testing",
@@ -20,6 +22,8 @@ export default function EditTaskPage() {
   const { id } = useParams<{ id: string }>();
   const router  = useRouter();
 
+  const allowed = usePageGuard(ADMIN_ROLES.UPPER);
+
   const [loading, setLoading]       = useState(true);
   const [title, setTitle]           = useState("");
   const [taskType, setTaskType]     = useState("");
@@ -31,6 +35,8 @@ export default function EditTaskPage() {
   const [taskStatus, setTaskStatus]     = useState("active");
   const [assignmentReq, setAssignmentReq]   = useState(false);
   const [assignmentType, setAssignmentType] = useState("quiz");
+  const [requiredLevel, setRequiredLevel]   = useState("1");
+  const [xpReward, setXpReward]             = useState("0");
   const [saving, setSaving]         = useState(false);
   const [error, setError]           = useState<string | null>(null);
   const [saved, setSaved]           = useState(false);
@@ -55,6 +61,8 @@ export default function EditTaskPage() {
       setTaskStatus(data.status ?? "active");
       setAssignmentReq(data.assignment_required ?? false);
       setAssignmentType(data.assignment_type ?? "quiz");
+      setRequiredLevel(data.required_level != null ? String(data.required_level) : "1");
+      setXpReward(data.xp_reward != null ? String(data.xp_reward) : "0");
       setLoading(false);
     }
     load();
@@ -80,6 +88,8 @@ export default function EditTaskPage() {
       status: taskStatus,
       assignment_required: assignmentReq,
       assignment_type: assignmentReq ? assignmentType : null,
+      required_level: requiredLevel ? parseInt(requiredLevel) : 1,
+      xp_reward: xpReward ? parseInt(xpReward) : 0,
     }).eq("id", id);
 
     if (updateErr) { setError(updateErr.message); setSaving(false); return; }
@@ -96,6 +106,7 @@ export default function EditTaskPage() {
     );
   }
 
+  if (!allowed) return null;
   return (
     <div className="space-y-6 max-w-2xl">
       <Link href={`/admin/tasks/${id}`} className="inline-flex items-center gap-1.5 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors">
@@ -171,6 +182,26 @@ export default function EditTaskPage() {
           <div>
             <label className={labelClass}>Deadline</label>
             <input type="date" value={deadline} onChange={(e) => setDeadline(e.target.value)} className={inputClass} />
+          </div>
+        </section>
+
+        {/* Gamification */}
+        <section className="rounded-lg border border-[var(--border-default)] bg-[var(--surface-card)] p-6 space-y-5">
+          <div>
+            <h2 className="font-semibold text-[var(--text-primary)]">Gamification</h2>
+            <p className="text-xs text-[var(--text-secondary)] mt-0.5">Level requirement and XP reward for this task.</p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <div>
+              <label className={labelClass}>Required Level</label>
+              <input type="number" value={requiredLevel} onChange={(e) => setRequiredLevel(e.target.value)}
+                min={1} max={100} className={inputClass} />
+            </div>
+            <div>
+              <label className={labelClass}>XP Reward</label>
+              <input type="number" value={xpReward} onChange={(e) => setXpReward(e.target.value)}
+                min={0} className={inputClass} />
+            </div>
           </div>
         </section>
 

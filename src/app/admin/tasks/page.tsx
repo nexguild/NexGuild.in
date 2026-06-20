@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { ClipboardList, Plus, Search, Pause, X, Pencil, BarChart2, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
+import { usePageGuard } from "@/components/layout/admin-auth-guard";
+import { ADMIN_ROLES } from "@/lib/admin-permissions";
 import type { TaskStat } from "@/app/api/admin/task-analytics/route";
 
 interface Task {
@@ -30,6 +32,8 @@ const STATUSES   = ["All Status", "active", "paused", "draft", "archived"];
 
 export default function AdminTasksPage() {
   const tokenRef = useRef<string | null>(null);
+  const allowed = usePageGuard(ADMIN_ROLES.CONTENT);
+
   const [tasks, setTasks]             = useState<Task[]>([]);
   const [loading, setLoading]         = useState(true);
   const [search, setSearch]           = useState("");
@@ -92,6 +96,7 @@ export default function AdminTasksPage() {
     return matchSearch && matchType && matchStatus;
   });
 
+  if (!allowed) return null;
   return (
     <div className="space-y-6">
       <div className="flex items-start justify-between gap-4">

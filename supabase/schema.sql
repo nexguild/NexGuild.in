@@ -11,7 +11,7 @@ CREATE TABLE profiles (
   email          TEXT,
   phone          TEXT,
   country        TEXT DEFAULT 'India',
-  role           TEXT DEFAULT 'contributor',   -- 'contributor' | 'admin'
+  role           TEXT DEFAULT 'contributor',   -- 'contributor' | 'owner' | 'admin' | 'reviewer' | 'finance' | 'support' | 'moderator'
   status         TEXT DEFAULT 'active',        -- 'active' | 'suspended' | 'banned'
   kyc_status     TEXT DEFAULT 'pending',       -- 'pending' | 'verified' | 'rejected'
   referral_code  TEXT UNIQUE,
@@ -147,11 +147,43 @@ CREATE POLICY "Admins can manage withdrawals"
 -- It reads full_name and country from the signup metadata and
 -- generates a unique referral code automatically.
 
+-- Signup exceptions: Owner can pre-approve non-Gmail/Outlook emails
+CREATE TABLE IF NOT EXISTS public.signup_exceptions (
+  id          UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  email       TEXT UNIQUE NOT NULL,
+  approved_by UUID REFERENCES public.profiles(id),
+  reason      TEXT,
+  created_at  TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE public.signup_exceptions ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Only admin tier can manage signup exceptions"
+  ON public.signup_exceptions FOR ALL
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.profiles
+      WHERE id = auth.uid() AND role IN ('owner','admin')
+    )
+  );
+
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 DECLARE
   new_referral_code TEXT;
+  email_domain TEXT;
 BEGIN
+  email_domain := lower(split_part(NEW.email, '@', 2));
+
+  -- Block non-Gmail/Outlook signups unless pre-approved by Owner
+  IF email_domain NOT IN ('gmail.com', 'outlook.com') THEN
+    IF NOT EXISTS (
+      SELECT 1 FROM public.signup_exceptions WHERE email = lower(NEW.email)
+    ) THEN
+      RAISE EXCEPTION 'SIGNUP_DOMAIN_NOT_ALLOWED: Only Gmail and Outlook email addresses are accepted.';
+    END IF;
+  END IF;
+
   -- Generate a short unique referral code
   new_referral_code := upper(substring(replace(gen_random_uuid()::text, '-', ''), 1, 8));
 
@@ -521,3 +553,183 @@ ALTER PUBLICATION supabase_realtime ADD TABLE ticket_messages;
 -- Or run via SQL:
 -- INSERT INTO storage.buckets (id, name, public) VALUES ('submissions', 'submissions', true) ON CONFLICT DO NOTHING;
 -- INSERT INTO storage.buckets (id, name, public) VALUES ('assignments', 'assignments', true) ON CONFLICT DO NOTHING;
+
+-- ── 20. Admin Role System ─────────────────────────────────────
+-- Widens role to 7 values + adds helper functions for RLS policies.
+
+-- Step 1: Add CHECK constraint (run SELECT DISTINCT role FROM profiles first!)
+ALTER TABLE profiles
+  ADD CONSTRAINT profiles_role_check
+  CHECK (role IN ('contributor','owner','admin','reviewer','finance','support','moderator'));
+
+-- Step 2: Promote owner account
+UPDATE profiles SET role = 'owner'
+WHERE email = (SELECT email FROM auth.users WHERE email = 'careergrowthremotely@gmail.com' LIMIT 1);
+
+-- Step 3: Helper function — true for any of the 6 admin-tier roles
+CREATE OR REPLACE FUNCTION public.is_admin_tier()
+RETURNS BOOLEAN
+LANGUAGE sql
+SECURITY DEFINER
+STABLE
+AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM profiles
+    WHERE id = auth.uid()
+    AND role IN ('owner','admin','reviewer','finance','support','moderator')
+  );
+$$;
+
+-- Step 4: Helper function — checks if current user's role is in allowed list
+CREATE OR REPLACE FUNCTION public.has_role(allowed_roles TEXT[])
+RETURNS BOOLEAN
+LANGUAGE sql
+SECURITY DEFINER
+STABLE
+AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM profiles
+    WHERE id = auth.uid()
+    AND role = ANY(allowed_roles)
+  );
+$$;
+
+GRANT EXECUTE ON FUNCTION public.is_admin_tier() TO authenticated, service_role;
+GRANT EXECUTE ON FUNCTION public.has_role(TEXT[]) TO authenticated, service_role;
+
+-- ── 21. Role-based RLS policies (additive — do not remove existing 'admin' policies) ──
+
+-- SUBMISSIONS
+CREATE POLICY "Owner can manage all submissions"
+  ON submissions FOR ALL
+  USING (has_role(ARRAY['owner']));
+
+CREATE POLICY "Reviewers can manage submissions"
+  ON submissions FOR ALL
+  USING (has_role(ARRAY['reviewer']));
+
+CREATE POLICY "Moderators can view submissions"
+  ON submissions FOR SELECT
+  USING (has_role(ARRAY['moderator']));
+
+-- ASSIGNMENTS
+CREATE POLICY "Owner can manage all assignments"
+  ON assignments FOR ALL
+  USING (has_role(ARRAY['owner']));
+
+CREATE POLICY "Reviewers can manage assignments"
+  ON assignments FOR ALL
+  USING (has_role(ARRAY['reviewer']));
+
+CREATE POLICY "Moderators can view assignments"
+  ON assignments FOR SELECT
+  USING (has_role(ARRAY['moderator']));
+
+-- PROFILES — view access for reviewer, support, moderator; update for moderator (ban/coins)
+CREATE POLICY "Owner can view all profiles"
+  ON profiles FOR SELECT
+  USING (has_role(ARRAY['owner']));
+
+CREATE POLICY "Owner can update all profiles"
+  ON profiles FOR UPDATE
+  USING (has_role(ARRAY['owner']));
+
+CREATE POLICY "Reviewers can view all profiles"
+  ON profiles FOR SELECT
+  USING (has_role(ARRAY['reviewer']));
+
+CREATE POLICY "Support can view all profiles"
+  ON profiles FOR SELECT
+  USING (has_role(ARRAY['support']));
+
+CREATE POLICY "Moderators can view all profiles"
+  ON profiles FOR SELECT
+  USING (has_role(ARRAY['moderator']));
+
+CREATE POLICY "Moderators can update profiles"
+  ON profiles FOR UPDATE
+  USING (has_role(ARRAY['moderator']));
+
+-- COIN TRANSACTIONS — finance view; moderator insert (credit coins action)
+CREATE POLICY "Owner can manage all coin transactions"
+  ON coin_transactions FOR ALL
+  USING (has_role(ARRAY['owner']));
+
+CREATE POLICY "Finance can view coin transactions"
+  ON coin_transactions FOR SELECT
+  USING (has_role(ARRAY['finance']));
+
+CREATE POLICY "Moderators can insert coin transactions"
+  ON coin_transactions FOR INSERT
+  WITH CHECK (has_role(ARRAY['moderator']));
+
+-- VOUCHER REQUESTS — finance manages fulfillment
+CREATE POLICY "Owner can manage all voucher requests"
+  ON voucher_requests FOR ALL
+  USING (has_role(ARRAY['owner']));
+
+CREATE POLICY "Finance can manage voucher requests"
+  ON voucher_requests FOR ALL
+  USING (has_role(ARRAY['finance']));
+
+-- EARNINGS — finance view; owner full
+CREATE POLICY "Owner can manage all earnings"
+  ON earnings FOR ALL
+  USING (has_role(ARRAY['owner']));
+
+CREATE POLICY "Finance can view all earnings"
+  ON earnings FOR SELECT
+  USING (has_role(ARRAY['finance']));
+
+-- WITHDRAWALS — finance manages; owner full
+CREATE POLICY "Owner can manage all withdrawals"
+  ON withdrawals FOR ALL
+  USING (has_role(ARRAY['owner']));
+
+CREATE POLICY "Finance can manage withdrawals"
+  ON withdrawals FOR ALL
+  USING (has_role(ARRAY['finance']));
+
+-- SUPPORT TICKETS — support + moderator manage
+CREATE POLICY "Owner can manage all support tickets"
+  ON support_tickets FOR ALL TO authenticated
+  USING (has_role(ARRAY['owner']));
+
+CREATE POLICY "Support can manage all tickets"
+  ON support_tickets FOR ALL TO authenticated
+  USING (has_role(ARRAY['support']));
+
+CREATE POLICY "Moderators can manage support tickets"
+  ON support_tickets FOR ALL TO authenticated
+  USING (has_role(ARRAY['moderator']));
+
+-- TICKET MESSAGES — support + moderator manage
+CREATE POLICY "Owner can manage all ticket messages"
+  ON ticket_messages FOR ALL TO authenticated
+  USING (has_role(ARRAY['owner']));
+
+CREATE POLICY "Support can manage ticket messages"
+  ON ticket_messages FOR ALL TO authenticated
+  USING (has_role(ARRAY['support']));
+
+CREATE POLICY "Moderators can manage ticket messages"
+  ON ticket_messages FOR ALL TO authenticated
+  USING (has_role(ARRAY['moderator']));
+
+-- ANNOUNCEMENTS — support + moderator manage
+CREATE POLICY "Owner can manage all announcements"
+  ON announcements FOR ALL
+  USING (has_role(ARRAY['owner']));
+
+CREATE POLICY "Support can manage announcements"
+  ON announcements FOR ALL
+  USING (has_role(ARRAY['support']));
+
+CREATE POLICY "Moderators can manage announcements"
+  ON announcements FOR ALL
+  USING (has_role(ARRAY['moderator']));
+
+-- TASKS — owner full (admin already covered by existing policy)
+CREATE POLICY "Owner can manage all tasks"
+  ON tasks FOR ALL
+  USING (has_role(ARRAY['owner']));

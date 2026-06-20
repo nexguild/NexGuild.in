@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
       .eq("id", user.id)
       .single();
 
-    if (callerProfile?.role !== "admin" && callerProfile?.role !== "owner") {
+    if (!["admin", "owner", "reviewer"].includes(callerProfile?.role ?? "")) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
     // ── Fetch submission + task ──────────────────────────────────
     const { data: sub, error: subFetchErr } = await admin
       .from("submissions")
-      .select("id, contributor_id, tasks(pay_per_task, title)")
+      .select("id, contributor_id, tasks(pay_per_task, title, xp_reward)")
       .eq("id", submissionId)
       .single();
 
@@ -49,7 +49,7 @@ export async function POST(req: NextRequest) {
     }
 
     const now = new Date().toISOString();
-    const taskMeta = sub.tasks as unknown as { pay_per_task: number | null; title: string } | null;
+    const taskMeta = sub.tasks as unknown as { pay_per_task: number | null; title: string; xp_reward: number | null } | null;
     const taskTitle = taskMeta?.title ?? "a task";
 
     // ── APPROVE ──────────────────────────────────────────────────
@@ -98,6 +98,31 @@ export async function POST(req: NextRequest) {
           return NextResponse.json({ error: "Failed to credit coins: " + e2b.message }, { status: 500 });
         }
       }
+
+      // 2b. Award XP
+      const xpToAward = taskMeta?.xp_reward ?? 0;
+      if (xpToAward > 0) {
+        const { error: xpErr } = await admin.rpc("award_xp", {
+          p_contributor_id: sub.contributor_id,
+          p_xp: xpToAward,
+        });
+        if (xpErr) console.error("[review-submission] award_xp:", xpErr.message);
+      }
+
+      // 2c. Update streak eligibility: increment tasks_approved_today (reset if new day)
+      const today = new Date().toISOString().split("T")[0];
+      const { data: streakProfile } = await admin
+        .from("profiles")
+        .select("last_task_approved_date, tasks_approved_today")
+        .eq("id", sub.contributor_id)
+        .single();
+      const sp = streakProfile as { last_task_approved_date: string | null; tasks_approved_today: number | null } | null;
+      const newCount = sp?.last_task_approved_date === today ? (sp?.tasks_approved_today ?? 0) + 1 : 1;
+      const { error: dateErr } = await admin
+        .from("profiles")
+        .update({ last_task_approved_date: today, tasks_approved_today: newCount })
+        .eq("id", sub.contributor_id);
+      if (dateErr) console.error("[review-submission] streak update:", dateErr.message);
 
       // 3. Log coin transaction
       const { error: e3 } = await admin.from("coin_transactions").insert({

@@ -1,168 +1,235 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { StatCard } from "@/components/ui/stat-card";
-import { ArrowRight, ClipboardList, Layers, ShoppingBag, Coins, X, Megaphone, RefreshCw } from "lucide-react";
+import {
+  ClipboardList, Layers, ShoppingBag, ArrowRight, X, Megaphone,
+  RefreshCw, Flame, Star, Lock, Trophy, CheckCircle2, Clock,
+} from "lucide-react";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
+import { NexCoinIcon } from "@/components/ui/nexcoin-icon";
 import { supabase } from "@/lib/supabase";
 
-// Warm Light Theme Styles
-const styles = `
-  @import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600&display=swap');
-  
-  .warm-light-dashboard {
-    font-family: 'Inter', sans-serif;
-    background: linear-gradient(160deg, #FEF9F0 0%, #FAF3E4 100%);
-    position: relative;
-    overflow: hidden;
-    animation: fadeUpIn 0.9s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-  }
-  
-  .warm-light-dashboard::before {
-    content: '';
-    position: absolute;
-    bottom: -5%;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 55%;
-    height: 55%;
-    background: radial-gradient(circle, rgba(245, 158, 11, 0.22) 0%, transparent 70%);
-    filter: blur(90px);
-    pointer-events: none;
-    z-index: 0;
-  }
-  
-  .warm-light-dashboard > * {
-    position: relative;
-    z-index: 1;
-  }
-  
-  @keyframes fadeUpIn {
-    from {
-      opacity: 0;
-      transform: translateY(20px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-  
-  .warm-heading-display {
-    font-family: 'Instrument Serif', serif;
-    font-size: clamp(26px, 3.6vw, 50px);
-    line-height: 1.08;
-    letter-spacing: -0.02em;
-    color: #1C1917;
-  }
-  
-  .warm-heading-section {
-    font-family: 'Instrument Serif', serif;
-    font-size: clamp(20px, 2.4vw, 36px);
-    line-height: 1.15;
-    color: #1C1917;
-  }
-  
-  .warm-body-text {
-    font-family: 'Inter', sans-serif;
-    font-size: clamp(13px, 1vw, 15px);
-    line-height: 1.7;
-    color: #78716C;
-  }
-  
-  .warm-label-text {
-    font-family: 'Inter', sans-serif;
-    font-weight: 500;
-    color: #1C1917;
-  }
-  
-  .warm-tag-text {
-    font-family: 'Inter', sans-serif;
-    font-weight: 600;
-    text-transform: uppercase;
-    color: #92400E;
-  }
-  
-  .frosted-glass-btn {
-    background: rgba(255, 255, 255, 0.72);
-    backdrop-filter: blur(12px);
-    border: 1.5px solid rgba(217, 119, 6, 0.35);
-    border-radius: 999px;
-    color: #92400E;
-    font-weight: 500;
-    padding: 0.625rem 1.25rem;
-    cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-  }
-  
-  .frosted-glass-btn:hover {
-    border-color: rgba(217, 119, 6, 0.65);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.15);
-  }
-  
-  .warm-card {
-    background: rgba(255, 255, 255, 0.55);
-    backdrop-filter: blur(8px);
-    border: 1px solid rgba(245, 158, 11, 0.15);
-    border-radius: 1rem;
-  }
-  
-  .warm-accent-gold {
-    color: #F59E0B;
-  }
-  
-  .warm-accent-gold-dark {
-    color: #92400E;
-  }
-`;
-
+/* ─── Types ─────────────────────────────────────────────────────── */
 interface Profile {
   full_name: string | null;
   nexcoins: number;
+  xp: number | null;
+  level: number | null;
+  current_streak: number | null;
+  longest_streak: number | null;
+  last_streak_claim_date: string | null;
+  last_task_approved_date: string | null;
+  tasks_approved_today: number | null;
 }
-
 interface Task {
-  id: string;
-  title: string;
-  description: string | null;
-  task_type: string | null;
-  pay_per_task: number | null;
+  id: string; title: string; description: string | null;
+  task_type: string | null; pay_per_task: number | null;
+  xp_reward: number | null; required_level: number | null;
 }
-
-interface SubmissionMeta {
-  status: string;
-  feedback: string | null;
-}
-
-interface AnnouncementNotif {
-  id: string;
-  title: string;
-  message: string;
-  created_at: string;
-}
+interface SubmissionMeta { status: string; feedback: string | null; }
+interface Notification { id: string; title: string; message: string | null; type: string | null; created_at: string; }
+interface CoinTx { amount: number; created_at: string; }
+interface LeaderboardEntry { rank: number; id: string; full_name: string; approved_count: number; }
 
 const QUICK_ACTIONS = [
-  { icon: ClipboardList, label: "Browse Tasks",  href: "/dashboard/tasks",       desc: "Find and start new tasks" },
-  { icon: Layers,        label: "Offerwalls",     href: "/dashboard/offerwalls",  desc: "Earn via partner offers" },
-  { icon: ShoppingBag,   label: "Store",          href: "/dashboard/store",       desc: "Redeem your NexCoins" },
+  { icon: ClipboardList, label: "Browse Tasks",  href: "/dashboard/tasks",      desc: "Find and start new tasks" },
+  { icon: Layers,        label: "Offerwalls",    href: "/dashboard/offerwalls", desc: "Earn via partner offers" },
+  { icon: ShoppingBag,   label: "NexStore",      href: "/dashboard/store",      desc: "Redeem your NexCoins" },
 ];
 
+/* ─── Earnings SVG Line Chart ─────────────────────────────────── */
+function EarningsChart({ data }: { data: { label: string; value: number }[] }) {
+  if (data.length === 0) return (
+    <div className="h-32 flex items-center justify-center text-sm text-slate-400">No earnings data yet</div>
+  );
+  const max = Math.max(...data.map((d) => d.value), 1);
+  const W = 500; const H = 100; const pad = 8;
+  const pts = data.map((d, i) => {
+    const x = pad + (i / (data.length - 1)) * (W - 2 * pad);
+    const y = H - pad - ((d.value / max) * (H - 2 * pad));
+    return `${x},${y}`;
+  });
+  const polyline = pts.join(" ");
+  const areaPath = `M${pts[0]} L${pts.join(" L")} L${pad + (W - 2 * pad)},${H - pad} L${pad},${H - pad} Z`;
+
+  return (
+    <div className="w-full">
+      <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-28" preserveAspectRatio="none">
+        <defs>
+          <linearGradient id="earnGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#02b491" stopOpacity="0.18" />
+            <stop offset="100%" stopColor="#02b491" stopOpacity="0" />
+          </linearGradient>
+        </defs>
+        <path d={areaPath} fill="url(#earnGrad)" />
+        <polyline points={polyline} fill="none" stroke="#02b491" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+        {data.map((d, i) => {
+          const x = pad + (i / (data.length - 1)) * (W - 2 * pad);
+          const y = H - pad - ((d.value / max) * (H - 2 * pad));
+          return <circle key={i} cx={x} cy={y} r="3" fill="#02b491" />;
+        })}
+      </svg>
+      <div className="flex justify-between mt-1">
+        {data.map((d, i) => (
+          <span key={i} className="text-[10px] text-slate-400">{d.label}</span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ─── Daily Progress Ring (SVG) ───────────────────────────────── */
+function ProgressRing({ value, max, label, sub }: { value: number; max: number; label: string; sub: string }) {
+  const r = 36; const circ = 2 * Math.PI * r;
+  const pct = max > 0 ? Math.min(value / max, 1) : 0;
+  const dash = pct * circ;
+  return (
+    <div className="flex flex-col items-center gap-1">
+      <div className="relative w-24 h-24">
+        <svg viewBox="0 0 88 88" className="w-full h-full -rotate-90">
+          <circle cx="44" cy="44" r={r} fill="none" stroke="#E6FAF5" strokeWidth="8" />
+          <circle cx="44" cy="44" r={r} fill="none" stroke="#02b491" strokeWidth="8"
+            strokeDasharray={`${dash} ${circ}`} strokeLinecap="round"
+            style={{ transition: "stroke-dasharray 0.6s ease" }} />
+        </svg>
+        <div className="absolute inset-0 flex flex-col items-center justify-center">
+          <span className="text-xl font-bold text-slate-800">{value}</span>
+          <span className="text-[10px] text-slate-400 leading-tight">{sub}</span>
+        </div>
+      </div>
+      <p className="text-xs font-semibold text-slate-600 text-center">{label}</p>
+    </div>
+  );
+}
+
+/* ─── 7-Day Streak Grid ───────────────────────────────────────── */
+function StreakGrid({
+  streak, canClaim, claimedToday, claimResult, claimError, claimingStreak, dailyBonus, day7Bonus, tasksToday, tasksRequired, onClaim,
+}: {
+  streak: number; canClaim: boolean; claimedToday: boolean;
+  claimResult: { awarded: number } | null; claimError: string | null; claimingStreak: boolean;
+  dailyBonus: number; day7Bonus: number; tasksToday: number; tasksRequired: number; onClaim: () => void;
+}) {
+  const days = [1, 2, 3, 4, 5, 6, 7];
+  const cyclePos = claimResult && streak === 0 ? 7 : streak;
+
+  return (
+    <div className="rounded-2xl bg-white border border-slate-100 shadow-sm p-5">
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <Flame className="h-5 w-5 text-orange-500" />
+          <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wider">Daily Streak</h2>
+        </div>
+        <span className="text-xs text-slate-400">Day 7 = +{day7Bonus} bonus coins</span>
+      </div>
+
+      <div className="flex items-end justify-between gap-1.5 mb-4">
+        {days.map((day) => {
+          const done    = day <= cyclePos;
+          const current = day === cyclePos + 1 && canClaim;
+          const locked  = day > cyclePos + 1 || (!canClaim && day === cyclePos + 1);
+          const reward  = day === 7 ? day7Bonus : dailyBonus;
+          return (
+            <div key={day} className="flex-1 flex flex-col items-center gap-1">
+              <span className="text-[10px] font-bold text-slate-400">
+                {day === 7 ? "🔥" : `+${reward}`}
+              </span>
+              <div className={`w-full aspect-square rounded-xl flex items-center justify-center transition-all ${
+                done
+                  ? "bg-gradient-to-br from-[#02b491] to-[#029470] shadow-md"
+                  : current
+                  ? "bg-orange-100 border-2 border-orange-400 ring-2 ring-orange-200"
+                  : "bg-slate-100"
+              }`}>
+                {done ? (
+                  <CheckCircle2 className="h-4 w-4 text-white" />
+                ) : current ? (
+                  <Flame className="h-4 w-4 text-orange-500" />
+                ) : (
+                  <Lock className="h-3.5 w-3.5 text-slate-300" />
+                )}
+              </div>
+              <span className={`text-[10px] font-medium ${done ? "text-[#029470]" : current ? "text-orange-500" : "text-slate-400"}`}>
+                Day {day}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+
+      {claimResult ? (
+        <div className="flex items-center justify-center gap-2 py-2.5 rounded-xl bg-green-50 border border-green-100 text-sm font-bold text-green-700">
+          <NexCoinIcon size={16} /> +{claimResult.awarded} coins claimed! Keep it up!
+        </div>
+      ) : canClaim ? (
+        <button
+          onClick={onClaim}
+          disabled={claimingStreak}
+          className="w-full py-2.5 rounded-xl text-sm font-bold text-white transition-opacity disabled:opacity-60"
+          style={{ background: "linear-gradient(90deg, #f97316, #ef4444)" }}
+        >
+          {claimingStreak ? "Claiming…" : `🔥 Claim Day ${cyclePos + 1} Reward (+${cyclePos + 1 === 7 ? day7Bonus : dailyBonus} coins)`}
+        </button>
+      ) : claimError ? (
+        <div className="py-2.5 rounded-xl bg-slate-50 border border-slate-100 text-xs text-center text-slate-500">{claimError}</div>
+      ) : claimedToday ? (
+        <div className="py-2.5 rounded-xl bg-green-50 border border-green-100 text-xs text-center font-semibold text-green-600">
+          ✓ Claimed today — come back tomorrow!
+        </div>
+      ) : (
+        <div className="space-y-2">
+          <div className="flex items-center justify-between text-xs text-slate-500">
+            <span>Today&apos;s tasks</span>
+            <span className="font-bold text-slate-700">{tasksToday} / {tasksRequired}</span>
+          </div>
+          <div className="h-1.5 rounded-full bg-slate-100 overflow-hidden">
+            <div className="h-full rounded-full transition-all duration-500" style={{ width: `${Math.min(100, (tasksToday / tasksRequired) * 100)}%`, background: "#02b491" }} />
+          </div>
+          <p className="text-xs text-slate-400 text-center">
+            {tasksRequired - tasksToday > 0
+              ? `Complete ${tasksRequired - tasksToday} more task${tasksRequired - tasksToday !== 1 ? "s" : ""} to unlock today's streak reward`
+              : "All tasks done — claim your reward!"}
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ─── Page ───────────────────────────────────────────────────── */
 export default function DashboardHome() {
-  const [profile, setProfile]           = useState<Profile | null>(null);
-  const [tasks, setTasks]               = useState<Task[]>([]);
+  const [profile, setProfile]               = useState<Profile | null>(null);
+  const [tasks, setTasks]                   = useState<Task[]>([]);
+  const [userLevel, setUserLevel]           = useState(1);
   const [submissionMeta, setSubmissionMeta] = useState<Record<string, SubmissionMeta>>({});
-  const [tasksDone, setTasksDone]       = useState<number>(0);
-  const [approvalRate, setApprovalRate] = useState<number | null>(null);
-  const [loading, setLoading]           = useState(true);
-  const [banner, setBanner]             = useState<AnnouncementNotif | null>(null);
+  const [tasksDone, setTasksDone]           = useState(0);
+  const [approvalRate, setApprovalRate]     = useState<number | null>(null);
+  const [totalEarned, setTotalEarned]       = useState(0);
+  const [todayApproved, setTodayApproved]   = useState(0);
+  const [todayXP, setTodayXP]              = useState(0);
+  const [chartData, setChartData]           = useState<{ label: string; value: number }[]>([]);
+  const [notifications, setNotifications]   = useState<Notification[]>([]);
+  const [leaderboard, setLeaderboard]       = useState<LeaderboardEntry[]>([]);
+  const [loading, setLoading]               = useState(true);
+  const [banner, setBanner]                 = useState<{ id: string; title: string; message: string } | null>(null);
   const [bannerDismissed, setBannerDismissed] = useState(false);
+  const [dailyBonus, setDailyBonus]         = useState(10);
+  const [day7Bonus, setDay7Bonus]           = useState(50);
+  const [tasksRequired, setTasksRequired]   = useState(5);
+
+  // Streak claim state
+  const [claimingStreak, setClaimingStreak] = useState(false);
+  const [claimResult, setClaimResult]       = useState<{ awarded: number; new_streak: number } | null>(null);
+  const [claimError, setClaimError]         = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchData() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
+
+      const today = new Date().toISOString().split("T")[0];
+      const sevenDaysAgo = new Date(Date.now() - 6 * 86400000).toISOString().split("T")[0];
+      const { data: { session } } = await supabase.auth.getSession();
 
       const [
         { data: profileData },
@@ -170,54 +237,93 @@ export default function DashboardHome() {
         { data: mySubmissions },
         { count: approvedCount },
         { count: reviewedCount },
-        { data: announcementData },
+        { data: txData },
+        { data: notifData },
+        { data: streakSettings },
+        leaderRes,
       ] = await Promise.all([
-        supabase.from("profiles").select("full_name, nexcoins").eq("id", user.id).single(),
-        supabase.from("tasks").select("id, title, description, task_type, pay_per_task").eq("status", "active").limit(20),
+        supabase.from("profiles").select("full_name, nexcoins, xp, level, current_streak, longest_streak, last_streak_claim_date, last_task_approved_date, tasks_approved_today").eq("id", user.id).single(),
+        supabase.from("tasks").select("id, title, description, task_type, pay_per_task, xp_reward, required_level").eq("status", "active").order("created_at", { ascending: false }).limit(20),
         supabase.from("submissions").select("task_id, status, feedback").eq("contributor_id", user.id),
         supabase.from("submissions").select("*", { count: "exact", head: true }).eq("contributor_id", user.id).eq("status", "approved"),
         supabase.from("submissions").select("*", { count: "exact", head: true }).eq("contributor_id", user.id).in("status", ["approved", "rejected"]),
-        // Latest unread announcement notification
-        // Use neq("is_read", true) instead of eq("is_read", false) so rows
-        // where is_read IS NULL (db default before explicit false) are also returned
-        supabase
-          .from("notifications")
-          .select("id, title, message, created_at")
-          .eq("user_id", user.id)
-          .eq("type", "announcement")
-          .neq("is_read", true)
-          .order("created_at", { ascending: false })
-          .limit(1),
+        supabase.from("coin_transactions").select("amount, created_at").eq("contributor_id", user.id).eq("type", "earned").gte("created_at", sevenDaysAgo + "T00:00:00"),
+        supabase.from("notifications").select("id, title, message, type, created_at").eq("user_id", user.id).order("created_at", { ascending: false }).limit(8),
+        supabase.from("platform_settings").select("key, value").in("key", ["streak_daily_bonus", "streak_day7_bonus", "streak_tasks_required_per_day"]),
+        fetch("/api/leaderboard?limit=5", { headers: { Authorization: `Bearer ${session?.access_token}` } }),
       ]);
 
-      // Build submission meta map: task_id → { status, feedback }
+      const p = profileData as Profile | null;
+      setUserLevel(p?.level ?? 1);
+
+      // Streak settings
+      const settingsRows = (streakSettings as { key: string; value: string }[] | null) ?? [];
+      setDailyBonus(parseInt(settingsRows.find(r => r.key === "streak_daily_bonus")?.value ?? "10") || 10);
+      setDay7Bonus(parseInt(settingsRows.find(r => r.key === "streak_day7_bonus")?.value ?? "50") || 50);
+      setTasksRequired(parseInt(settingsRows.find(r => r.key === "streak_tasks_required_per_day")?.value ?? "5") || 5);
+
+      // Submission meta
       const metaMap: Record<string, SubmissionMeta> = {};
       for (const s of (mySubmissions ?? []) as { task_id: string; status: string; feedback: string | null }[]) {
         metaMap[s.task_id] = { status: s.status, feedback: s.feedback };
       }
       setSubmissionMeta(metaMap);
 
-      // Show tasks with no submission or where resubmission is allowed; hide final rejections
-      const availableTasks = (tasksData ?? [])
-        .filter((t) => {
-          const sub = metaMap[t.id];
-          if (!sub) return true;
-          return sub.status === "resubmit_requested";
-        })
+      // Available tasks (first 3, not completed/final-rejected)
+      const availableTasks = ((tasksData ?? []) as Task[])
+        .filter(t => { const sub = metaMap[t.id]; return !sub || sub.status === "resubmit_requested"; })
         .slice(0, 3);
-
-      setProfile(profileData ?? { full_name: null, nexcoins: 0 });
       setTasks(availableTasks);
-      setTasksDone(approvedCount ?? 0);
-      setApprovalRate(
-        reviewedCount && reviewedCount > 0
-          ? Math.round(((approvedCount ?? 0) / reviewedCount) * 100)
-          : null
+
+      // Approval rate
+      const approved = approvedCount ?? 0;
+      const reviewed = reviewedCount ?? 0;
+      setTasksDone(approved);
+      setApprovalRate(reviewed > 0 ? Math.round((approved / reviewed) * 100) : null);
+
+      // Earnings chart + totals
+      const txRows = (txData ?? []) as CoinTx[];
+      const totalEarnedCoins = txRows.reduce((s, r) => s + (r.amount ?? 0), 0);
+      setTotalEarned(totalEarnedCoins);
+
+      // Today's earnings
+      const todayTx = txRows.filter(r => r.created_at.startsWith(today));
+      setTodayApproved(todayTx.length);
+
+      // Build 7-day chart
+      const dayMap: Record<string, number> = {};
+      for (let i = 6; i >= 0; i--) {
+        const d = new Date(Date.now() - i * 86400000).toISOString().split("T")[0];
+        dayMap[d] = 0;
+      }
+      for (const tx of txRows) {
+        const d = tx.created_at.split("T")[0];
+        if (d in dayMap) dayMap[d] += tx.amount ?? 0;
+      }
+      setChartData(
+        Object.entries(dayMap).map(([date, value]) => ({
+          label: new Date(date + "T12:00:00").toLocaleDateString("en-IN", { weekday: "short" }),
+          value,
+        }))
       );
 
-      const notif = (announcementData as unknown as AnnouncementNotif[] | null)?.[0] ?? null;
-      console.log("[dashboard] announcement notif:", notif);
-      setBanner(notif);
+      // Fetch total XP earned today (approximate via submissions approved today — use coins as proxy)
+      setTodayXP(todayTx.length * 50); // rough; ideally query XP directly
+
+      // Notifications (activity feed)
+      setNotifications((notifData as Notification[] | null) ?? []);
+
+      // Leaderboard
+      if (leaderRes.ok) {
+        const { leaderboard: lb } = await leaderRes.json() as { leaderboard: LeaderboardEntry[] };
+        setLeaderboard(lb ?? []);
+      }
+
+      // Banner
+      const bannerNotif = ((notifData as Notification[] | null) ?? []).find(n => n.type === "announcement");
+      setBanner(bannerNotif ? { id: bannerNotif.id, title: bannerNotif.title.replace(/^📢\s*/, ""), message: bannerNotif.message ?? "" } : null);
+
+      setProfile(p ?? { full_name: null, nexcoins: 0, xp: 0, level: 1, current_streak: 0, longest_streak: 0, last_streak_claim_date: null, last_task_approved_date: null, tasks_approved_today: 0 });
       setLoading(false);
     }
     fetchData();
@@ -225,173 +331,310 @@ export default function DashboardHome() {
 
   async function dismissBanner() {
     setBannerDismissed(true);
-    if (banner?.id) {
-      await supabase.from("notifications").update({ is_read: true }).eq("id", banner.id);
-    }
+    if (banner?.id) await supabase.from("notifications").update({ is_read: true }).eq("id", banner.id);
   }
 
-  const displayName = profile?.full_name ?? "there";
-  const showBanner  = banner && !bannerDismissed;
+  async function claimStreak() {
+    setClaimingStreak(true);
+    setClaimError(null);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await fetch("/api/streak/claim", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${session?.access_token ?? ""}` },
+      });
+      const data = await res.json() as { success?: boolean; awarded?: number; new_streak?: number; reason?: string; required?: number; completed?: number };
+      if (data.success) {
+        setClaimResult({ awarded: data.awarded ?? 0, new_streak: data.new_streak ?? 0 });
+        setProfile(prev => prev ? { ...prev, nexcoins: prev.nexcoins + (data.awarded ?? 0), current_streak: data.new_streak ?? 0, last_streak_claim_date: new Date().toISOString().split("T")[0] } : prev);
+      } else {
+        setClaimError(
+          data.reason === "already_claimed_today" ? "Already claimed today." :
+          data.reason === "insufficient_tasks_today"
+            ? `Need ${data.required ?? tasksRequired} tasks today (${data.completed ?? 0} done so far).`
+            : data.reason === "no_approved_task_today" ? "No approved tasks today yet." :
+          "Could not claim streak."
+        );
+      }
+    } catch { setClaimError("Network error. Try again."); }
+    setClaimingStreak(false);
+  }
 
-  // Strip the "📢 " prefix that admin adds when creating announcement notifications
-  const bannerTitle   = banner?.title?.replace(/^📢\s*/, "") ?? "";
-  const bannerMessage = banner?.message ?? "";
+  const displayName   = profile?.full_name ?? "there";
+  const showBanner    = banner && !bannerDismissed;
+  const xp            = profile?.xp ?? 0;
+  const level         = profile?.level ?? 1;
+  const xpInLevel     = xp % 1000;
+  const xpPct         = Math.round((xpInLevel / 1000) * 100);
+  const streak          = profile?.current_streak ?? 0;
+  const today           = new Date().toISOString().split("T")[0];
+  const tasksToday      = profile?.tasks_approved_today ?? 0;
+  const claimedToday    = profile?.last_streak_claim_date === today;
+  const canClaim        = tasksToday >= tasksRequired && !claimedToday && !claimResult;
+
+  const notifTypeIcon: Record<string, string> = {
+    submission_approved: "✅", submission_rejected: "❌", assignment_approved: "✅",
+    assignment_rejected: "❌", voucher_delivered: "🎁", new_task: "📋",
+    announcement: "📢", bonus_coins: "🪙", support: "💬", system: "ℹ️",
+  };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 pb-8">
 
       {/* Announcement Banner */}
       {showBanner && (
-        <div className="rounded-xl border border-[#14b8a6]/30 bg-gradient-to-r from-[#14b8a6]/10 to-[#f59e0b]/5 p-4 flex items-start gap-3 relative">
-          <div className="h-8 w-8 rounded-lg bg-[#14b8a6]/15 flex items-center justify-center flex-shrink-0 mt-0.5">
-            <Megaphone className="h-4 w-4 text-[#14b8a6]" />
-          </div>
+        <div className="rounded-xl border border-[#99F6D9] bg-[#E6FAF5] p-4 flex items-start gap-3">
+          <Megaphone className="h-5 w-5 text-[#02b491] flex-shrink-0 mt-0.5" />
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-[var(--text-primary)]">{bannerTitle}</p>
-            <p className="text-sm text-[var(--text-secondary)] mt-0.5 leading-relaxed">{bannerMessage}</p>
+            <p className="text-sm font-bold text-slate-800">{banner!.title}</p>
+            <p className="text-sm text-slate-500 mt-0.5">{banner!.message}</p>
           </div>
-          <button
-            onClick={dismissBanner}
-            className="flex-shrink-0 p-1 rounded-md text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-subtle)] transition-colors"
-            aria-label="Dismiss announcement"
-          >
-            <X className="h-4 w-4" />
-          </button>
+          <button onClick={dismissBanner} className="text-slate-400 hover:text-slate-600 flex-shrink-0"><X className="h-4 w-4" /></button>
         </div>
       )}
 
-      {/* Welcome + Stats */}
-      <div>
-        <h1 className="text-2xl font-bold text-[var(--text-primary)] mb-1">
-          {loading ? "Welcome back!" : `Welcome back, ${displayName}!`}
-        </h1>
-        <p className="text-sm text-[var(--text-secondary)] mb-5">Here is your dashboard overview.</p>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-          <StatCard
-            label="NexCoins"
-            value={loading ? "—" : (profile?.nexcoins ?? 0).toLocaleString()}
-          />
-          <StatCard
-            label="Tasks Done"
-            value={loading ? "—" : tasksDone.toLocaleString()}
-          />
-          <StatCard
-            className="col-span-2 sm:col-span-1"
-            label="Approval Rate"
-            value={loading ? "—" : approvalRate === null ? "N/A" : approvalRate + "%"}
-          />
+      {/* Welcome + Level */}
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <div>
+          <p className="text-xs font-bold text-[#02b491] uppercase tracking-widest mb-1">Dashboard</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">
+            {loading ? "Welcome back!" : `Welcome back, ${displayName}!`}
+          </h1>
+          <p className="text-sm text-slate-500 mt-1">Here&apos;s your overview for today.</p>
+        </div>
+        {!loading && (
+          <div className="flex flex-col items-end gap-1 flex-shrink-0">
+            <div className="flex items-center gap-2 bg-white border border-slate-100 rounded-2xl px-4 py-2.5 shadow-sm">
+              <Star className="h-4 w-4 text-[#02b491]" />
+              <span className="text-sm font-bold text-slate-800">Level {level}</span>
+            </div>
+            <div className="w-32">
+              <div className="h-1.5 rounded-full bg-slate-100 overflow-hidden">
+                <div className="h-full rounded-full" style={{ width: `${xpPct}%`, background: "linear-gradient(90deg,#02b491,#029470)" }} />
+              </div>
+              <p className="text-[10px] text-slate-400 text-right mt-0.5">{xpInLevel}/1000 XP</p>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* 4-Stat Cards */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        {[
+          { label: "NexCoins Balance", value: loading ? "—" : (profile?.nexcoins ?? 0).toLocaleString(), icon: <NexCoinIcon size={18} />, sub: "Available to redeem" },
+          { label: "Total Earned",     value: loading ? "—" : totalEarned.toLocaleString(),              icon: <NexCoinIcon size={18} />, sub: "Lifetime coins earned" },
+          { label: "Tasks Completed",  value: loading ? "—" : tasksDone.toLocaleString(),                icon: <ClipboardList className="h-[18px] w-[18px] text-[#02b491]" />, sub: "All-time approved" },
+          { label: "Approval Rate",    value: loading ? "—" : approvalRate === null ? "N/A" : approvalRate + "%", icon: <CheckCircle2 className="h-[18px] w-[18px] text-[#02b491]" />, sub: "Approved / reviewed" },
+        ].map((s) => (
+          <div key={s.label} className="rounded-2xl bg-white border border-slate-100 shadow-sm p-4">
+            <div className="flex items-center gap-2 mb-2">{s.icon}<p className="text-xs font-bold text-slate-400 uppercase tracking-wide truncate">{s.label}</p></div>
+            <p className="text-2xl font-bold text-slate-900">{s.value}</p>
+            <p className="text-xs text-slate-400 mt-0.5">{s.sub}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* 7-Day Streak Grid */}
+      <StreakGrid
+        streak={streak}
+        canClaim={canClaim}
+        claimedToday={claimedToday}
+        claimResult={claimResult}
+        claimError={claimError}
+        claimingStreak={claimingStreak}
+        dailyBonus={dailyBonus}
+        day7Bonus={day7Bonus}
+        tasksToday={tasksToday}
+        tasksRequired={tasksRequired}
+        onClaim={claimStreak}
+      />
+
+      {/* Daily Progress + Available Tasks */}
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
+
+        {/* Available Tasks — 3/5 width */}
+        <div className="lg:col-span-3 rounded-2xl bg-white border border-slate-100 shadow-sm p-5">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wider">Available Now</h2>
+            <Link href="/dashboard/tasks" className="text-xs font-bold text-[#029470] hover:underline flex items-center gap-1">
+              Browse all <ArrowRight className="h-3 w-3" />
+            </Link>
+          </div>
+          {loading ? (
+            <div className="space-y-3">
+              {[1,2,3].map(i => <div key={i} className="h-16 rounded-xl bg-slate-50 animate-pulse" />)}
+            </div>
+          ) : tasks.length === 0 ? (
+            <div className="py-10 flex flex-col items-center gap-2 text-center">
+              <ClipboardList className="h-8 w-8 text-slate-200" />
+              <p className="text-sm font-semibold text-slate-500">No tasks available yet</p>
+              <p className="text-xs text-slate-400">Check back soon.</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {tasks.map((task) => {
+                const sub        = submissionMeta[task.id];
+                const needsResub = sub?.status === "resubmit_requested";
+                const taskLevel  = task.required_level ?? 1;
+                const locked     = taskLevel > userLevel;
+                const href       = locked ? "#" : needsResub ? `/dashboard/tasks/${task.id}/work` : `/dashboard/tasks/${task.id}`;
+                return (
+                  <Link key={task.id} href={href} onClick={e => locked && e.preventDefault()}
+                    className={`flex items-start gap-3 p-3 rounded-xl border transition-all group ${locked ? "border-slate-100 opacity-60 cursor-not-allowed" : needsResub ? "border-orange-200 hover:border-orange-300 hover:bg-orange-50" : "border-slate-100 hover:border-[#99F6D9] hover:bg-[#E6FAF5]/30"}`}>
+                    <div className={`h-8 w-8 rounded-lg flex items-center justify-center flex-shrink-0 ${locked ? "bg-slate-100" : "bg-[#E6FAF5] group-hover:bg-[#CCFAEC]"}`}>
+                      {locked ? <Lock className="h-3.5 w-3.5 text-slate-400" /> : <ClipboardList className="h-3.5 w-3.5 text-[#02b491]" />}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <p className="text-xs font-bold text-slate-400 uppercase tracking-wide truncate">{task.task_type ?? "Task"}</p>
+                        {locked && <span className="text-[10px] font-bold text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded-full">Lv.{taskLevel}</span>}
+                        {needsResub && <span className="text-[10px] font-bold text-orange-600 bg-orange-50 border border-orange-200 px-1.5 py-0.5 rounded-full flex items-center gap-0.5"><RefreshCw className="h-2.5 w-2.5" />Resubmit</span>}
+                      </div>
+                      <p className={`text-sm font-semibold truncate ${locked ? "text-slate-500" : "text-slate-800 group-hover:text-[#017A5E]"}`}>{task.title}</p>
+                    </div>
+                    <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                      {task.pay_per_task != null && <span className="inline-flex items-center gap-0.5 text-xs font-bold text-slate-600"><NexCoinIcon size={11} />{task.pay_per_task}</span>}
+                      {(task.xp_reward ?? 0) > 0 && <span className="inline-flex items-center gap-0.5 text-xs font-bold text-[#02b491]"><Star className="h-3 w-3" />+{task.xp_reward}XP</span>}
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Daily Progress — 2/5 width */}
+        <div className="lg:col-span-2 rounded-2xl bg-white border border-slate-100 shadow-sm p-5">
+          <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wider mb-5">Today&apos;s Progress</h2>
+          {loading ? (
+            <div className="flex flex-col items-center gap-4">
+              <div className="h-24 w-24 rounded-full bg-slate-50 animate-pulse" />
+            </div>
+          ) : (
+            <div className="flex flex-col items-center gap-5">
+              <ProgressRing value={todayApproved} max={Math.max(todayApproved, 3)} label="Tasks approved today" sub="tasks" />
+              <div className="w-full space-y-2.5">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-slate-500 flex items-center gap-1.5"><Clock className="h-3.5 w-3.5" />Streak</span>
+                  <span className="font-bold text-slate-700">{streak} day{streak !== 1 ? "s" : ""}</span>
+                </div>
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-slate-500 flex items-center gap-1.5"><Star className="h-3.5 w-3.5 text-[#02b491]" />Level</span>
+                  <span className="font-bold text-slate-700">{level}</span>
+                </div>
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-slate-500 flex items-center gap-1.5"><NexCoinIcon size={13} />Today&apos;s Earnings</span>
+                  <span className="font-bold text-slate-700">{chartData.find(d => d.label === new Date().toLocaleDateString("en-IN", { weekday: "short" }))?.value ?? 0} coins</span>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Earnings Overview Chart */}
+      <div className="rounded-2xl bg-white border border-slate-100 shadow-sm p-5">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wider">Earnings Overview</h2>
+            <p className="text-xs text-slate-400 mt-0.5">NexCoins earned — last 7 days</p>
+          </div>
+          <Link href="/dashboard/earnings" className="text-xs font-bold text-[#029470] hover:underline">View All</Link>
+        </div>
+        {loading ? (
+          <div className="h-28 rounded-xl bg-slate-50 animate-pulse" />
+        ) : (
+          <EarningsChart data={chartData} />
+        )}
+      </div>
+
+      {/* Recent Activity + Top Contributors */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+
+        {/* Recent Activity */}
+        <div className="rounded-2xl bg-white border border-slate-100 shadow-sm p-5">
+          <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wider mb-4">Recent Activity</h2>
+          {loading ? (
+            <div className="space-y-3">{[1,2,3].map(i => <div key={i} className="h-10 rounded-lg bg-slate-50 animate-pulse" />)}</div>
+          ) : notifications.length === 0 ? (
+            <div className="py-8 text-center">
+              <p className="text-sm text-slate-400">No activity yet</p>
+            </div>
+          ) : (
+            <ul className="space-y-3">
+              {notifications.slice(0, 6).map((n) => (
+                <li key={n.id} className="flex items-start gap-3">
+                  <span className="text-base flex-shrink-0 mt-0.5">{notifTypeIcon[n.type ?? ""] ?? "ℹ️"}</span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-semibold text-slate-700 truncate">{n.title}</p>
+                    {n.message && <p className="text-xs text-slate-400 truncate">{n.message}</p>}
+                  </div>
+                  <p className="text-[10px] text-slate-300 flex-shrink-0">
+                    {new Date(n.created_at).toLocaleDateString("en-IN", { month: "short", day: "numeric" })}
+                  </p>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+
+        {/* Top Contributors */}
+        <div className="rounded-2xl bg-white border border-slate-100 shadow-sm p-5">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <Trophy className="h-4 w-4 text-amber-500" />
+              <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wider">Top Contributors</h2>
+            </div>
+            <Link href="/dashboard/leaderboard" className="text-xs font-bold text-[#029470] hover:underline">View All</Link>
+          </div>
+          {loading ? (
+            <div className="space-y-3">{[1,2,3,4,5].map(i => <div key={i} className="h-8 rounded-lg bg-slate-50 animate-pulse" />)}</div>
+          ) : leaderboard.length === 0 ? (
+            <div className="py-8 text-center">
+              <p className="text-sm text-slate-400">No data yet — be first!</p>
+            </div>
+          ) : (
+            <ul className="space-y-2.5">
+              {leaderboard.map((entry) => (
+                <li key={entry.id} className="flex items-center gap-3">
+                  <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${
+                    entry.rank === 1 ? "bg-amber-100 text-amber-700" :
+                    entry.rank === 2 ? "bg-slate-100 text-slate-600" :
+                    entry.rank === 3 ? "bg-orange-100 text-orange-700" :
+                    "bg-slate-50 text-slate-500"
+                  }`}>{entry.rank}</span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-slate-700 truncate">{entry.full_name}</p>
+                  </div>
+                  <span className="text-xs font-bold text-[#029470] flex-shrink-0">{entry.approved_count} tasks</span>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       </div>
 
       {/* Quick Actions */}
       <div>
-        <h2 className="text-base font-semibold text-[var(--text-primary)] mb-4">Quick Actions</h2>
+        <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wider mb-3">Quick Actions</h2>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {QUICK_ACTIONS.map((action) => {
             const Icon = action.icon;
             return (
-              <Link
-                key={action.href}
-                href={action.href}
-                className="flex items-center gap-4 rounded-xl border border-[var(--border-default)] bg-[var(--surface-card)] p-5 card-hover group"
-              >
-                <div className="h-10 w-10 rounded-lg bg-[var(--brand-100)] flex items-center justify-center flex-shrink-0">
-                  <Icon className="h-5 w-5 text-[var(--brand-500)]" />
+              <Link key={action.href} href={action.href}
+                className="flex items-center gap-4 rounded-2xl border border-slate-100 bg-white p-4 shadow-sm hover:shadow-md hover:border-[#99F6D9] transition-all group">
+                <div className="h-10 w-10 rounded-xl bg-[#E6FAF5] flex items-center justify-center flex-shrink-0 group-hover:bg-[#CCFAEC] transition-colors">
+                  <Icon className="h-5 w-5 text-[#029470]" />
                 </div>
                 <div className="min-w-0">
-                  <p className="font-semibold text-[var(--text-primary)] text-sm">{action.label}</p>
-                  <p className="text-xs text-[var(--text-muted)]">{action.desc}</p>
+                  <p className="font-bold text-slate-800 text-sm">{action.label}</p>
+                  <p className="text-xs text-slate-400">{action.desc}</p>
                 </div>
-                <ArrowRight className="h-4 w-4 text-[var(--text-muted)] ml-auto flex-shrink-0 group-hover:text-[var(--brand-500)] transition-colors" />
+                <ArrowRight className="h-4 w-4 text-slate-300 ml-auto flex-shrink-0 group-hover:text-[#02b491] transition-colors" />
               </Link>
             );
           })}
         </div>
-      </div>
-
-      {/* NexCoins Snapshot */}
-      <div className="rounded-lg border border-[var(--border-default)] bg-[var(--surface-card)] p-6">
-        <div className="flex items-center justify-between mb-5">
-          <h2 className="text-base font-semibold text-[var(--text-primary)]">NexCoins Balance</h2>
-          <Coins className="h-4 w-4 text-[var(--brand-500)]" />
-        </div>
-        <div className="mb-6">
-          <p className="text-xs text-[var(--text-muted)] uppercase tracking-wide mb-1">Available Coins</p>
-          <p className="text-4xl font-bold text-[var(--brand-500)]">
-            {loading ? "—" : (profile?.nexcoins ?? 0).toLocaleString()}
-          </p>
-          <p className="text-xs text-[var(--text-muted)] mt-1">Complete tasks to earn more NexCoins</p>
-        </div>
-        <Button asChild className="w-full sm:w-auto" variant="secondary">
-          <Link href="/dashboard/store">Redeem in Store →</Link>
-        </Button>
-      </div>
-
-      {/* Available Tasks */}
-      <div>
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-base font-semibold text-[var(--text-primary)]">Available Now</h2>
-          <Link href="/dashboard/tasks" className="text-sm text-[var(--text-link)] hover:underline flex items-center gap-1">
-            Browse all <ArrowRight className="h-3.5 w-3.5" />
-          </Link>
-        </div>
-
-        {loading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            {[1,2,3].map((i) => (
-              <div key={i} className="h-32 rounded-xl border border-[var(--border-default)] bg-[var(--surface-card)] animate-pulse" />
-            ))}
-          </div>
-        ) : tasks.length === 0 ? (
-          <div className="rounded-xl border border-[var(--border-default)] bg-[var(--surface-card)] py-12 flex flex-col items-center gap-3 text-center px-6">
-            <ClipboardList className="h-8 w-8 text-[var(--text-muted)]" />
-            <p className="font-semibold text-[var(--text-primary)]">No tasks available yet</p>
-            <p className="text-sm text-[var(--text-secondary)]">Check back soon — new tasks are added regularly.</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {tasks.map((task) => {
-              const sub        = submissionMeta[task.id];
-              const needsResub = sub?.status === "resubmit_requested";
-              const href       = needsResub
-                ? `/dashboard/tasks/${task.id}/work`
-                : `/dashboard/tasks/${task.id}`;
-              return (
-                <Link
-                  key={task.id}
-                  href={href}
-                  className={`rounded-xl border bg-[var(--surface-card)] p-5 card-hover group ${
-                    needsResub ? "border-orange-500/25" : "border-[var(--border-default)]"
-                  }`}
-                >
-                  <div className="flex items-center justify-between gap-2 mb-2">
-                    <p className="text-xs font-semibold text-[var(--brand-500)] uppercase tracking-wider">
-                      {task.task_type ?? "Task"}
-                    </p>
-                    {needsResub && (
-                      <span className="flex items-center gap-1 text-xs font-bold text-orange-400 bg-orange-500/10 border border-orange-500/30 px-2 py-0.5 rounded-full">
-                        <RefreshCw className="h-3 w-3" /> Resubmit
-                      </span>
-                    )}
-                  </div>
-                  <h3 className="font-semibold text-[var(--text-primary)] text-sm mb-1 group-hover:text-[var(--brand-500)] transition-colors line-clamp-1">
-                    {task.title}
-                  </h3>
-                  {needsResub && sub?.feedback ? (
-                    <p className="text-xs line-clamp-2 mb-2 text-orange-400/80">{sub.feedback}</p>
-                  ) : task.description ? (
-                    <p className="text-xs text-[var(--text-muted)] line-clamp-2 mb-3">{task.description}</p>
-                  ) : null}
-                  {task.pay_per_task != null && (
-                    <p className="text-xs font-medium text-[var(--success-text)]">
-                      {task.pay_per_task} coins / task
-                    </p>
-                  )}
-                </Link>
-              );
-            })}
-          </div>
-        )}
       </div>
 
     </div>

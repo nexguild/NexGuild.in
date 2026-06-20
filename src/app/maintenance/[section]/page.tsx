@@ -1,7 +1,9 @@
-import type { Metadata } from "next";
-import Link from "next/link";
+"use client";
 
-export const metadata: Metadata = { title: "Under Maintenance — NexGuild" };
+import { useEffect, useState } from "react";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
+import { supabase } from "@/lib/supabase";
 
 const SECTION_META: Record<string, { label: string; backHref: string; backLabel: string }> = {
   org:         { label: "Organization Services", backHref: "/",          backLabel: "Back to Home" },
@@ -12,13 +14,49 @@ const SECTION_META: Record<string, { label: string; backHref: string; backLabel:
   signup:      { label: "New Registrations",      backHref: "/",          backLabel: "Back to Home" },
 };
 
-export default async function SectionMaintenancePage({
-  params,
-}: {
-  params: Promise<{ section: string }>;
-}) {
-  const { section } = await params;
-  const meta  = SECTION_META[section] ?? { label: "This Section", backHref: "/", backLabel: "Back to Home" };
+const ADMIN_TIER_ROLES = ["owner", "admin", "reviewer", "finance", "support", "moderator"];
+
+export default function SectionMaintenancePage() {
+  const params       = useParams();
+  const router       = useRouter();
+  const searchParams = useSearchParams();
+
+  const section = params.section as string;
+  const from    = searchParams.get("from");
+  const meta    = SECTION_META[section] ?? { label: "This Section", backHref: "/", backLabel: "Back to Home" };
+
+  const [checking, setChecking] = useState(true);
+
+  useEffect(() => {
+    async function checkBypass() {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { setChecking(false); return; }
+
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", user.id)
+        .single();
+
+      if (profile && ADMIN_TIER_ROLES.includes(profile.role)) {
+        // Admin-tier user — send them to where they were going, or the section's home
+        router.replace(from ?? meta.backHref);
+        return;
+      }
+
+      setChecking(false);
+    }
+    checkBypass();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  if (checking) {
+    return (
+      <div className="min-h-screen bg-[#06111f] flex items-center justify-center">
+        <div className="h-6 w-6 rounded-full border-2 border-[#14b8a6] border-t-transparent animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#06111f] flex flex-col items-center justify-center px-6 text-center">

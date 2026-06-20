@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Coins, ShoppingBag, TrendingUp, History } from "lucide-react";
+import { ShoppingBag, TrendingUp, History } from "lucide-react";
+import { NexCoinIcon } from "@/components/ui/nexcoin-icon";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { StatCard } from "@/components/ui/stat-card";
@@ -87,7 +88,7 @@ export default function NexCoinsPage() {
       <div className="rounded-xl border border-[var(--brand-200)] bg-[var(--surface-card)] p-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
         <div className="flex items-center gap-5">
           <div className="h-14 w-14 rounded-full bg-[var(--brand-100)] flex items-center justify-center flex-shrink-0">
-            <Coins className="h-7 w-7 text-[var(--brand-500)]" />
+            <NexCoinIcon size={28} />
           </div>
           <div>
             <p className="text-sm text-[var(--text-muted)] mb-1">Available NexCoins</p>

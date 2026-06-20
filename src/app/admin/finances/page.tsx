@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { Loader2, Download, Coins, Gift, Users, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
+import { usePageGuard } from "@/components/layout/admin-auth-guard";
+import { ADMIN_ROLES } from "@/lib/admin-permissions";
 
 interface FinanceStat {
   label: string;
@@ -19,6 +21,8 @@ interface MonthBucket {
 }
 
 export default function FinancesPage() {
+  const allowed = usePageGuard(ADMIN_ROLES.FINANCE);
+
   const [loading, setLoading]             = useState(true);
   const [totalCoinsEarned, setTotalCoinsEarned]   = useState(0);
   const [totalCoinsRedeemed, setTotalCoinsRedeemed] = useState(0);
@@ -115,6 +119,7 @@ export default function FinancesPage() {
 
   const maxCoins = Math.max(...monthlyData.map((m) => Math.max(m.earned, m.redeemed)), 1);
 
+  if (!allowed) return null;
   return (
     <div className="space-y-8">
       <div className="flex items-start justify-between gap-4">

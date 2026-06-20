@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Search, Lock, Globe, Coins, Users, Clock, X, ChevronRight, CheckCircle2, Star, Loader2, XCircle } from "lucide-react";
+import { Search, Lock, Globe, Users, Clock, X, ChevronRight, CheckCircle2, Star, Loader2, XCircle } from "lucide-react";
+import { NexCoinIcon } from "@/components/ui/nexcoin-icon";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
@@ -27,6 +28,8 @@ interface Task {
   required_language: string | null;
   is_private: boolean | null;
   is_featured: boolean | null;
+  required_level: number | null;
+  xp_reward: number | null;
   terms: string | null;
   validation_time: string | null;
   payment_time: string | null;
@@ -36,7 +39,11 @@ interface Task {
 interface ProfileData {
   languages: string[];
   skills: string[];
+  level: number;
 }
+
+type SortBy = "newest" | "highest_payout" | "ending_soon";
+type PayoutFilter = "all" | "under10" | "10to50" | "50plus";
 
 const FILTERS = [
   "All", "Audio Recording", "Transcription", "Data Annotation",
@@ -86,11 +93,14 @@ export default function OpportunitiesPage() {
   const [tasks, setTasks]                 = useState<Task[]>([]);
   const [submissionMap, setSubmissionMap] = useState<Record<string, string>>({});
   const [assignmentMap, setAssignmentMap] = useState<Record<string, string>>({});
-  const [profile, setProfile]             = useState<ProfileData>({ languages: [], skills: [] });
+  const [profile, setProfile]             = useState<ProfileData>({ languages: [], skills: [], level: 1 });
   const [userId, setUserId]               = useState<string | null>(null);
   const [loading, setLoading]             = useState(true);
   const [activeFilter, setActiveFilter]   = useState("All");
   const [search, setSearch]               = useState("");
+  const [sortBy, setSortBy]               = useState<SortBy>("newest");
+  const [payoutFilter, setPayoutFilter]   = useState<PayoutFilter>("all");
+  const [showOnlyQualified, setShowOnlyQualified] = useState(false);
   const [now, setNow]                     = useState(() => new Date());
 
   // T&C modal
@@ -118,7 +128,7 @@ export default function OpportunitiesPage() {
           ? supabase.from("assignments").select("task_id, status").eq("contributor_id", user.id)
           : Promise.resolve({ data: [] }),
         user
-          ? supabase.from("profiles").select("languages, skills").eq("id", user.id).single()
+          ? supabase.from("profiles").select("languages, skills, level").eq("id", user.id).single()
           : Promise.resolve({ data: null }),
       ]);
 
@@ -139,7 +149,8 @@ export default function OpportunitiesPage() {
       if (profileRes.data) {
         setProfile({
           languages: (profileRes.data.languages as string[] | null) ?? [],
-          skills: (profileRes.data.skills as string[] | null) ?? [],
+          skills:    (profileRes.data.skills    as string[] | null) ?? [],
+          level:     (profileRes.data.level     as number  | null) ?? 1,
         });
       }
       setLoading(false);
@@ -167,6 +178,8 @@ export default function OpportunitiesPage() {
     }
   }
 
+  const userLevel = profile.level ?? 1;
+
   const filtered = tasks
     .filter((t) => {
       if (activeFilter !== "All" && t.task_type?.toLowerCase() !== activeFilter.toLowerCase()) return false;
@@ -174,12 +187,30 @@ export default function OpportunitiesPage() {
         const q = search.toLowerCase();
         if (!t.title.toLowerCase().includes(q) && !t.description?.toLowerCase().includes(q)) return false;
       }
+      // Level filter
+      if (showOnlyQualified) {
+        const needed = t.required_level ?? 1;
+        if (userLevel < needed) return false;
+      }
+      // Payout filter
+      const pay = t.pay_per_task ?? 0;
+      if (payoutFilter === "under10"  && pay >= 10) return false;
+      if (payoutFilter === "10to50"   && (pay < 10 || pay > 50)) return false;
+      if (payoutFilter === "50plus"   && pay <= 50) return false;
       return true;
     })
     .sort((a, b) => {
+      // Featured always floats to top
       if (a.is_featured && !b.is_featured) return -1;
       if (!a.is_featured && b.is_featured) return 1;
-      return 0;
+      // Secondary sort
+      if (sortBy === "highest_payout") return (b.pay_per_task ?? 0) - (a.pay_per_task ?? 0);
+      if (sortBy === "ending_soon") {
+        const da = a.deadline ? new Date(a.deadline).getTime() : Infinity;
+        const db = b.deadline ? new Date(b.deadline).getTime() : Infinity;
+        return da - db;
+      }
+      return 0; // newest — already fetched in descending order
     });
 
   return (
@@ -191,16 +222,31 @@ export default function OpportunitiesPage() {
 
       {/* Search + Filter Bar */}
       <div className="space-y-3">
-        <div className="flex items-center gap-2 h-10 px-3 rounded-lg border border-[var(--border-default)] bg-[var(--surface-card)]">
-          <Search className="h-4 w-4 text-[var(--text-muted)] flex-shrink-0" />
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search tasks..."
-            className="flex-1 bg-transparent text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none"
-          />
+
+        {/* Row 1: Search + Sort */}
+        <div className="flex items-center gap-2">
+          <div className="flex flex-1 items-center gap-2 h-10 px-3 rounded-lg border border-[var(--border-default)] bg-[var(--surface-card)]">
+            <Search className="h-4 w-4 text-[var(--text-muted)] flex-shrink-0" />
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search tasks..."
+              className="flex-1 bg-transparent text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none"
+            />
+          </div>
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value as SortBy)}
+            className="h-10 px-3 rounded-lg border border-[var(--border-default)] bg-[var(--surface-card)] text-sm text-[var(--text-secondary)] focus:outline-none focus:ring-2 focus:ring-[var(--border-focus)] cursor-pointer flex-shrink-0"
+          >
+            <option value="newest">Newest</option>
+            <option value="highest_payout">Highest Payout</option>
+            <option value="ending_soon">Ending Soon</option>
+          </select>
         </div>
+
+        {/* Row 2: Type filter pills */}
         <div className="flex items-center gap-2 overflow-x-auto scrollbar-thin pb-1">
           {FILTERS.map((f) => (
             <button
@@ -208,7 +254,7 @@ export default function OpportunitiesPage() {
               onClick={() => setActiveFilter(f)}
               className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap flex-shrink-0 transition-colors ${
                 activeFilter === f
-                  ? "bg-[var(--brand-500)] text-black"
+                  ? "bg-[var(--brand-500)] text-white"
                   : "bg-[var(--surface-subtle)] text-[var(--text-secondary)] hover:bg-[var(--border-default)]"
               }`}
             >
@@ -216,6 +262,48 @@ export default function OpportunitiesPage() {
             </button>
           ))}
         </div>
+
+        {/* Row 3: Payout buckets + Level toggle */}
+        <div className="flex items-center gap-2 flex-wrap">
+          {/* Payout buckets */}
+          {(["all", "under10", "10to50", "50plus"] as PayoutFilter[]).map((bucket) => {
+            const labels: Record<PayoutFilter, string> = {
+              all: "Any payout", under10: "< 10 coins", "10to50": "10–50 coins", "50plus": "50+ coins",
+            };
+            return (
+              <button
+                key={bucket}
+                onClick={() => setPayoutFilter(bucket)}
+                className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap flex-shrink-0 transition-colors border ${
+                  payoutFilter === bucket
+                    ? "bg-[var(--brand-500)]/10 border-[var(--brand-500)] text-[var(--brand-500)]"
+                    : "bg-transparent border-[var(--border-default)] text-[var(--text-secondary)] hover:border-[var(--brand-500)]"
+                }`}
+              >
+                {labels[bucket]}
+              </button>
+            );
+          })}
+
+          {/* Level toggle */}
+          <button
+            onClick={() => setShowOnlyQualified((v) => !v)}
+            className={`ml-auto px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap flex-shrink-0 transition-colors border flex items-center gap-1.5 ${
+              showOnlyQualified
+                ? "bg-[var(--brand-500)]/10 border-[var(--brand-500)] text-[var(--brand-500)]"
+                : "bg-transparent border-[var(--border-default)] text-[var(--text-secondary)] hover:border-[var(--brand-500)]"
+            }`}
+          >
+            {showOnlyQualified ? "✓" : "🔒"} {showOnlyQualified ? "My Level Only" : "Show All Levels"}
+          </button>
+        </div>
+
+        {/* Result count */}
+        {!loading && (
+          <p className="text-xs text-[var(--text-muted)]">
+            {filtered.length} {filtered.length === 1 ? "task" : "tasks"} found
+          </p>
+        )}
       </div>
 
       {/* Task Grid */}
@@ -252,9 +340,11 @@ export default function OpportunitiesPage() {
             const assignRejected   = task.assignment_required && assignStatus === "rejected";
             const isResubmitNeeded = subStatus === "resubmit_requested";
             const isFinalRejected  = subStatus === "rejected";
+            const taskLevel        = task.required_level ?? 1;
+            const isLocked         = userLevel < taskLevel && !subStatus;
 
             async function handleCardClick() {
-              if (isFull || isFinalRejected) return;
+              if (isFull || isFinalRejected || isLocked) return;
               // Assignment rejected → delete it, fresh assignment form
               if (assignRejected) {
                 if (!userId || retrying) return;
@@ -289,6 +379,8 @@ export default function OpportunitiesPage() {
                     ? "opacity-60 border-[var(--border-default)]"
                     : isFinalRejected
                     ? "opacity-50 border-red-500/20 cursor-not-allowed"
+                    : isLocked
+                    ? "opacity-70 border-[var(--border-default)] cursor-not-allowed"
                     : `cursor-pointer hover:-translate-y-0.5 hover:shadow-[0_6px_28px_rgba(20,184,166,0.12)] hover:border-[rgba(20,184,166,0.35)]
                     ${isFeatured ? "border-[rgba(245,158,11,0.4)]" : "border-[var(--border-default)]"}`
                   }`}
@@ -331,6 +423,16 @@ export default function OpportunitiesPage() {
                       {langMatches && " ✓"}
                     </span>
                   )}
+                  {isLocked && (
+                    <span className="text-xs font-semibold text-slate-400 bg-slate-500/10 px-2 py-0.5 rounded-full flex items-center gap-1">
+                      <Lock className="h-2.5 w-2.5" /> Requires Level {taskLevel}
+                    </span>
+                  )}
+                  {(task.xp_reward ?? 0) > 0 && (
+                    <span className="text-xs font-semibold text-[#02b491] bg-[rgba(20,184,166,0.08)] px-2 py-0.5 rounded-full flex items-center gap-1">
+                      <Star className="h-2.5 w-2.5" /> +{task.xp_reward} XP
+                    </span>
+                  )}
                 </div>
 
                 {/* Title + Description */}
@@ -365,7 +467,7 @@ export default function OpportunitiesPage() {
                   {/* Coins + Slots */}
                   <div className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-1.5 text-xs">
-                      <Coins className="h-3.5 w-3.5 text-[var(--brand-500)]" />
+                      <NexCoinIcon size={14} />
                       <span className="text-[var(--brand-500)] font-bold">{task.pay_per_task ?? "—"} coins</span>
                     </div>
                     {total != null && (
@@ -403,6 +505,10 @@ export default function OpportunitiesPage() {
                     <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-red-400">
                       <XCircle className="h-4 w-4" /> Rejected ✗
                     </span>
+                  ) : isLocked ? (
+                    <div className="w-full h-9 rounded-lg bg-slate-500/10 border border-slate-500/20 flex items-center justify-center gap-1.5 text-sm font-semibold text-slate-400">
+                      <Lock className="h-4 w-4" /> Level {taskLevel} Required
+                    </div>
                   ) : (
                     <button
                       onClick={handleCardClick}
@@ -416,7 +522,7 @@ export default function OpportunitiesPage() {
                           ? "bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20"
                           : subStatus === "in_progress"
                           ? "bg-[rgba(20,184,166,0.1)] text-[var(--brand-500)] border border-[rgba(20,184,166,0.2)] hover:bg-[rgba(20,184,166,0.15)]"
-                          : "bg-[var(--brand-500)] text-black hover:brightness-105 active:scale-[0.98]"
+                          : "bg-[var(--brand-500)] text-white hover:brightness-105 active:scale-[0.98]"
                       }`}
                     >
                       {retrying === task.id ? (
@@ -505,7 +611,7 @@ export default function OpportunitiesPage() {
               {/* Reward reminder */}
               {tncTask.pay_per_task && (
                 <div className="flex items-center gap-3 rounded-lg bg-[rgba(20,184,166,0.06)] border border-[rgba(20,184,166,0.2)] p-4">
-                  <Coins className="h-5 w-5 text-[var(--brand-500)] flex-shrink-0" />
+                  <NexCoinIcon size={20} className="flex-shrink-0" />
                   <div>
                     <p className="text-sm font-bold text-[var(--brand-500)]">{tncTask.pay_per_task} NexCoins</p>
                     <p className="text-xs text-[var(--text-muted)]">Credited after your work is approved</p>

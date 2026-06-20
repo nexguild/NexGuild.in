@@ -4,6 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import { Plus, Pencil, Trash2, Loader2, X, Package, ToggleLeft, ToggleRight, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
+import { usePageGuard } from "@/components/layout/admin-auth-guard";
+import { ADMIN_ROLES } from "@/lib/admin-permissions";
 
 interface DbVoucher {
   id: string;
@@ -38,6 +40,8 @@ const CATEGORY_LABELS: Record<string, string> = {
 
 export default function VoucherCatalogPage() {
   const tokenRef = useRef<string | null>(null);
+
+  const allowed = usePageGuard(ADMIN_ROLES.FINANCE);
 
   const [vouchers, setVouchers]   = useState<DbVoucher[]>([]);
   const [loading, setLoading]     = useState(true);
@@ -161,6 +165,7 @@ export default function VoucherCatalogPage() {
     setForm((prev) => ({ ...prev, [k]: val }));
   }
 
+  if (!allowed) return null;
   return (
     <div className="space-y-6">
       <div className="flex items-start justify-between gap-4 flex-wrap">

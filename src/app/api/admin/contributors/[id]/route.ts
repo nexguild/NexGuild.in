@@ -30,7 +30,7 @@ export async function GET(
     { data: tickets },
   ] = await Promise.all([
     admin.from("profiles")
-      .select("id, full_name, email, country, status, nexcoins, joined_at, role")
+      .select("id, full_name, email, country, status, nexcoins, xp, level, current_streak, longest_streak, last_streak_claim_date, joined_at, role")
       .eq("id", id)
       .single(),
     admin.from("submissions")

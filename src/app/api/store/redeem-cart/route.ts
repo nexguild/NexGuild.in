@@ -22,6 +22,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase-server";
+import { notifyAdmins } from "@/lib/email";
 
 interface CartItem {
   voucherType: string;
@@ -122,6 +123,16 @@ export async function POST(req: NextRequest) {
       await admin.from("coupons").update({ used_count: (cur as { used_count: number }).used_count + 1 }).eq("id", couponId);
     }
   }
+
+  // Notify admins async — fire and forget
+  const { data: requesterProfile } = await admin.from("profiles").select("full_name").eq("id", user.id).single();
+  const requesterName = (requesterProfile as { full_name: string | null } | null)?.full_name ?? "A contributor";
+  const voucherSummary = items.length === 1 ? items[0].voucherType : `${items.length} vouchers`;
+  notifyAdmins(admin, "new_voucher_request", {
+    contributorName: requesterName,
+    detail:    voucherSummary,
+    actionUrl: "https://nexguild.in/admin/vouchers",
+  });
 
   return NextResponse.json({
     success:      true,

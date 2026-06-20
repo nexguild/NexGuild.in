@@ -1,6 +1,14 @@
+"use client";
+
+import { usePageGuard } from "@/components/layout/admin-auth-guard";
+import { ADMIN_ROLES } from "@/lib/admin-permissions";
+
 const TABS = ["Pending", "Processing", "Completed", "Rejected"];
 
 export default function WithdrawalsPage() {
+  const allowed = usePageGuard(ADMIN_ROLES.FINANCE);
+
+  if (!allowed) return null;
   return (
     <div className="space-y-6">
       <div>

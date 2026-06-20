@@ -5,7 +5,7 @@ import { SupportButton } from "@/components/layout/support-button";
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
     <AuthGuard>
-      <div className="theme-teal min-h-screen bg-[var(--surface-page)]">
+      <div className="min-h-screen" style={{ background: "#F1F5F9" }}>
         <DashboardShell>{children}</DashboardShell>
         <SupportButton />
       </div>

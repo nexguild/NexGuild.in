@@ -14,7 +14,8 @@ const PAGE_TITLES: Record<string, string> = {
   "/dashboard/offerwalls":    "Offerwall Hub",
   "/dashboard/earnings":      "Earnings",
   "/dashboard/wallet":        "NexCoins",
-  "/dashboard/store":         "Store",
+  "/dashboard/store":         "NexStore",
+  "/dashboard/leaderboard":   "Leaderboard",
   "/dashboard/vouchers":      "My Vouchers",
   "/dashboard/support":       "Support",
   "/dashboard/profile":       "Profile",
@@ -204,16 +205,16 @@ if (existingChannel) {
   }
 
   return (
-    <header className="h-16 fixed top-0 right-0 left-0 lg:left-sidebar z-30 flex items-center justify-between px-4 sm:px-6 bg-[var(--surface-card)] border-b border-[var(--border-default)]">
+    <header className="h-16 fixed top-0 right-0 left-0 lg:left-sidebar z-30 flex items-center justify-between px-4 sm:px-6 bg-white border-b border-slate-200 shadow-sm">
       <div className="flex items-center gap-3">
         <button
           onClick={onMenuToggle}
-          className="lg:hidden h-9 w-9 flex items-center justify-center rounded-md hover:bg-[var(--surface-subtle)] transition-colors"
+          className="lg:hidden h-9 w-9 flex items-center justify-center rounded-md text-slate-600 hover:bg-slate-100 transition-colors"
           aria-label="Toggle menu"
         >
-          <Menu className="h-5 w-5 text-[var(--text-primary)]" />
+          <Menu className="h-5 w-5" />
         </button>
-        <h1 className="text-lg font-semibold text-[var(--text-primary)]">{title}</h1>
+        <h1 className="text-lg font-semibold text-slate-800">{title}</h1>
       </div>
 
       <div className="flex items-center gap-2">
@@ -221,7 +222,7 @@ if (existingChannel) {
         <div ref={bellRef} className="relative">
           <button
             onClick={() => setOpen((v) => !v)}
-            className="relative h-9 w-9 flex items-center justify-center rounded-md text-[var(--text-secondary)] hover:bg-[var(--surface-subtle)] hover:text-[var(--text-primary)] transition-colors"
+            className="relative h-9 w-9 flex items-center justify-center rounded-md text-slate-500 hover:bg-slate-100 hover:text-slate-700 transition-colors"
             aria-label="Notifications"
           >
             <Bell className="h-5 w-5" />
@@ -233,15 +234,15 @@ if (existingChannel) {
           </button>
 
           {open && (
-            <div className="absolute right-0 top-11 w-80 max-h-[480px] flex flex-col rounded-xl border border-[var(--border-default)] bg-[var(--surface-card)] shadow-xl overflow-hidden">
-              <div className="px-4 py-3 border-b border-[var(--border-default)] flex items-center justify-between flex-shrink-0">
-                <span className="text-sm font-semibold text-[var(--text-primary)]">
-                  Notifications {unreadCount > 0 && <span className="text-[var(--brand-500)]">({unreadCount})</span>}
+            <div className="absolute right-0 top-11 w-80 max-h-[480px] flex flex-col rounded-xl border border-slate-200 bg-white shadow-xl overflow-hidden">
+              <div className="px-4 py-3 border-b border-slate-100 flex items-center justify-between flex-shrink-0">
+                <span className="text-sm font-semibold text-slate-800">
+                  Notifications {unreadCount > 0 && <span className="text-[#029470]">({unreadCount})</span>}
                 </span>
                 {unreadCount > 0 && (
                   <button
                     onClick={markAllRead}
-                    className="flex items-center gap-1 text-xs text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors"
+                    className="flex items-center gap-1 text-xs text-slate-400 hover:text-slate-700 transition-colors"
                   >
                     <CheckCheck className="h-3.5 w-3.5" /> Mark all read
                   </button>
@@ -251,12 +252,12 @@ if (existingChannel) {
               <div className="flex-1 overflow-y-auto">
                 {notifications.length === 0 ? (
                   <div className="py-10 flex flex-col items-center gap-2 text-center px-4">
-                    <Bell className="h-8 w-8 text-[var(--text-muted)]" />
-                    <p className="text-sm font-medium text-[var(--text-primary)]">No notifications yet</p>
-                    <p className="text-xs text-[var(--text-muted)]">Task approvals and updates will appear here.</p>
+                    <Bell className="h-8 w-8 text-slate-300" />
+                    <p className="text-sm font-medium text-slate-700">No notifications yet</p>
+                    <p className="text-xs text-slate-400">Task approvals and updates will appear here.</p>
                   </div>
                 ) : (
-                  <ul className="divide-y divide-[var(--border-default)]">
+                  <ul className="divide-y divide-slate-100">
                     {notifications.map((n) => {
                       const href = n.type ? (TYPE_HREF[n.type] ?? "/dashboard") : "/dashboard";
                       return (
@@ -264,19 +265,19 @@ if (existingChannel) {
                           <Link
                             href={href}
                             onClick={() => { markRead(n.id); setOpen(false); }}
-                            className={`flex items-start gap-2 px-4 py-3 hover:bg-[var(--surface-subtle)] transition-colors ${!n.is_read ? "bg-[var(--brand-500)]/5" : ""}`}
+                            className={`flex items-start gap-2 px-4 py-3 hover:bg-slate-50 transition-colors ${!n.is_read ? "bg-[#E6FAF5]/60" : ""}`}
                           >
                             {!n.is_read && (
-                              <span className="mt-1.5 h-2 w-2 rounded-full bg-[var(--brand-500)] flex-shrink-0" />
+                              <span className="mt-1.5 h-2 w-2 rounded-full bg-[#02b491] flex-shrink-0" />
                             )}
                             <div className={!n.is_read ? "" : "ml-4"}>
-                              <p className={`text-xs font-semibold ${n.type ? (TYPE_COLORS[n.type] ?? "text-[var(--text-primary)]") : "text-[var(--text-primary)]"}`}>
+                              <p className={`text-xs font-semibold ${n.type ? (TYPE_COLORS[n.type] ?? "text-slate-800") : "text-slate-800"}`}>
                                 {n.title}
                               </p>
                               {n.message && (
-                                <p className="text-xs text-[var(--text-muted)] mt-0.5 line-clamp-2">{n.message}</p>
+                                <p className="text-xs text-slate-500 mt-0.5 line-clamp-2">{n.message}</p>
                               )}
-                              <p className="text-[10px] text-[var(--text-muted)] mt-1">
+                              <p className="text-[10px] text-slate-400 mt-1">
                                 {new Date(n.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
                               </p>
                             </div>
@@ -295,38 +296,38 @@ if (existingChannel) {
         <div ref={menuRef} className="relative">
           <button
             onClick={() => setMenuOpen((v) => !v)}
-            className="flex items-center gap-2 h-9 px-2 rounded-md hover:bg-[var(--surface-subtle)] transition-colors"
+            className="flex items-center gap-2 h-9 px-2 rounded-md hover:bg-slate-100 transition-colors"
             aria-label="User menu"
           >
             <Avatar src={avatarUrl} name={userInitials} size="sm" />
-            <span className="hidden sm:block text-sm font-medium text-[var(--text-primary)] max-w-[100px] truncate">
+            <span className="hidden sm:block text-sm font-medium text-slate-700 max-w-[100px] truncate">
               {userName ? userName.split(" ")[0] : ""}
             </span>
             <ChevronDown className={`h-4 w-4 text-[var(--text-muted)] transition-transform duration-200 ${menuOpen ? "rotate-180" : ""}`} />
           </button>
 
           {menuOpen && (
-            <div className="absolute right-0 top-11 w-48 rounded-xl border border-[var(--border-default)] bg-[var(--surface-card)] shadow-xl overflow-hidden z-50">
+            <div className="absolute right-0 top-11 w-48 rounded-xl border border-slate-200 bg-white shadow-xl overflow-hidden z-50">
               <Link
                 href="/dashboard/profile"
                 onClick={() => setMenuOpen(false)}
-                className="flex items-center gap-3 px-4 py-3 text-sm text-[var(--text-primary)] hover:bg-[var(--surface-subtle)] transition-colors"
+                className="flex items-center gap-3 px-4 py-3 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
               >
-                <User className="h-4 w-4 text-[var(--text-muted)]" />
+                <User className="h-4 w-4 text-slate-400" />
                 View Profile
               </Link>
               <Link
                 href="/dashboard/settings"
                 onClick={() => setMenuOpen(false)}
-                className="flex items-center gap-3 px-4 py-3 text-sm text-[var(--text-primary)] hover:bg-[var(--surface-subtle)] transition-colors"
+                className="flex items-center gap-3 px-4 py-3 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
               >
-                <Settings className="h-4 w-4 text-[var(--text-muted)]" />
+                <Settings className="h-4 w-4 text-slate-400" />
                 Settings
               </Link>
-              <div className="border-t border-[var(--border-default)]" />
+              <div className="border-t border-slate-100" />
               <button
                 onClick={handleSignOut}
-                className="w-full flex items-center gap-3 px-4 py-3 text-sm text-red-400 hover:bg-red-500/5 transition-colors"
+                className="w-full flex items-center gap-3 px-4 py-3 text-sm text-red-500 hover:bg-red-50 transition-colors"
               >
                 <LogOut className="h-4 w-4" />
                 Log Out

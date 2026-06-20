@@ -5,6 +5,8 @@ import Link from "next/link";
 import { FolderOpen, Plus, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
+import { usePageGuard } from "@/components/layout/admin-auth-guard";
+import { ADMIN_ROLES } from "@/lib/admin-permissions";
 
 interface Project {
   id: string;
@@ -25,6 +27,8 @@ const STATUS_STYLES: Record<string, string> = {
 
 export default function AdminProjectsPage() {
   const tokenRef = useRef<string | null>(null);
+  const allowed = usePageGuard(ADMIN_ROLES.REVIEW);
+
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading]   = useState(true);
   const [error, setError]       = useState<string | null>(null);
@@ -50,6 +54,7 @@ export default function AdminProjectsPage() {
     load();
   }, []);
 
+  if (!allowed) return null;
   return (
     <div className="space-y-6">
       <div className="flex items-start justify-between gap-4">

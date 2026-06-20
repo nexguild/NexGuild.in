@@ -10,6 +10,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Avatar } from "@/components/ui/avatar";
 import { supabase } from "@/lib/supabase";
+import { usePageGuard } from "@/components/layout/admin-auth-guard";
+import { ADMIN_ROLES } from "@/lib/admin-permissions";
 
 interface Task {
   id: string;
@@ -53,6 +55,8 @@ const STATUS_BADGE: Record<string, string> = {
 export default function AdminTaskDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router  = useRouter();
+
+  const allowed = usePageGuard(ADMIN_ROLES.CONTENT);
 
   const [task, setTask]               = useState<Task | null>(null);
   const [submissions, setSubmissions] = useState<Submission[]>([]);
@@ -130,6 +134,7 @@ export default function AdminTaskDetailPage() {
 
   const pending = submissions.filter((s) => s.status === "submitted").length;
 
+  if (!allowed) return null;
   return (
     <div className="space-y-6 max-w-4xl">
       <div className="flex items-center justify-between gap-4">

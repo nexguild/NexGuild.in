@@ -1,0 +1,33 @@
+<svg width="240" height="240" viewBox="0 0 240 240" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="coinGradE" cx="32%" cy="28%" r="80%">
+      <stop offset="0%" stop-color="#fff3d4"/>
+      <stop offset="30%" stop-color="#fcd34d"/>
+      <stop offset="68%" stop-color="#F59E0B"/>
+      <stop offset="100%" stop-color="#8a5408"/>
+    </radialGradient>
+    <radialGradient id="innerGradE" cx="35%" cy="30%" r="78%">
+      <stop offset="0%" stop-color="#ffe9ae"/>
+      <stop offset="55%" stop-color="#eea412"/>
+      <stop offset="100%" stop-color="#b4760a"/>
+    </radialGradient>
+    <linearGradient id="rimShineE" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.6"/>
+      <stop offset="45%" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="textGradE" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#4a2e05"/>
+      <stop offset="100%" stop-color="#1f1300"/>
+    </linearGradient>
+  </defs>
+  <ellipse cx="120" cy="226" rx="68" ry="7" fill="#000000" opacity="0.22"/>
+  <circle cx="120" cy="118" r="106" fill="url(#coinGradE)" stroke="#2e1c04" stroke-width="3.5"/>
+  <circle cx="120" cy="118" r="101" fill="none" stroke="#2e1c04" stroke-width="2" opacity="0.3" stroke-dasharray="2,5.2"/>
+  <circle cx="120" cy="118" r="86" fill="url(#innerGradE)" stroke="#7a4d08" stroke-width="1.5"/>
+  <circle cx="120" cy="118" r="86" fill="none" stroke="#2e1c04" stroke-width="1" opacity="0.35"/>
+  <circle cx="120" cy="118" r="74" fill="none" stroke="#2e1c04" stroke-width="1" opacity="0.25"/>
+  <text x="120" y="138" font-family="Georgia, 'Times New Roman', serif" font-weight="700" font-size="54" fill="url(#textGradE)" text-anchor="middle" letter-spacing="1">Nex</text>
+  <rect x="92" y="150" width="56" height="3" rx="1.5" fill="#2e1c04" opacity="0.45"/>
+  <path d="M 40 58 A 106 106 0 0 1 168 22 A 92 92 0 0 0 40 58 Z" fill="url(#rimShineE)"/>
+  <ellipse cx="76" cy="56" rx="36" ry="15" fill="#ffffff" opacity="0.3" transform="rotate(-18 76 56)"/>
+</svg>

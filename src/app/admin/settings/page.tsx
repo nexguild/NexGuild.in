@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Plus, Trash2, Loader2, X, CheckCircle2, Tag, ToggleLeft, ToggleRight, Crown } from "lucide-react";
+import { Plus, Trash2, Loader2, X, CheckCircle2, Tag, ToggleLeft, ToggleRight, Crown, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
 
@@ -26,6 +26,19 @@ interface Coupon {
 }
 
 type MaintenanceSections = Record<string, boolean>;
+
+const TEAM_ROLES = ["admin", "reviewer", "finance", "support", "moderator"] as const;
+type TeamRole = typeof TEAM_ROLES[number];
+
+const ROLE_META: Record<string, { label: string; desc: string; badge: string; dot: string }> = {
+  owner:       { label: "Owner",       desc: "Full platform control",              badge: "bg-amber-500/15 text-amber-400",    dot: "#f59e0b" },
+  admin:       { label: "Admin",       desc: "Full access except ownership",       badge: "bg-violet-500/15 text-violet-400",  dot: "#a78bfa" },
+  reviewer:    { label: "Reviewer",    desc: "Review tasks & submissions",         badge: "bg-blue-500/15 text-blue-400",      dot: "#60a5fa" },
+  finance:     { label: "Finance",     desc: "Manage payouts & coupons",           badge: "bg-emerald-500/15 text-emerald-400",dot: "#34d399" },
+  support:     { label: "Support",     desc: "Handle user support tickets",        badge: "bg-sky-500/15 text-sky-400",        dot: "#38bdf8" },
+  moderator:   { label: "Moderator",   desc: "Moderate content & flag abuse",      badge: "bg-orange-500/15 text-orange-400",  dot: "#fb923c" },
+  contributor: { label: "Contributor", desc: "Regular platform user",              badge: "bg-[var(--surface-subtle)] text-[var(--text-muted)]", dot: "#6b7280" },
+};
 
 const MAINTENANCE_SECTIONS: { key: string; label: string; desc: string }[] = [
   { key: "org",          label: "Organization Side",    desc: "Client-facing pages (/services, /for-organizations, /client)" },
@@ -69,12 +82,24 @@ export default function AdminSettingsPage() {
   const [togglingCoupon, setTogglingCoupon] = useState<string | null>(null);
   const [deletingCoupon, setDeletingCoupon] = useState<string | null>(null);
 
-  // Add admin modal
-  const [showInvite, setShowInvite]   = useState(false);
-  const [inviteEmail, setInviteEmail] = useState("");
-  const [inviting, setInviting]       = useState(false);
-  const [inviteErr, setInviteErr]     = useState<string | null>(null);
-  const [inviteOk, setInviteOk]       = useState(false);
+  // Add team member modal
+  const [showInvite, setShowInvite]     = useState(false);
+  const [inviteEmail, setInviteEmail]   = useState("");
+  const [inviteRole, setInviteRole]     = useState<TeamRole>("admin");
+  const [inviting, setInviting]         = useState(false);
+  const [inviteErr, setInviteErr]       = useState<string | null>(null);
+  const [inviteOk, setInviteOk]         = useState(false);
+
+  // Inline role change
+  const [changingRole, setChangingRole] = useState<string | null>(null);
+
+  // Streak settings
+  const [streakDailyBonus,    setStreakDailyBonus]    = useState("10");
+  const [streakDay7Bonus,     setStreakDay7Bonus]      = useState("50");
+  const [streakTasksRequired, setStreakTasksRequired]  = useState("5");
+  const [savingStreak, setSavingStreak]                = useState(false);
+  const [streakSaved, setStreakSaved]                  = useState(false);
+  const [streakErr, setStreakErr]                      = useState<string | null>(null);
 
   // Create coupon modal
   const [showCoupon, setShowCoupon]         = useState(false);
@@ -105,9 +130,12 @@ export default function AdminSettingsPage() {
       ]);
 
       if (settingsRes.ok) {
-        const d = await settingsRes.json() as { admins: AdminUser[]; maintenanceSections: MaintenanceSections };
+        const d = await settingsRes.json() as { admins: AdminUser[]; maintenanceSections: MaintenanceSections; streakDailyBonus?: number; streakDay7Bonus?: number; streakTasksRequired?: number };
         setAdmins(d.admins ?? []);
         setMaintenanceSections(d.maintenanceSections ?? {});
+        if (d.streakDailyBonus    != null) setStreakDailyBonus(String(d.streakDailyBonus));
+        if (d.streakDay7Bonus     != null) setStreakDay7Bonus(String(d.streakDay7Bonus));
+        if (d.streakTasksRequired != null) setStreakTasksRequired(String(d.streakTasksRequired));
       }
       setLoadingAdmins(false);
 
@@ -139,13 +167,27 @@ export default function AdminSettingsPage() {
     const res = await fetch("/api/admin/settings", {
       method:  "PATCH",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${tokenRef.current}` },
-      body:    JSON.stringify({ action: "promote", email: inviteEmail.trim().toLowerCase() }),
+      body:    JSON.stringify({ action: "promote", email: inviteEmail.trim().toLowerCase(), role: inviteRole }),
     });
     const data = await res.json() as { ok?: boolean; admins?: AdminUser[]; error?: string };
-    if (!res.ok) { setInviteErr(data.error ?? "Failed to promote user."); setInviting(false); return; }
+    if (!res.ok) { setInviteErr(data.error ?? "Failed to assign role."); setInviting(false); return; }
     setAdmins(data.admins ?? []);
     setInviteOk(true);
     setInviting(false);
+  }
+
+  async function changeRole(id: string, newRole: TeamRole) {
+    setChangingRole(id);
+    const res = await fetch("/api/admin/settings", {
+      method:  "PATCH",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${tokenRef.current}` },
+      body:    JSON.stringify({ action: "change_role", id, role: newRole }),
+    });
+    if (res.ok) {
+      const data = await res.json() as { admins?: AdminUser[] };
+      setAdmins(data.admins ?? []);
+    }
+    setChangingRole(null);
   }
 
   async function demoteAdmin(id: string) {
@@ -210,6 +252,25 @@ export default function AdminSettingsPage() {
     setCreatingCoupon(false);
   }
 
+  async function saveStreakSettings(e: React.FormEvent) {
+    e.preventDefault();
+    setSavingStreak(true);
+    setStreakErr(null);
+    const res = await fetch("/api/admin/settings", {
+      method:  "PATCH",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${tokenRef.current}` },
+      body:    JSON.stringify({ action: "update_streak_settings", dailyBonus: streakDailyBonus, day7Bonus: streakDay7Bonus, tasksRequired: streakTasksRequired }),
+    });
+    const data = await res.json() as { error?: string };
+    if (!res.ok) {
+      setStreakErr(data.error ?? "Failed to save.");
+    } else {
+      setStreakSaved(true);
+      setTimeout(() => setStreakSaved(false), 3000);
+    }
+    setSavingStreak(false);
+  }
+
   const isOwner = currentRole === "owner";
 
   return (
@@ -271,18 +332,18 @@ export default function AdminSettingsPage() {
         })}
       </section>
 
-      {/* Admin Users */}
+      {/* Team & Roles */}
       <section className="rounded-lg border border-[var(--border-default)] bg-[var(--surface-card)] divide-y divide-[var(--border-default)]">
         <div className="px-6 py-4 flex items-center justify-between">
           <div>
-            <h2 className="font-semibold text-[var(--text-primary)]">Admin Users</h2>
+            <h2 className="font-semibold text-[var(--text-primary)]">Team &amp; Roles</h2>
             <p className="text-xs text-[var(--text-muted)] mt-0.5">
-              {isOwner ? "Promote a contributor to admin by their email." : "Only the owner can add or remove admins."}
+              {isOwner ? "Assign roles to team members. Only the owner can make changes." : "Only the owner can manage team roles."}
             </p>
           </div>
           {isOwner && (
-            <Button size="sm" variant="secondary" onClick={() => { setShowInvite(true); setInviteOk(false); setInviteErr(null); setInviteEmail(""); }}>
-              <Plus className="h-3.5 w-3.5" /> Add Admin
+            <Button size="sm" variant="secondary" onClick={() => { setShowInvite(true); setInviteOk(false); setInviteErr(null); setInviteEmail(""); setInviteRole("admin"); }}>
+              <Plus className="h-3.5 w-3.5" /> Add Member
             </Button>
           )}
         </div>
@@ -291,29 +352,51 @@ export default function AdminSettingsPage() {
             <Loader2 className="h-4 w-4 animate-spin" /> Loading…
           </div>
         ) : admins.length === 0 ? (
-          <div className="px-6 py-6 text-sm text-[var(--text-muted)]">No admins found.</div>
+          <div className="px-6 py-6 text-sm text-[var(--text-muted)]">No team members found.</div>
         ) : (
-          admins.map((admin) => {
-            const isAdminOwner = admin.role === "owner";
+          admins.map((member) => {
+            const isOwnerAccount = member.role === "owner";
+            const meta = ROLE_META[member.role] ?? ROLE_META.contributor;
             return (
-              <div key={admin.id} className="px-6 py-4 flex items-center justify-between gap-4">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <p className="text-sm font-medium text-[var(--text-primary)]">{admin.full_name ?? "—"}</p>
-                    {isAdminOwner && (
-                      <span className="flex items-center gap-1 text-xs font-semibold px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-400">
-                        <Crown className="h-3 w-3" /> Owner
-                      </span>
-                    )}
+              <div key={member.id} className="px-6 py-4 flex items-center justify-between gap-4">
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <p className="text-sm font-medium text-[var(--text-primary)] truncate">{member.full_name ?? "—"}</p>
+                    <span className={`inline-flex items-center gap-1 text-xs font-semibold px-1.5 py-0.5 rounded ${meta.badge}`}>
+                      {isOwnerAccount && <Crown className="h-3 w-3" />}
+                      {meta.label}
+                    </span>
                   </div>
-                  <p className="text-xs text-[var(--text-muted)]">
-                    {admin.email} · {isAdminOwner ? "Owner" : "Admin"} · Since {new Date(admin.joined_at).toLocaleDateString("en-IN", { month: "short", year: "numeric" })}
+                  <p className="text-xs text-[var(--text-muted)] truncate">
+                    {member.email} · Since {new Date(member.joined_at).toLocaleDateString("en-IN", { month: "short", year: "numeric" })}
                   </p>
                 </div>
-                {isOwner && !isAdminOwner && (
-                  <Button size="sm" variant="ghost" className="text-red-400 hover:text-red-300 hover:bg-red-500/10" onClick={() => demoteAdmin(admin.id)}>
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </Button>
+                {isOwner && !isOwnerAccount && (
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    {/* Inline role dropdown */}
+                    <div className="relative">
+                      <select
+                        value={member.role}
+                        disabled={changingRole === member.id}
+                        onChange={(e) => changeRole(member.id, e.target.value as TeamRole)}
+                        className="appearance-none h-8 pl-3 pr-7 rounded-md border border-[var(--border-strong)] bg-[var(--surface-subtle)] text-xs text-[var(--text-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--border-focus)] disabled:opacity-50 cursor-pointer"
+                      >
+                        {TEAM_ROLES.map((r) => (
+                          <option key={r} value={r}>{ROLE_META[r].label}</option>
+                        ))}
+                      </select>
+                      <ChevronDown className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 h-3 w-3 text-[var(--text-muted)]" />
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="text-red-400 hover:text-red-300 hover:bg-red-500/10"
+                      onClick={() => demoteAdmin(member.id)}
+                      title="Remove from team"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
                 )}
               </div>
             );
@@ -387,40 +470,128 @@ export default function AdminSettingsPage() {
         )}
       </section>
 
-      {/* ── Add Admin Modal ──────────────────────────────────────────── */}
+      {/* Streak Rewards */}
+      {isOwner && (
+        <section className="rounded-lg border border-[var(--border-default)] bg-[var(--surface-card)] divide-y divide-[var(--border-default)]">
+          <div className="px-6 py-4">
+            <h2 className="font-semibold text-[var(--text-primary)]">Streak Rewards</h2>
+            <p className="text-xs text-[var(--text-muted)] mt-0.5">NexCoins awarded to contributors for daily submission streaks.</p>
+          </div>
+          <form onSubmit={saveStreakSettings} className="px-6 py-5 space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-[var(--text-primary)] mb-1.5">Tasks required per day</label>
+                <input
+                  type="number"
+                  min="1"
+                  value={streakTasksRequired}
+                  onChange={(e) => setStreakTasksRequired(e.target.value)}
+                  className="w-full h-10 px-3 rounded-lg border border-[var(--border-default)] bg-[var(--surface-subtle)] text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--border-focus)]"
+                />
+                <p className="text-xs text-[var(--text-muted)] mt-1">Tasks needed to unlock daily claim</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-[var(--text-primary)] mb-1.5">Daily Bonus (coins)</label>
+                <input
+                  type="number"
+                  min="1"
+                  value={streakDailyBonus}
+                  onChange={(e) => setStreakDailyBonus(e.target.value)}
+                  className="w-full h-10 px-3 rounded-lg border border-[var(--border-default)] bg-[var(--surface-subtle)] text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--border-focus)]"
+                />
+                <p className="text-xs text-[var(--text-muted)] mt-1">Awarded each day contributor claims streak</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-[var(--text-primary)] mb-1.5">Day 7 Milestone (coins)</label>
+                <input
+                  type="number"
+                  min="1"
+                  value={streakDay7Bonus}
+                  onChange={(e) => setStreakDay7Bonus(e.target.value)}
+                  className="w-full h-10 px-3 rounded-lg border border-[var(--border-default)] bg-[var(--surface-subtle)] text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--border-focus)]"
+                />
+                <p className="text-xs text-[var(--text-muted)] mt-1">Bonus awarded instead on day 7 (streak resets)</p>
+              </div>
+            </div>
+            {streakErr && <p className="text-sm text-red-400 bg-red-500/10 px-3 py-2 rounded-md">{streakErr}</p>}
+            {streakSaved && (
+              <div className="flex items-center gap-2 text-sm text-green-400 bg-green-500/10 px-3 py-2 rounded-md">
+                <CheckCircle2 className="h-4 w-4" /> Streak settings saved.
+              </div>
+            )}
+            <Button type="submit" size="sm" disabled={savingStreak}>
+              {savingStreak ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Save Streak Settings"}
+            </Button>
+          </form>
+        </section>
+      )}
+
+      {/* ── Add Team Member Modal ──────────────────────────────────── */}
       {showInvite && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/60">
           <div className="w-full max-w-sm bg-[var(--surface-card)] rounded-xl border border-[var(--border-default)] p-6 shadow-xl">
             <div className="flex items-center justify-between mb-5">
-              <h2 className="text-lg font-semibold text-[var(--text-primary)]">Add Admin</h2>
+              <h2 className="text-lg font-semibold text-[var(--text-primary)]">Add Team Member</h2>
               <button onClick={() => setShowInvite(false)}><X className="h-5 w-5 text-[var(--text-muted)]" /></button>
             </div>
             {inviteOk ? (
               <div className="flex flex-col items-center gap-3 py-4 text-center">
                 <CheckCircle2 className="h-10 w-10 text-green-400" />
-                <p className="font-semibold text-[var(--text-primary)]">Role updated</p>
-                <p className="text-sm text-[var(--text-secondary)]">The user has been promoted to admin.</p>
+                <p className="font-semibold text-[var(--text-primary)]">Role assigned</p>
+                <p className="text-sm text-[var(--text-secondary)]">
+                  The user has been assigned the <span className={`font-semibold ${ROLE_META[inviteRole]?.badge ?? ""} px-1 rounded`}>{ROLE_META[inviteRole]?.label}</span> role.
+                </p>
                 <Button className="w-full mt-2" onClick={() => setShowInvite(false)}>Done</Button>
               </div>
             ) : (
               <form onSubmit={promoteToAdmin} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-[var(--text-primary)] mb-1.5">Contributor Email</label>
+                  <label className="block text-sm font-medium text-[var(--text-primary)] mb-1.5">User Email</label>
                   <input
                     type="email"
                     required
                     value={inviteEmail}
                     onChange={(e) => setInviteEmail(e.target.value)}
-                    placeholder="contributor@email.com"
+                    placeholder="user@gmail.com"
                     className="w-full h-10 px-3 rounded-md border border-[var(--border-strong)] bg-[var(--surface-subtle)] text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--border-focus)]"
                   />
                   <p className="text-xs text-[var(--text-muted)] mt-1.5">The user must already have an account on NexGuild.</p>
                 </div>
+                <div>
+                  <label className="block text-sm font-medium text-[var(--text-primary)] mb-1.5">Role</label>
+                  <div className="grid grid-cols-1 gap-1.5">
+                    {TEAM_ROLES.map((r) => {
+                      const m = ROLE_META[r];
+                      const selected = inviteRole === r;
+                      return (
+                        <button
+                          key={r}
+                          type="button"
+                          onClick={() => setInviteRole(r)}
+                          className={`flex items-start gap-3 px-3 py-2.5 rounded-lg border text-left transition-colors ${
+                            selected
+                              ? "border-[var(--brand-500)] bg-[var(--brand-50)]"
+                              : "border-[var(--border-default)] hover:border-[var(--border-strong)]"
+                          }`}
+                        >
+                          <span
+                            className="mt-0.5 h-2 w-2 rounded-full flex-shrink-0"
+                            style={{ backgroundColor: m.dot }}
+                          />
+                          <div>
+                            <p className="text-sm font-medium text-[var(--text-primary)]">{m.label}</p>
+                            <p className="text-xs text-[var(--text-muted)]">{m.desc}</p>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
                 {inviteErr && <p className="text-sm text-red-400 bg-red-500/10 px-3 py-2 rounded-md">{inviteErr}</p>}
-                <div className="flex gap-3">
+                <div className="flex gap-3 pt-1">
                   <Button type="button" variant="ghost" className="flex-1" onClick={() => setShowInvite(false)}>Cancel</Button>
                   <Button type="submit" className="flex-1" disabled={inviting}>
-                    {inviting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Promote to Admin"}
+                    {inviting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Assign Role"}
                   </Button>
                 </div>
               </form>

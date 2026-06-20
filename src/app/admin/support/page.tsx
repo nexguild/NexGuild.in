@@ -8,6 +8,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/lib/supabase";
+import { usePageGuard } from "@/components/layout/admin-auth-guard";
+import { ADMIN_ROLES } from "@/lib/admin-permissions";
 
 interface Ticket {
   id: string;
@@ -49,6 +51,8 @@ function fmtTime(ts: string) {
 
 export default function AdminSupportPage() {
   // List state
+  const allowed = usePageGuard(ADMIN_ROLES.SUPPORT);
+
   const [tickets, setTickets]     = useState<Ticket[]>([]);
   const [loading, setLoading]     = useState(true);
   const [activeTab, setActiveTab] = useState<Tab>("open");
@@ -361,7 +365,8 @@ export default function AdminSupportPage() {
             const st    = STATUS_META[t.status] ?? STATUS_META.open;
             const name  = (t.profiles as { full_name: string | null } | null)?.full_name ?? "Unknown";
             const email = (t.profiles as { email: string | null } | null)?.email ?? "—";
-            return (
+            if (!allowed) return null;
+  return (
               <li key={t.id}>
                 <button
                   className="w-full rounded-lg border border-[var(--border-default)] bg-[var(--surface-card)] px-5 py-4 flex items-center gap-4 text-left hover:bg-[var(--surface-subtle)] transition-colors"

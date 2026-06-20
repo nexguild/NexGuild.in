@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { Gift, CheckCircle, Loader2, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
+import { usePageGuard } from "@/components/layout/admin-auth-guard";
+import { ADMIN_ROLES } from "@/lib/admin-permissions";
 
 interface VoucherRequest {
   id: string;
@@ -30,6 +32,8 @@ const STATUS_STYLES: Record<string, string> = {
 const TABS = ["pending", "processing", "delivered"];
 
 export default function VouchersPage() {
+  const allowed = usePageGuard(ADMIN_ROLES.FINANCE);
+
   const [requests, setRequests] = useState<VoucherRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("pending");
@@ -40,11 +44,14 @@ export default function VouchersPage() {
 
   useEffect(() => {
     async function fetchRequests() {
-      const { data } = await supabase
-        .from("voucher_requests")
-        .select("id, contributor_id, voucher_type, voucher_value, coins_spent, status, voucher_code, requested_at, delivered_at, profiles(full_name, email)")
-        .order("requested_at", { ascending: false });
-      setRequests((data as unknown as VoucherRequest[]) ?? []);
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await fetch("/api/admin/voucher-requests", {
+        headers: session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {},
+      });
+      if (res.ok) {
+        const { requests } = await res.json() as { requests: VoucherRequest[] };
+        setRequests(requests ?? []);
+      }
       setLoading(false);
     }
     fetchRequests();
@@ -98,6 +105,7 @@ export default function VouchersPage() {
 
   const pendingCount = requests.filter((r) => r.status === "pending").length;
 
+  if (!allowed) return null;
   return (
     <div className="space-y-6">
       <div className="flex items-start justify-between gap-4">

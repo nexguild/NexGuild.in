@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 interface NexGuildLogoProps {
-  theme?: "gold" | "teal";
+  theme?: "gold" | "teal" | "light";
   variant?: "navbar" | "landing" | "footer";
   className?: string;
   href?: string;
@@ -13,7 +13,8 @@ export function NexGuildLogo({
   className,
   href = "/",
 }: NexGuildLogoProps) {
-  const accent = theme === "teal" ? "#14b8a6" : "#F59E0B";
+  const accent = theme === "teal" ? "#14b8a6" : theme === "light" ? "#02b491" : "#F59E0B";
+  const textColor = theme === "light" ? "#0F172A" : "#ffffff";
 
   if (variant === "landing") {
     return (
@@ -68,7 +69,7 @@ export function NexGuildLogo({
             <rect x="9" y="4" width="9" height="8" rx="4.5" fill={accent} opacity="0.7"/>
           </g>
         </svg>
-        <span style={{ fontFamily: "Arial, sans-serif", fontWeight: 900, fontSize: "20px", color: "#ffffff", letterSpacing: "0.5px" }}>
+        <span style={{ fontFamily: "Arial, sans-serif", fontWeight: 900, fontSize: "20px", color: textColor, letterSpacing: "0.5px" }}>
           Nex<span style={{ color: accent }}>Guild</span>
         </span>
       </Link>

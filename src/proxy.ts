@@ -77,7 +77,9 @@ export async function proxy(req: NextRequest) {
     if (supabaseUrl && serviceKey) {
       const sections = await fetchMaintenanceSections(supabaseUrl, serviceKey);
       if (sections[section]) {
-        return NextResponse.redirect(new URL(`/maintenance/${section}`, req.url));
+        const dest = new URL(`/maintenance/${section}`, req.url);
+        dest.searchParams.set("from", pathname);
+        return NextResponse.redirect(dest);
       }
     }
   } catch {

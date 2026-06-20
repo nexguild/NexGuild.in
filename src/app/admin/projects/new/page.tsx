@@ -6,6 +6,8 @@ import Link from "next/link";
 import { ArrowLeft, Loader2, FolderOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
+import { usePageGuard } from "@/components/layout/admin-auth-guard";
+import { ADMIN_ROLES } from "@/lib/admin-permissions";
 
 const PROJECT_TYPES = [
   "Audio Recording", "Transcription", "Data Annotation", "App Testing",
@@ -19,6 +21,8 @@ const labelClass = "block text-sm font-medium text-[var(--text-secondary)] mb-1.
 export default function NewProjectPage() {
   const router   = useRouter();
   const tokenRef = useRef<string | null>(null);
+
+  const allowed = usePageGuard(ADMIN_ROLES.UPPER);
 
   const [name, setName]               = useState("");
   const [clientName, setClientName]   = useState("");
@@ -59,6 +63,7 @@ export default function NewProjectPage() {
     router.push("/admin/projects");
   }
 
+  if (!allowed) return null;
   return (
     <div className="space-y-6 max-w-2xl">
       <Link href="/admin/projects" className="inline-flex items-center gap-2 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors">

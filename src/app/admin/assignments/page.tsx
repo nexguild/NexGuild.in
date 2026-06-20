@@ -8,6 +8,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Avatar } from "@/components/ui/avatar";
 import { supabase } from "@/lib/supabase";
+import { usePageGuard } from "@/components/layout/admin-auth-guard";
+import { ADMIN_ROLES } from "@/lib/admin-permissions";
 
 interface QuizQuestion {
   question: string;
@@ -151,6 +153,8 @@ function AssignmentContent({ assignment }: { assignment: Assignment }) {
 }
 
 export default function AdminAssignmentsPage() {
+  const allowed = usePageGuard(ADMIN_ROLES.REVIEW);
+
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [loading, setLoading]         = useState(true);
   const [activeTab, setActiveTab]     = useState<Tab>("pending");
@@ -214,6 +218,7 @@ export default function AdminAssignmentsPage() {
 
   const pendingCount = assignments.filter((a) => a.status === "pending").length;
 
+  if (!allowed) return null;
   return (
     <div className="space-y-6">
       <div className="flex items-start justify-between gap-4 flex-wrap">

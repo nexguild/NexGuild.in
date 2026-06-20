@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { StatCard } from "@/components/ui/stat-card";
-import { ReceiptText, TrendingUp, Coins, Wallet } from "lucide-react";
+import { ReceiptText, TrendingUp } from "lucide-react";
+import { NexCoinIcon } from "@/components/ui/nexcoin-icon";
 import { supabase } from "@/lib/supabase";
 
 interface Transaction {
@@ -79,12 +80,12 @@ export default function EarningsPage() {
         <StatCard
           label="Current Balance"
           value={loading ? "—" : nexcoins.toLocaleString() + " coins"}
-          icon={<Wallet className="h-5 w-5" />}
+          icon={<NexCoinIcon size={20} />}
         />
         <StatCard
           label="Total Earned"
           value={loading ? "—" : totalEarned.toLocaleString() + " coins"}
-          icon={<Coins className="h-5 w-5" />}
+          icon={<NexCoinIcon size={20} />}
         />
         <StatCard
           label="Pending Review"

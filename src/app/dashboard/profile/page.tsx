@@ -3,7 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Camera, Coins, X, Loader2, Plus } from "lucide-react";
+import { Camera, X, Loader2, Plus } from "lucide-react";
+import { NexCoinIcon } from "@/components/ui/nexcoin-icon";
 import { supabase } from "@/lib/supabase";
 
 interface Profile {
@@ -295,7 +296,7 @@ export default function ProfilePage() {
       {/* NexCoins Balance */}
       <div className="rounded-lg border border-[var(--border-default)] bg-[var(--surface-card)] p-6 flex items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <Coins className="h-5 w-5 text-[var(--brand-500)]" />
+          <NexCoinIcon size={20} />
           <div>
             <p className="text-sm font-medium text-[var(--text-primary)]">NexCoins Balance</p>
             <p className="text-xs text-[var(--text-muted)]">Redeem in the store for vouchers</p>

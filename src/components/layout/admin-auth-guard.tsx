@@ -1,32 +1,63 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 
-// Returns true = confirmed admin, false = confirmed not-admin, null = server error
-async function checkIsAdmin(accessToken: string): Promise<boolean | null> {
+// ── Role context ────────────────────────────────────────────────────────────
+const AdminRoleContext = createContext<string | null>(null);
+
+export function useAdminRole(): string | null {
+  return useContext(AdminRoleContext);
+}
+
+/**
+ * Call at the top of any admin page to restrict it to specific roles.
+ * Returns `true` when the user is allowed; `false` while redirecting.
+ * Render `null` when `false` to avoid a content flash.
+ */
+export function usePageGuard(allowedRoles: readonly string[]): boolean {
+  const role = useAdminRole();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (role && !allowedRoles.includes(role)) {
+      router.replace("/admin");
+    }
+    // allowedRoles is a stable literal array at call site — eslint-disable is intentional
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [role, router]);
+
+  if (!role) return false;
+  return allowedRoles.includes(role);
+}
+
+// ── Admin-check API call ────────────────────────────────────────────────────
+async function fetchAdminCheck(accessToken: string): Promise<{ isAdmin: boolean; role: string } | null> {
   try {
     const res = await fetch("/api/auth/admin-check", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ access_token: accessToken }),
     });
-    const json = await res.json();
+    const json = await res.json() as { isAdmin?: boolean; role?: string };
     console.log("[AdminAuthGuard] admin-check response:", JSON.stringify(json), "status:", res.status);
-    if (res.status === 500) return null; // server error — don't sign out
-    return json.isAdmin === true;
+    if (res.status === 500) return null;
+    return { isAdmin: json.isAdmin === true, role: json.role ?? "contributor" };
   } catch (err) {
     console.error("[AdminAuthGuard] admin-check fetch error:", err);
     return null;
   }
 }
 
+// ── Guard component ─────────────────────────────────────────────────────────
 export function AdminAuthGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
-  const [ready, setReady] = useState(false);
+
+  const [ready, setReady]           = useState(false);
   const [serverError, setServerError] = useState(false);
+  const [role, setRole]             = useState<string | null>(null);
 
   const isLoginPage = pathname === "/admin/login";
 
@@ -35,14 +66,10 @@ export function AdminAuthGuard({ children }: { children: React.ReactNode }) {
     setServerError(false);
 
     if (isLoginPage) {
-      // If already authenticated as admin → skip login form
       supabase.auth.getSession().then(async ({ data: { session } }) => {
-        if (!session) {
-          setReady(true);
-          return;
-        }
-        const result = await checkIsAdmin(session.access_token);
-        if (result === true) {
+        if (!session) { setReady(true); return; }
+        const result = await fetchAdminCheck(session.access_token);
+        if (result?.isAdmin) {
           router.replace("/admin");
         } else {
           setReady(true);
@@ -59,21 +86,21 @@ export function AdminAuthGuard({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      const result = await checkIsAdmin(session.access_token);
+      const result = await fetchAdminCheck(session.access_token);
 
       if (result === null) {
-        // Server error — show a retry prompt rather than silently signing out
         setServerError(true);
         setReady(true);
         return;
       }
 
-      if (result === false) {
+      if (!result.isAdmin) {
         await supabase.auth.signOut();
         router.replace("/admin/login");
         return;
       }
 
+      setRole(result.role);
       setReady(true);
     }
 
@@ -82,6 +109,7 @@ export function AdminAuthGuard({ children }: { children: React.ReactNode }) {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       if (event === "SIGNED_OUT") {
         setReady(false);
+        setRole(null);
         router.replace("/admin/login");
       }
     });
@@ -109,5 +137,9 @@ export function AdminAuthGuard({ children }: { children: React.ReactNode }) {
     );
   }
 
-  return <>{children}</>;
+  return (
+    <AdminRoleContext.Provider value={role}>
+      {children}
+    </AdminRoleContext.Provider>
+  );
 }

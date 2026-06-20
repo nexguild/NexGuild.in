@@ -234,6 +234,16 @@ export default function TaskWorkPage() {
     setSubmissionStatus("submitted");
     setDone(true);
     setFinalSubmitting(false);
+    // Notify admins async
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.access_token) {
+        fetch("/api/submissions/notify", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}` },
+          body: JSON.stringify({ taskId: id }),
+        }).catch(() => {});
+      }
+    });
   }
 
   async function submitClassic(e: React.FormEvent) {
@@ -271,6 +281,16 @@ export default function TaskWorkPage() {
     if (updateErr) { setClassicError(updateErr.message); setClassicSubmitting(false); return; }
     setDone(true);
     setClassicSubmitting(false);
+    // Notify admins async
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.access_token) {
+        fetch("/api/submissions/notify", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}` },
+          body: JSON.stringify({ taskId: id }),
+        }).catch(() => {});
+      }
+    });
   }
 
   // ── Loading ──────────────────────────────────────────────────────────────────

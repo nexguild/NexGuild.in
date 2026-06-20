@@ -43,8 +43,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ isAdmin: false, reason: "profile_error" }, { status: 500 });
   }
 
-  const isAdmin = profile?.role === "admin" || profile?.role === "owner";
-  console.log("[admin-check] role:", profile?.role, "→ isAdmin:", isAdmin);
+  const role = profile?.role ?? "contributor";
+  const isAdmin = role !== "contributor";
+  console.log("[admin-check] role:", role, "→ isAdmin:", isAdmin);
 
-  return NextResponse.json({ isAdmin });
+  return NextResponse.json({ isAdmin, role });
 }

@@ -8,6 +8,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Avatar } from "@/components/ui/avatar";
 import { supabase } from "@/lib/supabase";
+import { usePageGuard } from "@/components/layout/admin-auth-guard";
+import { ADMIN_ROLES } from "@/lib/admin-permissions";
 
 interface FileItem {
   name: string;
@@ -52,6 +54,8 @@ function statusLabel(status: string): string {
 }
 
 export default function AdminSubmissionsPage() {
+  const allowed = usePageGuard(ADMIN_ROLES.CONTENT);
+
   const [submissions, setSubmissions]     = useState<Submission[]>([]);
   const [loading, setLoading]             = useState(true);
   const [activeTab, setActiveTab]         = useState<Tab>("submitted");
@@ -197,6 +201,7 @@ export default function AdminSubmissionsPage() {
     }
   }
 
+  if (!allowed) return null;
   return (
     <div className="space-y-6">
       <div className="flex items-start justify-between gap-4">

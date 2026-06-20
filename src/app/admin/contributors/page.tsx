@@ -4,6 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import { Users, Search, Eye, Ban, Coins, Loader2, X, CheckCircle2, Minus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
+import { usePageGuard } from "@/components/layout/admin-auth-guard";
+import { ADMIN_ROLES } from "@/lib/admin-permissions";
 
 interface Contributor {
   id: string;
@@ -23,6 +25,8 @@ const STATUS_STYLES: Record<string, string> = {
 
 export default function ContributorsPage() {
   const tokenRef = useRef<string | null>(null);
+
+  const allowed = usePageGuard(ADMIN_ROLES.USERS);
 
   const [contributors, setContributors] = useState<Contributor[]>([]);
   const [loading, setLoading]           = useState(true);
@@ -151,6 +155,7 @@ export default function ContributorsPage() {
     return matchSearch && matchStatus;
   });
 
+  if (!allowed) return null;
   return (
     <div className="space-y-6">
       <div>

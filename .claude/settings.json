@@ -40,7 +40,10 @@
       "Bash(mkdir -p \"c:/Users/somen/NexGuild.in/src/app/admin/contributors/[id]\")",
       "Bash(mkdir -p \"c:/Users/somen/NexGuild.in/src/app/api/admin/contributors/[id]\" && mkdir -p \"c:/Users/somen/NexGuild.in/src/app/api/admin/settings\" && mkdir -p \"c:/Users/somen/NexGuild.in/src/app/api/admin/deduct-coins\" && mkdir -p \"c:/Users/somen/NexGuild.in/src/app/api/admin/projects\" && mkdir -p \"c:/Users/somen/NexGuild.in/src/app/admin/projects/new\" && mkdir -p \"c:/Users/somen/NexGuild.in/src/app/maintenance\")",
       "Skill(code-review)",
-      "Skill(code-review:*)"
+      "Skill(code-review:*)",
+      "Bash(node -e \"const pkg=require\\('./package.json'\\); console.log\\(pkg.dependencies.tailwindcss || pkg.devDependencies.tailwindcss\\)\")",
+      "Bash(node -e \"const p=require\\('./package.json'\\); const deps={...p.dependencies,...p.devDependencies}; Object.keys\\(deps\\).filter\\(k=>k.includes\\('supabase'\\)\\).forEach\\(k=>console.log\\(k,deps[k]\\)\\)\")",
+      "Bash(node -e ' *)"
     ],
     "additionalDirectories": [
       "c:\\Users\\somen\\NexGuild.in\\src\\app\\admin\\contributors",

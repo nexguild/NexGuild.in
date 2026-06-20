@@ -161,14 +161,14 @@
 
 /* ─── Legacy :root  (legal pages · fallback) ────────────────── */
 :root {
-  --brand-50:  #EEF2FF;
-  --brand-100: #E0E7FF;
-  --brand-200: #C7D2FE;
-  --brand-400: #818CF8;
-  --brand-500: #6366F1;
-  --brand-600: #4F46E5;
-  --brand-700: #4338CA;
-  --brand-900: #1E1B4B;
+  --brand-50:  #E6FAF5;
+  --brand-100: #CCFAEC;
+  --brand-200: #99F6D9;
+  --brand-400: #26CAAA;
+  --brand-500: #02b491;
+  --brand-600: #029470;
+  --brand-700: #017A5E;
+  --brand-900: #013D2F;
 
   --surface-page:    #F9FAFB;
   --surface-card:    #FFFFFF;
@@ -179,13 +179,13 @@
 
   --border-default: #E5E7EB;
   --border-strong:  #D1D5DB;
-  --border-focus:   #6366F1;
+  --border-focus:   #02b491;
 
   --text-primary:   #111827;
   --text-secondary: #6B7280;
   --text-muted:     #9CA3AF;
   --text-inverse:   #FFFFFF;
-  --text-link:      #6366F1;
+  --text-link:      #02b491;
 
   --glow-hero:         none;
   --card-shadow:       none;
@@ -208,17 +208,17 @@
   --badge-brand-text:   var(--brand-700);
 
   --sidebar-bg:          #FFFFFF;
-  --sidebar-item-hover:  #EEF2FF;
-  --sidebar-item-active: #EEF2FF;
+  --sidebar-item-hover:  #E6FAF5;
+  --sidebar-item-active: #E6FAF5;
   --sidebar-text:        #374151;
   --sidebar-text-muted:  #9CA3AF;
-  --sidebar-active-text: #4F46E5;
+  --sidebar-active-text: #02b491;
   --admin-sidebar-bg:          #111827;
   --admin-sidebar-text:        #D1D5DB;
   --admin-sidebar-text-muted:  #6B7280;
   --admin-sidebar-item-hover:  rgba(255,255,255,0.06);
-  --admin-sidebar-item-active: rgba(99,102,241,0.20);
-  --admin-sidebar-active-text: #A5B4FC;
+  --admin-sidebar-item-active: rgba(2,180,145,0.20);
+  --admin-sidebar-active-text: #26CAAA;
 }
 
 /* ─── Component Utilities ────────────────────────────────────── */

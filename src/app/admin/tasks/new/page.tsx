@@ -8,6 +8,8 @@ import {
   ArrowLeft, Loader2, Plus, Trash2, ChevronUp, ChevronDown, GripVertical,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import { usePageGuard } from "@/components/layout/admin-auth-guard";
+import { ADMIN_ROLES } from "@/lib/admin-permissions";
 
 const TASK_TYPES = [
   "Audio Recording", "Transcription", "Data Annotation", "App Testing",
@@ -85,6 +87,8 @@ export default function PostNewTaskPage() {
   const router = useRouter();
 
   // Basic info
+  const allowed = usePageGuard(ADMIN_ROLES.UPPER);
+
   const [title, setTitle]               = useState("");
   const [taskType, setTaskType]         = useState("");
   const [description, setDescription]   = useState("");
@@ -112,6 +116,10 @@ export default function PostNewTaskPage() {
   const [isFeatured, setIsFeatured] = useState(false);
   const [validationTime, setValidationTime] = useState("48 hours");
   const [paymentTime, setPaymentTime]       = useState("7 days");
+
+  // Gamification
+  const [requiredLevel, setRequiredLevel] = useState("1");
+  const [xpReward, setXpReward]           = useState("0");
 
   // T&C
   const [terms, setTerms] = useState("");
@@ -210,6 +218,8 @@ export default function PostNewTaskPage() {
         payment_time:                paymentTime,
         terms:                       terms.trim() || null,
         steps:                       stepsPayload.length > 0 ? stepsPayload : [],
+        required_level:              requiredLevel ? parseInt(requiredLevel) : 1,
+        xp_reward:                   xpReward ? parseInt(xpReward) : 0,
         status,
       }),
     });
@@ -219,6 +229,7 @@ export default function PostNewTaskPage() {
     router.push("/admin/tasks");
   }
 
+  if (!allowed) return null;
   return (
     <div className="space-y-6 max-w-2xl">
       <div className="flex items-center gap-3">
@@ -289,6 +300,28 @@ export default function PostNewTaskPage() {
           <div>
             <label className={labelClass}>Deadline</label>
             <input type="date" value={deadline} onChange={(e) => setDeadline(e.target.value)} className={inputClass} />
+          </div>
+        </section>
+
+        {/* ── Gamification ──────────────────────────────────────────────── */}
+        <section className="rounded-xl border border-[var(--border-default)] bg-[var(--surface-card)] p-6 space-y-5">
+          <div>
+            <h2 className="font-bold text-[var(--text-primary)]">Gamification</h2>
+            <p className="text-xs text-[var(--text-secondary)] mt-0.5">Set the contributor level required to unlock this task and how much XP is awarded on approval.</p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <div>
+              <label className={labelClass}>Required Level</label>
+              <input type="number" value={requiredLevel} onChange={(e) => setRequiredLevel(e.target.value)}
+                min={1} max={100} placeholder="1" className={inputClass} />
+              <p className="text-xs text-[var(--text-muted)] mt-1">Minimum contributor level (1 = open to all)</p>
+            </div>
+            <div>
+              <label className={labelClass}>XP Reward</label>
+              <input type="number" value={xpReward} onChange={(e) => setXpReward(e.target.value)}
+                min={0} placeholder="0" className={inputClass} />
+              <p className="text-xs text-[var(--text-muted)] mt-1">XP awarded when submission is approved</p>
+            </div>
           </div>
         </section>
 

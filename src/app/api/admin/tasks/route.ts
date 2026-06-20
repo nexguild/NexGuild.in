@@ -33,6 +33,7 @@ export async function POST(req: NextRequest) {
       validation_time, payment_time,
       terms, steps,
       assignment_instructions, assignment_questions, assignment_passing_score,
+      required_level, xp_reward,
       status,
     } = body as {
       title: string;
@@ -55,6 +56,8 @@ export async function POST(req: NextRequest) {
       payment_time?: string;
       terms?: string;
       steps?: object[];
+      required_level?: number;
+      xp_reward?: number;
       status: "active" | "draft";
     };
 
@@ -86,6 +89,8 @@ export async function POST(req: NextRequest) {
         payment_time: payment_time ?? "72 hours",
         terms: terms?.trim() || null,
         steps: steps ?? [],
+        required_level: required_level ?? 1,
+        xp_reward: xp_reward ?? 0,
         status,
       })
       .select("id, title, task_type, pay_per_task, total_slots")
