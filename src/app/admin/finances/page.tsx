@@ -119,6 +119,30 @@ export default function FinancesPage() {
 
   const maxCoins = Math.max(...monthlyData.map((m) => Math.max(m.earned, m.redeemed)), 1);
 
+  function handleExport() {
+    const rows: string[][] = [
+      ["Month", "Coins Issued", "Coins Redeemed", "Net Circulating"],
+      ...monthlyData.map((m) => [m.month, String(m.earned), String(m.redeemed), String(m.earned - m.redeemed)]),
+      [],
+      ["Summary"],
+      ["Total Coins Issued", String(totalCoinsEarned)],
+      ["Total Coins Redeemed", String(totalCoinsRedeemed)],
+      ["Circulating", String(totalCoinsEarned - totalCoinsRedeemed)],
+      ["Active Contributors", String(activeContributors)],
+      ["Vouchers Delivered", `${totalDelivered} / ${totalVouchers}`],
+    ];
+    const csv = rows.map((r) => r.map((v) => `"${v}"`).join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `nexguild-finances-${new Date().toISOString().split("T")[0]}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
   if (!allowed) return null;
   return (
     <div className="space-y-8">
@@ -127,7 +151,7 @@ export default function FinancesPage() {
           <h1 className="text-2xl font-bold text-[var(--text-primary)]">Finances</h1>
           <p className="text-sm text-[var(--text-secondary)]">NexCoins issued, redeemed, and platform overview.</p>
         </div>
-        <Button variant="secondary" size="sm" disabled>
+        <Button variant="secondary" size="sm" onClick={handleExport} disabled={loading}>
           <Download className="h-4 w-4" /> Export CSV
         </Button>
       </div>

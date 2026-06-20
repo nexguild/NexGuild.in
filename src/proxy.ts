@@ -71,6 +71,12 @@ export async function proxy(req: NextRequest) {
   const section = matchSection(pathname);
   if (!section) return NextResponse.next();
 
+  // Admin-tier users who have already been verified on the maintenance page
+  // carry a short-lived bypass cookie so we don't redirect them again.
+  if (req.cookies.get("admin_bypass")?.value === "1") {
+    return NextResponse.next();
+  }
+
   try {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const serviceKey  = process.env.SUPABASE_SERVICE_ROLE_KEY;

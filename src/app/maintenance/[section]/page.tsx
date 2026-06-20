@@ -39,7 +39,8 @@ export default function SectionMaintenancePage() {
         .single();
 
       if (profile && ADMIN_TIER_ROLES.includes(profile.role)) {
-        // Admin-tier user — send them to where they were going, or the section's home
+        // Set a 1-hour bypass cookie so the proxy won't redirect again on the next navigation
+        document.cookie = "admin_bypass=1; path=/; max-age=3600; SameSite=Strict";
         router.replace(from ?? meta.backHref);
         return;
       }

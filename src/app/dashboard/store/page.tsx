@@ -69,6 +69,7 @@ export default function StorePage() {
   const [loading, setLoading]     = useState(true);
   const [vouchers, setVouchers]   = useState<DbVoucher[]>([]);
   const [selectedCategory, setSelectedCategory] = useState("All");
+  const [showAffordable, setShowAffordable]     = useState(false);
 
   // Modal — open by brand; user picks denomination
   const [detailBrand, setDetailBrand]               = useState<string | null>(null);
@@ -223,9 +224,13 @@ export default function StorePage() {
     setRedeeming(false);
   }
 
-  const displayedBrands = brandList.filter(({ category }) => {
-    if (selectedCategory === "All") return true;
-    return category === CATEGORY_MAP[selectedCategory];
+  const displayedBrands = brandList.filter(({ brand, category }) => {
+    if (selectedCategory !== "All" && category !== CATEGORY_MAP[selectedCategory]) return false;
+    if (showAffordable) {
+      const minCoins = Math.min(...brandVouchers(brand).map((v) => v.coins_required));
+      if ((nexcoins ?? 0) < minCoins) return false;
+    }
+    return true;
   });
 
   return (
@@ -258,7 +263,7 @@ export default function StorePage() {
         </div>
       </div>
 
-      {/* Category Filter */}
+      {/* Category + Affordability Filters */}
       <div className="flex items-center gap-2 flex-wrap">
         {CATEGORIES.map((cat) => (
           <button
@@ -273,6 +278,20 @@ export default function StorePage() {
             {cat}
           </button>
         ))}
+        <div className="ml-auto flex items-center gap-2">
+          <button
+            onClick={() => setShowAffordable(!showAffordable)}
+            disabled={loading}
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium border transition-colors disabled:opacity-50 ${
+              showAffordable
+                ? "bg-green-500/15 border-green-500/40 text-green-400"
+                : "bg-[var(--surface-subtle)] border-[var(--border-default)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+            }`}
+          >
+            <span className={`h-2 w-2 rounded-full flex-shrink-0 ${showAffordable ? "bg-green-400" : "bg-[var(--text-muted)]"}`} />
+            I can afford
+          </button>
+        </div>
       </div>
 
       {/* Brand Grid */}
@@ -283,35 +302,58 @@ export default function StorePage() {
           ))}
         </div>
       ) : displayedBrands.length === 0 ? (
-        <div className="rounded-xl border border-[var(--border-default)] bg-[var(--surface-card)] py-16 text-center">
-          <p className="text-[var(--text-muted)] text-sm">No vouchers available in this category.</p>
+        <div className="rounded-xl border border-[var(--border-default)] bg-[var(--surface-card)] py-16 text-center px-6">
+          {showAffordable ? (
+            <>
+              <p className="text-2xl mb-3">🏆</p>
+              <p className="font-semibold text-[var(--text-primary)] mb-1">Almost there!</p>
+              <p className="text-sm text-[var(--text-secondary)] mb-4 max-w-xs mx-auto">
+                Complete a few more tasks to unlock vouchers — you&apos;re getting close!
+              </p>
+              <Link
+                href="/dashboard/opportunities"
+                className="inline-flex items-center gap-1.5 text-sm font-medium text-[var(--brand-500)] hover:underline"
+              >
+                Browse Opportunities →
+              </Link>
+            </>
+          ) : (
+            <p className="text-[var(--text-muted)] text-sm">No vouchers available in this category.</p>
+          )}
         </div>
       ) : (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           {displayedBrands.map(({ brand }) => {
-            const colors    = brandColor(brand);
-            const bv        = brandVouchers(brand);
-            const available = isBrandAvailable(brand);
-            const minCoins  = Math.min(...bv.map((v) => v.coins_required));
-            const emoji     = bv[0]?.emoji ?? "🎁";
+            const colors      = brandColor(brand);
+            const bv          = brandVouchers(brand);
+            const available   = isBrandAvailable(brand);
+            const minCoins    = Math.min(...bv.map((v) => v.coins_required));
+            const emoji       = bv[0]?.emoji ?? "🎁";
+            const canAfford   = available && (nexcoins ?? 0) >= minCoins;
 
             return (
               <div
                 key={brand}
                 onClick={() => !loading && openBrandModal(brand)}
-                className={`rounded-xl border border-[var(--border-default)] bg-[var(--surface-card)] p-4 flex flex-col gap-3 cursor-pointer hover:border-[var(--brand-500)] transition-colors group ${
-                  !available ? "opacity-60" : ""
-                }`}
+                className={`rounded-xl border bg-[var(--surface-card)] p-4 flex flex-col gap-3 cursor-pointer transition-colors group ${
+                  canAfford
+                    ? "border-green-500/40 hover:border-green-500/70"
+                    : "border-[var(--border-default)] hover:border-[var(--brand-500)]"
+                } ${!available ? "opacity-60" : ""}`}
               >
                 <div className="flex items-start justify-between gap-2">
                   <div className={`h-10 w-10 rounded-xl ${colors.bg} flex items-center justify-center text-xl flex-shrink-0`}>
                     {emoji}
                   </div>
-                  {!available && (
+                  {!available ? (
                     <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-[var(--surface-subtle)] text-[var(--text-muted)] border border-[var(--border-default)] leading-none">
                       Sold Out
                     </span>
-                  )}
+                  ) : canAfford ? (
+                    <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-green-500/15 text-green-400 border border-green-500/30 leading-none">
+                      ✓ Affordable
+                    </span>
+                  ) : null}
                 </div>
 
                 <div className="flex-1">

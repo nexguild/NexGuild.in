@@ -525,8 +525,9 @@ export default function TaskWorkPage() {
                             href={step.url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-[rgba(20,184,166,0.3)] bg-[rgba(20,184,166,0.06)] text-sm font-semibold text-[var(--brand-500)] hover:bg-[rgba(20,184,166,0.12)] transition-colors"
+                            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-[rgba(20,184,166,0.3)] bg-[rgba(20,184,166,0.06)] text-sm font-semibold text-[var(--brand-500)] hover:bg-[rgba(20,184,166,0.12)] transition-colors mr-2"
                           >
+                            
                             <ExternalLink className="h-3.5 w-3.5" />
                             Open Link
                           </a>

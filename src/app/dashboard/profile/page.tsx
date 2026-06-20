@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Camera, X, Loader2, Plus } from "lucide-react";
+import { Camera, X, Loader2, Plus, Star } from "lucide-react";
 import { NexCoinIcon } from "@/components/ui/nexcoin-icon";
 import { supabase } from "@/lib/supabase";
 
@@ -13,6 +13,8 @@ interface Profile {
   phone: string | null;
   joined_at: string | null;
   nexcoins: number;
+  xp: number | null;
+  level: number | null;
   skills: string[] | null;
   languages: string[] | null;
   avatar_url: string | null;
@@ -29,8 +31,11 @@ export default function ProfilePage() {
   const [profile, setProfile]   = useState<Profile | null>(null);
   const [loading, setLoading]   = useState(true);
   const [userId, setUserId]     = useState<string | null>(null);
-  const [uploading, setUploading] = useState(false);
+  const [uploading, setUploading]     = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const [tasksCompleted, setTasksCompleted] = useState<number | null>(null);
+  const [approvalRate, setApprovalRate]     = useState<number | null>(null);
+  const [totalEarned, setTotalEarned]       = useState<number | null>(null);
 
   // File input ref for avatar upload
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -54,13 +59,41 @@ export default function ProfilePage() {
       setEmail(user.email ?? null);
       setUserId(user.id);
 
-      const { data } = await supabase
-        .from("profiles")
-        .select("full_name, country, phone, joined_at, nexcoins, skills, languages, avatar_url")
-        .eq("id", user.id)
-        .single();
+      const [
+        { data },
+        { count: approvedCount },
+        { count: reviewedCount },
+        { data: txnData },
+      ] = await Promise.all([
+        supabase
+          .from("profiles")
+          .select("full_name, country, phone, joined_at, nexcoins, xp, level, skills, languages, avatar_url")
+          .eq("id", user.id)
+          .single(),
+        supabase
+          .from("submissions")
+          .select("*", { count: "exact", head: true })
+          .eq("contributor_id", user.id)
+          .eq("status", "approved"),
+        supabase
+          .from("submissions")
+          .select("*", { count: "exact", head: true })
+          .eq("contributor_id", user.id)
+          .in("status", ["approved", "rejected"]),
+        supabase
+          .from("coin_transactions")
+          .select("amount")
+          .eq("contributor_id", user.id)
+          .eq("type", "earned"),
+      ]);
 
-      setProfile(data ?? { full_name: null, country: null, phone: null, joined_at: null, nexcoins: 0, skills: [], languages: [], avatar_url: null });
+      const approved = approvedCount ?? 0;
+      const reviewed = reviewedCount ?? 0;
+      setTasksCompleted(approved);
+      setApprovalRate(reviewed > 0 ? Math.round((approved / reviewed) * 100) : null);
+      setTotalEarned((txnData ?? []).reduce((s: number, t: { amount: number }) => s + (t.amount ?? 0), 0));
+
+      setProfile(data ?? { full_name: null, country: null, phone: null, joined_at: null, nexcoins: 0, xp: 0, level: 1, skills: [], languages: [], avatar_url: null });
       setLoading(false);
     }
     fetchProfile();
@@ -209,6 +242,11 @@ export default function ProfilePage() {
     else console.error("[profile] removeLanguage error:", error.message);
   }
 
+  const level      = profile?.level ?? 1;
+  const xp         = profile?.xp ?? 0;
+  const xpInLevel  = xp % 1000;
+  const xpPct      = (xpInLevel / 1000) * 100;
+
   const displayName = profile?.full_name ?? email ?? "—";
   const initials = profile?.full_name
     ? profile.full_name.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase()
@@ -256,12 +294,36 @@ export default function ProfilePage() {
           </div>
 
           <div className="flex-1 min-w-0">
-            <h2 className="text-xl font-bold text-[var(--text-primary)]">
-              {loading ? "Loading…" : displayName}
-            </h2>
-            <p className="text-sm text-[var(--text-secondary)]">
-              {loading ? "—" : (email ?? "—")}
-            </p>
+            <div className="flex items-start justify-between gap-3 flex-wrap">
+              <div className="min-w-0">
+                <h2 className="text-xl font-bold text-[var(--text-primary)]">
+                  {loading ? "Loading…" : displayName}
+                </h2>
+                <p className="text-sm text-[var(--text-secondary)]">
+                  {loading ? "—" : (email ?? "—")}
+                </p>
+              </div>
+              {!loading && (
+                <div className="flex items-center gap-1.5 rounded-lg border border-[var(--border-default)] bg-[var(--surface-subtle)] px-3 py-1.5 flex-shrink-0">
+                  <Star className="h-3.5 w-3.5 text-[var(--brand-500)]" />
+                  <span className="text-sm font-bold text-[var(--text-primary)]">Level {level}</span>
+                </div>
+              )}
+            </div>
+            {!loading && (
+              <div className="mt-2">
+                <div className="flex items-center justify-between text-xs text-[var(--text-muted)] mb-1">
+                  <span>{xpInLevel.toLocaleString()} / 1,000 XP</span>
+                  <span>Next level</span>
+                </div>
+                <div className="h-1.5 rounded-full bg-[var(--surface-subtle)] overflow-hidden">
+                  <div
+                    className="h-full rounded-full transition-all duration-500"
+                    style={{ width: `${xpPct}%`, background: "linear-gradient(90deg,#02b491,#029470)" }}
+                  />
+                </div>
+              </div>
+            )}
             {uploadError && (
               <p className="text-xs text-red-400 mt-1">{uploadError}</p>
             )}
@@ -363,21 +425,37 @@ export default function ProfilePage() {
         </form>
       </div>
 
-      {/* Reputation */}
+      {/* Lifetime Stats */}
       <div className="rounded-lg border border-[var(--border-default)] bg-[var(--surface-card)] p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="font-semibold text-[var(--text-primary)]">Reputation</h3>
-          <span className="text-xs text-[var(--text-muted)] bg-[var(--surface-subtle)] px-2 py-1 rounded-full">Coming in V2</span>
-        </div>
-        <div className="grid grid-cols-3 gap-4 opacity-50">
+        <h3 className="font-semibold text-[var(--text-primary)] mb-4">Lifetime Stats</h3>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           {[
-            { label: "Tier",          value: "—" },
-            { label: "Approval Rate", value: "—" },
-            { label: "Tasks Done",    value: "—" },
+            {
+              label: "Tasks Completed",
+              value: loading || tasksCompleted === null ? "—" : tasksCompleted.toLocaleString(),
+            },
+            {
+              label: "Approval Rate",
+              value: loading || approvalRate === null ? (loading ? "—" : "N/A") : `${approvalRate}%`,
+            },
+            {
+              label: "Member Since",
+              value: loading ? "—" : (profile?.joined_at
+                ? new Date(profile.joined_at).toLocaleDateString("en-IN", { month: "long", year: "numeric" })
+                : "—"),
+            },
+            {
+              label: "Total Earned",
+              value: loading || totalEarned === null ? "—" : totalEarned.toLocaleString(),
+              isCoins: true,
+            },
           ].map((stat) => (
-            <div key={stat.label} className="text-center">
-              <p className="text-2xl font-bold text-[var(--text-primary)]">{stat.value}</p>
-              <p className="text-xs text-[var(--text-muted)] mt-1">{stat.label}</p>
+            <div key={stat.label} className="rounded-lg bg-[var(--surface-subtle)] px-4 py-3 text-center">
+              <p className="text-xs text-[var(--text-muted)] mb-1.5">{stat.label}</p>
+              <div className="flex items-center justify-center gap-1">
+                {stat.isCoins && !loading && <NexCoinIcon size={14} />}
+                <p className="text-xl font-bold text-[var(--text-primary)]">{stat.value}</p>
+              </div>
             </div>
           ))}
         </div>

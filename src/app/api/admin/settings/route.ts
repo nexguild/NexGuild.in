@@ -74,8 +74,11 @@ export async function PATCH(req: NextRequest) {
   const body = await req.json().catch(() => null);
   if (!body?.action) return NextResponse.json({ error: "action required" }, { status: 400 });
 
-  // Section maintenance — any admin or owner
+  // Section maintenance — owner only
   if (body.action === "maintenance_section") {
+    if (role !== "owner") {
+      return NextResponse.json({ error: "Only the owner can toggle maintenance mode." }, { status: 403 });
+    }
     const section = body.section as string;
     const key = `maintenance_${section}` as SectionKey;
     if (!SECTION_KEYS.includes(key)) {

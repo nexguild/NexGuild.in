@@ -28,7 +28,7 @@ interface Task {
 }
 interface SubmissionMeta { status: string; feedback: string | null; }
 interface Notification { id: string; title: string; message: string | null; type: string | null; created_at: string; }
-interface CoinTx { amount: number; created_at: string; }
+interface CoinTx { amount: number; created_at: string; source?: string | null; }
 interface LeaderboardEntry { rank: number; id: string; full_name: string; approved_count: number; }
 
 const QUICK_ACTIONS = [
@@ -247,7 +247,7 @@ export default function DashboardHome() {
         supabase.from("submissions").select("task_id, status, feedback").eq("contributor_id", user.id),
         supabase.from("submissions").select("*", { count: "exact", head: true }).eq("contributor_id", user.id).eq("status", "approved"),
         supabase.from("submissions").select("*", { count: "exact", head: true }).eq("contributor_id", user.id).in("status", ["approved", "rejected"]),
-        supabase.from("coin_transactions").select("amount, created_at").eq("contributor_id", user.id).eq("type", "earned").gte("created_at", sevenDaysAgo + "T00:00:00"),
+        supabase.from("coin_transactions").select("amount, created_at, source").eq("contributor_id", user.id).eq("type", "earned").gte("created_at", sevenDaysAgo + "T00:00:00"),
         supabase.from("notifications").select("id, title, message, type, created_at").eq("user_id", user.id).order("created_at", { ascending: false }).limit(8),
         supabase.from("platform_settings").select("key, value").in("key", ["streak_daily_bonus", "streak_day7_bonus", "streak_tasks_required_per_day"]),
         fetch("/api/leaderboard?limit=5", { headers: { Authorization: `Bearer ${session?.access_token}` } }),
@@ -286,9 +286,9 @@ export default function DashboardHome() {
       const totalEarnedCoins = txRows.reduce((s, r) => s + (r.amount ?? 0), 0);
       setTotalEarned(totalEarnedCoins);
 
-      // Today's earnings
-      const todayTx = txRows.filter(r => r.created_at.startsWith(today));
-      setTodayApproved(todayTx.length);
+      // Today's task-only transactions (excludes streak bonuses, offerwall, etc.)
+      const todayTaskTx = txRows.filter(r => r.created_at.startsWith(today) && (r.source === "task" || r.source == null));
+      setTodayApproved(todayTaskTx.length);
 
       // Build 7-day chart
       const dayMap: Record<string, number> = {};
@@ -308,7 +308,7 @@ export default function DashboardHome() {
       );
 
       // Fetch total XP earned today (approximate via submissions approved today — use coins as proxy)
-      setTodayXP(todayTx.length * 50); // rough; ideally query XP directly
+      setTodayXP(todayTaskTx.length * 50); // rough; ideally query XP directly
 
       // Notifications (activity feed)
       setNotifications((notifData as Notification[] | null) ?? []);

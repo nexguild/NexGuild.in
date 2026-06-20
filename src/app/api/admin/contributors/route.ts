@@ -2,7 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase-server";
 import { FROM_NOREPLY, getResend, accountBannedHtml } from "@/lib/email";
 
-async function verifyAdminOrOwner(req: NextRequest) {
+const VIEW_ROLES   = ["owner", "admin", "reviewer", "support", "moderator"];
+const ACTION_ROLES = ["owner", "admin"];
+
+async function verifyContributorAccess(req: NextRequest, requireAction = false) {
   const token = req.headers.get("authorization")?.replace("Bearer ", "");
   if (!token) return null;
   const admin = createServerClient();
@@ -10,12 +13,13 @@ async function verifyAdminOrOwner(req: NextRequest) {
   if (userErr || !user) return null;
   const { data: profile } = await admin.from("profiles").select("role").eq("id", user.id).single();
   const role = (profile as { role: string } | null)?.role;
-  if (role !== "admin" && role !== "owner") return null;
+  const allowed = requireAction ? ACTION_ROLES : VIEW_ROLES;
+  if (!allowed.includes(role ?? "")) return null;
   return { admin, role };
 }
 
 export async function GET(req: NextRequest) {
-  const ctx = await verifyAdminOrOwner(req);
+  const ctx = await verifyContributorAccess(req, false);
   if (!ctx) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { data, error } = await ctx.admin
@@ -29,7 +33,7 @@ export async function GET(req: NextRequest) {
 }
 
 export async function PATCH(req: NextRequest) {
-  const ctx = await verifyAdminOrOwner(req);
+  const ctx = await verifyContributorAccess(req, true);
   if (!ctx) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const body = await req.json().catch(() => null);

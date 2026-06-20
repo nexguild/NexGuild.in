@@ -26,7 +26,7 @@ const TARGET_LABELS: Record<string, string> = {
 
 export default function AdminAnnouncementsPage() {
   const tokenRef = useRef<string | null>(null);
-  const allowed = usePageGuard(ADMIN_ROLES.UPPER);
+  const allowed = usePageGuard(ADMIN_ROLES.ANNOUNCE);
 
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [loading, setLoading]   = useState(true);

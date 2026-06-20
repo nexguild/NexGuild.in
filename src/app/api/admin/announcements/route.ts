@@ -10,7 +10,8 @@ async function verifyAdmin(req: NextRequest) {
   if (!user) return null;
   const { data: profile } = await admin.from("profiles").select("role").eq("id", user.id).single();
   const role = (profile as { role: string } | null)?.role;
-  if (role !== "admin" && role !== "owner") return null;
+  const ANNOUNCE_ROLES = ["owner", "admin", "support", "moderator"];
+  if (!ANNOUNCE_ROLES.includes(role ?? "")) return null;
   return { admin, userId: user.id };
 }
 

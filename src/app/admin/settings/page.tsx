@@ -301,36 +301,38 @@ export default function AdminSettingsPage() {
         ))}
       </section>
 
-      {/* Section Maintenance */}
-      <section className="rounded-lg border border-[var(--border-default)] bg-[var(--surface-card)] divide-y divide-[var(--border-default)]">
-        <div className="px-6 py-4">
-          <h2 className="font-semibold text-[var(--text-primary)]">Section Maintenance</h2>
-          <p className="text-xs text-[var(--text-muted)] mt-0.5">Toggle maintenance mode per platform section. Active sections show a maintenance page to visitors.</p>
-        </div>
-        {MAINTENANCE_SECTIONS.map(({ key, label, desc }) => {
-          const on = maintenanceSections[key] ?? false;
-          return (
-            <div key={key} className="px-6 py-4 flex items-center justify-between gap-4">
-              <div>
-                <div className="flex items-center gap-2">
-                  <p className="text-sm font-medium text-[var(--text-primary)]">{label}</p>
-                  {on && (
-                    <span className="text-xs font-medium px-1.5 py-0.5 rounded bg-yellow-500/15 text-yellow-400">
-                      Active
-                    </span>
-                  )}
+      {/* Section Maintenance — owner only */}
+      {isOwner && (
+        <section className="rounded-lg border border-[var(--border-default)] bg-[var(--surface-card)] divide-y divide-[var(--border-default)]">
+          <div className="px-6 py-4">
+            <h2 className="font-semibold text-[var(--text-primary)]">Section Maintenance</h2>
+            <p className="text-xs text-[var(--text-muted)] mt-0.5">Toggle maintenance mode per platform section. Active sections show a maintenance page to visitors.</p>
+          </div>
+          {MAINTENANCE_SECTIONS.map(({ key, label, desc }) => {
+            const on = maintenanceSections[key] ?? false;
+            return (
+              <div key={key} className="px-6 py-4 flex items-center justify-between gap-4">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-medium text-[var(--text-primary)]">{label}</p>
+                    {on && (
+                      <span className="text-xs font-medium px-1.5 py-0.5 rounded bg-yellow-500/15 text-yellow-400">
+                        Active
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-[var(--text-muted)]">{desc}</p>
                 </div>
-                <p className="text-xs text-[var(--text-muted)]">{desc}</p>
+                <Toggle
+                  on={on}
+                  onToggle={() => toggleSection(key)}
+                  disabled={togglingSection === key}
+                />
               </div>
-              <Toggle
-                on={on}
-                onToggle={() => toggleSection(key)}
-                disabled={togglingSection === key}
-              />
-            </div>
-          );
-        })}
-      </section>
+            );
+          })}
+        </section>
+      )}
 
       {/* Team & Roles */}
       <section className="rounded-lg border border-[var(--border-default)] bg-[var(--surface-card)] divide-y divide-[var(--border-default)]">
