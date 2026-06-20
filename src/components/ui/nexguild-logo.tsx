@@ -53,7 +53,7 @@ export function NexGuildLogo({
   if (variant === "navbar") {
     return (
       <Link
-        href="/earn"
+        href={href}
         aria-label="NexGuild — Home"
         className={className}
         style={{ display: "inline-flex", alignItems: "center", flexShrink: 0, textDecoration: "none", gap: "8px" }}

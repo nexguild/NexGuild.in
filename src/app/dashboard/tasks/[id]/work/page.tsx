@@ -4,11 +4,12 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import {
-  ArrowLeft, Lock, CheckCircle2, ChevronDown, ChevronUp,
-  Upload, X, Loader2, Clock, Coins, Users, AlertCircle,
+  ArrowLeft, Lock, CheckCircle2, ChevronDown,
+  Upload, X, Loader2, Clock, Users, AlertCircle,
   FileText, ExternalLink, Send,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { NexCoinIcon } from "@/components/ui/nexcoin-icon";
 import { supabase } from "@/lib/supabase";
 
 interface TaskStep {
@@ -67,7 +68,6 @@ function formatCountdown(deadline: string | null, now: Date): string {
 export default function TaskWorkPage() {
   const { id } = useParams<{ id: string }>();
   const router  = useRouter();
-
   const [userId, setUserId]                     = useState<string | null>(null);
   const [task, setTask]                         = useState<Task | null>(null);
   const [submissionId, setSubmissionId]         = useState<string | null>(null);
@@ -76,19 +76,16 @@ export default function TaskWorkPage() {
   const [loading, setLoading]                   = useState(true);
   const [pageError, setPageError]               = useState<string | null>(null);
 
-  // Step card expand state (all expanded by default)
+  // Step card expand state (none expanded by default to show chevrons)
   const [collapsedSteps, setCollapsedSteps] = useState<Set<number>>(new Set());
-
   // Submit modal
   const [modalStep, setModalStep]       = useState<number | null>(null);
   const [modalText, setModalText]       = useState("");
   const [modalFile, setModalFile]       = useState<File | null>(null);
   const [modalError, setModalError]     = useState<string | null>(null);
   const [submittingModal, setSubmittingModal] = useState(false);
-
   // Final task submit
   const [finalSubmitting, setFinalSubmitting] = useState(false);
-
   // Classic mode
   const [classicNotes, setClassicNotes]         = useState("");
   const [classicFiles, setClassicFiles]         = useState<File[]>([]);
@@ -97,7 +94,7 @@ export default function TaskWorkPage() {
 
   const [done, setDone] = useState(false);
   const [now, setNow]   = useState(() => new Date());
-
+  
   useEffect(() => {
     const iv = setInterval(() => setNow(new Date()), 1000);
     return () => clearInterval(iv);
@@ -145,8 +142,7 @@ export default function TaskWorkPage() {
 
       setSubmissionId(sid);
       setSubmissionStatus(sstatus);
-
-      // When resubmitting, show all steps as fresh (don't pre-fill previous answers)
+      
       if (sid && sstatus !== "resubmit_requested") {
         try {
           const { data: subs } = await supabase
@@ -213,7 +209,6 @@ export default function TaskWorkPage() {
       file_url: fileUrl,
       submitted_at: new Date().toISOString(),
     }, { onConflict: "task_id,contributor_id,step_index" });
-
     if (saveErr) { setModalError(saveErr.message); setSubmittingModal(false); return; }
 
     setStepSubs((prev) => [
@@ -234,7 +229,7 @@ export default function TaskWorkPage() {
     setSubmissionStatus("submitted");
     setDone(true);
     setFinalSubmitting(false);
-    // Notify admins async
+    
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.access_token) {
         fetch("/api/submissions/notify", {
@@ -277,11 +272,10 @@ export default function TaskWorkPage() {
       status: "submitted",
       submitted_at: new Date().toISOString(),
     }).eq("id", submissionId);
-
     if (updateErr) { setClassicError(updateErr.message); setClassicSubmitting(false); return; }
     setDone(true);
     setClassicSubmitting(false);
-    // Notify admins async
+    
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.access_token) {
         fetch("/api/submissions/notify", {
@@ -293,7 +287,6 @@ export default function TaskWorkPage() {
     });
   }
 
-  // ── Loading ──────────────────────────────────────────────────────────────────
   if (loading) {
     return (
       <div className="flex items-center justify-center py-24">
@@ -319,7 +312,6 @@ export default function TaskWorkPage() {
     );
   }
 
-  // ── Done / submitted ─────────────────────────────────────────────────────────
   if (done || submissionStatus === "submitted" || submissionStatus === "approved") {
     return (
       <div className="max-w-md mx-auto space-y-6 py-12 text-center">
@@ -365,9 +357,8 @@ export default function TaskWorkPage() {
   return (
     <>
       <div className={`space-y-5 max-w-3xl ${hasSteps ? "pb-24" : ""}`}>
-
-        {/* ── TOP SECTION ──────────────────────────────────────────────────── */}
-        <div className="space-y-3">
+        {/* ── TOP SECTION ── */}
+        <div className="space-y-3 relative z-10">
           <Link
             href="/dashboard/opportunities"
             className="inline-flex items-center gap-1.5 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
@@ -375,12 +366,12 @@ export default function TaskWorkPage() {
             <ArrowLeft className="h-4 w-4" /> Back to Opportunities
           </Link>
 
-          <h1 className="text-2xl font-extrabold text-[var(--text-primary)] leading-tight">
+          <h1 className="text-2xl font-extrabold text-[var(--text-primary)] leading-tight relative z-20">
             {task.title}
           </h1>
 
           {task.deadline && (
-            <p className={`flex items-center gap-2 text-sm font-semibold ${
+            <p className={`flex items-center gap-2 text-sm font-semibold relative z-20 ${
               countdown === "Ended" ? "text-red-400" : "text-[var(--text-secondary)]"
             }`}>
               <Clock className="h-4 w-4 text-[var(--brand-500)] flex-shrink-0" />
@@ -388,10 +379,10 @@ export default function TaskWorkPage() {
             </p>
           )}
 
-          <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center gap-2 flex-wrap relative z-20">
             {task.pay_per_task && (
-              <span className="inline-flex items-center gap-1.5 text-xs font-bold text-[var(--brand-500)] bg-[rgba(20,184,166,0.12)] border border-[rgba(20,184,166,0.2)] px-3 py-1.5 rounded-full">
-                <Coins className="h-3.5 w-3.5" /> {task.pay_per_task} NexCoins
+              <span className="inline-flex items-center gap-1.5 text-xs font-bold text-[var(--brand-500)] bg-[rgba(2,180,145,0.12)] border border-[rgba(2,180,145,0.2)] px-3 py-1.5 rounded-full">
+                <NexCoinIcon size={14} /> {task.pay_per_task} NexCoins
               </span>
             )}
             {task.total_slots != null && (
@@ -405,16 +396,16 @@ export default function TaskWorkPage() {
               </span>
             )}
             {task.task_type && (
-              <span className="inline-flex items-center text-xs font-bold text-[var(--brand-500)] bg-[rgba(20,184,166,0.08)] border border-[rgba(20,184,166,0.15)] px-3 py-1.5 rounded-full uppercase tracking-wide">
+              <span className="inline-flex items-center text-xs font-bold text-[var(--brand-500)] bg-[rgba(2,180,145,0.08)] border border-[rgba(2,180,145,0.15)] px-3 py-1.5 rounded-full uppercase tracking-wide">
                 {task.task_type}
               </span>
             )}
           </div>
         </div>
 
-        {/* ── STEPS MODE ──────────────────────────────────────────────────── */}
+        {/* ── STEPS MODE ── */}
         {hasSteps && (
-          <div className="space-y-4">
+          <div className="space-y-4 relative z-10">
             {/* Progress bar card */}
             <div className="rounded-xl border border-[var(--border-default)] bg-[var(--surface-card)] px-5 py-4">
               <div className="flex items-center justify-between mb-2.5">
@@ -436,12 +427,13 @@ export default function TaskWorkPage() {
               </div>
             </div>
 
-            {/* Step cards */}
-            <div className="space-y-3">
+            {/* Step cards Loop */}
+            <div className="space-y-3 relative z-10">
               {steps.map((step, idx) => {
                 const isCompleted = doneSet.has(idx);
                 const isLocked    = !isCompleted && idx > 0 && !doneSet.has(idx - 1);
-                const isCollapsed = collapsedSteps.has(idx);
+                // Invert collapse logic so chevrons show by default
+                const isOpen      = !collapsedSteps.has(idx);
                 const stepSub     = stepSubs.find((s) => s.step_index === idx);
 
                 function toggleCollapse() {
@@ -455,40 +447,44 @@ export default function TaskWorkPage() {
                 return (
                   <div
                     key={idx}
-                    className={`rounded-xl border bg-[var(--surface-card)] transition-all duration-200 overflow-hidden ${
+                    className={`rounded-xl border transition-all duration-300 ease-in-out overflow-hidden shadow-sm relative z-20 ${
                       isCompleted
                         ? "border-green-500/25"
                         : isLocked
                         ? "border-[var(--border-default)] opacity-55"
-                        : "border-[var(--border-default)] shadow-sm"
+                        : isOpen
+                        ? "border-[#02b491]/30" // Subtle border color when open
+                        : "border-[var(--border-default)]"
                     }`}
                   >
-                    {/* Card header row */}
+                    {/* LAYER 1: CARD HEADER ROW (Colors based on open/closed state) */}
                     <div
-                      className={`flex items-center gap-3 px-5 py-4 ${
-                        isLocked ? "cursor-not-allowed" : "cursor-pointer hover:bg-[var(--surface-subtle)]"
-                      } transition-colors`}
+                      className={`flex items-center gap-3 px-5 py-3 transition-colors duration-300 ease-in-out ${
+                        isLocked ? "cursor-not-allowed" : "cursor-pointer"
+                      }`}
+                      style={{
+                        // Header background becomes brand blue when open
+                        backgroundColor: isOpen && !isLocked ? '#02b491' : 'var(--surface-card)',
+                        // Title text becomes white when open
+                        color: isOpen && !isLocked ? '#ffffff' : 'var(--text-primary)'
+                      }}
                       onClick={() => !isLocked && toggleCollapse()}
                     >
                       {/* Step icon */}
-                      <div className={`h-9 w-9 rounded-xl flex items-center justify-center flex-shrink-0 text-sm font-bold ${
-                        isCompleted
-                          ? "bg-green-500/15 text-green-400"
-                          : isLocked
-                          ? "bg-[var(--surface-subtle)] text-[var(--text-muted)]"
-                          : "bg-[rgba(20,184,166,0.12)] text-[var(--brand-500)]"
-                      }`}>
-                        {isCompleted
-                          ? <CheckCircle2 className="h-5 w-5" />
-                          : isLocked
-                          ? <Lock className="h-4 w-4" />
-                          : idx + 1}
+                      <div 
+                        className="h-9 w-9 rounded-xl flex items-center justify-center flex-shrink-0 text-sm font-bold transition-colors duration-300 ease-in-out"
+                        style={{
+                          // Icon background becomes white when open
+                          backgroundColor: isOpen && !isLocked ? '#ffffff' : isCompleted ? 'rgba(34, 197, 94, 0.15)' : isLocked ? 'var(--surface-subtle)' : 'rgba(2, 180, 145, 0.15)',
+                          // Icon text becomes dark slate grey when open
+                          color: isOpen && !isLocked ? '#1e293b' : isCompleted ? '#4ade80' : isLocked ? 'var(--text-muted)' : '#02b491'
+                        }}
+                      >
+                        {isCompleted ? <CheckCircle2 className="h-5 w-5" /> : isLocked ? <Lock className="h-4 w-4" /> : idx + 1}
                       </div>
 
                       <div className="flex-1 min-w-0">
-                        <p className={`text-sm font-bold leading-snug ${
-                          isCompleted ? "text-[var(--text-secondary)]" : "text-[var(--text-primary)]"
-                        }`}>
+                        <p className="text-sm font-bold leading-snug">
                           Stage {idx + 1}: {step.title}
                         </p>
                         {isLocked ? (
@@ -496,7 +492,7 @@ export default function TaskWorkPage() {
                             Complete stage {idx} first
                           </p>
                         ) : isCompleted && stepSub ? (
-                          <p className="text-xs text-green-400/80 mt-0.5 truncate">
+                          <p className={`text-xs mt-0.5 truncate transition-colors duration-300 ease-in-out ${isOpen ? 'text-[#ffffff]/80' : 'text-green-400/80'}`}>
                             {stepSub.text_value
                               ? `"${stepSub.text_value.slice(0, 60)}${stepSub.text_value.length > 60 ? "…" : ""}"`
                               : stepSub.file_url ? "File uploaded ✓" : "Completed ✓"}
@@ -505,46 +501,87 @@ export default function TaskWorkPage() {
                       </div>
 
                       {!isLocked && (
-                        isCollapsed
-                          ? <ChevronDown className="h-4 w-4 text-[var(--text-muted)] flex-shrink-0" />
-                          : <ChevronUp className="h-4 w-4 text-[var(--text-muted)] flex-shrink-0" />
+                        <div
+                          className="flex-shrink-0 h-8 w-8 rounded-full flex items-center justify-center transition-all duration-200"
+                          style={{
+                            backgroundColor: isOpen ? 'rgba(255,255,255,0.2)' : 'rgba(2,180,145,0.12)',
+                            border: isOpen ? '1.5px solid rgba(255,255,255,0.35)' : '1.5px solid rgba(2,180,145,0.35)',
+                          }}
+                        >
+                          <ChevronDown
+                            className={`h-5 w-5 transition-transform duration-200 ease-in-out ${isOpen ? 'rotate-180' : ''}`}
+                            style={{ color: isOpen ? '#ffffff' : '#02b491' }}
+                          />
+                        </div>
                       )}
                     </div>
 
-                    {/* Card body */}
-                    {!isLocked && !isCollapsed && (
-                      <div className="px-5 pb-5 pt-1 space-y-4 border-t border-[var(--border-default)]">
-                        {step.description && (
-                          <p className="text-sm text-[var(--text-secondary)] leading-relaxed pt-3">
-                            {step.description}
-                          </p>
-                        )}
+                    {/* LAYER 2: EXPANDABLE BODY (Content Zone remains white) */}
+                    <div
+                      className={`overflow-hidden transition-all duration-300 ease-in-out ${isOpen && !isLocked ? 'max-h-[600px] opacity-100' : 'max-h-0 opacity-0'}`}
+                    >
+                      {!isLocked && (
+                        <div className="px-5 pb-5 pt-5 border-t bg-[var(--surface-card)]" style={{ borderColor: 'rgba(2, 180, 145, 0.2)' }}>
+                          <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+                            {step.description && (
+                              <p className="text-sm text-[var(--text-secondary)] leading-relaxed flex-1 pt-0.5">
+                                {step.description}
+                              </p>
+                            )}
+                            {step.url && (
+                              <div className="flex-shrink-0">
+                                <a
+                                  href={step.url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border text-xs font-semibold transition-colors whitespace-nowrap"
+                                  style={{
+                                    borderColor: 'rgba(2, 180, 145, 0.4)',
+                                    backgroundColor: 'rgba(2, 180, 145, 0.08)',
+                                    color: '#02b491'
+                                  }}
+                                >
+                                  <ExternalLink className="h-3 w-3" />
+                                  Open Link
+                                </a>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
 
-                        {step.url && (
-                          <a
-                            href={step.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-[rgba(20,184,166,0.3)] bg-[rgba(20,184,166,0.06)] text-sm font-semibold text-[var(--brand-500)] hover:bg-[rgba(20,184,166,0.12)] transition-colors mr-2"
-                          >
-                            
-                            <ExternalLink className="h-3.5 w-3.5" />
-                            Open Link
-                          </a>
-                        )}
-
-                        {isCompleted ? (
-                          <div className="flex items-center gap-2 text-sm font-semibold text-green-400">
+                    {/* LAYER 3: FIXED BOTTOM BAR (Colors based on open state) */}
+                    <div 
+                      className={`px-5 py-3 border-t flex items-center justify-end transition-all duration-300 ease-in-out relative z-30 ${isOpen && !isLocked ? 'border-[#02b491]/30' : 'border-[var(--border-default)]'}`}
+                      style={{ 
+                        // Bottom bar matches header color when open
+                        backgroundColor: isOpen && !isLocked ? '#02b491' : 'rgba(var(--surface-subtle), 0.1)',
+                      }}
+                    >
+                      {!isLocked ? (
+                        isCompleted ? (
+                          <div className={`flex items-center gap-2 text-sm font-semibold py-1 transition-colors duration-300 ease-in-out ${isOpen ? 'text-[#ffffff]' : 'text-green-400'}`}>
                             <CheckCircle2 className="h-4 w-4" /> Stage completed
                           </div>
                         ) : (
-                          <Button size="sm" onClick={() => openModal(idx)}>
+                          <Button 
+                            size="sm" 
+                            onClick={() => openModal(idx)}
+                            // Hover effect tweak
+                            className="hover:opacity-95 transition-all text-xs h-8 px-4 font-bold tracking-wide shadow-sm my-1 relative z-40"
+                            style={{ 
+                              // Button becomes white with dark slate grey text when open
+                              backgroundColor: isOpen ? '#ffffff' : '#02b491', 
+                              color: isOpen ? '#1e293b' : '#ffffff' 
+                            }}
+                          >
                             <Send className="h-3.5 w-3.5" />
                             {step.submitType === "none" ? "Mark as Complete" : "Submit Stage →"}
                           </Button>
-                        )}
-                      </div>
-                    )}
+                        )
+                      ) : null}
+                    </div>
                   </div>
                 );
               })}
@@ -552,7 +589,7 @@ export default function TaskWorkPage() {
           </div>
         )}
 
-        {/* ── CLASSIC MODE ────────────────────────────────────────────────── */}
+        {/* ── CLASSIC MODE ── */}
         {!hasSteps && (
           <div className="space-y-4">
             {(task.description || task.requirements) && (
@@ -651,9 +688,7 @@ export default function TaskWorkPage() {
 
                 <div className="flex gap-3 flex-wrap">
                   <Button type="submit" disabled={classicSubmitting}>
-                    {classicSubmitting
-                      ? <><Loader2 className="h-4 w-4 animate-spin" /> Submitting…</>
-                      : "Submit Work →"}
+                    {classicSubmitting ? <><Loader2 className="h-4 w-4 animate-spin" /> Submitting…</> : "Submit Work →"}
                   </Button>
                   <Button type="button" variant="ghost" asChild>
                     <Link href="/dashboard/tasks">Cancel</Link>
@@ -665,14 +700,13 @@ export default function TaskWorkPage() {
         )}
       </div>
 
-      {/* ── SUBMIT STEP MODAL ────────────────────────────────────────────── */}
+      {/* ── SUBMIT STEP MODAL ── */}
       {modalStep !== null && activeStep && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
           onClick={(e) => { if (e.target === e.currentTarget) closeModal(); }}
         >
           <div className="w-full max-w-md rounded-2xl border border-[var(--border-default)] bg-[var(--surface-card)] shadow-2xl p-6 space-y-5">
-            {/* Modal header */}
             <div className="flex items-start justify-between gap-3">
               <div>
                 <h2 className="text-base font-bold text-[var(--text-primary)]">
@@ -689,7 +723,6 @@ export default function TaskWorkPage() {
               </button>
             </div>
 
-            {/* Text input */}
             {activeStep.submitType === "text" && (
               <div className="space-y-1.5">
                 <label className="text-sm font-semibold text-[var(--text-primary)]">Your Response</label>
@@ -704,7 +737,6 @@ export default function TaskWorkPage() {
               </div>
             )}
 
-            {/* File upload */}
             {activeStep.submitType === "file" && (
               <div className="space-y-1.5">
                 <label className="text-sm font-semibold text-[var(--text-primary)]">Upload File</label>
@@ -747,7 +779,6 @@ export default function TaskWorkPage() {
               </div>
             )}
 
-            {/* None / mark complete */}
             {activeStep.submitType === "none" && (
               <p className="text-sm text-[var(--text-secondary)] bg-[var(--surface-subtle)] rounded-lg px-4 py-3">
                 Confirm to mark this stage as complete.
@@ -758,11 +789,8 @@ export default function TaskWorkPage() {
               <p className="text-sm text-red-400 bg-red-500/10 px-3 py-2 rounded-lg">{modalError}</p>
             )}
 
-            {/* Actions */}
-            <div className="flex gap-2 justify-end">
-              <Button variant="ghost" onClick={closeModal} disabled={submittingModal}>
-                Cancel
-              </Button>
+            <div className="flex gap-2 justify-end relative z-50">
+              <Button variant="ghost" onClick={closeModal} disabled={submittingModal}>Cancel</Button>
               <Button onClick={handleStepSubmit} disabled={submittingModal}>
                 {submittingModal
                   ? <><Loader2 className="h-4 w-4 animate-spin" /> Submitting…</>
@@ -773,43 +801,35 @@ export default function TaskWorkPage() {
         </div>
       )}
 
-      {/* ── FIXED BOTTOM BAR ────────────────────────────────────────────── */}
+      {/* ── FIXED BOTTOM BAR ── */}
       {hasSteps && (
-        <div className="fixed bottom-0 left-0 right-0 lg:left-[240px] z-40 border-t border-[var(--border-default)] bg-[var(--surface-card)]/95 backdrop-blur-sm">
+        <div className="fixed bottom-0 left-0 right-0 lg:left-[240px] z-30 border-t border-[var(--border-default)] bg-[var(--surface-card)]/95 backdrop-blur-sm shadow-inner">
           <div className="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
             <div className="flex items-center gap-5 flex-wrap min-w-0">
               {task.pay_per_task && (
-                <div className="flex items-center gap-1.5 min-w-0">
-                  <Coins className="h-4 w-4 text-[var(--brand-500)] flex-shrink-0" />
+                <div className="flex items-center gap-1.5 min-w-0 relative z-40">
+                  <NexCoinIcon size={16} className="flex-shrink-0" />
                   <span className="text-sm text-[var(--text-secondary)] whitespace-nowrap">
-                    Earn up to:{" "}
-                    <span className="font-bold text-[var(--brand-500)]">
-                      {task.pay_per_task} NexCoins
-                    </span>
+                    Earn up to: <span className="font-bold text-[var(--brand-500)]">{task.pay_per_task} NexCoins</span>
                   </span>
                 </div>
               )}
               {task.total_slots != null && (
-                <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-1.5 relative z-40">
                   <Users className="h-4 w-4 text-[var(--text-muted)] flex-shrink-0" />
                   <span className="text-sm text-[var(--text-secondary)] whitespace-nowrap">
-                    Slots:{" "}
-                    <span className="font-semibold text-[var(--text-primary)]">
-                      {task.filled_slots ?? 0}/{task.total_slots}
-                    </span>
+                    Slots: <span className="font-semibold text-[var(--text-primary)]">{task.filled_slots ?? 0}/{task.total_slots}</span>
                   </span>
                 </div>
               )}
             </div>
 
             {allDone ? (
-              <Button onClick={finalSubmit} disabled={finalSubmitting} className="flex-shrink-0">
-                {finalSubmitting
-                  ? <><Loader2 className="h-4 w-4 animate-spin" /> Submitting…</>
-                  : <><Send className="h-4 w-4" /> Submit Task</>}
+              <Button onClick={finalSubmit} disabled={finalSubmitting} className="flex-shrink-0 relative z-40">
+                {finalSubmitting ? <><Loader2 className="h-4 w-4 animate-spin" /> Submitting…</> : <><Send className="h-4 w-4" /> Submit Task</>}
               </Button>
             ) : (
-              <span className="text-xs text-[var(--text-muted)] flex-shrink-0 whitespace-nowrap">
+              <span className="text-xs text-[var(--text-muted)] flex-shrink-0 whitespace-nowrap relative z-40">
                 {completedCount}/{steps.length} stages done
               </span>
             )}

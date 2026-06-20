@@ -48,7 +48,7 @@ export function DashboardSidebar({ open, onClose }: DashboardSidebarProps) {
       {/* Mobile backdrop */}
       <div
         className={cn(
-          "fixed inset-0 z-30 bg-black/60 transition-opacity duration-300 lg:hidden",
+          "fixed inset-0 z-30 bg-black/60 transition-opacity duration-200 ease-out lg:hidden",
           open ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
         )}
         onClick={onClose}
@@ -58,7 +58,7 @@ export function DashboardSidebar({ open, onClose }: DashboardSidebarProps) {
       <aside
         className={cn(
           "fixed left-0 top-0 bottom-0 w-sidebar flex flex-col z-40 sidebar-bg border-r border-[var(--border-default)]",
-          "transition-transform duration-300",
+          "will-change-transform transition-transform duration-300 ease-out",
           open ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
         )}
       >
