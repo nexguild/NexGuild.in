@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { FadeIn } from "@/components/ui/fade-in";
+import { AdSlot } from "@/components/ui/ad-slot";
 
 const TYPING_TEXTS = [
   "Earn by Recording.",
@@ -229,20 +230,11 @@ export default function EarnPage() {
         </div>
       </section>
 
-      {/* Ad Banner Segment */}
+      {/* Ad Slot */}
       <section className="py-8 px-6">
         <div className="mx-auto max-w-container flex justify-center">
-          <div 
-            className="w-full max-w-[728px] h-[90px] rounded-2xl flex items-center justify-center"
-            style={{
-              background: "rgba(255,255,255,0.4)",
-              backdropFilter: "blur(12px)",
-              border: "1.5px solid rgba(13,148,136,0.1)",
-            }}
-          >
-            <span className="text-xs uppercase tracking-widest text-stone-400">
-              Advertisement
-            </span>
+          <div className="w-full max-w-[728px]">
+            <AdSlot placement="earn-top" />
           </div>
         </div>
       </section>

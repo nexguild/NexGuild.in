@@ -341,6 +341,62 @@
   .sidebar-bg       { background-color: var(--sidebar-bg); }
   .admin-sidebar-bg { background-color: var(--admin-sidebar-bg); }
 }
+/* ─── Blog Prose (rendered markdown in /blog/[slug]) ─────────── */
+.blog-prose {
+  color: #1E293B;
+  line-height: 1.85;
+  font-size: 1.0625rem;
+}
+.blog-prose h1,
+.blog-prose h2,
+.blog-prose h3,
+.blog-prose h4 {
+  font-family: 'Instrument Serif', serif;
+  color: #0F3D36;
+  font-weight: 700;
+  line-height: 1.25;
+  margin-top: 2em;
+  margin-bottom: 0.6em;
+}
+.blog-prose h1 { font-size: 2rem; }
+.blog-prose h2 {
+  font-size: 1.375rem;
+  padding-bottom: 0.35em;
+  border-bottom: 1px solid rgba(13,148,136,0.12);
+}
+.blog-prose h3 { font-size: 1.125rem; }
+.blog-prose p  { margin-bottom: 1.25em; }
+.blog-prose ul,
+.blog-prose ol {
+  padding-left: 1.75em;
+  margin-bottom: 1.25em;
+}
+.blog-prose li            { margin-bottom: 0.45em; }
+.blog-prose ul li         { list-style-type: disc; }
+.blog-prose ol li         { list-style-type: decimal; }
+.blog-prose strong        { color: #0F3D36; font-weight: 600; }
+.blog-prose a             { color: #0D9488; text-decoration: underline; text-underline-offset: 2px; }
+.blog-prose a:hover       { color: #0F3D36; }
+.blog-prose blockquote {
+  border-left: 3px solid #0D9488;
+  padding-left: 1.1em;
+  color: #475569;
+  font-style: italic;
+  margin: 1.5em 0;
+}
+.blog-prose code {
+  background: rgba(13,148,136,0.07);
+  padding: 0.1em 0.35em;
+  border-radius: 4px;
+  font-size: 0.875em;
+  color: #0F3D36;
+}
+.blog-prose hr {
+  border: none;
+  border-top: 1px solid rgba(13,148,136,0.12);
+  margin: 2em 0;
+}
+
 /* ব্রাউজারের অটোফিল ব্যাকগ্রাউন্ড ও অদৃশ্য টেক্সট ফিক্স */
 input:-webkit-autofill,
 input:-webkit-autofill:hover, 

@@ -5,6 +5,7 @@ const COMMUNITY_LINKS = [
   { label: "Start Earning",  href: "/earn" },
   { label: "Opportunities",  href: "/opportunities" },
   { label: "How It Works",   href: "/how-it-works" },
+  { label: "Blog",           href: "/blog" },
   { label: "FAQ",            href: "/faq" },
   { label: "About Us",       href: "/earn/about" },
   { label: "Contact",        href: "/earn/contact" },
