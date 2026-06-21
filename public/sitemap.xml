@@ -86,6 +86,12 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://nexguild.in/blog/nexguild-vs-traditional-microtask-sites</loc>
+    <lastmod>2026-06-21</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://nexguild.in/client</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
