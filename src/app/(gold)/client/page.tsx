@@ -1,65 +1,65 @@
-import type { Metadata } from "next";
+﻿import type { Metadata } from "next";
 import Link from "next/link";
 import { FadeIn } from "@/components/ui/fade-in";
 
 export const metadata: Metadata = {
-  title: "NexGuild for Organizations — Human-Powered Work at Scale",
+  title: "NexGuild for Organizations â€” Human-Powered Work at Scale",
   description:
-    "NexGuild manages everything — from recruiting contributors to delivering your final dataset. Audio, transcription, annotation, testing and more.",
+    "NexGuild manages everything â€” from recruiting contributors to delivering your final dataset. Audio, transcription, annotation, testing and more.",
 };
 
 const SERVICES = [
-  { icon: "🎙️", name: "Audio Recording",    desc: "Voice samples, sentences, conversations in any language" },
-  { icon: "📝", name: "Transcription",       desc: "Audio to text with timestamps, multilingual support" },
-  { icon: "🏷️", name: "Data Annotation",     desc: "Image, text, and video labeling for AI model training" },
-  { icon: "📸", name: "Image Collection",    desc: "Controlled photo datasets under specified conditions" },
-  { icon: "🖐️", name: "Palm & Face Data",    desc: "Biometric training datasets with consent forms" },
-  { icon: "🌿", name: "Field Data Collection", desc: "On-ground data gathering across Indian cities" },
-  { icon: "📱", name: "App Testing",         desc: "Functional, usability, and regression testing" },
-  { icon: "🎮", name: "Game Testing",        desc: "QA, bug reports, and gameplay experience feedback" },
-  { icon: "🌐", name: "Website Testing",     desc: "UX review, feedback, and accessibility audits" },
-  { icon: "🛡️", name: "Content Moderation", desc: "Review and classify content for safety standards" },
-  { icon: "🔍", name: "Web Research",        desc: "Data gathering, fact checking, competitive research" },
-  { icon: "▶️", name: "Social Media Tasks",  desc: "Organic engagement and awareness campaigns" },
+  { icon: "ðŸŽ™ï¸", name: "Audio Recording",    desc: "Voice samples, sentences, conversations in any language" },
+  { icon: "ðŸ“", name: "Transcription",       desc: "Audio to text with timestamps, multilingual support" },
+  { icon: "ðŸ·ï¸", name: "Data Annotation",     desc: "Image, text, and video labeling for AI model training" },
+  { icon: "ðŸ“¸", name: "Image Collection",    desc: "Controlled photo datasets under specified conditions" },
+  { icon: "ðŸ–ï¸", name: "Palm & Face Data",    desc: "Biometric training datasets with consent forms" },
+  { icon: "ðŸŒ¿", name: "Field Data Collection", desc: "On-ground data gathering across Indian cities" },
+  { icon: "ðŸ“±", name: "App Testing",         desc: "Functional, usability, and regression testing" },
+  { icon: "ðŸŽ®", name: "Game Testing",        desc: "QA, bug reports, and gameplay experience feedback" },
+  { icon: "ðŸŒ", name: "Website Testing",     desc: "UX review, feedback, and accessibility audits" },
+  { icon: "ðŸ›¡ï¸", name: "Content Moderation", desc: "Review and classify content for safety standards" },
+  { icon: "ðŸ”", name: "Web Research",        desc: "Data gathering, fact checking, competitive research" },
+  { icon: "â–¶ï¸", name: "Social Media Tasks",  desc: "Organic engagement and awareness campaigns" },
 ];
 
 const STEPS = [
-  { n: "01", title: "Contact Us",       desc: "Tell us about your project — scope, volume, and deadline." },
+  { n: "01", title: "Contact Us",       desc: "Tell us about your project â€” scope, volume, and deadline." },
   { n: "02", title: "We Scope It",      desc: "We plan, price, and prepare the contributor pipeline." },
   { n: "03", title: "We Execute",       desc: "A managed team of contributors completes the work." },
   { n: "04", title: "You Receive",      desc: "Clean, formatted deliverables delivered on time." },
 ];
 
 const WHY = [
-  { icon: "✅", title: "Fully Managed",       desc: "We recruit, brief, and monitor contributors so you don't have to." },
-  { icon: "🔍", title: "Quality Reviewed",    desc: "Every submission is reviewed before delivery." },
-  { icon: "⚡", title: "Fast Turnaround",     desc: "Quick project delivery with regular progress updates." },
-  { icon: "💰", title: "Affordable",          desc: "Competitive Indian pricing with no hidden fees." },
-  { icon: "📈", title: "Scalable",            desc: "From 10 samples to 10,000 — we scale with your needs." },
-  { icon: "📊", title: "Transparent",         desc: "Regular progress reports and open communication." },
+  { icon: "âœ…", title: "Fully Managed",       desc: "We recruit, brief, and monitor contributors so you don't have to." },
+  { icon: "ðŸ”", title: "Quality Reviewed",    desc: "Every submission is reviewed before delivery." },
+  { icon: "âš¡", title: "Fast Turnaround",     desc: "Quick project delivery with regular progress updates." },
+  { icon: "ðŸ’°", title: "Affordable",          desc: "Competitive Indian pricing with no hidden fees." },
+  { icon: "ðŸ“ˆ", title: "Scalable",            desc: "From 10 samples to 10,000 â€” we scale with your needs." },
+  { icon: "ðŸ“Š", title: "Transparent",         desc: "Regular progress reports and open communication." },
 ];
 
 const STATS = [
   { value: "100+", label: "Contributors" },
   { value: "10+",  label: "Project Types" },
   { value: "100%", label: "Quality Checked" },
-  { value: "🇮🇳",  label: "India Based" },
+  { value: "ðŸ‡®ðŸ‡³",  label: "India Based" },
 ];
 
 export default function ClientPage() {
   return (
     <div style={{ background: "#faefef", color: "#1C1917", minHeight: "100vh" }}>
-      {/* ── Hero ──────────────────────────────────────────────────── */}
+      {/* â”€â”€ Hero â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <section
         className="relative overflow-hidden"
         style={{ background: "linear-gradient(160deg, #FEF9F0 0%, #FAF3E4 100%)", paddingBottom: "4rem" }}
       >
-        {/* ── 🚀 PREMIUM BACKGROUND GRAPHICS & ANIMATION ── */}
+        {/* â”€â”€ ðŸš€ PREMIUM BACKGROUND GRAPHICS & ANIMATION â”€â”€ */}
         <div aria-hidden style={{ position: "absolute", inset: 0, zIndex: 0, overflow: "hidden" }}>
           
           
 
-          {/* ২. বামদিকের ওরিজিনাল মুভিং গ্লো অর্ব */}
+          {/* à§¨. à¦¬à¦¾à¦®à¦¦à¦¿à¦•à§‡à¦° à¦“à¦°à¦¿à¦œà¦¿à¦¨à¦¾à¦² à¦®à§à¦­à¦¿à¦‚ à¦—à§à¦²à§‹ à¦…à¦°à§à¦¬ */}
           <div
             style={{
               position: "absolute",
@@ -74,7 +74,7 @@ export default function ClientPage() {
             }}
           />
 
-          {/* ৩. ডানদিকের ওরিজিনাল মুভিং গ্লো অর্ব */}
+          {/* à§©. à¦¡à¦¾à¦¨à¦¦à¦¿à¦•à§‡à¦° à¦“à¦°à¦¿à¦œà¦¿à¦¨à¦¾à¦² à¦®à§à¦­à¦¿à¦‚ à¦—à§à¦²à§‹ à¦…à¦°à§à¦¬ */}
           <div
             style={{
               position: "absolute",
@@ -135,7 +135,7 @@ export default function ClientPage() {
                 lineHeight: 1.75,
               }}
             >
-              We manage everything — from recruiting contributors to delivering your final dataset.<br />
+              We manage everything â€” from recruiting contributors to delivering your final dataset.<br />
               You define the work. We handle the rest.
             </p>
           </FadeIn>
@@ -163,7 +163,7 @@ export default function ClientPage() {
                 }}
                 className="hover:translate-y-[-2px] hover:bg-white"
               >
-                Get a Quote →
+                Get a Quote â†’
               </Link>
               <a
                 href="#services"
@@ -186,14 +186,14 @@ export default function ClientPage() {
                 }}
                 className="hover:translate-y-[-2px] hover:bg-[rgba(217,119,6,0.05)]"
               >
-                See Our Work ↓
+                See Our Work â†“
               </a>
             </div>
           </FadeIn>
         </div>
       </section>
 
-      {/* ── Stats (Premium Grid Cards with Pop-up Animation) ─────────────────── */}
+      {/* â”€â”€ Stats (Premium Grid Cards with Pop-up Animation) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
 <section style={{ padding: "2rem 1.5rem" }}>
   <div className="mx-auto max-w-container">
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-5">
@@ -226,7 +226,7 @@ export default function ClientPage() {
   </div>
 </section>
 
-      {/* ── Services ──────────────────────────────────────────────── */}
+      {/* â”€â”€ Services â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <section id="services" style={{ padding: "6rem 1.5rem" }}>
         <div className="mx-auto max-w-container">
           <FadeIn>
@@ -272,7 +272,7 @@ export default function ClientPage() {
         </div>
       </section>
 
-      {/* ── How It Works ──────────────────────────────────────────── */}
+      {/* â”€â”€ How It Works â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <section style={{ padding: "6rem 1.5rem", background: "rgba(255,255,255,0.3)", backdropFilter: "blur(12px)", borderTop: "1px solid rgba(217,119,6,0.08)", borderBottom: "1px solid rgba(217,119,6,0.08)" }}>
         <div className="mx-auto max-w-container">
           <FadeIn>
@@ -330,7 +330,7 @@ export default function ClientPage() {
         </div>
       </section>
 
-      {/* ── Why NexGuild ─────────────────────────────────────────── */}
+      {/* â”€â”€ Why NexGuild â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <section style={{ padding: "6rem 1.5rem" }}>
         <div className="mx-auto max-w-container">
           <FadeIn>
@@ -370,7 +370,7 @@ export default function ClientPage() {
         </div>
       </section>
 
-      {/* ── CTA ───────────────────────────────────────────────────── */}
+      {/* â”€â”€ CTA â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <section style={{ padding: "2rem 1.5rem 6rem 1.5rem" }}>
         <div className="mx-auto max-w-container">
           <FadeIn>
@@ -397,7 +397,7 @@ export default function ClientPage() {
                   Contact us today. We respond within 24 hours.
                 </p>
                 <div className="flex flex-col sm:flex-row flex-wrap items-center justify-center gap-4 relative z-10">
-  {/* ১. WhatsApp Button (Official Brand Green) */}
+  {/* à§§. WhatsApp Button (Official Brand Green) */}
   <a
     href="https://wa.me/919382008513"
     target="_blank"
@@ -427,7 +427,7 @@ export default function ClientPage() {
     WhatsApp
   </a>
 
-  {/* ২. Telegram Button (Official Brand Blue) */}
+  {/* à§¨. Telegram Button (Official Brand Blue) */}
   <a
     href="https://t.me/nexguild"
     target="_blank"
@@ -457,9 +457,9 @@ export default function ClientPage() {
     Telegram
   </a>
 
-  {/* ৩. Send Email Button (NexGuild Signature Premium Amber/Gold) */}
+  {/* à§©. Send Email Button (NexGuild Signature Premium Amber/Gold) */}
   <a
-    href="mailto:nexguild.in@gmail.com"
+    href="mailto:admin@nexguild.in"
     target="_blank"
     rel="noopener noreferrer"
     style={{

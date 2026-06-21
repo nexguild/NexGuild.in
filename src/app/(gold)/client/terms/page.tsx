@@ -1,7 +1,7 @@
-import type { Metadata } from "next";
+﻿import type { Metadata } from "next";
 
 export const metadata: Metadata = { 
-  title: "Client Terms of Service — NexGuild",
+  title: "Client Terms of Service â€” NexGuild",
   description: "These Client Terms govern business relations and data collection campaigns managed manually via NexGuild channels.",
 };
 
@@ -10,7 +10,7 @@ export default function ClientTermsPage() {
     <div style={{ background: "#faefef", color: "#1C1917", minHeight: "100vh" }} className="py-20 px-6">
       <div className="mx-auto max-w-3xl">
         <p className="text-[#D97706] text-xs font-bold uppercase tracking-widest mb-3 italic">
-          Corporate Edition • Last updated: June 2026
+          Corporate Edition â€¢ Last updated: June 2026
         </p>
         
         <h1 
@@ -54,8 +54,8 @@ export default function ClientTermsPage() {
 
           <p className="text-xs text-stone-500 pt-6 border-t border-stone-400/40">
             To launch a custom campaign or discuss dataset requirements, contact our management desk directly at{" "}
-            <a href="mailto:nexguild.in@gmail.com" className="text-[#D97706] font-bold hover:underline">
-              nexguild.in@gmail.com
+            <a href="mailto:admin@nexguild.in" className="text-[#D97706] font-bold hover:underline">
+              admin@nexguild.in
             </a> or via our official Telegram/WhatsApp business handles.
           </p>
         </div>

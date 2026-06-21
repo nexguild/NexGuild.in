@@ -1,7 +1,7 @@
-import type { Metadata } from "next";
+﻿import type { Metadata } from "next";
 
 export const metadata: Metadata = { 
-  title: "Privacy Policy — NexGuild",
+  title: "Privacy Policy â€” NexGuild",
   description: "NexGuild is committed to protecting your personal information and being transparent about what we collect and how we use it.",
 };
 
@@ -96,8 +96,8 @@ export default function PrivacyPage() {
           {/* Footer note */}
           <p className="text-xs text-stone-500 pt-6 border-t border-stone-300/60">
             For specific inquiries or privacy complaints regarding your data management, please write to our compliance officer at{" "}
-            <a href="mailto:nexguild.in@gmail.com" className="text-[#0D9488] font-bold hover:underline">
-              nexguild.in@gmail.com
+            <a href="mailto:admin@nexguild.in" className="text-[#0D9488] font-bold hover:underline">
+              admin@nexguild.in
             </a>.
           </p>
         </div>

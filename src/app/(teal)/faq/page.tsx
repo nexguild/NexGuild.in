@@ -1,9 +1,9 @@
-import type { Metadata } from "next";
+﻿import type { Metadata } from "next";
 import Link from "next/link";
 import { FadeIn } from "@/components/ui/fade-in";
 import { ArrowRight, ChevronDown } from "lucide-react";
 
-export const metadata: Metadata = { title: "FAQ — NexGuild" };
+export const metadata: Metadata = { title: "FAQ â€” NexGuild" };
 
 const FAQ_SECTIONS = [
   {
@@ -20,7 +20,7 @@ const FAQ_SECTIONS = [
     faqs: [
       { q: "What types of tasks are available?",    a: "NexGuild offers audio recording, transcription, data annotation, app testing, game testing, surveys, offerwalls, social media tasks, web research, and data collection. New task types are added regularly." },
       { q: "How do I know what a task pays?",        a: "Each task shows its pay rate before you start. You will always know what you will earn before committing to a task." },
-      { q: "How long does each task take?",          a: "It varies by task type. Some micro-tasks take 1–5 minutes. Surveys typically take 5–20 minutes. Audio recordings and testing tasks can take longer. Each task shows an estimated time." },
+      { q: "How long does each task take?",          a: "It varies by task type. Some micro-tasks take 1â€“5 minutes. Surveys typically take 5â€“20 minutes. Audio recordings and testing tasks can take longer. Each task shows an estimated time." },
       { q: "What are offerwalls?",                   a: "Offerwalls are partner tasks from third-party providers like Lootably. They include surveys, app installs, and other activities. Earnings from offerwalls are automatically credited to your wallet after the provider confirms completion." },
     ],
   },
@@ -29,7 +29,7 @@ const FAQ_SECTIONS = [
     faqs: [
       { q: "How does my NexCoins balance work?",             a: "Your NexCoins balance shows confirmed coins ready to redeem. Coins from tasks still under review are shown as pending and cannot be redeemed yet." },
       { q: "What can I redeem NexCoins for?",                a: "You can redeem NexCoins for Amazon, Flipkart, Paytm, PhonePe, Swiggy, Zomato, and Google Play gift vouchers. Visit the Store in your dashboard." },
-      { q: "Is there a minimum NexCoins requirement?",       a: "Each voucher has a fixed NexCoins cost shown in the Store. There is no separate minimum — just choose a voucher your balance covers." },
+      { q: "Is there a minimum NexCoins requirement?",       a: "Each voucher has a fixed NexCoins cost shown in the Store. There is no separate minimum â€” just choose a voucher your balance covers." },
       { q: "How long does voucher delivery take?",           a: "Vouchers are delivered to your registered email within 48 hours after your redemption request is processed by our team." },
     ],
   },
@@ -37,7 +37,7 @@ const FAQ_SECTIONS = [
     section: "Task Review & Quality",
     faqs: [
       { q: "What happens after I submit a task?",   a: "Your submission enters the review queue. Our team checks it against the task requirements. If approved, earnings move to your wallet. If rejected, you receive feedback explaining why." },
-      { q: "Why was my submission rejected?",        a: "Submissions are rejected when they do not meet the task's quality requirements — incomplete answers, poor audio quality, inaccurate labels, etc. You will always receive feedback with the rejection." },
+      { q: "Why was my submission rejected?",        a: "Submissions are rejected when they do not meet the task's quality requirements â€” incomplete answers, poor audio quality, inaccurate labels, etc. You will always receive feedback with the rejection." },
       { q: "Can I resubmit a rejected task?",        a: "Some tasks allow resubmission. The task details will indicate if revision is permitted. Follow the feedback you received to improve your submission." },
       { q: "How is my approval rate calculated?",    a: "Your approval rate is the percentage of your submitted tasks that were approved. A higher approval rate unlocks access to better-paying tasks." },
     ],
@@ -45,7 +45,7 @@ const FAQ_SECTIONS = [
   {
     section: "Account & Support",
     faqs: [
-      { q: "How do I contact support?",              a: "Use the Contact page on our website or email nexguild.in@gmail.com. We respond within 24 hours." },
+      { q: "How do I contact support?",              a: "Use the Contact page on our website or email admin@nexguild.in. We respond within 24 hours." },
       { q: "Can I use multiple accounts?",           a: "No. Multiple accounts are against NexGuild's Terms of Service and will result in a permanent ban. One account per person." },
       { q: "What happens if I'm banned?",            a: "Banned accounts lose all pending and available balances. If you believe a ban was made in error, contact us within 7 days with evidence." },
     ],
@@ -56,7 +56,7 @@ export default function FAQPage() {
   return (
     <div style={{ background: "#EBFBFA", color: "#1E293B", minHeight: "100vh" }}>
       
-      {/* ── Hero Section ─────────────────────────────────────────── */}
+      {/* â”€â”€ Hero Section â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <section className="relative overflow-hidden py-24 px-6 text-center">
         {/* Soft Radial Mint Glow */}
         <div
@@ -86,7 +86,7 @@ export default function FAQPage() {
         </div>
       </section>
 
-      {/* ── FAQ Sections Wrapper ─────────────────────────────────── */}
+      {/* â”€â”€ FAQ Sections Wrapper â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <section className="py-16 px-6" style={{ background: "rgba(255,255,255,0.25)", backdropFilter: "blur(12px)", borderTop: "1px solid rgba(13,148,136,0.06)", borderBottom: "1px solid rgba(13,148,136,0.06)" }}>
         <div className="mx-auto max-w-2xl space-y-14">
           {FAQ_SECTIONS.map((section, si) => (
@@ -129,7 +129,7 @@ export default function FAQPage() {
         </div>
       </section>
 
-      {/* ── CTA / Still Have Questions Section ───────────────────── */}
+      {/* â”€â”€ CTA / Still Have Questions Section â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <section className="py-20 px-6 text-center relative overflow-hidden">
         <FadeIn>
           <div className="mx-auto max-w-container">

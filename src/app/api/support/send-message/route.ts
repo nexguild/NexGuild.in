@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+﻿import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { Resend } from "resend";
 
@@ -64,7 +64,7 @@ export async function POST(req: NextRequest) {
       const resend = new Resend(process.env.RESEND_API_KEY);
       await resend.emails.send({
         from:    "NexGuild <noreply@nexguild.in>",
-        to:      "nexguild.in@gmail.com",
+        to:      "admin@nexguild.in",
         subject: `Re: ${ticket.subject} [new reply from ${contributorName}]`,
         html: `
           <div style="font-family:-apple-system,sans-serif;max-width:560px;margin:0 auto;background:#0f0f0f;color:#e5e5e5;border-radius:12px;overflow:hidden;">

@@ -1,7 +1,7 @@
-import type { Metadata } from "next";
+﻿import type { Metadata } from "next";
 
 export const metadata: Metadata = { 
-  title: "Terms of Service — NexGuild",
+  title: "Terms of Service â€” NexGuild",
   description: "These Terms of Service govern your use of NexGuild. By creating an account, you agree to these terms.",
 };
 
@@ -99,8 +99,8 @@ export default function TermsPage() {
           {/* Footer note */}
           <p className="text-xs text-stone-500 pt-6 border-t border-stone-300/60">
             For formal legal inquiries or questions regarding these Terms, please contact our compliance desk at{" "}
-            <a href="mailto:nexguild.in@gmail.com" className="text-[#0D9488] font-bold hover:underline">
-              nexguild.in@gmail.com
+            <a href="mailto:admin@nexguild.in" className="text-[#0D9488] font-bold hover:underline">
+              admin@nexguild.in
             </a>.
           </p>
         </div>

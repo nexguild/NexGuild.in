@@ -1,7 +1,7 @@
-import type { Metadata } from "next";
+﻿import type { Metadata } from "next";
 
 export const metadata: Metadata = { 
-  title: "Cookie Policy — NexGuild",
+  title: "Cookie Policy â€” NexGuild",
   description: "NexGuild uses cookies and similar technologies to keep you logged in and improve your experience.",
 };
 
@@ -91,8 +91,8 @@ export default function CookiePolicyPage() {
           {/* Footer note */}
           <p className="text-xs text-stone-500 pt-6 border-t border-stone-300/60">
             For specific compliance metrics regarding our use of local storage tracking, contact us at{" "}
-            <a href="mailto:nexguild.in@gmail.com" className="text-[#0D9488] font-bold hover:underline">
-              nexguild.in@gmail.com
+            <a href="mailto:admin@nexguild.in" className="text-[#0D9488] font-bold hover:underline">
+              admin@nexguild.in
             </a>.
           </p>
         </div>

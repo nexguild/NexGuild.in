@@ -1,7 +1,7 @@
-import type { Metadata } from "next";
+﻿import type { Metadata } from "next";
 
 export const metadata: Metadata = { 
-  title: "Client Privacy Policy — NexGuild",
+  title: "Client Privacy Policy â€” NexGuild",
   description: "Details personal and corporate communication data security protocols for enterprise clients.",
 };
 
@@ -10,7 +10,7 @@ export default function ClientPrivacyPage() {
     <div style={{ background: "#faefef", color: "#1C1917", minHeight: "100vh" }} className="py-20 px-6">
       <div className="mx-auto max-w-3xl">
         <p className="text-[#D97706] text-xs font-bold uppercase tracking-widest mb-3 italic">
-          Corporate Edition • Last updated: June 2026
+          Corporate Edition â€¢ Last updated: June 2026
         </p>
         
         <h1 
@@ -46,8 +46,8 @@ export default function ClientPrivacyPage() {
 
           <p className="text-xs text-stone-500 pt-6 border-t border-stone-400/40">
             For data protection inquiries or to request immediate deletion of your shared communication archives from our local records, contact us at{" "}
-            <a href="mailto:nexguild.in@gmail.com" className="text-[#D97706] font-bold hover:underline">
-              nexguild.in@gmail.com
+            <a href="mailto:admin@nexguild.in" className="text-[#D97706] font-bold hover:underline">
+              admin@nexguild.in
             </a>.
           </p>
         </div>
