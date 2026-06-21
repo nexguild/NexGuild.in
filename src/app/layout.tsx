@@ -60,6 +60,11 @@ export const metadata: Metadata = {
     apple: "/apple-touch-icon.svg",
   },
   manifest: "/site.webmanifest",
+  
+  // এখানে তোমার গুগল সার্চ কনসোলের ভেরিফিকেশন কোড যুক্ত করা হলো ভাই
+  verification: {
+    google: "BcVWlhBG4yrlq_qFBwW7a4omi4HRxjRZ-n28-MeHZLo",
+  },
 };
 
 export default function RootLayout({
