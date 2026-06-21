@@ -1,3 +1,4 @@
+import { GoogleAnalytics } from '@next/third-parties/google';
 import type { Metadata } from "next";
 import "./globals.css";
 import { ScrollReset } from "@/components/ui/scroll-reset";
@@ -65,13 +66,17 @@ export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
-}) {
+}) 
+{
   return (
     <html lang="en">
       <body>
         <ScrollReset />
         {children}
         <ScrollToTop />
+        
+        {/* Google Analytics Global Setup */}
+        <GoogleAnalytics gaId="G-3WNZK6P6ZZ" />
       </body>
     </html>
   );
