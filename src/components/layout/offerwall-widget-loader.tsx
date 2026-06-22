@@ -22,15 +22,38 @@ declare global {
   }
 }
 
+// NexGuild fallback — matches indigo/light theme; overridden by DB custom_config.style_config
+const DEFAULT_STYLE_CONFIG = {
+  text_color: "#0F172A",
+  survey_box: {
+    topbar_background_color: "#6366F1",
+    box_background_color: "#FFFFFF",
+    rounded_borders: true,
+    stars_filled: "#0F172A",
+  },
+};
+
+function mergeStyleConfig(fromDb: Record<string, unknown>): Record<string, unknown> {
+  const surveyBoxDb = (fromDb.survey_box as Record<string, unknown> | null | undefined) ?? {};
+  return {
+    ...DEFAULT_STYLE_CONFIG,
+    ...fromDb,
+    survey_box: {
+      ...DEFAULT_STYLE_CONFIG.survey_box,
+      ...surveyBoxDb,
+    },
+  };
+}
+
 function injectScript(src: string, onLoad?: () => void) {
   if (document.querySelector(`script[src="${src}"]`)) {
     onLoad?.();
     return;
   }
-  const s     = document.createElement("script");
-  s.src       = src;
-  s.async     = true;
-  s.onload    = () => onLoad?.();
+  const s  = document.createElement("script");
+  s.src    = src;
+  s.async  = true;
+  s.onload = () => onLoad?.();
   document.body.appendChild(s);
 }
 
@@ -55,22 +78,23 @@ export function OfferwallWidgetLoader() {
       for (const w of widgets) {
         if (!w.scriptUrl) continue;
 
-        // Resolve appId env var (if present, read from window or process.env client side)
+        // Resolve app_id from NEXT_PUBLIC_ env var if configured
         const appIdKey = w.appIdEnv ?? null;
         const appId: string | null = appIdKey
-          ? (window[appIdKey] as string | null) ?? (process.env[appIdKey] as string | null) ?? null
+          ? (process.env[appIdKey] as string | null) ?? null
           : null;
 
-        // Build window config object the provider's script reads
+        // Use snake_case keys — CPX (and most script-tag providers) read snake_case
+        // style_config is always a fully populated object even if DB has nothing set
         const configKey = `${w.slug.replace(/_/g, "")}Config`;
         window[configKey] = {
-          ...(appId ? { appId } : {}),
-          userId:        w.userId,
-          secureHash:    w.secureHash ?? undefined,
-          widgetConfigs: w.widgetConfigs,
-          styleConfig:   w.styleConfig,
-          useIframe:     w.useIframe,
-          iframePosition: w.iframePosition,
+          ...(appId ? { app_id: appId } : {}),
+          user_id:         w.userId,
+          secure_hash:     w.secureHash ?? undefined,
+          widget_configs:  w.widgetConfigs,
+          style_config:    mergeStyleConfig(w.styleConfig ?? {}),
+          use_iframe:      w.useIframe,
+          iframe_position: w.iframePosition,
         };
 
         injectScript(w.scriptUrl);

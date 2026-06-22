@@ -1,0 +1,22 @@
+{
+  "name": "NexGuild",
+  "short_name": "NexGuild",
+  "description": "Earn NexCoins by completing micro-tasks and redeem them for vouchers.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F1F5F9",
+  "theme_color": "#02b491",
+  "icons": [
+    {
+      "src": "/nexguild_logo_final.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}
