@@ -8,6 +8,7 @@ interface WidgetConfig {
   name: string;
   scriptUrl: string | null;
   appIdEnv: string | null;
+  windowConfigKey: string | null;
   widgetConfigs: unknown[];
   styleConfig: Record<string, unknown>;
   useIframe: boolean;
@@ -84,9 +85,13 @@ export function OfferwallWidgetLoader() {
           ? (process.env[appIdKey] as string | null) ?? null
           : null;
 
-        // Use snake_case keys — CPX (and most script-tag providers) read snake_case
-        // style_config is always a fully populated object even if DB has nothing set
-        const configKey = `${w.slug.replace(/_/g, "")}Config`;
+        // window_config_key in custom_config tells us which window property the
+        // provider's script reads (e.g. CPX reads window.config → set to "config").
+        // Falls back to slug-derived name for providers that don't set this.
+        const configKey = w.windowConfigKey ?? `${w.slug.replace(/_/g, "")}Config`;
+
+        // IMPORTANT: config must be assigned BEFORE the script tag is appended
+        // so it's already on window when the script executes.
         window[configKey] = {
           ...(appId ? { app_id: appId } : {}),
           user_id:         w.userId,
@@ -96,6 +101,9 @@ export function OfferwallWidgetLoader() {
           use_iframe:      w.useIframe,
           iframe_position: w.iframePosition,
         };
+
+        // Temporary debug — remove after confirming CPX widget loads correctly
+        console.log(`window.${configKey} before CPX load:`, JSON.stringify(window[configKey]));
 
         injectScript(w.scriptUrl);
       }

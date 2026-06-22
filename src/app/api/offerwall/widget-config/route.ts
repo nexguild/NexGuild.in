@@ -43,29 +43,31 @@ export async function GET(req: NextRequest) {
 
   const widgets = (providers as Provider[]).map((p) => {
     const cfg        = p.custom_config ?? {};
-    const scriptUrl  = (cfg.script_url as string | null) ?? null;
-    const appIdEnv   = (cfg.app_id_env as string | null) ?? null;
-    const widgetCfgs = (cfg.widget_configs as unknown[] | null) ?? [];
-    const styleCfg   = (cfg.style_config as Record<string, unknown> | null) ?? {};
-    const useIframe  = cfg.use_iframe === true;
-    const iframePos  = (cfg.iframe_position as number | null) ?? 1;
+    const scriptUrl      = (cfg.script_url as string | null) ?? null;
+    const appIdEnv       = (cfg.app_id_env as string | null) ?? null;
+    const widgetCfgs     = (cfg.widget_configs as unknown[] | null) ?? [];
+    const styleCfg       = (cfg.style_config as Record<string, unknown> | null) ?? {};
+    const useIframe      = cfg.use_iframe === true;
+    const iframePos      = (cfg.iframe_position as number | null) ?? 1;
+    // Which window property the provider's script reads (e.g. "config" for CPX)
+    const windowConfigKey = (cfg.window_config_key as string | null) ?? null;
 
-    // Compute secure hash for user
     let secureHash: string | null = null;
     if (p.hash_format && p.postback_secret) {
       secureHash = computeHash(p.hash_format, p.postback_secret, user.id);
     }
 
     return {
-      slug:          p.slug,
-      name:          p.name,
+      slug:            p.slug,
+      name:            p.name,
       scriptUrl,
       appIdEnv,
-      widgetConfigs: widgetCfgs,
-      styleConfig:   styleCfg,
+      windowConfigKey,
+      widgetConfigs:   widgetCfgs,
+      styleConfig:     styleCfg,
       useIframe,
-      iframePosition: iframePos,
-      userId:        user.id,
+      iframePosition:  iframePos,
+      userId:          user.id,
       secureHash,
     };
   });
