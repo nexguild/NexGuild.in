@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Layers, Info } from "lucide-react";
 import { NexCoinIcon } from "@/components/ui/nexcoin-icon";
 import { supabase } from "@/lib/supabase";
+import { applyWidgetConfig, injectScript, type WidgetInitConfig } from "@/lib/offerwall-widget-inject";
 
 interface Provider {
   id: string;
@@ -62,6 +63,40 @@ export default function OfferwallsPage() {
   const comingSoon     = taskOfferwalls.filter((p) => !p.isLive);
 
   const activeProv = taskOfferwalls.find((p) => p.slug === activeSlug) ?? null;
+
+  // For script_tag providers: inject (or re-inject) their script AFTER this
+  // render cycle has put the #fullscreen div in the DOM. Force-reinject so
+  // the script re-executes and finds the div even if it already ran from the
+  // layout-level loader before the user navigated to this page.
+  useEffect(() => {
+    const slug = activeProv?.slug;
+    const intType = activeProv?.integration_type;
+    if (!slug || intType !== "script_tag") return;
+
+    async function inject() {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) return;
+
+      const res = await fetch("/api/offerwall/widget-config", {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
+      if (!res.ok) return;
+
+      const { widgets } = await res.json() as { widgets: WidgetInitConfig[] };
+      const w = widgets?.find((x) => x.slug === slug);
+      if (!w?.scriptUrl) return;
+
+      const configKey = applyWidgetConfig(w);
+      console.log(`[OfferwallsPage] injecting window.${configKey}:`, JSON.stringify((window as Record<string, unknown>)[configKey]));
+
+      // force=true removes the existing <script> tag so CPX re-executes and
+      // finds #fullscreen which is now in the DOM
+      injectScript(w.scriptUrl, true);
+    }
+
+    inject().catch(console.error);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeProv?.slug, activeProv?.integration_type]);
 
   function buildEmbedUrl(p: Provider): string | null {
     if (!p.embed_url_template || !userId) return null;
