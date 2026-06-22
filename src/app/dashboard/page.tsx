@@ -26,6 +26,7 @@ interface Task {
   task_type: string | null; pay_per_task: number | null;
   xp_reward: number | null; required_level: number | null;
 }
+interface OfferwallProvider { id: string; name: string; slug: string; is_ad_network: boolean; description: string | null; logo_url: string | null; isLive: boolean; }
 interface SubmissionMeta { status: string; feedback: string | null; }
 interface Notification { id: string; title: string; message: string | null; type: string | null; created_at: string; }
 interface CoinTx { amount: number; created_at: string; source?: string | null; }
@@ -210,6 +211,7 @@ export default function DashboardHome() {
   const [chartData, setChartData]           = useState<{ label: string; value: number }[]>([]);
   const [notifications, setNotifications]   = useState<Notification[]>([]);
   const [leaderboard, setLeaderboard]       = useState<LeaderboardEntry[]>([]);
+  const [liveOfferwalls, setLiveOfferwalls] = useState<OfferwallProvider[]>([]);
   const [loading, setLoading]               = useState(true);
   const [banner, setBanner]                 = useState<{ id: string; title: string; message: string } | null>(null);
   const [bannerDismissed, setBannerDismissed] = useState(false);
@@ -241,6 +243,7 @@ export default function DashboardHome() {
         { data: notifData },
         { data: streakSettings },
         leaderRes,
+        offerRes,
       ] = await Promise.all([
         supabase.from("profiles").select("full_name, nexcoins, xp, level, current_streak, longest_streak, last_streak_claim_date, last_task_approved_date, tasks_approved_today").eq("id", user.id).single(),
         supabase.from("tasks").select("id, title, description, task_type, pay_per_task, xp_reward, required_level").eq("status", "active").order("created_at", { ascending: false }).limit(20),
@@ -251,6 +254,7 @@ export default function DashboardHome() {
         supabase.from("notifications").select("id, title, message, type, created_at").eq("user_id", user.id).order("created_at", { ascending: false }).limit(8),
         supabase.from("platform_settings").select("key, value").in("key", ["streak_daily_bonus", "streak_day7_bonus", "streak_tasks_required_per_day"]),
         fetch("/api/leaderboard?limit=5", { headers: { Authorization: `Bearer ${session?.access_token}` } }),
+        fetch("/api/offerwalls", { headers: { Authorization: `Bearer ${session?.access_token}` } }),
       ]);
 
       const p = profileData as Profile | null;
@@ -317,6 +321,11 @@ export default function DashboardHome() {
       if (leaderRes.ok) {
         const { leaderboard: lb } = await leaderRes.json() as { leaderboard: LeaderboardEntry[] };
         setLeaderboard(lb ?? []);
+      }
+
+      if (offerRes.ok) {
+        const { providers: offerProviders } = await offerRes.json() as { providers: OfferwallProvider[] };
+        setLiveOfferwalls((offerProviders ?? []).filter(p => !p.is_ad_network && p.isLive));
       }
 
       // Banner
@@ -464,42 +473,74 @@ export default function DashboardHome() {
             <div className="space-y-3">
               {[1,2,3].map(i => <div key={i} className="h-16 rounded-xl bg-slate-50 animate-pulse" />)}
             </div>
-          ) : tasks.length === 0 ? (
+          ) : tasks.length === 0 && liveOfferwalls.length === 0 ? (
             <div className="py-10 flex flex-col items-center gap-2 text-center">
               <ClipboardList className="h-8 w-8 text-slate-200" />
               <p className="text-sm font-semibold text-slate-500">No tasks available yet</p>
               <p className="text-xs text-slate-400">Check back soon.</p>
             </div>
           ) : (
-            <div className="space-y-3">
-              {tasks.map((task) => {
-                const sub        = submissionMeta[task.id];
-                const needsResub = sub?.status === "resubmit_requested";
-                const taskLevel  = task.required_level ?? 1;
-                const locked     = taskLevel > userLevel;
-                const href       = locked ? "#" : needsResub ? `/dashboard/tasks/${task.id}/work` : `/dashboard/tasks/${task.id}`;
-                return (
-                  <Link key={task.id} href={href} onClick={e => locked && e.preventDefault()}
-                    className={`flex items-start gap-3 p-3 rounded-xl border transition-all group ${locked ? "border-slate-100 opacity-60 cursor-not-allowed" : needsResub ? "border-orange-200 hover:border-orange-300 hover:bg-orange-50" : "border-slate-100 hover:border-[#99F6D9] hover:bg-[#E6FAF5]/30"}`}>
-                    <div className={`h-8 w-8 rounded-lg flex items-center justify-center flex-shrink-0 ${locked ? "bg-slate-100" : "bg-[#E6FAF5] group-hover:bg-[#CCFAEC]"}`}>
-                      {locked ? <Lock className="h-3.5 w-3.5 text-slate-400" /> : <ClipboardList className="h-3.5 w-3.5 text-[#02b491]" />}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-0.5">
-                        <p className="text-xs font-bold text-slate-400 uppercase tracking-wide truncate">{task.task_type ?? "Task"}</p>
-                        {locked && <span className="text-[10px] font-bold text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded-full">Lv.{taskLevel}</span>}
-                        {needsResub && <span className="text-[10px] font-bold text-orange-600 bg-orange-50 border border-orange-200 px-1.5 py-0.5 rounded-full flex items-center gap-0.5"><RefreshCw className="h-2.5 w-2.5" />Resubmit</span>}
-                      </div>
-                      <p className={`text-sm font-semibold truncate ${locked ? "text-slate-500" : "text-slate-800 group-hover:text-[#017A5E]"}`}>{task.title}</p>
-                    </div>
-                    <div className="flex flex-col items-end gap-1 flex-shrink-0">
-                      {task.pay_per_task != null && <span className="inline-flex items-center gap-0.5 text-xs font-bold text-slate-600"><NexCoinIcon size={11} />{task.pay_per_task}</span>}
-                      {(task.xp_reward ?? 0) > 0 && <span className="inline-flex items-center gap-0.5 text-xs font-bold text-[#02b491]"><Star className="h-3 w-3" />+{task.xp_reward}XP</span>}
-                    </div>
-                  </Link>
-                );
-              })}
-            </div>
+            <>
+              {tasks.length > 0 && (
+                <div className="space-y-3">
+                  {tasks.map((task) => {
+                    const sub        = submissionMeta[task.id];
+                    const needsResub = sub?.status === "resubmit_requested";
+                    const taskLevel  = task.required_level ?? 1;
+                    const locked     = taskLevel > userLevel;
+                    const href       = locked ? "#" : needsResub ? `/dashboard/tasks/${task.id}/work` : `/dashboard/tasks/${task.id}`;
+                    return (
+                      <Link key={task.id} href={href} onClick={e => locked && e.preventDefault()}
+                        className={`flex items-start gap-3 p-3 rounded-xl border transition-all group ${locked ? "border-slate-100 opacity-60 cursor-not-allowed" : needsResub ? "border-orange-200 hover:border-orange-300 hover:bg-orange-50" : "border-slate-100 hover:border-[#99F6D9] hover:bg-[#E6FAF5]/30"}`}>
+                        <div className={`h-8 w-8 rounded-lg flex items-center justify-center flex-shrink-0 ${locked ? "bg-slate-100" : "bg-[#E6FAF5] group-hover:bg-[#CCFAEC]"}`}>
+                          {locked ? <Lock className="h-3.5 w-3.5 text-slate-400" /> : <ClipboardList className="h-3.5 w-3.5 text-[#02b491]" />}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-0.5">
+                            <p className="text-xs font-bold text-slate-400 uppercase tracking-wide truncate">{task.task_type ?? "Task"}</p>
+                            {locked && <span className="text-[10px] font-bold text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded-full">Lv.{taskLevel}</span>}
+                            {needsResub && <span className="text-[10px] font-bold text-orange-600 bg-orange-50 border border-orange-200 px-1.5 py-0.5 rounded-full flex items-center gap-0.5"><RefreshCw className="h-2.5 w-2.5" />Resubmit</span>}
+                          </div>
+                          <p className={`text-sm font-semibold truncate ${locked ? "text-slate-500" : "text-slate-800 group-hover:text-[#017A5E]"}`}>{task.title}</p>
+                        </div>
+                        <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                          {task.pay_per_task != null && <span className="inline-flex items-center gap-0.5 text-xs font-bold text-slate-600"><NexCoinIcon size={11} />{task.pay_per_task}</span>}
+                          {(task.xp_reward ?? 0) > 0 && <span className="inline-flex items-center gap-0.5 text-xs font-bold text-[#02b491]"><Star className="h-3 w-3" />+{task.xp_reward}XP</span>}
+                        </div>
+                      </Link>
+                    );
+                  })}
+                </div>
+              )}
+
+              {liveOfferwalls.length > 0 && (
+                <div className={tasks.length > 0 ? "mt-4 pt-4 border-t border-slate-100" : ""}>
+                  <div className="flex items-center gap-1.5 mb-2.5">
+                    <Layers className="h-3.5 w-3.5 text-indigo-400" />
+                    <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Earn via Offerwalls</p>
+                  </div>
+                  <div className="space-y-2">
+                    {liveOfferwalls.map((p) => (
+                      <Link key={p.id} href="/dashboard/offerwalls"
+                        className="flex items-center gap-3 p-3 rounded-xl border border-indigo-100 hover:border-indigo-200 hover:bg-indigo-50/40 transition-all group">
+                        <div className="h-8 w-8 rounded-lg flex items-center justify-center flex-shrink-0 bg-indigo-50 group-hover:bg-indigo-100 overflow-hidden transition-colors">
+                          {p.logo_url
+                            ? <img src={p.logo_url} alt={p.name} className="h-full w-full object-contain p-1" />
+                            : <Layers className="h-3.5 w-3.5 text-indigo-500" />}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-semibold text-slate-800 truncate group-hover:text-indigo-700">{p.name}</p>
+                          {p.description && <p className="text-xs text-slate-400 truncate">{p.description}</p>}
+                        </div>
+                        <span className="text-xs font-bold text-indigo-500 group-hover:text-indigo-700 flex items-center gap-0.5 flex-shrink-0">
+                          Start Earning <ArrowRight className="h-3 w-3" />
+                        </span>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </div>
 
