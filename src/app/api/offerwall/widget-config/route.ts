@@ -43,14 +43,19 @@ export async function GET(req: NextRequest) {
 
   const widgets = (providers as Provider[]).map((p) => {
     const cfg        = p.custom_config ?? {};
-    const scriptUrl      = (cfg.script_url as string | null) ?? null;
-    const appIdEnv       = (cfg.app_id_env as string | null) ?? null;
-    const widgetCfgs     = (cfg.widget_configs as unknown[] | null) ?? [];
-    const styleCfg       = (cfg.style_config as Record<string, unknown> | null) ?? {};
-    const useIframe      = cfg.use_iframe === true;
-    const iframePos      = (cfg.iframe_position as number | null) ?? 1;
+    const scriptUrl       = (cfg.script_url as string | null) ?? null;
+    const appIdEnv        = (cfg.app_id_env as string | null) ?? null;
+    const widgetCfgs      = (cfg.widget_configs as unknown[] | null) ?? [];
+    const styleCfg        = (cfg.style_config as Record<string, unknown> | null) ?? {};
+    const useIframe       = cfg.use_iframe === true;
+    const iframePos       = (cfg.iframe_position as number | null) ?? 1;
     // Which window property the provider's script reads (e.g. "config" for CPX)
     const windowConfigKey = (cfg.window_config_key as string | null) ?? null;
+    // CPX expects { general_config: { app_id, ext_user_id, secure_hash } } at root
+    const useGeneralConfig = cfg.use_general_config === true;
+    // CPX calls the widget array "script_config" instead of "widget_configs"
+    const widgetArrayKey  = (cfg.widget_array_key as string | null) ?? "widget_configs";
+    const debug           = cfg.debug === true;
 
     let secureHash: string | null = null;
     if (p.hash_format && p.postback_secret) {
@@ -58,16 +63,19 @@ export async function GET(req: NextRequest) {
     }
 
     return {
-      slug:            p.slug,
-      name:            p.name,
+      slug:             p.slug,
+      name:             p.name,
       scriptUrl,
       appIdEnv,
       windowConfigKey,
-      widgetConfigs:   widgetCfgs,
-      styleConfig:     styleCfg,
+      useGeneralConfig,
+      widgetArrayKey,
+      widgetConfigs:    widgetCfgs,
+      styleConfig:      styleCfg,
       useIframe,
-      iframePosition:  iframePos,
-      userId:          user.id,
+      iframePosition:   iframePos,
+      debug,
+      userId:           user.id,
       secureHash,
     };
   });

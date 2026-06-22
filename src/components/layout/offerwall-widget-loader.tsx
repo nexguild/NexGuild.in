@@ -9,10 +9,13 @@ interface WidgetConfig {
   scriptUrl: string | null;
   appIdEnv: string | null;
   windowConfigKey: string | null;
+  useGeneralConfig: boolean;
+  widgetArrayKey: string;
   widgetConfigs: unknown[];
   styleConfig: Record<string, unknown>;
   useIframe: boolean;
   iframePosition: number;
+  debug: boolean;
   userId: string;
   secureHash: string | null;
 }
@@ -23,7 +26,7 @@ declare global {
   }
 }
 
-// NexGuild fallback — matches indigo/light theme; overridden by DB custom_config.style_config
+// NexGuild fallback — overridden by DB custom_config.style_config values
 const DEFAULT_STYLE_CONFIG = {
   text_color: "#0F172A",
   survey_box: {
@@ -46,15 +49,11 @@ function mergeStyleConfig(fromDb: Record<string, unknown>): Record<string, unkno
   };
 }
 
-function injectScript(src: string, onLoad?: () => void) {
-  if (document.querySelector(`script[src="${src}"]`)) {
-    onLoad?.();
-    return;
-  }
-  const s  = document.createElement("script");
-  s.src    = src;
-  s.async  = true;
-  s.onload = () => onLoad?.();
+function injectScript(src: string) {
+  if (document.querySelector(`script[src="${src}"]`)) return;
+  const s = document.createElement("script");
+  s.src   = src;
+  s.async = true;
   document.body.appendChild(s);
 }
 
@@ -79,31 +78,53 @@ export function OfferwallWidgetLoader() {
       for (const w of widgets) {
         if (!w.scriptUrl) continue;
 
-        // Resolve app_id from NEXT_PUBLIC_ env var if configured
         const appIdKey = w.appIdEnv ?? null;
         const appId: string | null = appIdKey
           ? (process.env[appIdKey] as string | null) ?? null
           : null;
 
-        // window_config_key in custom_config tells us which window property the
-        // provider's script reads (e.g. CPX reads window.config → set to "config").
-        // Falls back to slug-derived name for providers that don't set this.
-        const configKey = w.windowConfigKey ?? `${w.slug.replace(/_/g, "")}Config`;
+        const configKey    = w.windowConfigKey ?? `${w.slug.replace(/_/g, "")}Config`;
+        const styleConfig  = mergeStyleConfig(w.styleConfig ?? {});
+        const widgetArray  = w.widgetConfigs ?? [];
 
-        // IMPORTANT: config must be assigned BEFORE the script tag is appended
-        // so it's already on window when the script executes.
-        window[configKey] = {
-          ...(appId ? { app_id: appId } : {}),
-          user_id:         w.userId,
-          secure_hash:     w.secureHash ?? undefined,
-          widget_configs:  w.widgetConfigs,
-          style_config:    mergeStyleConfig(w.styleConfig ?? {}),
-          use_iframe:      w.useIframe,
-          iframe_position: w.iframePosition,
-        };
+        let cfg: Record<string, unknown>;
 
-        // Temporary debug — remove after confirming CPX widget loads correctly
-        console.log(`window.${configKey} before CPX load:`, JSON.stringify(window[configKey]));
+        if (w.useGeneralConfig) {
+          // CPX Research (and similar): user identity nested in general_config;
+          // widget array key is "script_config" (set via custom_config.widget_array_key)
+          cfg = {
+            general_config: {
+              app_id:       appId ?? "",
+              ext_user_id:  w.userId,
+              secure_hash:  w.secureHash ?? "",
+              email:        "",
+              username:     "",
+            },
+            style_config:       styleConfig,
+            [w.widgetArrayKey]: widgetArray,
+            debug:              w.debug,
+            use_iframe:         w.useIframe,
+            iframe_position:    w.iframePosition,
+          };
+        } else {
+          // Generic flat structure for other providers
+          cfg = {
+            ...(appId ? { app_id: appId } : {}),
+            user_id:            w.userId,
+            secure_hash:        w.secureHash ?? undefined,
+            style_config:       styleConfig,
+            [w.widgetArrayKey]: widgetArray,
+            debug:              w.debug,
+            use_iframe:         w.useIframe,
+            iframe_position:    w.iframePosition,
+          };
+        }
+
+        // Config MUST be on window before the script tag is appended
+        window[configKey] = cfg;
+
+        // Temporary debug log — remove after CPX widget confirmed working
+        console.log(`[OfferwallWidgetLoader] window.${configKey}:`, JSON.stringify(window[configKey]));
 
         injectScript(w.scriptUrl);
       }
