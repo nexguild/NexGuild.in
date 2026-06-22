@@ -11,12 +11,19 @@ interface DbVoucher {
   id: string;
   brand_name: string;
   description: string;
-  value_inr: number;
+  value_inr: number | null;
+  value_usd: number | null;
   coins_required: number;
   category: string;
   emoji: string;
   is_available: boolean;
   created_at: string;
+}
+
+function fmtPrice(v: DbVoucher): string {
+  if (v.value_inr && v.value_inr > 0) return `₹${v.value_inr}`;
+  if (v.value_usd && v.value_usd > 0) return `$${v.value_usd}`;
+  return "—";
 }
 
 type FormState = {
@@ -126,10 +133,10 @@ export default function VoucherCatalogPage() {
     setForm({
       brand_name:       v.brand_name,
       description:      v.description,
-      value_inr:        String(v.value_inr),
-      value_usd:        "",
+      value_inr:        v.value_inr && v.value_inr > 0 ? String(v.value_inr) : "",
+      value_usd:        v.value_usd && v.value_usd > 0 ? String(v.value_usd) : "",
       coins_required:   String(v.coins_required),
-      coins_overridden: true, // existing value treated as manually set
+      coins_overridden: true,
       category:         v.category,
       emoji:            v.emoji,
     });
@@ -142,16 +149,29 @@ export default function VoucherCatalogPage() {
     e.preventDefault();
     setFormErr(null);
 
-    const val   = parseInt(form.value_inr, 10);
-    const coins = parseInt(form.coins_required, 10);
-    if (!form.brand_name.trim())         { setFormErr("Brand name is required."); return; }
-    if (isNaN(val) || val <= 0)          { setFormErr("Enter a valid INR value."); return; }
-    if (isNaN(coins) || coins <= 0)      { setFormErr("NexCoins required must be a positive number."); return; }
+    const inrVal  = parseFloat(form.value_inr);
+    const usdVal  = parseFloat(form.value_usd);
+    const hasInr  = !isNaN(inrVal) && inrVal > 0;
+    const hasUsd  = !isNaN(usdVal) && usdVal > 0;
+    const coins   = parseInt(form.coins_required, 10);
+
+    if (!form.brand_name.trim())    { setFormErr("Brand name is required."); return; }
+    if (!hasInr && !hasUsd)         { setFormErr("Enter a price in INR or USD (or both)."); return; }
+    if (isNaN(coins) || coins <= 0) { setFormErr("NexCoins required must be a positive number."); return; }
 
     setSaving(true);
+    const base = {
+      brand_name:     form.brand_name,
+      description:    form.description,
+      value_inr:      hasInr ? Math.round(inrVal) : 0,
+      value_usd:      hasUsd ? usdVal : 0,
+      coins_required: coins,
+      category:       form.category,
+      emoji:          form.emoji,
+    };
     const body = editId
-      ? { action: "update", id: editId, brand_name: form.brand_name, description: form.description, value_inr: val, coins_required: coins, category: form.category, emoji: form.emoji }
-      : { action: "create", brand_name: form.brand_name, description: form.description, value_inr: val, coins_required: coins, category: form.category, emoji: form.emoji };
+      ? { action: "update", id: editId, ...base }
+      : { action: "create", ...base };
 
     const res  = await callApi(body);
     const data = await res.json() as { voucher?: DbVoucher; error?: string };
@@ -164,7 +184,7 @@ export default function VoucherCatalogPage() {
         setVouchers((prev) => prev.map((v) => v.id === editId ? data.voucher! : v));
       } else {
         setVouchers((prev) => [...prev, data.voucher!].sort((a, b) =>
-          a.brand_name.localeCompare(b.brand_name) || a.value_inr - b.value_inr
+          a.brand_name.localeCompare(b.brand_name) || (a.coins_required - b.coins_required)
         ));
       }
       setTimeout(() => setShowForm(false), 800);
@@ -255,7 +275,7 @@ export default function VoucherCatalogPage() {
           <table className="w-full text-sm min-w-[700px]">
             <thead>
               <tr className="bg-[var(--surface-subtle)] border-b border-[var(--border-default)]">
-                {["", "Brand", "Description", "₹ Value", "Coins", "Category", "Status", "Actions"].map((h) => (
+                {["", "Brand", "Description", "Value", "Coins", "Category", "Status", "Actions"].map((h) => (
                   <th key={h} className="text-left px-4 py-3 font-medium text-[var(--text-secondary)] whitespace-nowrap">{h}</th>
                 ))}
               </tr>
@@ -266,7 +286,7 @@ export default function VoucherCatalogPage() {
                   <td className="px-4 py-3 text-xl w-10">{v.emoji}</td>
                   <td className="px-4 py-3 font-semibold text-[var(--text-primary)] whitespace-nowrap">{v.brand_name}</td>
                   <td className="px-4 py-3 text-[var(--text-secondary)] max-w-[200px] truncate">{v.description || "—"}</td>
-                  <td className="px-4 py-3 font-semibold text-[var(--text-primary)]">₹{v.value_inr}</td>
+                  <td className="px-4 py-3 font-semibold text-[var(--text-primary)]">{fmtPrice(v)}</td>
                   <td className="px-4 py-3 text-[var(--brand-500)] font-medium">{v.coins_required.toLocaleString()}</td>
                   <td className="px-4 py-3">
                     <span className="text-xs px-2 py-0.5 rounded-full bg-[var(--surface-subtle)] text-[var(--text-secondary)] border border-[var(--border-default)] capitalize">
@@ -372,31 +392,33 @@ export default function VoucherCatalogPage() {
                   />
                 </div>
 
-                {/* Price fields + auto-pricing */}
-                <div className="flex gap-3">
-                  <div className="flex-1">
-                    <label className="block text-xs font-medium text-[var(--text-primary)] mb-1.5">Price in ₹ (INR) *</label>
-                    <input
-                      type="number"
-                      required
-                      min="1"
-                      value={form.value_inr}
-                      onChange={(e) => setField("value_inr", e.target.value)}
-                      placeholder="100"
-                      className="w-full h-10 px-3 rounded-md border border-[var(--border-strong)] bg-[var(--surface-subtle)] text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--border-focus)]"
-                    />
-                  </div>
-                  <div className="flex-1">
-                    <label className="block text-xs font-medium text-[var(--text-primary)] mb-1.5">Price in $ (USD) <span className="text-[var(--text-muted)] font-normal">optional</span></label>
-                    <input
-                      type="number"
-                      min="0.01"
-                      step="0.01"
-                      value={form.value_usd}
-                      onChange={(e) => setField("value_usd", e.target.value)}
-                      placeholder="1.00"
-                      className="w-full h-10 px-3 rounded-md border border-[var(--border-strong)] bg-[var(--surface-subtle)] text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--border-focus)]"
-                    />
+                {/* Price fields — fill INR or USD (or both); at least one required */}
+                <div>
+                  <p className="text-xs text-[var(--text-muted)] mb-2">Fill the price in <strong>INR</strong> for Indian vouchers or <strong>USD</strong> for international ones. At least one is required.</p>
+                  <div className="flex gap-3">
+                    <div className="flex-1">
+                      <label className="block text-xs font-medium text-[var(--text-primary)] mb-1.5">Price in ₹ (INR)</label>
+                      <input
+                        type="number"
+                        min="1"
+                        value={form.value_inr}
+                        onChange={(e) => setField("value_inr", e.target.value)}
+                        placeholder="100"
+                        className="w-full h-10 px-3 rounded-md border border-[var(--border-strong)] bg-[var(--surface-subtle)] text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--border-focus)]"
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <label className="block text-xs font-medium text-[var(--text-primary)] mb-1.5">Price in $ (USD)</label>
+                      <input
+                        type="number"
+                        min="0.01"
+                        step="0.01"
+                        value={form.value_usd}
+                        onChange={(e) => setField("value_usd", e.target.value)}
+                        placeholder="1.00"
+                        className="w-full h-10 px-3 rounded-md border border-[var(--border-strong)] bg-[var(--surface-subtle)] text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--border-focus)]"
+                      />
+                    </div>
                   </div>
                 </div>
                 {/* NexCoins Required — auto-calculated, manually overridable */}
@@ -482,7 +504,7 @@ export default function VoucherCatalogPage() {
               </div>
             </div>
             <div className="rounded-lg bg-[var(--surface-subtle)] p-3 mb-5 text-sm text-[var(--text-secondary)]">
-              {deleteTarget.emoji} {deleteTarget.brand_name} · ₹{deleteTarget.value_inr} · {deleteTarget.coins_required.toLocaleString()} coins
+              {deleteTarget.emoji} {deleteTarget.brand_name} · {fmtPrice(deleteTarget)} · {deleteTarget.coins_required.toLocaleString()} coins
             </div>
             <div className="flex gap-3">
               <Button variant="ghost" className="flex-1" onClick={() => setDeleteTarget(null)}>Cancel</Button>
