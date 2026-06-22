@@ -25,8 +25,6 @@ export function OfferwallWidgetLoader() {
       for (const w of widgets) {
         if (!w.scriptUrl) continue;
         const configKey = applyWidgetConfig(w);
-        // Temporary debug — remove after CPX widget confirmed working
-        console.log(`[OfferwallWidgetLoader] window.${configKey}:`, JSON.stringify((window as Record<string, unknown>)[configKey]));
         // Don't force-inject here: the offerwalls page owns injection timing
         // for fullscreen widgets so the #fullscreen div exists first.
         // This call handles notification/floating widgets that need no specific div.

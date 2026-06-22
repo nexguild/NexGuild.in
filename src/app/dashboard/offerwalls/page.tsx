@@ -86,8 +86,7 @@ export default function OfferwallsPage() {
       const w = widgets?.find((x) => x.slug === slug);
       if (!w?.scriptUrl) return;
 
-      const configKey = applyWidgetConfig(w);
-      console.log(`[OfferwallsPage] injecting window.${configKey}:`, JSON.stringify((window as Record<string, unknown>)[configKey]));
+      applyWidgetConfig(w);
 
       // force=true removes the existing <script> tag so CPX re-executes and
       // finds #fullscreen which is now in the DOM

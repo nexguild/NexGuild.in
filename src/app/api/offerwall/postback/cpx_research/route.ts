@@ -58,15 +58,6 @@ async function handleCpxPostback(req: NextRequest): Promise<Response> {
   const ipClick      = q.get("ip_click")  ?? "";
   const sourceIp     = getClientIp(req);
 
-  // ── Log every incoming call so we see it in Vercel ──────────────────────
-  console.log("[postback/cpx_research] incoming", {
-    status, trans_id: transId, user_id: userId, type,
-    amount_local: amountLocal, amount_usd: amountUsd,
-    offer_id: offerId, hash: incomingHash,
-    subid_1: subid1, subid_2: subid2, ip_click: ipClick,
-    source_ip: sourceIp, debug_mode: DEBUG,
-  });
-
   if (!transId || !userId || !status) {
     console.warn("[postback/cpx_research] missing required fields — returning 400", { transId, userId, status });
     return new Response("Bad Request", { status: 400 });
