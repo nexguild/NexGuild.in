@@ -11,6 +11,9 @@ interface Provider {
   slug: string;
   is_ad_network: boolean;
   embed_url_template: string | null;
+  integration_type: string;
+  description: string | null;
+  logo_url: string | null;
   isLive: boolean;
 }
 
@@ -44,7 +47,7 @@ export default function OfferwallsPage() {
       if (res.ok) {
         const { providers: p } = await res.json() as { providers: Provider[] };
         setProviders(p);
-        // Default-select the first live task offerwall if any
+        // Default-select the first live task offerwall
         const firstLive = p.find((x) => !x.is_ad_network && x.isLive);
         if (firstLive) setActiveSlug(firstLive.slug);
       }
@@ -63,6 +66,54 @@ export default function OfferwallsPage() {
   function buildEmbedUrl(p: Provider): string | null {
     if (!p.embed_url_template || !userId) return null;
     return p.embed_url_template.replace(/\{user_id\}/g, userId);
+  }
+
+  function renderEmbedArea(p: Provider) {
+    if (p.integration_type === "script_tag") {
+      // The OfferwallWidgetLoader (in dashboard layout) injects the provider's script
+      // which finds this div by ID and renders the fullscreen widget inside it.
+      return (
+        <div className="rounded-xl border border-[var(--border-default)] bg-[var(--surface-card)] overflow-hidden">
+          <div className="px-5 py-3 border-b border-[var(--border-default)] bg-[var(--surface-subtle)] flex items-center gap-2">
+            <NexCoinIcon size={16} />
+            <p className="text-xs text-[var(--text-muted)]">
+              Earnings from <span className="font-semibold text-[var(--text-primary)]">{p.name}</span> are credited to your NexCoins automatically after confirmation.
+            </p>
+          </div>
+          <div id="fullscreen" className="min-h-[480px] sm:min-h-[600px] w-full" />
+        </div>
+      );
+    }
+
+    // iframe embed (default)
+    const embedUrl = buildEmbedUrl(p);
+    return (
+      <div className="rounded-xl border border-[var(--border-default)] bg-[var(--surface-card)] overflow-hidden">
+        <div className="px-5 py-3 border-b border-[var(--border-default)] bg-[var(--surface-subtle)] flex items-center gap-2">
+          <NexCoinIcon size={16} />
+          <p className="text-xs text-[var(--text-muted)]">
+            Earnings from <span className="font-semibold text-[var(--text-primary)]">{p.name}</span> are credited to your NexCoins automatically after confirmation.
+          </p>
+        </div>
+        {embedUrl ? (
+          <iframe
+            src={embedUrl}
+            className="w-full border-0 min-h-[480px] sm:h-[600px]"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media"
+            sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox"
+            title={`${p.name} Offerwall`}
+          />
+        ) : (
+          <div className="flex flex-col items-center justify-center py-24 px-6 text-center bg-[var(--surface-page)]">
+            <Layers className="h-10 w-10 text-[var(--text-muted)] mb-4" />
+            <p className="font-semibold text-[var(--text-primary)] mb-2">{p.name}</p>
+            <p className="text-sm text-[var(--text-secondary)] max-w-sm">
+              Provider is live but the embed URL hasn&apos;t been configured yet. Check back soon.
+            </p>
+          </div>
+        )}
+      </div>
+    );
   }
 
   return (
@@ -86,7 +137,6 @@ export default function OfferwallsPage() {
           <div className="h-[480px] rounded-xl bg-[var(--surface-subtle)] animate-pulse" />
         </div>
       ) : taskOfferwalls.length === 0 ? (
-        /* No providers in DB yet (migration not run) */
         <div className="rounded-xl border border-[var(--border-default)] bg-[var(--surface-card)] py-20 flex flex-col items-center gap-4 text-center px-6">
           <Layers className="h-10 w-10 text-[var(--text-muted)]" />
           <p className="font-semibold text-[var(--text-primary)]">Offerwall Hub Coming Soon</p>
@@ -133,35 +183,10 @@ export default function OfferwallsPage() {
               </p>
             </div>
           ) : activeProv && activeProv.isLive ? (
-            <div className="rounded-xl border border-[var(--border-default)] bg-[var(--surface-card)] overflow-hidden">
-              {/* Embed header */}
-              <div className="px-5 py-3 border-b border-[var(--border-default)] bg-[var(--surface-subtle)] flex items-center gap-2">
-                <NexCoinIcon size={16} />
-                <p className="text-xs text-[var(--text-muted)]">
-                  Earnings from <span className="font-semibold text-[var(--text-primary)]">{activeProv.name}</span> are credited to your NexCoins automatically after confirmation.
-                </p>
-              </div>
-              {buildEmbedUrl(activeProv) ? (
-                <iframe
-                  src={buildEmbedUrl(activeProv)!}
-                  className="w-full border-0 min-h-[480px] sm:h-[600px]"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media"
-                  sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox"
-                  title={`${activeProv.name} Offerwall`}
-                />
-              ) : (
-                <div className="flex flex-col items-center justify-center py-24 px-6 text-center bg-[var(--surface-page)]">
-                  <Layers className="h-10 w-10 text-[var(--text-muted)] mb-4" />
-                  <p className="font-semibold text-[var(--text-primary)] mb-2">{activeProv.name}</p>
-                  <p className="text-sm text-[var(--text-secondary)] max-w-sm">
-                    Provider is live but the embed URL hasn&apos;t been configured yet. Check back soon.
-                  </p>
-                </div>
-              )}
-            </div>
+            renderEmbedArea(activeProv)
           ) : null}
 
-          {/* Coming Soon grid — only shown if there are some coming-soon providers */}
+          {/* Coming Soon grid */}
           {comingSoon.length > 0 && (
             <div>
               <h2 className="text-sm font-semibold text-[var(--text-secondary)] uppercase tracking-wide mb-3">
@@ -174,7 +199,9 @@ export default function OfferwallsPage() {
                     className="rounded-lg border border-[var(--border-default)] bg-[var(--surface-subtle)] p-3 opacity-60 text-center"
                   >
                     <p className="text-xs font-semibold text-[var(--text-primary)]">{p.name}</p>
-                    <p className="text-[10px] text-[var(--text-muted)] mt-0.5">We&apos;re working on this — check back soon!</p>
+                    <p className="text-[10px] text-[var(--text-muted)] mt-0.5">
+                      {p.description ?? "We're working on this — check back soon!"}
+                    </p>
                   </div>
                 ))}
               </div>

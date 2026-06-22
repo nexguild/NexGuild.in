@@ -23,13 +23,15 @@ type FormState = {
   brand_name: string;
   description: string;
   value_inr: string;
+  value_usd: string;
   coins_required: string;
+  coins_overridden: boolean; // true = admin manually set coins, skip auto-calc
   category: string;
   emoji: string;
 };
 
 const EMPTY_FORM: FormState = {
-  brand_name: "", description: "", value_inr: "", coins_required: "", category: "shopping", emoji: "🎁",
+  brand_name: "", description: "", value_inr: "", value_usd: "", coins_required: "", coins_overridden: false, category: "shopping", emoji: "🎁",
 };
 
 const CATEGORIES = ["shopping", "apps", "food", "other"];
@@ -48,6 +50,10 @@ export default function VoucherCatalogPage() {
   const [toggling, setToggling]   = useState<string | null>(null);
   const [deleting, setDeleting]   = useState<string | null>(null);
 
+  // Exchange rates for auto-pricing
+  const [nexcoinPerInr, setNexcoinPerInr] = useState(12.5);
+  const [nexcoinPerUsd, setNexcoinPerUsd] = useState(1000);
+
   // Add / Edit modal
   const [showForm, setShowForm]     = useState(false);
   const [editId, setEditId]         = useState<string | null>(null);
@@ -63,10 +69,24 @@ export default function VoucherCatalogPage() {
     async function load() {
       const { data: { session } } = await supabase.auth.getSession();
       tokenRef.current = session?.access_token ?? null;
-      await fetchVouchers(session?.access_token ?? "");
+      await Promise.all([
+        fetchVouchers(session?.access_token ?? ""),
+        fetchRates(session?.access_token ?? ""),
+      ]);
     }
     load();
   }, []);
+
+  async function fetchRates(token: string) {
+    const res = await fetch("/api/admin/settings", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (res.ok) {
+      const data = await res.json() as { nexcoinPerInr?: number; nexcoinPerUsd?: number };
+      if (data.nexcoinPerInr) setNexcoinPerInr(data.nexcoinPerInr);
+      if (data.nexcoinPerUsd) setNexcoinPerUsd(data.nexcoinPerUsd);
+    }
+  }
 
   async function fetchVouchers(token: string) {
     const res  = await fetch("/api/admin/voucher-catalog", {
@@ -85,6 +105,14 @@ export default function VoucherCatalogPage() {
     });
   }
 
+  function calcCoins(inr: string, usd: string): string {
+    const inrVal = parseFloat(inr);
+    const usdVal = parseFloat(usd);
+    if (!isNaN(inrVal) && inrVal > 0) return String(Math.round(inrVal * nexcoinPerInr));
+    if (!isNaN(usdVal) && usdVal > 0) return String(Math.round(usdVal * nexcoinPerUsd));
+    return "";
+  }
+
   function openAdd() {
     setEditId(null);
     setForm(EMPTY_FORM);
@@ -96,12 +124,14 @@ export default function VoucherCatalogPage() {
   function openEdit(v: DbVoucher) {
     setEditId(v.id);
     setForm({
-      brand_name:     v.brand_name,
-      description:    v.description,
-      value_inr:      String(v.value_inr),
-      coins_required: String(v.coins_required),
-      category:       v.category,
-      emoji:          v.emoji,
+      brand_name:       v.brand_name,
+      description:      v.description,
+      value_inr:        String(v.value_inr),
+      value_usd:        "",
+      coins_required:   String(v.coins_required),
+      coins_overridden: true, // existing value treated as manually set
+      category:         v.category,
+      emoji:            v.emoji,
     });
     setFormErr(null);
     setSaveOk(false);
@@ -115,13 +145,13 @@ export default function VoucherCatalogPage() {
     const val   = parseInt(form.value_inr, 10);
     const coins = parseInt(form.coins_required, 10);
     if (!form.brand_name.trim())         { setFormErr("Brand name is required."); return; }
-    if (isNaN(val) || val <= 0)          { setFormErr("Enter a valid value (₹)."); return; }
-    if (isNaN(coins) || coins <= 0)      { setFormErr("Enter valid coins required."); return; }
+    if (isNaN(val) || val <= 0)          { setFormErr("Enter a valid INR value."); return; }
+    if (isNaN(coins) || coins <= 0)      { setFormErr("NexCoins required must be a positive number."); return; }
 
     setSaving(true);
     const body = editId
-      ? { action: "update", id: editId, ...form, value_inr: val, coins_required: coins }
-      : { action: "create", ...form, value_inr: val, coins_required: coins };
+      ? { action: "update", id: editId, brand_name: form.brand_name, description: form.description, value_inr: val, coins_required: coins, category: form.category, emoji: form.emoji }
+      : { action: "create", brand_name: form.brand_name, description: form.description, value_inr: val, coins_required: coins, category: form.category, emoji: form.emoji };
 
     const res  = await callApi(body);
     const data = await res.json() as { voucher?: DbVoucher; error?: string };
@@ -162,7 +192,26 @@ export default function VoucherCatalogPage() {
   }
 
   function setField(k: keyof FormState, val: string) {
-    setForm((prev) => ({ ...prev, [k]: val }));
+    setForm((prev) => {
+      const next = { ...prev, [k]: val };
+      // Auto-calculate coins when INR or USD changes (unless admin has overridden)
+      if ((k === "value_inr" || k === "value_usd") && !prev.coins_overridden) {
+        const auto = calcCoins(k === "value_inr" ? val : prev.value_inr, k === "value_usd" ? val : prev.value_usd);
+        if (auto) next.coins_required = auto;
+      }
+      return next;
+    });
+  }
+
+  function setCoinsManually(val: string) {
+    setForm((prev) => ({ ...prev, coins_required: val, coins_overridden: true }));
+  }
+
+  function resetCoinsAutoCalc() {
+    setForm((prev) => {
+      const auto = calcCoins(prev.value_inr, prev.value_usd);
+      return { ...prev, coins_required: auto || prev.coins_required, coins_overridden: false };
+    });
   }
 
   if (!allowed) return null;
@@ -323,10 +372,10 @@ export default function VoucherCatalogPage() {
                   />
                 </div>
 
-                {/* Value + Coins row */}
+                {/* Price fields + auto-pricing */}
                 <div className="flex gap-3">
                   <div className="flex-1">
-                    <label className="block text-xs font-medium text-[var(--text-primary)] mb-1.5">Value (₹) *</label>
+                    <label className="block text-xs font-medium text-[var(--text-primary)] mb-1.5">Price in ₹ (INR) *</label>
                     <input
                       type="number"
                       required
@@ -338,17 +387,57 @@ export default function VoucherCatalogPage() {
                     />
                   </div>
                   <div className="flex-1">
-                    <label className="block text-xs font-medium text-[var(--text-primary)] mb-1.5">Coins Required *</label>
+                    <label className="block text-xs font-medium text-[var(--text-primary)] mb-1.5">Price in $ (USD) <span className="text-[var(--text-muted)] font-normal">optional</span></label>
                     <input
                       type="number"
-                      required
-                      min="1"
-                      value={form.coins_required}
-                      onChange={(e) => setField("coins_required", e.target.value)}
-                      placeholder="1000"
+                      min="0.01"
+                      step="0.01"
+                      value={form.value_usd}
+                      onChange={(e) => setField("value_usd", e.target.value)}
+                      placeholder="1.00"
                       className="w-full h-10 px-3 rounded-md border border-[var(--border-strong)] bg-[var(--surface-subtle)] text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--border-focus)]"
                     />
                   </div>
+                </div>
+                {/* NexCoins Required — auto-calculated, manually overridable */}
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="block text-xs font-medium text-[var(--text-primary)]">
+                      NexCoins Required *
+                      {!form.coins_overridden && (
+                        <span className="ml-1.5 text-[10px] font-normal px-1.5 py-0.5 rounded bg-[var(--brand-500)]/15 text-[var(--brand-500)]">
+                          Auto-calculated
+                        </span>
+                      )}
+                      {form.coins_overridden && (
+                        <span className="ml-1.5 text-[10px] font-normal px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-400">
+                          Manual override
+                        </span>
+                      )}
+                    </label>
+                    {form.coins_overridden && (
+                      <button
+                        type="button"
+                        onClick={resetCoinsAutoCalc}
+                        className="text-[10px] text-[var(--text-muted)] hover:text-[var(--brand-500)] transition-colors underline"
+                      >
+                        Reset to auto
+                      </button>
+                    )}
+                  </div>
+                  <input
+                    type="number"
+                    required
+                    min="1"
+                    value={form.coins_required}
+                    onChange={(e) => setCoinsManually(e.target.value)}
+                    placeholder={calcCoins(form.value_inr, form.value_usd) || "1250"}
+                    className="w-full h-10 px-3 rounded-md border border-[var(--border-strong)] bg-[var(--surface-subtle)] text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--border-focus)]"
+                  />
+                  <p className="text-xs text-[var(--text-muted)] mt-1">
+                    Rate: ₹1 = {nexcoinPerInr} coins · $1 = {nexcoinPerUsd} coins
+                    {" "}(set in <span className="text-[var(--brand-500)]">Settings → Exchange Rates</span>)
+                  </p>
                 </div>
 
                 {/* Category */}

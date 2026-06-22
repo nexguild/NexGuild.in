@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Plus, Trash2, Loader2, X, CheckCircle2, Tag, ToggleLeft, ToggleRight, Crown, ChevronDown } from "lucide-react";
+import { Plus, Trash2, Loader2, X, CheckCircle2, Tag, ToggleLeft, ToggleRight, Crown, ChevronDown, Globe, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
 
@@ -101,6 +101,20 @@ export default function AdminSettingsPage() {
   const [streakSaved, setStreakSaved]                  = useState(false);
   const [streakErr, setStreakErr]                      = useState<string | null>(null);
 
+  // Signup domains
+  const [allowedDomains, setAllowedDomains]       = useState<string[]>(["gmail.com", "outlook.com"]);
+  const [newDomain, setNewDomain]                 = useState("");
+  const [savingDomains, setSavingDomains]         = useState(false);
+  const [domainsSaved, setDomainsSaved]           = useState(false);
+  const [domainsErr, setDomainsErr]               = useState<string | null>(null);
+
+  // Exchange rates
+  const [nexcoinPerInr, setNexcoinPerInr]         = useState("12.5");
+  const [nexcoinPerUsd, setNexcoinPerUsd]         = useState("1000");
+  const [savingRates, setSavingRates]             = useState(false);
+  const [ratesSaved, setRatesSaved]               = useState(false);
+  const [ratesErr, setRatesErr]                   = useState<string | null>(null);
+
   // Create coupon modal
   const [showCoupon, setShowCoupon]         = useState(false);
   const [newCode, setNewCode]               = useState("");
@@ -130,12 +144,24 @@ export default function AdminSettingsPage() {
       ]);
 
       if (settingsRes.ok) {
-        const d = await settingsRes.json() as { admins: AdminUser[]; maintenanceSections: MaintenanceSections; streakDailyBonus?: number; streakDay7Bonus?: number; streakTasksRequired?: number };
+        const d = await settingsRes.json() as {
+          admins: AdminUser[];
+          maintenanceSections: MaintenanceSections;
+          streakDailyBonus?: number;
+          streakDay7Bonus?: number;
+          streakTasksRequired?: number;
+          allowedDomains?: string[];
+          nexcoinPerInr?: number;
+          nexcoinPerUsd?: number;
+        };
         setAdmins(d.admins ?? []);
         setMaintenanceSections(d.maintenanceSections ?? {});
         if (d.streakDailyBonus    != null) setStreakDailyBonus(String(d.streakDailyBonus));
         if (d.streakDay7Bonus     != null) setStreakDay7Bonus(String(d.streakDay7Bonus));
         if (d.streakTasksRequired != null) setStreakTasksRequired(String(d.streakTasksRequired));
+        if (d.allowedDomains      != null) setAllowedDomains(d.allowedDomains);
+        if (d.nexcoinPerInr       != null) setNexcoinPerInr(String(d.nexcoinPerInr));
+        if (d.nexcoinPerUsd       != null) setNexcoinPerUsd(String(d.nexcoinPerUsd));
       }
       setLoadingAdmins(false);
 
@@ -271,7 +297,62 @@ export default function AdminSettingsPage() {
     setSavingStreak(false);
   }
 
+  function addDomain() {
+    const d = newDomain.trim().toLowerCase().replace(/^@/, "");
+    if (!d || !d.includes(".")) { setDomainsErr("Enter a valid domain like gmail.com"); return; }
+    if (allowedDomains.includes(d)) { setDomainsErr("Domain already in list."); return; }
+    setAllowedDomains((prev) => [...prev, d]);
+    setNewDomain("");
+    setDomainsErr(null);
+  }
+
+  function removeDomain(d: string) {
+    if (allowedDomains.length <= 1) { setDomainsErr("At least one domain must remain."); return; }
+    setAllowedDomains((prev) => prev.filter((x) => x !== d));
+    setDomainsErr(null);
+  }
+
+  async function saveDomains(e: React.FormEvent) {
+    e.preventDefault();
+    setSavingDomains(true);
+    setDomainsErr(null);
+    const res = await fetch("/api/admin/settings", {
+      method:  "PATCH",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${tokenRef.current}` },
+      body:    JSON.stringify({ action: "update_signup_domains", domains: allowedDomains }),
+    });
+    const data = await res.json() as { error?: string; allowedDomains?: string[] };
+    if (!res.ok) {
+      setDomainsErr(data.error ?? "Failed to save.");
+    } else {
+      if (data.allowedDomains) setAllowedDomains(data.allowedDomains);
+      setDomainsSaved(true);
+      setTimeout(() => setDomainsSaved(false), 3000);
+    }
+    setSavingDomains(false);
+  }
+
+  async function saveExchangeRates(e: React.FormEvent) {
+    e.preventDefault();
+    setSavingRates(true);
+    setRatesErr(null);
+    const res = await fetch("/api/admin/settings", {
+      method:  "PATCH",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${tokenRef.current}` },
+      body:    JSON.stringify({ action: "update_exchange_rates", nexcoinPerInr, nexcoinPerUsd }),
+    });
+    const data = await res.json() as { error?: string };
+    if (!res.ok) {
+      setRatesErr(data.error ?? "Failed to save.");
+    } else {
+      setRatesSaved(true);
+      setTimeout(() => setRatesSaved(false), 3000);
+    }
+    setSavingRates(false);
+  }
+
   const isOwner = currentRole === "owner";
+  const isOwnerOrAdmin = currentRole === "owner" || currentRole === "admin";
 
   return (
     <div className="space-y-6 max-w-2xl">
@@ -523,6 +604,121 @@ export default function AdminSettingsPage() {
             )}
             <Button type="submit" size="sm" disabled={savingStreak}>
               {savingStreak ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Save Streak Settings"}
+            </Button>
+          </form>
+        </section>
+      )}
+
+      {/* Signup Domains — owner + admin */}
+      {isOwnerOrAdmin && (
+        <section className="rounded-lg border border-[var(--border-default)] bg-[var(--surface-card)] divide-y divide-[var(--border-default)]">
+          <div className="px-6 py-4">
+            <div className="flex items-center gap-2">
+              <Globe className="h-4 w-4 text-[var(--brand-500)]" />
+              <h2 className="font-semibold text-[var(--text-primary)]">Signup Domains</h2>
+            </div>
+            <p className="text-xs text-[var(--text-muted)] mt-0.5">
+              Only email addresses from these domains can register. Individual exceptions are managed via the signup_exceptions table.
+            </p>
+          </div>
+          <form onSubmit={saveDomains} className="px-6 py-5 space-y-4">
+            {/* Current domain list */}
+            <div className="flex flex-wrap gap-2">
+              {allowedDomains.map((d) => (
+                <span
+                  key={d}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-[var(--surface-subtle)] border border-[var(--border-default)] text-[var(--text-primary)]"
+                >
+                  @{d}
+                  <button
+                    type="button"
+                    onClick={() => removeDomain(d)}
+                    className="text-[var(--text-muted)] hover:text-red-400 transition-colors"
+                    title={`Remove @${d}`}
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </span>
+              ))}
+            </div>
+            {/* Add new domain */}
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={newDomain}
+                onChange={(e) => setNewDomain(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addDomain(); } }}
+                placeholder="e.g. yahoo.com or company.org"
+                className="flex-1 h-9 px-3 rounded-md border border-[var(--border-strong)] bg-[var(--surface-subtle)] text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--border-focus)]"
+              />
+              <button
+                type="button"
+                onClick={addDomain}
+                className="h-9 px-3 rounded-md border border-[var(--border-strong)] bg-[var(--surface-subtle)] text-sm text-[var(--text-secondary)] hover:text-[var(--brand-500)] hover:border-[var(--brand-500)] transition-colors flex items-center gap-1.5"
+              >
+                <Plus className="h-3.5 w-3.5" /> Add
+              </button>
+            </div>
+            {domainsErr && <p className="text-sm text-red-400 bg-red-500/10 px-3 py-2 rounded-md">{domainsErr}</p>}
+            {domainsSaved && (
+              <div className="flex items-center gap-2 text-sm text-green-400 bg-green-500/10 px-3 py-2 rounded-md">
+                <CheckCircle2 className="h-4 w-4" /> Signup domains saved.
+              </div>
+            )}
+            <Button type="submit" size="sm" disabled={savingDomains}>
+              {savingDomains ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Save Domains"}
+            </Button>
+          </form>
+        </section>
+      )}
+
+      {/* Exchange Rates — owner only */}
+      {isOwner && (
+        <section className="rounded-lg border border-[var(--border-default)] bg-[var(--surface-card)] divide-y divide-[var(--border-default)]">
+          <div className="px-6 py-4">
+            <div className="flex items-center gap-2">
+              <RefreshCw className="h-4 w-4 text-[var(--brand-500)]" />
+              <h2 className="font-semibold text-[var(--text-primary)]">NexCoin Exchange Rates</h2>
+            </div>
+            <p className="text-xs text-[var(--text-muted)] mt-0.5">
+              Controls the auto-calculated NexCoin price in the Voucher Catalog. Changing rates does NOT retroactively update already-set voucher prices.
+            </p>
+          </div>
+          <form onSubmit={saveExchangeRates} className="px-6 py-5 space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-[var(--text-primary)] mb-1.5">NexCoins per ₹1 (INR)</label>
+                <input
+                  type="number"
+                  min="0.1"
+                  step="0.1"
+                  value={nexcoinPerInr}
+                  onChange={(e) => setNexcoinPerInr(e.target.value)}
+                  className="w-full h-10 px-3 rounded-lg border border-[var(--border-default)] bg-[var(--surface-subtle)] text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--border-focus)]"
+                />
+                <p className="text-xs text-[var(--text-muted)] mt-1">₹100 voucher = {(parseFloat(nexcoinPerInr) || 12.5) * 100} NexCoins</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-[var(--text-primary)] mb-1.5">NexCoins per $1 (USD)</label>
+                <input
+                  type="number"
+                  min="1"
+                  step="1"
+                  value={nexcoinPerUsd}
+                  onChange={(e) => setNexcoinPerUsd(e.target.value)}
+                  className="w-full h-10 px-3 rounded-lg border border-[var(--border-default)] bg-[var(--surface-subtle)] text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--border-focus)]"
+                />
+                <p className="text-xs text-[var(--text-muted)] mt-1">$10 voucher = {(parseFloat(nexcoinPerUsd) || 1000) * 10} NexCoins</p>
+              </div>
+            </div>
+            {ratesErr && <p className="text-sm text-red-400 bg-red-500/10 px-3 py-2 rounded-md">{ratesErr}</p>}
+            {ratesSaved && (
+              <div className="flex items-center gap-2 text-sm text-green-400 bg-green-500/10 px-3 py-2 rounded-md">
+                <CheckCircle2 className="h-4 w-4" /> Exchange rates saved.
+              </div>
+            )}
+            <Button type="submit" size="sm" disabled={savingRates}>
+              {savingRates ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Save Rates"}
             </Button>
           </form>
         </section>

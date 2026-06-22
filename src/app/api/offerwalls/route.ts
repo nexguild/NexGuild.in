@@ -12,21 +12,28 @@ export async function GET(req: NextRequest) {
   // Select api_key server-side to derive isLive — NEVER return the value to the client
   const { data: providers, error } = await admin
     .from("offerwall_providers")
-    .select("id, name, slug, is_ad_network, embed_url_template, api_key")
-    .order("name");
+    .select("id, name, slug, is_ad_network, embed_url_template, api_key, integration_type, is_active, display_order, description, logo_url")
+    .eq("is_active", true)
+    .order("display_order", { ascending: true })
+    .order("name", { ascending: true });
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
   const safeProviders = (providers ?? []).map((p: {
     id: string; name: string; slug: string; is_ad_network: boolean;
     embed_url_template: string | null; api_key: string | null;
+    integration_type: string | null; is_active: boolean;
+    display_order: number; description: string | null; logo_url: string | null;
   }) => ({
-    id:                p.id,
-    name:              p.name,
-    slug:              p.slug,
-    is_ad_network:     p.is_ad_network,
+    id:                 p.id,
+    name:               p.name,
+    slug:               p.slug,
+    is_ad_network:      p.is_ad_network,
     embed_url_template: p.embed_url_template,
-    isLive:            !!(p.api_key && p.api_key.trim().length > 0),
+    integration_type:   p.integration_type ?? "iframe",
+    description:        p.description,
+    logo_url:           p.logo_url,
+    isLive:             !!(p.api_key && p.api_key.trim().length > 0),
   }));
 
   return NextResponse.json({ providers: safeProviders });
