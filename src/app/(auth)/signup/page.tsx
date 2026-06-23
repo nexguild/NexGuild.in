@@ -29,44 +29,61 @@ export default function SignupPage() {
   const [error, setError]                     = useState("");
   const [loading, setLoading]                 = useState(false);
 
-  // Called by the form submit button — validates then triggers hCaptcha.
-  // Actual signup happens in onCaptchaVerify once the token arrives.
+  // invisible = Pro trial (no visible challenge); visible = free tier fallback (inline widget)
+  // onError switches to visible so signup is never blocked regardless of plan tier.
+  const [captchaMode, setCaptchaMode]   = useState<"invisible" | "visible">("invisible");
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+
+  function validate(): boolean {
+    if (password !== confirmPassword) { setError("Passwords do not match."); return false; }
+    if (password.length < 8)          { setError("Password must be at least 8 characters."); return false; }
+    const domain = email.toLowerCase().split("@")[1];
+    if (!["gmail.com", "outlook.com"].includes(domain)) {
+      setError("Please sign up with a Gmail or Outlook email address.");
+      return false;
+    }
+    if (!termsChecked) { setError("Please accept the Terms of Service and Privacy Policy."); return false; }
+    return true;
+  }
+
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
-
-    if (password !== confirmPassword) { setError("Passwords do not match."); return; }
-    if (password.length < 8)          { setError("Password must be at least 8 characters."); return; }
-
-    const emailDomain = email.toLowerCase().split("@")[1];
-    if (!["gmail.com", "outlook.com"].includes(emailDomain)) {
-      setError("Please sign up with a Gmail or Outlook email address.");
-      return;
-    }
-
-    if (!termsChecked) { setError("Please accept the Terms of Service and Privacy Policy."); return; }
-
+    if (!validate()) return;
     setLoading(true);
-    captchaRef.current?.execute();
+
+    if (captchaMode === "invisible") {
+      // Token arrives asynchronously in onCaptchaVerify → signup fires there
+      captchaRef.current?.execute();
+    } else {
+      // Visible widget already gave us a token; submit directly
+      if (!captchaToken) {
+        setError("Please complete the captcha verification above.");
+        setLoading(false);
+        return;
+      }
+      doSignup(captchaToken);
+    }
   }
 
-  async function onCaptchaVerify(captchaToken: string) {
+  async function doSignup(token: string) {
     const { error: authError } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        captchaToken,
+        captchaToken: token,
         data: {
-          full_name:            fullName,
+          full_name:          fullName,
           country,
-          referral_code_used:   referralCode || null,
-          terms_accepted_at:    new Date().toISOString(),
+          referral_code_used: referralCode || null,
+          terms_accepted_at:  new Date().toISOString(),
         },
         emailRedirectTo: `${window.location.origin}/auth/callback`,
       },
     });
 
     captchaRef.current?.resetCaptcha();
+    setCaptchaToken(null);
 
     if (authError) {
       setError(
@@ -82,6 +99,29 @@ export default function SignupPage() {
 
     router.push("/dashboard");
   }
+
+  function onCaptchaVerify(token: string) {
+    if (captchaMode === "invisible") {
+      // Invisible path: token arrives here, signup immediately
+      doSignup(token);
+    } else {
+      // Visible path: store token; user clicks Submit to continue
+      setCaptchaToken(token);
+    }
+  }
+
+  function onCaptchaError() {
+    // Switch to inline visible widget — works on any plan tier
+    captchaRef.current?.resetCaptcha();
+    setCaptchaMode("visible");
+    setCaptchaToken(null);
+    setLoading(false);
+  }
+
+  const submitDisabled =
+    loading ||
+    !termsChecked ||
+    (captchaMode === "visible" && !captchaToken);
 
   return (
     <div style={{ background: "#EBFBFA", minHeight: "100vh" }} className="w-full flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
@@ -192,10 +232,8 @@ export default function SignupPage() {
           {/* Terms & Privacy — active consent checkbox */}
           <div className="flex items-start gap-3 pt-1">
             <input
-              type="checkbox"
-              id="terms"
-              checked={termsChecked}
-              onChange={(e) => setTermsChecked(e.target.checked)}
+              type="checkbox" id="terms"
+              checked={termsChecked} onChange={(e) => setTermsChecked(e.target.checked)}
               required
               style={{ transition: "all 0.2s ease" }}
               className="mt-1 h-4 w-4 appearance-none rounded border border-stone-300 bg-white checked:bg-[#0D9488] checked:border-[#0D9488] focus:ring-2 focus:ring-[#0D9488]/20 focus:outline-none relative cursor-pointer flex-shrink-0
@@ -209,21 +247,58 @@ export default function SignupPage() {
             </label>
           </div>
 
-          {/* Invisible hCaptcha — fires on execute(), calls onCaptchaVerify with token */}
+          {/*
+            hCaptcha — dual-mode:
+            key={captchaMode} forces a remount when switching invisible→visible.
+
+            Invisible (default, Pro trial): fires on captcha.execute(), no UI shown
+            to user unless risk detected. onVerify receives token → doSignup immediately.
+
+            Visible (free tier fallback): inline challenge widget rendered below.
+            onVerify stores token; Submit button stays disabled until token is set.
+            Switch is triggered automatically by onError (e.g. after Pro trial ends).
+          */}
           <HCaptcha
+            key={captchaMode}
             ref={captchaRef}
             sitekey={process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY!}
-            size="invisible"
+            size={captchaMode === "invisible" ? "invisible" : "normal"}
+            theme="light"
             onVerify={onCaptchaVerify}
-            onExpire={() => { captchaRef.current?.resetCaptcha(); setLoading(false); setError("Captcha expired. Please try again."); }}
-            onError={() => { captchaRef.current?.resetCaptcha(); setLoading(false); setError("Captcha failed. Please try again."); }}
+            onExpire={() => {
+              setCaptchaToken(null);
+              if (captchaMode === "invisible") {
+                captchaRef.current?.resetCaptcha();
+                setLoading(false);
+              }
+            }}
+            onError={onCaptchaError}
+            onClose={() => {
+              // User dismissed the invisible-mode popup without completing
+              if (captchaMode === "invisible") {
+                captchaRef.current?.resetCaptcha();
+                setLoading(false);
+              }
+            }}
           />
+
+          {captchaMode === "visible" && !captchaToken && (
+            <p className="text-xs text-stone-400 text-center -mt-1">
+              Complete the verification above to continue
+            </p>
+          )}
+
+          {captchaMode === "visible" && captchaToken && (
+            <p className="text-xs text-[#0D9488] text-center -mt-1">
+              ✓ Verification complete
+            </p>
+          )}
 
           {/* Submit */}
           <Button
             type="submit"
             size="lg"
-            disabled={loading || !termsChecked}
+            disabled={submitDisabled}
             style={{ background: "linear-gradient(135deg, #10B981 0%, #059669 100%)", color: "#FFFFFF" }}
             className="w-full mt-2 rounded-xl font-bold shadow-sm transition-all duration-300 hover:translate-y-[-2px] hover:shadow-[0_6px_15px_rgba(16,185,129,0.25)] disabled:opacity-50 disabled:cursor-not-allowed disabled:translate-y-0"
           >
