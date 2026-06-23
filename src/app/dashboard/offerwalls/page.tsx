@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Layers, Info } from "lucide-react";
+import { Layers, Info, Star, Clock } from "lucide-react";
 import { NexCoinIcon } from "@/components/ui/nexcoin-icon";
 import { supabase } from "@/lib/supabase";
 import { applyWidgetConfig, injectScript, type WidgetInitConfig } from "@/lib/offerwall-widget-inject";
@@ -18,11 +18,27 @@ interface Provider {
   isLive: boolean;
 }
 
+interface TRSurvey {
+  campaign_id:    string;
+  loi:            number;
+  cpi:            number;
+  rank:           number;
+  average_rating: number;
+  rating_count:   number;
+  nexcoins:       number;
+  entry_link:     string;
+}
+
 export default function OfferwallsPage() {
   const [providers, setProviders]   = useState<Provider[]>([]);
   const [userId, setUserId]         = useState<string | null>(null);
   const [loading, setLoading]       = useState(true);
   const [activeSlug, setActiveSlug] = useState<string | null>(null);
+
+  // TheoremReach survey state
+  const [trSurveys, setTrSurveys]         = useState<TRSurvey[]>([]);
+  const [trLoading, setTrLoading]         = useState(false);
+  const [trToken, setTrToken]             = useState<string | null>(null);
 
   useEffect(() => {
     async function init() {
@@ -35,6 +51,7 @@ export default function OfferwallsPage() {
       ]);
 
       setUserId(user?.id ?? null);
+      setTrToken(session?.access_token ?? null);
 
       if (!session?.access_token) {
         setLoading(false);
@@ -48,7 +65,6 @@ export default function OfferwallsPage() {
       if (res.ok) {
         const { providers: p } = await res.json() as { providers: Provider[] };
         setProviders(p);
-        // Default-select the first live task offerwall
         const firstLive = p.find((x) => !x.is_ad_network && x.isLive);
         if (firstLive) setActiveSlug(firstLive.slug);
       }
@@ -64,32 +80,37 @@ export default function OfferwallsPage() {
 
   const activeProv = taskOfferwalls.find((p) => p.slug === activeSlug) ?? null;
 
-  // For script_tag providers: inject (or re-inject) their script AFTER this
-  // render cycle has put the #fullscreen div in the DOM. Force-reinject so
-  // the script re-executes and finds the div even if it already ran from the
-  // layout-level loader before the user navigated to this page.
+  // Fetch TheoremReach surveys when their tab becomes active
   useEffect(() => {
-    const slug = activeProv?.slug;
+    if (activeProv?.slug !== "theoremreach" || activeProv?.integration_type !== "api" || !trToken) return;
+    setTrLoading(true);
+    fetch("/api/offerwall/theoremreach/surveys", {
+      headers: { Authorization: `Bearer ${trToken}` },
+    })
+      .then((r) => r.json())
+      .then((d: { surveys?: TRSurvey[] }) => setTrSurveys(d.surveys ?? []))
+      .catch(() => setTrSurveys([]))
+      .finally(() => setTrLoading(false));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeSlug]);
+
+  // script_tag: re-inject after #fullscreen div is in the DOM
+  useEffect(() => {
+    const slug    = activeProv?.slug;
     const intType = activeProv?.integration_type;
     if (!slug || intType !== "script_tag") return;
 
     async function inject() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.access_token) return;
-
       const res = await fetch("/api/offerwall/widget-config", {
         headers: { Authorization: `Bearer ${session.access_token}` },
       });
       if (!res.ok) return;
-
       const { widgets } = await res.json() as { widgets: WidgetInitConfig[] };
       const w = widgets?.find((x) => x.slug === slug);
       if (!w?.scriptUrl) return;
-
       applyWidgetConfig(w);
-
-      // force=true removes the existing <script> tag so CPX re-executes and
-      // finds #fullscreen which is now in the DOM
       injectScript(w.scriptUrl, true);
     }
 
@@ -102,10 +123,112 @@ export default function OfferwallsPage() {
     return p.embed_url_template.replace(/\{user_id\}/g, userId);
   }
 
+  function renderStars(rating: number) {
+    return Array.from({ length: 5 }).map((_, i) => (
+      <Star
+        key={i}
+        className={`h-3 w-3 ${i < Math.round(rating) ? "text-amber-400 fill-amber-400" : "text-stone-300"}`}
+      />
+    ));
+  }
+
+  function renderApiSurveys() {
+    if (trLoading) {
+      return (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="rounded-xl border border-[var(--border-default)] bg-[var(--surface-card)] p-5 space-y-3 animate-pulse">
+              <div className="h-4 w-3/4 bg-[var(--surface-subtle)] rounded" />
+              <div className="h-3 w-1/2 bg-[var(--surface-subtle)] rounded" />
+              <div className="h-8 w-full bg-[var(--surface-subtle)] rounded-lg mt-4" />
+            </div>
+          ))}
+        </div>
+      );
+    }
+
+    if (trSurveys.length === 0) {
+      return (
+        <div className="rounded-xl border border-[var(--border-default)] bg-[var(--surface-card)] py-20 flex flex-col items-center gap-4 text-center px-6">
+          <div className="h-14 w-14 rounded-full bg-[#E6FAF5] flex items-center justify-center">
+            <Layers className="h-7 w-7 text-[#02b491]" />
+          </div>
+          <p className="font-semibold text-[var(--text-primary)]">No surveys available right now</p>
+          <p className="text-sm text-[var(--text-secondary)] max-w-sm">
+            TheoremReach matches surveys to your profile. Check back soon — new surveys appear throughout the day.
+          </p>
+        </div>
+      );
+    }
+
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <p className="text-sm text-[var(--text-secondary)]">
+            <span className="font-semibold text-[var(--text-primary)]">{trSurveys.length}</span> surveys available
+          </p>
+          <p className="text-xs text-[var(--text-muted)]">Sorted by best match</p>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {trSurveys.map((s) => (
+            <div
+              key={s.campaign_id}
+              className="rounded-xl border border-[var(--border-default)] bg-[var(--surface-card)] p-5 flex flex-col gap-4 hover:border-[var(--brand-500)] transition-colors"
+            >
+              {/* Rating row */}
+              <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-0.5">{renderStars(s.average_rating)}</div>
+                <span className="text-xs text-[var(--text-muted)]">
+                  {s.average_rating.toFixed(1)} ({s.rating_count})
+                </span>
+              </div>
+
+              {/* Reward + time */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5">
+                  <NexCoinIcon size={18} />
+                  <span className="text-lg font-bold text-[var(--text-primary)]">{s.nexcoins}</span>
+                  <span className="text-xs text-[var(--text-muted)]">NexCoins</span>
+                </div>
+                <div className="flex items-center gap-1 text-xs text-[var(--text-muted)]">
+                  <Clock className="h-3.5 w-3.5" />
+                  <span>~{s.loi} min</span>
+                </div>
+              </div>
+
+              {/* CTA */}
+              <a
+                href={s.entry_link}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full text-center text-sm font-semibold py-2 rounded-lg bg-[var(--brand-500)] text-white hover:opacity-90 transition-opacity"
+              >
+                Start Survey →
+              </a>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   function renderEmbedArea(p: Provider) {
+    if (p.integration_type === "api") {
+      return (
+        <div className="rounded-xl border border-[var(--border-default)] bg-[var(--surface-card)] overflow-hidden">
+          <div className="px-5 py-3 border-b border-[var(--border-default)] bg-[var(--surface-subtle)] flex items-center gap-2">
+            <NexCoinIcon size={16} />
+            <p className="text-xs text-[var(--text-muted)]">
+              Earnings from <span className="font-semibold text-[var(--text-primary)]">{p.name}</span> are credited to your NexCoins automatically after survey completion.
+            </p>
+          </div>
+          <div className="p-5">{renderApiSurveys()}</div>
+        </div>
+      );
+    }
+
     if (p.integration_type === "script_tag") {
-      // The OfferwallWidgetLoader (in dashboard layout) injects the provider's script
-      // which finds this div by ID and renders the fullscreen widget inside it.
       return (
         <div className="rounded-xl border border-[var(--border-default)] bg-[var(--surface-card)] overflow-hidden">
           <div className="px-5 py-3 border-b border-[var(--border-default)] bg-[var(--surface-subtle)] flex items-center gap-2">
@@ -119,7 +242,7 @@ export default function OfferwallsPage() {
       );
     }
 
-    // iframe embed (default)
+    // iframe (default)
     const embedUrl = buildEmbedUrl(p);
     return (
       <div className="rounded-xl border border-[var(--border-default)] bg-[var(--surface-card)] overflow-hidden">
@@ -205,7 +328,7 @@ export default function OfferwallsPage() {
             ))}
           </div>
 
-          {/* Embed Area */}
+          {/* Embed / Survey Area */}
           {liveWalls.length === 0 ? (
             <div className="rounded-xl border border-[var(--border-default)] bg-[var(--surface-card)] py-20 flex flex-col items-center gap-4 text-center px-6">
               <div className="h-14 w-14 rounded-full bg-[#E6FAF5] flex items-center justify-center">
