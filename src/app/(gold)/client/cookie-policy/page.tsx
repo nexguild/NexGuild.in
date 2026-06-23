@@ -1,7 +1,7 @@
-﻿import type { Metadata } from "next";
+import type { Metadata } from "next";
 
 export const metadata: Metadata = { 
-  title: "Client Cookie Policy â€” NexGuild",
+  title: "Client Cookie Policy — NexGuild",
   description: "Explains standard web browsing cookie configurations for NexGuild informational pages.",
 };
 
@@ -10,7 +10,7 @@ export default function ClientCookiePolicyPage() {
     <div style={{ background: "#faefef", color: "#1C1917", minHeight: "100vh" }} className="py-20 px-6">
       <div className="mx-auto max-w-3xl">
         <p className="text-[#D97706] text-xs font-bold uppercase tracking-widest mb-3 italic">
-          Corporate Edition â€¢ Last updated: June 2026
+          Corporate Edition • Last updated: June 2026
         </p>
         
         <h1 
