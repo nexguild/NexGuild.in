@@ -1,7 +1,7 @@
-﻿import type { Metadata } from "next";
+import type { Metadata } from "next";
 
 export const metadata: Metadata = { 
-  title: "Cookie Policy â€” NexGuild",
+  title: "Cookie Policy — NexGuild",
   description: "NexGuild uses cookies and similar technologies to keep you logged in and improve your experience.",
 };
 

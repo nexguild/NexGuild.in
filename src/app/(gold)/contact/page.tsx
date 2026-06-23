@@ -1,10 +1,10 @@
-﻿import type { Metadata } from "next";
+import type { Metadata } from "next";
 import { FadeIn } from "@/components/ui/fade-in";
 import { Mail, MessageCircle } from "lucide-react";
 import { ContactForm } from "./ContactForm";
 
 export const metadata: Metadata = {
-  title: "Contact NexGuild â€” Project Enquiries",
+  title: "Contact NexGuild — Project Enquiries",
   description:
     "Get in touch to discuss your data project requirements. We work with organisations on audio, transcription, annotation, and human-powered digital tasks.",
   openGraph: {
@@ -18,7 +18,7 @@ export default function ContactPage() {
   return (
     <div style={{ background: "#FAF6EF", color: "#1C1917", minHeight: "100vh" }}>
       
-      {/* â”€â”€ Hero Segment with Client Page Matching Orbs â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+      {/* ── Hero Segment with Client Page Matching Orbs ────────────────── */}
       <section 
         className="relative overflow-hidden py-20 px-6"
         style={{ background: "linear-gradient(160deg, #FEF9F0 0%, #FAF3E4 100%)", borderBottom: "1px solid rgba(217,119,6,0.08)" }}
@@ -69,7 +69,7 @@ export default function ContactPage() {
         </div>
       </section>
 
-      {/* â”€â”€ Contact Form + Direct Channels â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+      {/* ── Contact Form + Direct Channels ───────────────────────────── */}
       <section style={{ background: "#FAF6EF", padding: "4rem 1.5rem" }}>
         <div className="mx-auto max-w-container">
           <div className="grid grid-cols-1 lg:grid-cols-5 gap-10">
@@ -103,8 +103,8 @@ export default function ContactPage() {
                   </div>
                   <div className="min-w-0">
                     <h3 className="font-semibold text-[#1C1917] text-sm mb-0.5">WhatsApp</h3>
-                    <p className="text-xs text-[#44403C]">Fastest response â€” direct project discussions.</p>
-                    <p className="text-xs text-[#25D366] mt-1 font-medium">Message on WhatsApp â†’</p>
+                    <p className="text-xs text-[#44403C]">Fastest response — direct project discussions.</p>
+                    <p className="text-xs text-[#25D366] mt-1 font-medium">Message on WhatsApp →</p>
                   </div>
                 </a>
 
@@ -119,7 +119,7 @@ export default function ContactPage() {
                   <div className="min-w-0">
                     <h3 className="font-semibold text-[#1C1917] text-sm mb-0.5">Email</h3>
                     <p className="text-xs text-[#44403C]">For project briefs and partnership enquiries.</p>
-                    <p className="text-xs text-[#92400E] mt-1 font-medium">admin@nexguild.in â†’</p>
+                    <p className="text-xs text-[#92400E] mt-1 font-medium">admin@nexguild.in →</p>
                   </div>
                 </a>
 
@@ -138,7 +138,7 @@ export default function ContactPage() {
                   <div className="min-w-0">
                     <h3 className="font-semibold text-[#1C1917] text-sm mb-0.5">LinkedIn</h3>
                     <p className="text-xs text-[#44403C]">Connect professionally or send a message.</p>
-                    <p className="text-xs text-[#0A66C2] mt-1 font-medium">linkedin.com/in/somen-biswas â†’</p>
+                    <p className="text-xs text-[#0A66C2] mt-1 font-medium">linkedin.com/in/somen-biswas →</p>
                   </div>
                 </a>
               </FadeIn>

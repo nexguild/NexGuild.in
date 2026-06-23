@@ -1,4 +1,4 @@
-﻿import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { Resend } from "resend";
 
 const TO_EMAIL = "admin@nexguild.in";
@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
     from: `NexGuild Contact Form <${FROM_EMAIL}>`,
     to: TO_EMAIL,
     replyTo: email,
-    subject: `New Contact: ${esc(name)}${company ? ` â€” ${esc(company)}` : ""}`,
+    subject: `New Contact: ${esc(name)}${company ? ` — ${esc(company)}` : ""}`,
     html: `
       <div style="font-family: sans-serif; max-width: 600px;">
         <h2 style="color: #F59E0B;">New Contact Form Submission</h2>

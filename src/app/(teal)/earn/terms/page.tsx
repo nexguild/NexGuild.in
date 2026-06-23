@@ -1,7 +1,7 @@
-﻿import type { Metadata } from "next";
+import type { Metadata } from "next";
 
 export const metadata: Metadata = { 
-  title: "Terms of Service â€” NexGuild",
+  title: "Terms of Service — NexGuild",
   description: "These Terms of Service govern your use of NexGuild. By creating an account, you agree to these terms.",
 };
 

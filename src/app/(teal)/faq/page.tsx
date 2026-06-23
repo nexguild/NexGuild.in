@@ -1,9 +1,9 @@
-﻿import type { Metadata } from "next";
+import type { Metadata } from "next";
 import Link from "next/link";
 import { FadeIn } from "@/components/ui/fade-in";
 import { ArrowRight, ChevronDown } from "lucide-react";
 
-export const metadata: Metadata = { title: "FAQ â€” NexGuild" };
+export const metadata: Metadata = { title: "FAQ — NexGuild" };
 
 const FAQ_SECTIONS = [
   {
@@ -29,7 +29,7 @@ const FAQ_SECTIONS = [
     faqs: [
       { q: "How does my NexCoins balance work?",             a: "Your NexCoins balance shows confirmed coins ready to redeem. Coins from tasks still under review are shown as pending and cannot be redeemed yet." },
       { q: "What can I redeem NexCoins for?",                a: "You can redeem NexCoins for Amazon, Flipkart, Paytm, PhonePe, Swiggy, Zomato, and Google Play gift vouchers. Visit the Store in your dashboard." },
-      { q: "Is there a minimum NexCoins requirement?",       a: "Each voucher has a fixed NexCoins cost shown in the Store. There is no separate minimum â€” just choose a voucher your balance covers." },
+      { q: "Is there a minimum NexCoins requirement?",       a: "Each voucher has a fixed NexCoins cost shown in the Store. There is no separate minimum — just choose a voucher your balance covers." },
       { q: "How long does voucher delivery take?",           a: "Vouchers are delivered to your registered email within 48 hours after your redemption request is processed by our team." },
     ],
   },
@@ -37,7 +37,7 @@ const FAQ_SECTIONS = [
     section: "Task Review & Quality",
     faqs: [
       { q: "What happens after I submit a task?",   a: "Your submission enters the review queue. Our team checks it against the task requirements. If approved, earnings move to your wallet. If rejected, you receive feedback explaining why." },
-      { q: "Why was my submission rejected?",        a: "Submissions are rejected when they do not meet the task's quality requirements â€” incomplete answers, poor audio quality, inaccurate labels, etc. You will always receive feedback with the rejection." },
+      { q: "Why was my submission rejected?",        a: "Submissions are rejected when they do not meet the task's quality requirements — incomplete answers, poor audio quality, inaccurate labels, etc. You will always receive feedback with the rejection." },
       { q: "Can I resubmit a rejected task?",        a: "Some tasks allow resubmission. The task details will indicate if revision is permitted. Follow the feedback you received to improve your submission." },
       { q: "How is my approval rate calculated?",    a: "Your approval rate is the percentage of your submitted tasks that were approved. A higher approval rate unlocks access to better-paying tasks." },
     ],
@@ -56,7 +56,7 @@ export default function FAQPage() {
   return (
     <div style={{ background: "#EBFBFA", color: "#1E293B", minHeight: "100vh" }}>
       
-      {/* â”€â”€ Hero Section â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+      {/* ── Hero Section ─────────────────────────────────────────── */}
       <section className="relative overflow-hidden py-24 px-6 text-center">
         {/* Soft Radial Mint Glow */}
         <div
@@ -86,7 +86,7 @@ export default function FAQPage() {
         </div>
       </section>
 
-      {/* â”€â”€ FAQ Sections Wrapper â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+      {/* ── FAQ Sections Wrapper ─────────────────────────────────── */}
       <section className="py-16 px-6" style={{ background: "rgba(255,255,255,0.25)", backdropFilter: "blur(12px)", borderTop: "1px solid rgba(13,148,136,0.06)", borderBottom: "1px solid rgba(13,148,136,0.06)" }}>
         <div className="mx-auto max-w-2xl space-y-14">
           {FAQ_SECTIONS.map((section, si) => (
@@ -129,7 +129,7 @@ export default function FAQPage() {
         </div>
       </section>
 
-      {/* â”€â”€ CTA / Still Have Questions Section â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+      {/* ── CTA / Still Have Questions Section ───────────────────── */}
       <section className="py-20 px-6 text-center relative overflow-hidden">
         <FadeIn>
           <div className="mx-auto max-w-container">

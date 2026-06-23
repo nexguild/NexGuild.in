@@ -1,4 +1,4 @@
-﻿import Link from "next/link";
+import Link from "next/link";
 import Image from "next/image";
 
 const COMPANY_LINKS = [
@@ -19,9 +19,9 @@ export function GoldFooter() {
   return (
     <footer 
       className="border-t border-[rgba(245,158,11,0.15)] shadow-xl relative overflow-hidden"
-      style={{ backgroundColor: "#110F0E" }} // à¦¸à¦²à¦¿à¦¡ à¦¡à¦¿à¦ª à¦šà¦¾à¦°à¦•à§‹à¦² à¦¬à§à¦²à§à¦¯à¦¾à¦• à¦«à§à¦°à§‡à¦®
+      style={{ backgroundColor: "#110F0E" }} // Solid deep charcoal black
     >
-      {/* à¦«à§à¦Ÿà¦¾à¦°à§‡ à¦¹à¦¾à¦²à¦•à¦¾ à¦¸à§à¦¥à¦¿à¦° à¦—à§‹à¦²à§à¦¡à§‡à¦¨ à¦°à§‡à¦¡à¦¿à§Ÿà¦¾à¦² à¦¬à§à¦¯à¦¾à¦•à¦—à§à¦°à¦¾à¦‰à¦¨à§à¦¡ à¦¯à¦¾à¦¤à§‡ à¦à¦•à¦¦à¦® à¦«à§à¦²à§à¦¯à¦¾à¦Ÿ à¦¨à¦¾ à¦²à¦¾à¦—à§‡ */}
+      {/* Subtle warm golden radial glow — footer background */}
       <div 
         aria-hidden 
         className="pointer-events-none absolute inset-0 opacity-40" 
@@ -45,7 +45,7 @@ export function GoldFooter() {
               />
             </div>
             <p className="text-sm text-stone-400 leading-relaxed mb-5">
-              Trusted by organisations for scalable human data projects. We recruit, brief, and manage every contributor â€” end to end.
+              Trusted by organisations for scalable human data projects. We recruit, brief, and manage every contributor — end to end.
             </p>
             <div className="flex items-center gap-3">
               <a
@@ -173,7 +173,7 @@ export function GoldFooter() {
             href="/earn"
             className="text-xs text-stone-600 hover:text-[#F59E0B] transition-colors"
           >
-            Looking to earn? Join as a contributor â†’
+            Looking to earn? Join as a contributor →
           </Link>
         </div>
       </div>

@@ -1,4 +1,4 @@
-﻿import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { Resend } from "resend";
 import { notifyAdmins } from "@/lib/email";
@@ -86,7 +86,7 @@ export async function POST(req: NextRequest) {
         `,
       }).catch((e: unknown) => console.error("[create-ticket] email error:", e));
     } else {
-      console.warn("[create-ticket] RESEND_API_KEY not set â€” email skipped");
+      console.warn("[create-ticket] RESEND_API_KEY not set — email skipped");
     }
 
     // Notify role-based admin users async

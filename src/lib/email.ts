@@ -1,4 +1,4 @@
-﻿import { Resend } from "resend";
+import { Resend } from "resend";
 import { SupabaseClient } from "@supabase/supabase-js";
 
 export const FROM_NOREPLY = "NexGuild <noreply@nexguild.in>";
@@ -8,8 +8,8 @@ export function getResend(): Resend | null {
   return new Resend(process.env.RESEND_API_KEY);
 }
 
-// â”€â”€â”€ Admin notification emails â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// Sends role-based notification emails to admin-tier users. Fire-and-forget â€”
+// ─── Admin notification emails ────────────────────────────────────────────────
+// Sends role-based notification emails to admin-tier users. Fire-and-forget —
 // failures are logged but never thrown so they can't break the caller.
 export async function notifyAdmins(
   adminClient: SupabaseClient,
@@ -86,14 +86,14 @@ function adminNotifHtml(eventLabel: string, contributorName: string, detail: str
           </table>
           <table cellpadding="0" cellspacing="0">
             <tr><td style="background:#02b491;border-radius:8px;">
-              <a href="${actionUrl}" style="display:inline-block;padding:11px 22px;font-size:13px;font-weight:700;color:#fff;text-decoration:none;">View in Admin â†’</a>
+              <a href="${actionUrl}" style="display:inline-block;padding:11px 22px;font-size:13px;font-weight:700;color:#fff;text-decoration:none;">View in Admin →</a>
             </td></tr>
           </table>
         </td>
       </tr>
       <tr>
         <td style="padding:14px 28px;border-top:1px solid #2a2a2a;text-align:center;">
-          <p style="margin:0;font-size:11px;color:#444;">NexGuild Â· <a href="https://nexguild.in/admin" style="color:#444;text-decoration:none;">nexguild.in/admin</a></p>
+          <p style="margin:0;font-size:11px;color:#444;">NexGuild · <a href="https://nexguild.in/admin" style="color:#444;text-decoration:none;">nexguild.in/admin</a></p>
         </td>
       </tr>
     </table>
@@ -148,38 +148,38 @@ function btn(text: string, href: string): string {
 </table>`;
 }
 
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─────────────────────────────────────────────────────────────────────────────
 // 1. Welcome
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─────────────────────────────────────────────────────────────────────────────
 export function welcomeHtml(name: string): string {
   const n = esc(name);
   return layout(`
-<h1 style="margin:0 0 6px;font-size:24px;font-weight:800;color:#fff;">Welcome to NexGuild! ðŸŽ‰</h1>
+<h1 style="margin:0 0 6px;font-size:24px;font-weight:800;color:#fff;">Welcome to NexGuild! 🎉</h1>
 <p style="margin:0 0 24px;font-size:14px;color:rgba(255,255,255,0.38);">Your account is ready. Let's get you earning.</p>
 
 <p style="margin:0 0 20px;font-size:15px;color:rgba(255,255,255,0.7);line-height:1.7;">
   Hi <strong style="color:#fff;">${n}</strong>,<br><br>
-  You're now part of NexGuild â€” the platform where contributors earn real rewards by completing tasks for organisations.
+  You're now part of NexGuild — the platform where contributors earn real rewards by completing tasks for organisations.
   Browse tasks, earn NexCoins, and redeem them for Amazon, Flipkart, and more gift vouchers.
 </p>
 
 <div style="background:#111;border:1px solid #222;border-radius:10px;padding:18px 22px;margin:0 0 24px;">
   <p style="margin:0 0 12px;font-size:12px;font-weight:700;color:#F59E0B;text-transform:uppercase;letter-spacing:1px;">Get started in 3 steps</p>
-  <p style="margin:0 0 8px;font-size:14px;color:rgba(255,255,255,0.65);line-height:1.6;"><strong style="color:#fff;">1.</strong> Complete your profile â€” add skills and device info</p>
+  <p style="margin:0 0 8px;font-size:14px;color:rgba(255,255,255,0.65);line-height:1.6;"><strong style="color:#fff;">1.</strong> Complete your profile — add skills and device info</p>
   <p style="margin:0 0 8px;font-size:14px;color:rgba(255,255,255,0.65);line-height:1.6;"><strong style="color:#fff;">2.</strong> Browse available tasks and find one that fits you</p>
   <p style="margin:0;font-size:14px;color:rgba(255,255,255,0.65);line-height:1.6;"><strong style="color:#fff;">3.</strong> Submit your work and earn NexCoins</p>
 </div>
 
-${btn("Go to Dashboard â†’", "https://nexguild.in/dashboard")}
+${btn("Go to Dashboard →", "https://nexguild.in/dashboard")}
 
 <p style="margin:16px 0 0;font-size:13px;color:rgba(255,255,255,0.3);">
-  New to NexGuild? <a href="https://nexguild.in/earn" style="color:#F59E0B;text-decoration:none;">See how it works â†’</a>
+  New to NexGuild? <a href="https://nexguild.in/earn" style="color:#F59E0B;text-decoration:none;">See how it works →</a>
 </p>`);
 }
 
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─────────────────────────────────────────────────────────────────────────────
 // 2. Task Approved
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─────────────────────────────────────────────────────────────────────────────
 export function taskApprovedHtml(
   name: string,
   taskTitle: string,
@@ -189,7 +189,7 @@ export function taskApprovedHtml(
   const n = esc(name), t = esc(taskTitle);
   return layout(`
 <div style="background:linear-gradient(135deg,#0a1f0a,#0f1a0f);border:1px solid rgba(34,197,94,0.2);border-radius:10px;padding:18px 22px;margin:0 0 24px;">
-  <p style="margin:0 0 4px;font-size:12px;font-weight:700;color:#22c55e;text-transform:uppercase;letter-spacing:1px;">Submission Approved âœ“</p>
+  <p style="margin:0 0 4px;font-size:12px;font-weight:700;color:#22c55e;text-transform:uppercase;letter-spacing:1px;">Submission Approved ✓</p>
   <p style="margin:0;font-size:30px;font-weight:800;color:#4ade80;">+${coinsAwarded.toLocaleString()} NexCoins</p>
 </div>
 
@@ -213,12 +213,12 @@ export function taskApprovedHtml(
   </td></tr>
 </table>
 
-${btn("View Earnings â†’", "https://nexguild.in/dashboard/earnings")}`);
+${btn("View Earnings →", "https://nexguild.in/dashboard/earnings")}`);
 }
 
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─────────────────────────────────────────────────────────────────────────────
 // 3. Task Rejected
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─────────────────────────────────────────────────────────────────────────────
 export function taskRejectedHtml(
   name: string,
   taskTitle: string,
@@ -242,17 +242,17 @@ ${f ? `<div style="background:#1c1010;border:1px solid rgba(239,68,68,0.25);bord
 
 <div style="background:#111;border:1px solid #222;border-radius:10px;padding:16px 20px;margin:0 0 24px;">
   <p style="margin:0 0 10px;font-size:12px;font-weight:700;color:#F59E0B;text-transform:uppercase;letter-spacing:1px;">Next steps</p>
-  <p style="margin:0 0 6px;font-size:14px;color:rgba(255,255,255,0.6);line-height:1.6;">â€¢ Review the task instructions carefully</p>
-  <p style="margin:0 0 6px;font-size:14px;color:rgba(255,255,255,0.6);line-height:1.6;">â€¢ Address the feedback above before re-submitting</p>
-  <p style="margin:0;font-size:14px;color:rgba(255,255,255,0.6);line-height:1.6;">â€¢ You can re-submit when you're confident in your work</p>
+  <p style="margin:0 0 6px;font-size:14px;color:rgba(255,255,255,0.6);line-height:1.6;">• Review the task instructions carefully</p>
+  <p style="margin:0 0 6px;font-size:14px;color:rgba(255,255,255,0.6);line-height:1.6;">• Address the feedback above before re-submitting</p>
+  <p style="margin:0;font-size:14px;color:rgba(255,255,255,0.6);line-height:1.6;">• You can re-submit when you're confident in your work</p>
 </div>
 
-${btn("Go to My Tasks â†’", "https://nexguild.in/dashboard/tasks")}`);
+${btn("Go to My Tasks →", "https://nexguild.in/dashboard/tasks")}`);
 }
 
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─────────────────────────────────────────────────────────────────────────────
 // 4. Assignment Approved
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─────────────────────────────────────────────────────────────────────────────
 export function assignmentApprovedHtml(
   name: string,
   taskTitle: string,
@@ -261,7 +261,7 @@ export function assignmentApprovedHtml(
   const n = esc(name), t = esc(taskTitle), id = esc(taskId);
   return layout(`
 <div style="background:linear-gradient(135deg,#0a1f0a,#0f1a0f);border:1px solid rgba(34,197,94,0.2);border-radius:10px;padding:18px 22px;margin:0 0 24px;">
-  <p style="margin:0 0 4px;font-size:12px;font-weight:700;color:#22c55e;text-transform:uppercase;letter-spacing:1px;">Assignment Approved âœ“</p>
+  <p style="margin:0 0 4px;font-size:12px;font-weight:700;color:#22c55e;text-transform:uppercase;letter-spacing:1px;">Assignment Approved ✓</p>
   <p style="margin:0;font-size:20px;font-weight:700;color:#fff;">${t}</p>
 </div>
 
@@ -270,12 +270,12 @@ export function assignmentApprovedHtml(
   Your assignment for <strong style="color:#fff;">${t}</strong> has been approved. You can now access the full task and start earning NexCoins.
 </p>
 
-${btn("Start the Task â†’", `https://nexguild.in/dashboard/tasks/${id}`)}`);
+${btn("Start the Task →", `https://nexguild.in/dashboard/tasks/${id}`)}`);
 }
 
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─────────────────────────────────────────────────────────────────────────────
 // 5. Assignment Rejected
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─────────────────────────────────────────────────────────────────────────────
 export function assignmentRejectedHtml(
   name: string,
   taskTitle: string,
@@ -299,17 +299,17 @@ ${f ? `<div style="background:#1c1010;border:1px solid rgba(239,68,68,0.25);bord
 
 <div style="background:#111;border:1px solid #222;border-radius:10px;padding:16px 20px;margin:0 0 24px;">
   <p style="margin:0 0 10px;font-size:12px;font-weight:700;color:#F59E0B;text-transform:uppercase;letter-spacing:1px;">Tips to improve</p>
-  <p style="margin:0 0 6px;font-size:14px;color:rgba(255,255,255,0.6);line-height:1.6;">â€¢ Re-read the task description and requirements carefully</p>
-  <p style="margin:0 0 6px;font-size:14px;color:rgba(255,255,255,0.6);line-height:1.6;">â€¢ Check your work for accuracy before re-applying</p>
-  <p style="margin:0;font-size:14px;color:rgba(255,255,255,0.6);line-height:1.6;">â€¢ You can re-apply for this assignment after reviewing</p>
+  <p style="margin:0 0 6px;font-size:14px;color:rgba(255,255,255,0.6);line-height:1.6;">• Re-read the task description and requirements carefully</p>
+  <p style="margin:0 0 6px;font-size:14px;color:rgba(255,255,255,0.6);line-height:1.6;">• Check your work for accuracy before re-applying</p>
+  <p style="margin:0;font-size:14px;color:rgba(255,255,255,0.6);line-height:1.6;">• You can re-apply for this assignment after reviewing</p>
 </div>
 
-${btn("Browse Tasks â†’", "https://nexguild.in/dashboard/tasks")}`);
+${btn("Browse Tasks →", "https://nexguild.in/dashboard/tasks")}`);
 }
 
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─────────────────────────────────────────────────────────────────────────────
 // 6. New Task Available
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─────────────────────────────────────────────────────────────────────────────
 export function newTaskHtml(
   name: string,
   taskTitle: string,
@@ -329,7 +329,7 @@ export function newTaskHtml(
 
 <p style="margin:0 0 20px;font-size:15px;color:rgba(255,255,255,0.7);line-height:1.7;">
   Hi <strong style="color:#fff;">${n}</strong>,<br><br>
-  A new task has just been posted on NexGuild. Slots fill up fast â€” get in early!
+  A new task has just been posted on NexGuild. Slots fill up fast — get in early!
 </p>
 
 <table width="100%" cellpadding="0" cellspacing="0" style="background:#111;border:1px solid #222;border-radius:10px;margin:0 0 24px;">
@@ -344,12 +344,12 @@ export function newTaskHtml(
   </td></tr>` : ""}
 </table>
 
-${btn("View Task â†’", `https://nexguild.in/dashboard/tasks/${id}`)}`);
+${btn("View Task →", `https://nexguild.in/dashboard/tasks/${id}`)}`);
 }
 
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─────────────────────────────────────────────────────────────────────────────
 // 7. Account Banned
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─────────────────────────────────────────────────────────────────────────────
 export function accountBannedHtml(name: string, reason: string): string {
   const n = esc(name), r = esc(reason);
   return layout(`
@@ -372,9 +372,9 @@ export function accountBannedHtml(name: string, reason: string): string {
 </div>`);
 }
 
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─────────────────────────────────────────────────────────────────────────────
 // 8. Coins Received (admin send)
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─────────────────────────────────────────────────────────────────────────────
 export function coinsReceivedHtml(
   name: string,
   amount: number,
@@ -384,7 +384,7 @@ export function coinsReceivedHtml(
   const n = esc(name), r = reason ? esc(reason) : null;
   return layout(`
 <div style="background:linear-gradient(135deg,#0a1a0a,#0f1a0f);border:1px solid rgba(245,158,11,0.2);border-radius:10px;padding:18px 22px;margin:0 0 24px;">
-  <p style="margin:0 0 4px;font-size:12px;font-weight:700;color:#F59E0B;text-transform:uppercase;letter-spacing:1px;">NexCoins Received ðŸŽ‰</p>
+  <p style="margin:0 0 4px;font-size:12px;font-weight:700;color:#F59E0B;text-transform:uppercase;letter-spacing:1px;">NexCoins Received 🎉</p>
   <p style="margin:0;font-size:32px;font-weight:800;color:#F59E0B;">+${amount.toLocaleString()}</p>
 </div>
 
@@ -409,12 +409,12 @@ ${r ? `<div style="background:#111;border:1px solid #222;border-radius:10px;padd
   </td></tr>
 </table>
 
-${btn("View Earnings â†’", "https://nexguild.in/dashboard/earnings")}`);
+${btn("View Earnings →", "https://nexguild.in/dashboard/earnings")}`);
 }
 
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─────────────────────────────────────────────────────────────────────────────
 // 9. Coins Deducted (admin deduct)
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─────────────────────────────────────────────────────────────────────────────
 export function coinsDeductedHtml(
   name: string,
   amount: number,
@@ -452,9 +452,9 @@ ${r ? `<div style="background:#1c1010;border:1px solid rgba(239,68,68,0.2);borde
 </p>`);
 }
 
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─────────────────────────────────────────────────────────────────────────────
 // 10. Resubmission Requested
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─────────────────────────────────────────────────────────────────────────────
 export function resubmissionRequestedHtml(
   name: string,
   taskTitle: string,
@@ -463,7 +463,7 @@ export function resubmissionRequestedHtml(
   const n = esc(name), t = esc(taskTitle), f = esc(feedback);
   return layout(`
 <div style="background:#1c1010;border:1px solid rgba(239,68,68,0.2);border-radius:10px;padding:18px 22px;margin:0 0 24px;">
-  <p style="margin:0 0 4px;font-size:12px;font-weight:700;color:#f87171;text-transform:uppercase;letter-spacing:1px;">Submission Rejected â€” Resubmission Allowed</p>
+  <p style="margin:0 0 4px;font-size:12px;font-weight:700;color:#f87171;text-transform:uppercase;letter-spacing:1px;">Submission Rejected — Resubmission Allowed</p>
   <p style="margin:0;font-size:18px;font-weight:700;color:#fff;">${t}</p>
 </div>
 
@@ -479,17 +479,17 @@ export function resubmissionRequestedHtml(
 
 <div style="background:#111;border:1px solid #222;border-radius:10px;padding:16px 20px;margin:0 0 24px;">
   <p style="margin:0 0 10px;font-size:12px;font-weight:700;color:#F59E0B;text-transform:uppercase;letter-spacing:1px;">Next steps</p>
-  <p style="margin:0 0 6px;font-size:14px;color:rgba(255,255,255,0.6);line-height:1.6;">â€¢ Review the feedback carefully</p>
-  <p style="margin:0 0 6px;font-size:14px;color:rgba(255,255,255,0.6);line-height:1.6;">â€¢ Make the required changes to your work</p>
-  <p style="margin:0;font-size:14px;color:rgba(255,255,255,0.6);line-height:1.6;">â€¢ Click "Resubmit" in your dashboard when ready</p>
+  <p style="margin:0 0 6px;font-size:14px;color:rgba(255,255,255,0.6);line-height:1.6;">• Review the feedback carefully</p>
+  <p style="margin:0 0 6px;font-size:14px;color:rgba(255,255,255,0.6);line-height:1.6;">• Make the required changes to your work</p>
+  <p style="margin:0;font-size:14px;color:rgba(255,255,255,0.6);line-height:1.6;">• Click "Resubmit" in your dashboard when ready</p>
 </div>
 
-${btn("Resubmit Now â†’", "https://nexguild.in/dashboard/tasks")}`);
+${btn("Resubmit Now →", "https://nexguild.in/dashboard/tasks")}`);
 }
 
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─────────────────────────────────────────────────────────────────────────────
 // 11. Announcement
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─────────────────────────────────────────────────────────────────────────────
 export function announcementHtml(
   name: string,
   annTitle: string,
@@ -498,7 +498,7 @@ export function announcementHtml(
   const n = esc(name), at = esc(annTitle), am = esc(annMessage);
   return layout(`
 <div style="display:inline-block;background:#111;border:1px solid rgba(245,158,11,0.3);border-radius:8px;padding:4px 14px;margin:0 0 18px;">
-  <span style="font-size:12px;font-weight:700;color:#F59E0B;text-transform:uppercase;letter-spacing:1px;">ðŸ“¢ Announcement</span>
+  <span style="font-size:12px;font-weight:700;color:#F59E0B;text-transform:uppercase;letter-spacing:1px;">📢 Announcement</span>
 </div>
 
 <h1 style="margin:0 0 24px;font-size:22px;font-weight:800;color:#fff;line-height:1.3;">${at}</h1>
@@ -509,5 +509,5 @@ export function announcementHtml(
   <p style="margin:0;font-size:14px;color:rgba(255,255,255,0.75);line-height:1.7;white-space:pre-wrap;">${am}</p>
 </div>
 
-${btn("View on Dashboard â†’", "https://nexguild.in/dashboard/announcements")}`);
+${btn("View on Dashboard →", "https://nexguild.in/dashboard/announcements")}`);
 }
