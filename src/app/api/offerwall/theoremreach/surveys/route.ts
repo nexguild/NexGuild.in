@@ -43,18 +43,21 @@ export async function GET(req: NextRequest) {
   });
   const urlWithoutHash = `${base}?${params.toString()}`;
 
-  // HMAC-SHA1: key = THEOREMREACH_SECRET_KEY, message = full URL without hash param
-  const hash = createHmac("sha1", THEOREMREACH_SECRET_KEY)
+  // Secret key is a hex-encoded binary key (40 hex chars = 20 bytes).
+  // Decode to raw bytes before HMAC — passing as a UTF-8 string would use 40 bytes instead of 20.
+  const secretKeyBytes = Buffer.from(THEOREMREACH_SECRET_KEY, "hex");
+
+  const hash = createHmac("sha1", secretKeyBytes)
     .update(urlWithoutHash)
     .digest("hex");
   const finalUrl = `${urlWithoutHash}&hash=${hash}`;
 
-  // Debug: log both key prefixes to confirm they are distinct
   console.log("[theoremreach/surveys] hash_debug", {
-    api_key_prefix:    THEOREMREACH_API_KEY.slice(0, 4) + "****",
-    secret_key_prefix: THEOREMREACH_SECRET_KEY.slice(0, 4) + "****",
-    hash_hex_prefix:   hash.slice(0, 8) + "...",
-    hmac_input:        urlWithoutHash.replace(THEOREMREACH_API_KEY, THEOREMREACH_API_KEY.slice(0, 6) + "****"),
+    api_key_prefix:        THEOREMREACH_API_KEY.slice(0, 6) + "****",
+    secret_key_prefix:     THEOREMREACH_SECRET_KEY.slice(0, 4) + "****",
+    secret_key_byte_len:   secretKeyBytes.length,   // should be 20 (40 hex chars -> 20 bytes)
+    hash_hex_prefix:       hash.slice(0, 8) + "...",
+    hmac_input:            urlWithoutHash.replace(THEOREMREACH_API_KEY, "[redacted]"),
   });
 
   let trResponse: Response;
