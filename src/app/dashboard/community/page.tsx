@@ -6,7 +6,7 @@ export const metadata: Metadata = { title: "Community — NexGuild" };
 const CHANNELS = [
   {
     name: "Telegram Group",
-    handle: "t.me/nexguild",
+    handle: "NexGuild Announcements 📢",
     href: "https://t.me/nexguild_community",
     desc: "Main community chat. Ask questions, get task updates, and connect with other contributors.",
     color: "#229ED9",
