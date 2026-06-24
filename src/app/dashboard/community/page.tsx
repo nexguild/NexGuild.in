@@ -7,7 +7,7 @@ const CHANNELS = [
   {
     name: "Telegram Group",
     handle: "t.me/nexguild",
-    href: "https://t.me/nexguild",
+    href: "https://t.me/nexguild_community",
     desc: "Main community chat. Ask questions, get task updates, and connect with other contributors.",
     color: "#229ED9",
     icon: (
