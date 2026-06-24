@@ -6,11 +6,12 @@ function verifyHash(req: NextRequest, incomingHash: string): boolean {
   const secret = process.env.THEOREMREACH_SECRET_KEY;
   if (!secret) return true; // not configured — skip validation (dev only)
 
-  // TheoremReach postback hash: HMAC-SHA1 of the full URL (without &hash= param)
-  const url        = new URL(req.url);
+  // TheoremReach postback hash: HMAC-SHA1(UTF-8 key, URL without &hash=), base64 URL-safe no padding
+  const url       = new URL(req.url);
   url.searchParams.delete("hash");
-  const urlString  = url.toString();
-  const expected   = createHmac("sha1", secret).update(urlString).digest("hex");
+  const urlString = url.toString();
+  const rawHash   = createHmac("sha1", secret).update(urlString).digest("base64");
+  const expected  = rawHash.replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "");
 
   return expected === incomingHash;
 }
