@@ -15,10 +15,11 @@ import { supabase } from "@/lib/supabase";
 interface TaskStep {
   title: string;
   description: string;
-  submitType: "text" | "file" | "none";
+  submitType: "text" | "file" | "none" | "proof_code";
   placeholder?: string;
   acceptedFiles?: string;
   url?: string;
+  site_slug?: string;  // used when submitType === "proof_code"
 }
 
 interface Task {
@@ -161,6 +162,12 @@ export default function TaskWorkPage() {
     load();
   }, [id, router]);
 
+  // Replace {user_id} placeholder in step URLs so external sites receive the contributor's ID
+  function buildStepUrl(url: string | undefined): string | undefined {
+    if (!url || !userId) return url;
+    return url.replace(/\{user_id\}/g, userId);
+  }
+
   function openModal(idx: number) {
     setModalStep(idx);
     setModalText("");
@@ -198,6 +205,37 @@ export default function TaskWorkPage() {
       if (upErr) { setModalError("Upload failed: " + upErr.message); setSubmittingModal(false); return; }
       const { data: urlData } = supabase.storage.from("submissions").getPublicUrl(upData.path);
       fileUrl = urlData.publicUrl;
+    } else if (step.submitType === "proof_code") {
+      const code = modalText.trim().toUpperCase();
+      if (!code || code.length !== 8) {
+        setModalError("Please enter the 8-character verification code.");
+        setSubmittingModal(false);
+        return;
+      }
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await fetch("/api/tasks/proof-code/validate", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session?.access_token ?? ""}`,
+        },
+        body: JSON.stringify({
+          code,
+          site_slug: step.site_slug ?? "starscoopdaily",
+          task_id: id,
+        }),
+      });
+      const json: { valid: boolean; reason?: string } = await res.json();
+      if (!json.valid) {
+        setModalError(
+          json.reason === "already_used"
+            ? "This code has already been used."
+            : "Invalid or expired code. Please try again."
+        );
+        setSubmittingModal(false);
+        return;
+      }
+      textValue = code;
     }
 
     const { error: saveErr } = await supabase.from("task_step_submissions").upsert({
@@ -531,7 +569,7 @@ export default function TaskWorkPage() {
                             {step.url && (
                               <div className="flex-shrink-0">
                                 <a
-                                  href={step.url}
+                                  href={buildStepUrl(step.url)}
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border text-xs font-semibold transition-colors whitespace-nowrap"
@@ -577,7 +615,7 @@ export default function TaskWorkPage() {
                             }}
                           >
                             <Send className="h-3.5 w-3.5" />
-                            {step.submitType === "none" ? "Mark as Complete" : "Submit Stage →"}
+                            {step.submitType === "none" ? "Mark as Complete" : step.submitType === "proof_code" ? "Verify Code →" : "Submit Stage →"}
                           </Button>
                         )
                       ) : null}
@@ -785,6 +823,28 @@ export default function TaskWorkPage() {
               </p>
             )}
 
+            {activeStep.submitType === "proof_code" && (
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-[var(--text-primary)]">
+                  Verification Code
+                </label>
+                <input
+                  type="text"
+                  value={modalText}
+                  onChange={(e) =>
+                    setModalText(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 8))
+                  }
+                  placeholder="ABCD1234"
+                  maxLength={8}
+                  autoFocus
+                  className="w-full px-3 py-3 rounded-lg border border-[var(--border-default)] bg-[var(--surface-subtle)] text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--border-focus)] font-mono tracking-[.35em] text-center text-xl uppercase"
+                />
+                <p className="text-xs text-[var(--text-muted)]">
+                  Enter the 8-character code shown in the NexGuild verification widget on the site you visited.
+                </p>
+              </div>
+            )}
+
             {modalError && (
               <p className="text-sm text-red-400 bg-red-500/10 px-3 py-2 rounded-lg">{modalError}</p>
             )}
@@ -794,7 +854,7 @@ export default function TaskWorkPage() {
               <Button onClick={handleStepSubmit} disabled={submittingModal}>
                 {submittingModal
                   ? <><Loader2 className="h-4 w-4 animate-spin" /> Submitting…</>
-                  : <><Send className="h-3.5 w-3.5" /> {activeStep.submitType === "none" ? "Confirm" : "Submit"}</>}
+                  : <><Send className="h-3.5 w-3.5" /> {activeStep.submitType === "none" ? "Confirm" : activeStep.submitType === "proof_code" ? "Verify →" : "Submit"}</>}
               </Button>
             </div>
           </div>
