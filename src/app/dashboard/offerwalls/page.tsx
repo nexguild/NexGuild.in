@@ -86,9 +86,10 @@ export default function OfferwallsPage() {
 
   const activeProv = taskOfferwalls.find((p) => p.slug === activeSlug) ?? null;
 
-  // Fetch TheoremReach surveys when their tab becomes active
+  // Fetch TheoremReach surveys whenever their tab becomes active (re-fetches on every switch)
   useEffect(() => {
     if (activeProv?.slug !== "theoremreach" || activeProv?.integration_type !== "api" || !trToken) return;
+    setTrSurveys([]);   // clear stale data so skeleton shows immediately
     setTrLoading(true);
     fetch("/api/offerwall/theoremreach/surveys", {
       headers: { Authorization: `Bearer ${trToken}` },
@@ -252,7 +253,7 @@ export default function OfferwallsPage() {
               Earnings from <span className="font-semibold text-[var(--text-primary)]">{p.name}</span> are credited to your NexCoins automatically after confirmation.
             </p>
           </div>
-          <div id={widgetDivId} className="min-h-[480px] sm:min-h-[600px] w-full" />
+          <div key={activeSlug ?? ""} id={widgetDivId} className="min-h-[480px] sm:min-h-[600px] w-full" />
         </div>
       );
     }
