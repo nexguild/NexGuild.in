@@ -1,29 +1,53 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Eye, EyeOff } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import HCaptcha from "@hcaptcha/react-hcaptcha";
 
 export default function LoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState("");
+  const captchaRef = useRef<HCaptcha>(null);
+
+  const [email, setEmail]       = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [error, setError]       = useState("");
+  const [loading, setLoading]   = useState(false);
 
-  async function handleSubmit(e: React.FormEvent) {
+  // invisible = Pro trial (no visible challenge); visible = free tier fallback
+  const [captchaMode, setCaptchaMode]   = useState<"invisible" | "visible">("invisible");
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+
+  function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
     setLoading(true);
 
+    if (captchaMode === "invisible") {
+      captchaRef.current?.execute();
+    } else {
+      if (!captchaToken) {
+        setError("Please complete the captcha verification above.");
+        setLoading(false);
+        return;
+      }
+      doLogin(captchaToken);
+    }
+  }
+
+  async function doLogin(token: string) {
     const { error: authError } = await supabase.auth.signInWithPassword({
       email,
       password,
+      options: { captchaToken: token },
     });
+
+    captchaRef.current?.resetCaptcha();
+    setCaptchaToken(null);
 
     if (authError) {
       setError(
@@ -38,9 +62,28 @@ export default function LoginPage() {
     router.push("/dashboard");
   }
 
+  function onCaptchaVerify(token: string) {
+    if (captchaMode === "invisible") {
+      doLogin(token);
+    } else {
+      setCaptchaToken(token);
+    }
+  }
+
+  function onCaptchaError() {
+    captchaRef.current?.resetCaptcha();
+    setCaptchaMode("visible");
+    setCaptchaToken(null);
+    setLoading(false);
+  }
+
+  const submitDisabled =
+    loading ||
+    (captchaMode === "visible" && !captchaToken);
+
   return (
     <div style={{ background: "#EBFBFA", minHeight: "100vh" }} className="w-full flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div 
+      <div
         className="w-full max-w-md rounded-2xl p-8 transition-all duration-300 hover:shadow-lg"
         style={{
           background: "rgba(255, 255, 255, 0.65)",
@@ -103,16 +146,52 @@ export default function LoginPage() {
             </div>
           </div>
 
-          {/* Submit Button */}
-          <Button 
-            type="submit" 
-            size="lg" 
-            disabled={loading}
-            style={{
-              background: "linear-gradient(135deg, #10B981 0%, #059669 100%)",
-              color: "#FFFFFF",
+          {/*
+            hCaptcha — dual-mode (same pattern as signup):
+            invisible (Pro trial): fires on execute(), no UI unless risk detected.
+            visible (free tier fallback): inline challenge, switched via onError.
+          */}
+          <HCaptcha
+            key={captchaMode}
+            ref={captchaRef}
+            sitekey={process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY!}
+            size={captchaMode === "invisible" ? "invisible" : "normal"}
+            theme="light"
+            onVerify={onCaptchaVerify}
+            onExpire={() => {
+              setCaptchaToken(null);
+              if (captchaMode === "invisible") {
+                captchaRef.current?.resetCaptcha();
+                setLoading(false);
+              }
             }}
-            className="w-full mt-2 rounded-xl font-bold shadow-sm transition-all duration-300 hover:translate-y-[-2px] hover:shadow-[0_6px_15px_rgba(16,185,129,0.25)]"
+            onError={onCaptchaError}
+            onClose={() => {
+              if (captchaMode === "invisible") {
+                captchaRef.current?.resetCaptcha();
+                setLoading(false);
+              }
+            }}
+          />
+
+          {captchaMode === "visible" && !captchaToken && (
+            <p className="text-xs text-stone-400 text-center -mt-1">
+              Complete the verification above to continue
+            </p>
+          )}
+          {captchaMode === "visible" && captchaToken && (
+            <p className="text-xs text-[#0D9488] text-center -mt-1">
+              ✓ Verification complete
+            </p>
+          )}
+
+          {/* Submit Button */}
+          <Button
+            type="submit"
+            size="lg"
+            disabled={submitDisabled}
+            style={{ background: "linear-gradient(135deg, #10B981 0%, #059669 100%)", color: "#FFFFFF" }}
+            className="w-full mt-2 rounded-xl font-bold shadow-sm transition-all duration-300 hover:translate-y-[-2px] hover:shadow-[0_6px_15px_rgba(16,185,129,0.25)] disabled:opacity-50 disabled:cursor-not-allowed disabled:translate-y-0"
           >
             {loading ? "Signing in…" : "Log In"}
           </Button>

@@ -229,6 +229,10 @@ export default function OfferwallsPage() {
     }
 
     if (p.integration_type === "script_tag") {
+      // Each script_tag provider gets its own target div ID so the CPX script
+      // (loaded globally for its notification widget) cannot accidentally fill
+      // a div that belongs to a different provider's tab.
+      const widgetDivId = p.slug === "cpx_research" ? "fullscreen" : `${p.slug.replace(/_/g, "-")}-widget`;
       return (
         <div className="rounded-xl border border-[var(--border-default)] bg-[var(--surface-card)] overflow-hidden">
           <div className="px-5 py-3 border-b border-[var(--border-default)] bg-[var(--surface-subtle)] flex items-center gap-2">
@@ -237,7 +241,7 @@ export default function OfferwallsPage() {
               Earnings from <span className="font-semibold text-[var(--text-primary)]">{p.name}</span> are credited to your NexCoins automatically after confirmation.
             </p>
           </div>
-          <div id="fullscreen" className="min-h-[480px] sm:min-h-[600px] w-full" />
+          <div id={widgetDivId} className="min-h-[480px] sm:min-h-[600px] w-full" />
         </div>
       );
     }

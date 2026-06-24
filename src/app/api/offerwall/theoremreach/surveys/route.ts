@@ -47,11 +47,20 @@ export async function GET(req: NextRequest) {
   const hash = createHmac("sha1", secretKey).update(urlWithoutHash).digest("hex");
   const finalUrl = `${urlWithoutHash}&hash=${hash}`;
 
+  // Debug: log the URL (redact api_key, show hash so we can verify)
+  console.log("[theoremreach/surveys] request", {
+    user_id:       user.id,
+    ip,
+    placement_id:  placementId,
+    api_key_prefix: apiKey.slice(0, 6) + "****",
+    hash_prefix:   hash.slice(0, 8) + "...",
+    url_without_hash: urlWithoutHash.replace(apiKey, apiKey.slice(0, 6) + "****"),
+  });
+
   let trResponse: Response;
   try {
     trResponse = await fetch(finalUrl, {
       headers: { Accept: "application/json" },
-      // 8s timeout — don't block the user too long
       signal: AbortSignal.timeout(8000),
     });
   } catch (err) {
@@ -59,13 +68,20 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ surveys: [], error: "upstream_timeout" });
   }
 
+  const responseText = await trResponse.text().catch(() => "");
+
+  // Always log status + raw body so we can diagnose issues
+  console.log("[theoremreach/surveys] response", {
+    status: trResponse.status,
+    ok:     trResponse.ok,
+    body:   responseText.slice(0, 1000), // first 1000 chars
+  });
+
   if (!trResponse.ok) {
-    const body = await trResponse.text().catch(() => "");
-    console.error(`[theoremreach/surveys] upstream ${trResponse.status}: ${body}`);
     return NextResponse.json({ surveys: [] });
   }
 
-  const data = await trResponse.json() as {
+  let data: {
     result_count?: number;
     surveys?: {
       campaign_id:    string;
@@ -77,6 +93,13 @@ export async function GET(req: NextRequest) {
       entry_link:     string;
     }[];
   };
+
+  try {
+    data = JSON.parse(responseText);
+  } catch {
+    console.error("[theoremreach/surveys] failed to parse JSON response");
+    return NextResponse.json({ surveys: [] });
+  }
 
   const raw = data.surveys ?? [];
 

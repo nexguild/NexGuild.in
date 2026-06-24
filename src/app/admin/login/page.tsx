@@ -1,30 +1,53 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Eye, EyeOff } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import HCaptcha from "@hcaptcha/react-hcaptcha";
 
 export default function AdminLoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState("");
+  const captchaRef = useRef<HCaptcha>(null);
+
+  const [email, setEmail]       = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [error, setError]       = useState("");
+  const [loading, setLoading]   = useState(false);
 
-  async function handleSubmit(e: React.FormEvent) {
+  const [captchaMode, setCaptchaMode]   = useState<"invisible" | "visible">("invisible");
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+
+  function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
     setLoading(true);
 
-    // Step 1: authenticate
+    if (captchaMode === "invisible") {
+      captchaRef.current?.execute();
+    } else {
+      if (!captchaToken) {
+        setError("Please complete the captcha verification above.");
+        setLoading(false);
+        return;
+      }
+      doLogin(captchaToken);
+    }
+  }
+
+  async function doLogin(token: string) {
+    // Step 1: authenticate with captcha token
     const { data, error: authError } = await supabase.auth.signInWithPassword({
       email,
       password,
+      options: { captchaToken: token },
     });
+
+    captchaRef.current?.resetCaptcha();
+    setCaptchaToken(null);
 
     if (authError || !data.user || !data.session) {
       setError("Incorrect email or password.");
@@ -33,8 +56,6 @@ export default function AdminLoginPage() {
     }
 
     // Step 2: verify admin role via server-side API (bypasses RLS)
-    // Use access_token directly from signInWithPassword — do NOT call getSession() again,
-    // as it may return null due to timing before the session is persisted.
     let isAdmin = false;
     let reason = "";
     try {
@@ -66,9 +87,27 @@ export default function AdminLoginPage() {
       return;
     }
 
-    // Step 3: replace history so back button won't return to login
     router.replace("/admin");
   }
+
+  function onCaptchaVerify(token: string) {
+    if (captchaMode === "invisible") {
+      doLogin(token);
+    } else {
+      setCaptchaToken(token);
+    }
+  }
+
+  function onCaptchaError() {
+    captchaRef.current?.resetCaptcha();
+    setCaptchaMode("visible");
+    setCaptchaToken(null);
+    setLoading(false);
+  }
+
+  const submitDisabled =
+    loading ||
+    (captchaMode === "visible" && !captchaToken);
 
   return (
     <div className="min-h-[80vh] flex items-center justify-center">
@@ -122,7 +161,46 @@ export default function AdminLoginPage() {
               </div>
             </div>
 
-            <Button type="submit" size="lg" className="w-full mt-1" disabled={loading}>
+            <HCaptcha
+              key={captchaMode}
+              ref={captchaRef}
+              sitekey={process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY!}
+              size={captchaMode === "invisible" ? "invisible" : "normal"}
+              theme="dark"
+              onVerify={onCaptchaVerify}
+              onExpire={() => {
+                setCaptchaToken(null);
+                if (captchaMode === "invisible") {
+                  captchaRef.current?.resetCaptcha();
+                  setLoading(false);
+                }
+              }}
+              onError={onCaptchaError}
+              onClose={() => {
+                if (captchaMode === "invisible") {
+                  captchaRef.current?.resetCaptcha();
+                  setLoading(false);
+                }
+              }}
+            />
+
+            {captchaMode === "visible" && !captchaToken && (
+              <p className="text-xs text-[var(--text-muted)] text-center -mt-1">
+                Complete the verification above to continue
+              </p>
+            )}
+            {captchaMode === "visible" && captchaToken && (
+              <p className="text-xs text-[var(--text-link)] text-center -mt-1">
+                ✓ Verification complete
+              </p>
+            )}
+
+            <Button
+              type="submit"
+              size="lg"
+              className="w-full mt-1 disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={submitDisabled}
+            >
               {loading ? "Signing in…" : "Sign In"}
             </Button>
           </form>
