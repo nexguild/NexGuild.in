@@ -21,43 +21,40 @@ export async function GET(req: NextRequest) {
   const { data: { user } } = await admin.auth.getUser(token);
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const apiKey     = process.env.THEOREMREACH_API_KEY;
-  const secretKey  = process.env.THEOREMREACH_SECRET_KEY;
-  const placementId = process.env.NEXT_PUBLIC_THEOREMREACH_PLACEMENT_ID ?? "e1870419-681e-4792-b66b-c59deb5479fe";
+  // Read env vars directly — no intermediate variable for the secret key
+  // to ensure THEOREMREACH_SECRET_KEY is never confused with THEOREMREACH_API_KEY
+  const THEOREMREACH_API_KEY    = process.env.THEOREMREACH_API_KEY    ?? "";
+  const THEOREMREACH_SECRET_KEY = process.env.THEOREMREACH_SECRET_KEY ?? "";
+  const placementId             = process.env.NEXT_PUBLIC_THEOREMREACH_PLACEMENT_ID ?? "e1870419-681e-4792-b66b-c59deb5479fe";
 
-  if (!apiKey || !secretKey) {
+  if (!THEOREMREACH_API_KEY || !THEOREMREACH_SECRET_KEY) {
     return NextResponse.json({ error: "TheoremReach not configured" }, { status: 503 });
   }
 
   const ip = getClientIp(req);
 
-  // Documented params only: api_key, user_id, ip, country_code, hash
-  // placement_id is for the offerwall wall URL, NOT the surveys endpoint
+  // Documented params only: api_key, user_id, ip, country_code
   const base = "https://api.theoremreach.com/api/publishers/v1/surveys";
   const params = new URLSearchParams({
-    api_key:      apiKey,
+    api_key:      THEOREMREACH_API_KEY,
     user_id:      user.id,
     ip,
     country_code: "IN",
   });
   const urlWithoutHash = `${base}?${params.toString()}`;
 
-  // HMAC-SHA1 of the full URL (without hash param)
-  const hash = createHmac("sha1", secretKey).update(urlWithoutHash).digest("hex");
+  // HMAC-SHA1: key = THEOREMREACH_SECRET_KEY, message = full URL without hash param
+  const hash = createHmac("sha1", THEOREMREACH_SECRET_KEY)
+    .update(urlWithoutHash)
+    .digest("hex");
   const finalUrl = `${urlWithoutHash}&hash=${hash}`;
 
-  // Debug: log everything needed to reproduce the hash manually
+  // Debug: log both key prefixes to confirm they are distinct
   console.log("[theoremreach/surveys] hash_debug", {
-    secret_key_prefix:   secretKey.slice(0, 4) + "****",
-    hmac_input_string:   urlWithoutHash.replace(apiKey, apiKey.slice(0, 6) + "****"),
-    hmac_input_length:   urlWithoutHash.length,
-    hash_hex_prefix:     hash.slice(0, 8) + "...",
-    url_param_order:     [...params.keys()].join(","),
-  });
-  console.log("[theoremreach/surveys] request", {
-    user_id:        user.id,
-    ip,
-    api_key_prefix: apiKey.slice(0, 6) + "****",
+    api_key_prefix:    THEOREMREACH_API_KEY.slice(0, 4) + "****",
+    secret_key_prefix: THEOREMREACH_SECRET_KEY.slice(0, 4) + "****",
+    hash_hex_prefix:   hash.slice(0, 8) + "...",
+    hmac_input:        urlWithoutHash.replace(THEOREMREACH_API_KEY, THEOREMREACH_API_KEY.slice(0, 6) + "****"),
   });
 
   let trResponse: Response;

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Layers, Info, Star, Clock } from "lucide-react";
 import { NexCoinIcon } from "@/components/ui/nexcoin-icon";
 import { supabase } from "@/lib/supabase";
@@ -30,6 +31,8 @@ interface TRSurvey {
 }
 
 export default function OfferwallsPage() {
+  const router = useRouter();
+
   const [providers, setProviders]   = useState<Provider[]>([]);
   const [userId, setUserId]         = useState<string | null>(null);
   const [loading, setLoading]       = useState(true);
@@ -65,7 +68,10 @@ export default function OfferwallsPage() {
       if (res.ok) {
         const { providers: p } = await res.json() as { providers: Provider[] };
         setProviders(p);
-        const firstLive = p.find((x) => !x.is_ad_network && x.isLive);
+        // Restore tab from URL (?tab=slug), fall back to first live provider
+        const tabParam = new URLSearchParams(window.location.search).get("tab");
+        const matched  = tabParam ? p.find((x) => !x.is_ad_network && x.isLive && x.slug === tabParam) : null;
+        const firstLive = matched ?? p.find((x) => !x.is_ad_network && x.isLive);
         if (firstLive) setActiveSlug(firstLive.slug);
       }
       setLoading(false);
@@ -117,6 +123,11 @@ export default function OfferwallsPage() {
     inject().catch(console.error);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeProv?.slug, activeProv?.integration_type]);
+
+  function switchTab(slug: string) {
+    setActiveSlug(slug);
+    router.replace(`/dashboard/offerwalls?tab=${slug}`, { scroll: false });
+  }
 
   function buildEmbedUrl(p: Provider): string | null {
     if (!p.embed_url_template || !userId) return null;
@@ -313,7 +324,7 @@ export default function OfferwallsPage() {
               <button
                 key={p.slug}
                 disabled={!p.isLive}
-                onClick={() => p.isLive && setActiveSlug(p.slug)}
+                onClick={() => p.isLive && switchTab(p.slug)}
                 className={`relative px-4 py-2.5 rounded-lg text-sm font-medium whitespace-nowrap flex items-center gap-2 transition-colors flex-shrink-0 ${
                   p.isLive
                     ? activeSlug === p.slug
