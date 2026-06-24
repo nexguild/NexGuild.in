@@ -31,15 +31,14 @@ export async function GET(req: NextRequest) {
 
   const ip = getClientIp(req);
 
-  // Build the URL without hash first
+  // Documented params only: api_key, user_id, ip, country_code, hash
+  // placement_id is for the offerwall wall URL, NOT the surveys endpoint
   const base = "https://api.theoremreach.com/api/publishers/v1/surveys";
   const params = new URLSearchParams({
-    api_key:          apiKey,
-    user_id:          user.id,
+    api_key:      apiKey,
+    user_id:      user.id,
     ip,
-    country_code:     "IN",
-    placement_id:     placementId,
-    max_result_count: "20",
+    country_code: "IN",
   });
   const urlWithoutHash = `${base}?${params.toString()}`;
 
@@ -47,34 +46,26 @@ export async function GET(req: NextRequest) {
   const hash = createHmac("sha1", secretKey).update(urlWithoutHash).digest("hex");
   const finalUrl = `${urlWithoutHash}&hash=${hash}`;
 
-  // Debug: log the URL (redact api_key, show hash so we can verify)
   console.log("[theoremreach/surveys] request", {
-    user_id:       user.id,
+    user_id:        user.id,
     ip,
-    placement_id:  placementId,
     api_key_prefix: apiKey.slice(0, 6) + "****",
-    hash_prefix:   hash.slice(0, 8) + "...",
     url_without_hash: urlWithoutHash.replace(apiKey, apiKey.slice(0, 6) + "****"),
   });
 
   let trResponse: Response;
   try {
-    trResponse = await fetch(finalUrl, {
-      headers: { Accept: "application/json" },
-      signal: AbortSignal.timeout(8000),
-    });
+    trResponse = await fetch(finalUrl);
   } catch (err) {
     console.error("[theoremreach/surveys] fetch error:", err);
     return NextResponse.json({ surveys: [], error: "upstream_timeout" });
   }
 
-  const responseText = await trResponse.text().catch(() => "");
+  const responseText = await trResponse.text();
 
-  // Always log status + raw body so we can diagnose issues
   console.log("[theoremreach/surveys] response", {
     status: trResponse.status,
-    ok:     trResponse.ok,
-    body:   responseText.slice(0, 1000), // first 1000 chars
+    body:   responseText.substring(0, 500),
   });
 
   if (!trResponse.ok) {
