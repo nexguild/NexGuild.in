@@ -99,11 +99,16 @@ export async function GET(req: NextRequest) {
   // Sort by rank descending (higher rank = better match for user)
   const sorted = [...raw].sort((a, b) => b.rank - a.rank);
 
-  // Enrich with NexCoin value; append user_id + placement_id to entry_link
+  // Enrich with NexCoin value; append user_id + placement_id, then sign with hash.
+  // Secret key must stay server-side — pre-sign here so client opens the URL directly.
   const surveys = sorted.map((s) => {
     const url = new URL(s.entry_link);
     url.searchParams.set("user_id",      user.id);
     url.searchParams.set("placement_id", placementId);
+
+    const entryUrl  = url.toString();
+    const rawHash   = createHmac("sha1", THEOREMREACH_SECRET_KEY).update(entryUrl).digest("base64");
+    const entryHash = rawHash.replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "");
 
     return {
       campaign_id:    s.campaign_id,
@@ -113,7 +118,7 @@ export async function GET(req: NextRequest) {
       average_rating: s.average_rating,
       rating_count:   s.rating_count,
       nexcoins:       Math.floor(s.cpi * EXCHANGE_RATE),
-      entry_link:     url.toString(),
+      entry_link:     `${entryUrl}&hash=${entryHash}`,
     };
   });
 
