@@ -46,11 +46,18 @@ export async function GET(req: NextRequest) {
   const hash = createHmac("sha1", secretKey).update(urlWithoutHash).digest("hex");
   const finalUrl = `${urlWithoutHash}&hash=${hash}`;
 
+  // Debug: log everything needed to reproduce the hash manually
+  console.log("[theoremreach/surveys] hash_debug", {
+    secret_key_prefix:   secretKey.slice(0, 4) + "****",
+    hmac_input_string:   urlWithoutHash.replace(apiKey, apiKey.slice(0, 6) + "****"),
+    hmac_input_length:   urlWithoutHash.length,
+    hash_hex_prefix:     hash.slice(0, 8) + "...",
+    url_param_order:     [...params.keys()].join(","),
+  });
   console.log("[theoremreach/surveys] request", {
     user_id:        user.id,
     ip,
     api_key_prefix: apiKey.slice(0, 6) + "****",
-    url_without_hash: urlWithoutHash.replace(apiKey, apiKey.slice(0, 6) + "****"),
   });
 
   let trResponse: Response;
