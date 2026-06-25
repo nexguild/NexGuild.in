@@ -125,7 +125,7 @@ export default function ContactPage() {
 
                 {/* LinkedIn Card */}
                 <a
-                  href="https://www.linkedin.com/in/somen-biswas-410727215"
+                  href="https://www.linkedin.com/company/nexguildin/"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-4 rounded-xl border border-stone-200/60 bg-white/60 p-5 transition-all duration-300 hover:translate-y-[-2px] hover:bg-white hover:border-[#0A66C2]/40 hover:shadow-md group"
