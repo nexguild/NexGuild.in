@@ -23,7 +23,7 @@ async function handlePostback(req: NextRequest): Promise<Response> {
   const userId    = q.get("user_id")                ?? q.get("uid")     ?? "";
   const reward    = parseInt(q.get("reward")         ?? "0", 10);
   const offerId   = q.get("offer_id")               ?? q.get("campaign_id") ?? "";
-  const sessionId = q.get("tx_id") ?? q.get("transaction_id") ?? q.get("session_id") ?? q.get("external_transaction_id") ?? "";
+  const sessionId = q.get("session_id")             ?? q.get("external_transaction_id") ?? "";
   const hash      = q.get("hash")                   ?? "";
   const isReversal = q.get("is_reversal") === "1"
     || q.get("reversal")  === "true"
