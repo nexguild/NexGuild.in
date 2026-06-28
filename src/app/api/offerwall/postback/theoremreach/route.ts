@@ -2,6 +2,8 @@ import { NextRequest } from "next/server";
 import { createHmac } from "crypto";
 import { createServerClient } from "@/lib/supabase-server";
 
+type AdminClient = ReturnType<typeof createServerClient>;
+
 function computeHash(secret: string, urlStr: string): string {
   const raw = createHmac("sha1", secret).update(urlStr).digest("base64");
   return raw.replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "");
@@ -16,39 +18,71 @@ function verifyHash(req: NextRequest, incomingHash: string): boolean {
   return computeHash(secret, url.toString()) === incomingHash;
 }
 
-async function handlePostback(req: NextRequest): Promise<Response> {
-  const url = new URL(req.url);
-  const q   = url.searchParams;
+async function logPostback(
+  admin: AdminClient,
+  rawParams: Record<string, string>,
+  hashValid: boolean | null,
+  actionTaken: string,
+  errorMessage?: string,
+) {
+  try {
+    await admin.from("postback_logs").insert({
+      provider:      "theoremreach",
+      raw_params:    rawParams,
+      hash_valid:    hashValid,
+      action_taken:  actionTaken,
+      error_message: errorMessage ?? null,
+    });
+  } catch (e) {
+    console.error("[postback/theoremreach] log write failed:", e);
+  }
+}
 
-  // TheoremReach debug/test callbacks — must return 200 and NOT credit anything
+async function handlePostback(req: NextRequest): Promise<Response> {
+  const url       = new URL(req.url);
+  const q         = url.searchParams;
+  const rawParams = Object.fromEntries(q.entries());
+
+  // Completely empty — no params at all, nothing to log
+  if (Object.keys(rawParams).length === 0) {
+    return new Response("Bad Request", { status: 400 });
+  }
+
+  const admin = createServerClient();
+
+  // TheoremReach debug/test callbacks — log and return 200, no credit
   if (q.get("debug") === "true" || q.get("debug") === "1") {
     console.log("[postback/theoremreach] debug callback — ignoring");
+    await logPostback(admin, rawParams, null, "debug_ignored");
     return new Response("OK", { status: 200 });
   }
 
-  const hash = q.get("hash") ?? "";
-  if (hash && !verifyHash(req, hash)) {
+  const hash      = q.get("hash") ?? "";
+  const hashValid = hash ? verifyHash(req, hash) : null; // null = hash not provided
+
+  if (hashValid === false) {
+    // Log the suspicious callback but always return 200 — TheoremReach won't retry on 200
     console.warn("[postback/theoremreach] hash validation failed");
-    return new Response("Forbidden", { status: 403 });
+    await logPostback(admin, rawParams, false, "hash_invalid");
+    return new Response("OK", { status: 200 });
   }
 
   const userId     = q.get("user_id")  ?? "";
-  const reward     = parseInt(q.get("reward") ?? "0", 10); // NexCoins (exchange_rate=700 applied by TR)
-  const txId       = q.get("tx_id")    ?? ""; // TheoremReach's unique ID — use for idempotency
+  const reward     = parseInt(q.get("reward") ?? "0", 10);
+  const txId       = q.get("tx_id")    ?? "";
   const isReversal = q.get("reversal") === "true" || q.get("reversal") === "1";
   const screenout  = q.get("screenout") === "1";
 
   if (!userId || !txId) {
-    console.warn("[postback/theoremreach] missing user_id or tx_id", { userId, txId });
-    return new Response("Bad Request", { status: 400 });
+    console.warn("[postback/theoremreach] missing user_id or tx_id");
+    await logPostback(admin, rawParams, hashValid, "error", "missing user_id or tx_id");
+    return new Response("OK", { status: 200 });
   }
 
   console.log("[postback/theoremreach]", {
     userId, txId, reward, isReversal, screenout,
     hash_prefix: hash.slice(0, 8) + "...",
   });
-
-  const admin = createServerClient();
 
   // ─── Reversal ─────────────────────────────────────────────────────────────
   if (isReversal) {
@@ -60,6 +94,7 @@ async function handlePostback(req: NextRequest): Promise<Response> {
 
     if (!existing || existing.status !== "credited") {
       console.log(`[postback/theoremreach] reversal: tx ${txId} not found or already reversed`);
+      await logPostback(admin, rawParams, hashValid, "reversed", `tx not found or already reversed: ${txId}`);
       return new Response("OK", { status: 200 });
     }
 
@@ -88,12 +123,14 @@ async function handlePostback(req: NextRequest): Promise<Response> {
     });
 
     console.log(`[postback/theoremreach] reversed ${coinsToReverse} coins from ${contributorId} (tx=${txId})`);
+    await logPostback(admin, rawParams, hashValid, "reversed");
     return new Response("OK", { status: 200 });
   }
 
   // ─── Completion ──────────────────────────────────────────────────────────
   if (reward <= 0) {
     console.log(`[postback/theoremreach] zero reward — ignoring (tx=${txId}, screenout=${screenout})`);
+    await logPostback(admin, rawParams, hashValid, "error", "zero reward");
     return new Response("OK", { status: 200 });
   }
 
@@ -105,7 +142,8 @@ async function handlePostback(req: NextRequest): Promise<Response> {
 
   if (provErr || !provider) {
     console.error("[postback/theoremreach] provider row not found:", provErr?.message);
-    return new Response("Provider not found", { status: 404 });
+    await logPostback(admin, rawParams, hashValid, "error", `provider lookup failed: ${provErr?.message}`);
+    return new Response("OK", { status: 200 });
   }
 
   // Idempotent insert — unique constraint on provider_transaction_id
@@ -117,7 +155,7 @@ async function handlePostback(req: NextRequest): Promise<Response> {
     nexcoins_awarded:        reward,
     status:                  "credited",
     raw_payload: {
-      query:    Object.fromEntries(q.entries()),
+      query: rawParams,
       screenout,
     },
   });
@@ -125,10 +163,12 @@ async function handlePostback(req: NextRequest): Promise<Response> {
   if (insertErr) {
     if (insertErr.code === "23505") {
       console.log(`[postback/theoremreach] duplicate tx ${txId} — skipping`);
+      await logPostback(admin, rawParams, hashValid, "duplicate");
       return new Response("OK", { status: 200 });
     }
     console.error("[postback/theoremreach] insert error:", insertErr.message);
-    return new Response("Internal Server Error", { status: 500 });
+    await logPostback(admin, rawParams, hashValid, "error", `tx insert failed: ${insertErr.message}`);
+    return new Response("OK", { status: 200 });
   }
 
   // Credit NexCoins
@@ -159,6 +199,7 @@ async function handlePostback(req: NextRequest): Promise<Response> {
   });
 
   console.log(`[postback/theoremreach] ✓ credited ${reward} coins → ${userId} (tx=${txId})`);
+  await logPostback(admin, rawParams, hashValid, "credited");
   return new Response("OK", { status: 200 });
 }
 

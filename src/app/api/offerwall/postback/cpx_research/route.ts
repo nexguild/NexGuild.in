@@ -6,6 +6,8 @@ import { createServerClient } from "@/lib/supabase-server";
 // and confirm the rest of the pipeline works. Remove after debugging.
 const DEBUG = process.env.CPX_POSTBACK_DEBUG === "true";
 
+type AdminClient = ReturnType<typeof createServerClient>;
+
 const CPX_IPS = new Set(["188.40.3.73", "157.90.97.92"]);
 
 function verifyHash(transId: string, incoming: string): { ok: boolean; detail: string } {
@@ -19,12 +21,11 @@ function verifyHash(transId: string, incoming: string): { ok: boolean; detail: s
   const expected = createHash("md5").update(input).digest("hex");
   const ok       = expected === incoming;
 
-  // Log full detail so Vercel log shows exactly what was compared
   console.log("[postback/cpx_research] hash_check", {
     trans_id:      transId,
     secret_set:    true,
-    secret_prefix: secret.slice(0, 4) + "****",   // show just enough to confirm correct secret
-    hash_input:    input,                          // full string being md5'd
+    secret_prefix: secret.slice(0, 4) + "****",
+    hash_input:    input,
     hash_expected: expected,
     hash_received: incoming,
     match:         ok,
@@ -41,9 +42,37 @@ function getClientIp(req: NextRequest): string {
   );
 }
 
+async function logPostback(
+  admin: AdminClient,
+  rawParams: Record<string, string>,
+  hashValid: boolean | null,
+  actionTaken: string,
+  errorMessage?: string,
+) {
+  try {
+    await admin.from("postback_logs").insert({
+      provider:      "cpx_research",
+      raw_params:    rawParams,
+      hash_valid:    hashValid,
+      action_taken:  actionTaken,
+      error_message: errorMessage ?? null,
+    });
+  } catch (e) {
+    console.error("[postback/cpx_research] log write failed:", e);
+  }
+}
+
 async function handleCpxPostback(req: NextRequest): Promise<Response> {
-  const url = new URL(req.url);
-  const q   = url.searchParams;
+  const url       = new URL(req.url);
+  const q         = url.searchParams;
+  const rawParams = Object.fromEntries(q.entries());
+
+  // Completely empty — nothing to log, just reject
+  if (Object.keys(rawParams).length === 0) {
+    return new Response("Bad Request", { status: 400 });
+  }
+
+  const admin = createServerClient();
 
   const status       = q.get("status");
   const transId      = q.get("trans_id");
@@ -59,8 +88,9 @@ async function handleCpxPostback(req: NextRequest): Promise<Response> {
   const sourceIp     = getClientIp(req);
 
   if (!transId || !userId || !status) {
-    console.warn("[postback/cpx_research] missing required fields — returning 400", { transId, userId, status });
-    return new Response("Bad Request", { status: 400 });
+    console.warn("[postback/cpx_research] missing required fields", { transId, userId, status });
+    await logPostback(admin, rawParams, null, "error", "missing trans_id, user_id, or status");
+    return new Response("OK", { status: 200 });
   }
 
   // ── Hash validation ──────────────────────────────────────────────────────
@@ -68,18 +98,20 @@ async function handleCpxPostback(req: NextRequest): Promise<Response> {
 
   if (!hashResult.ok) {
     if (DEBUG) {
-      console.warn(`[postback/cpx_research] DEBUG MODE — hash failed (${hashResult.detail}) but continuing to process`);
+      console.warn(`[postback/cpx_research] DEBUG MODE — hash failed (${hashResult.detail}) but continuing`);
     } else {
-      console.warn(`[postback/cpx_research] hash validation failed (${hashResult.detail}) — returning 403`);
-      return new Response("Forbidden", { status: 403 });
+      console.warn(`[postback/cpx_research] hash validation failed (${hashResult.detail})`);
+      await logPostback(admin, rawParams, false, "hash_invalid", hashResult.detail);
+      // Always return 200 — CPX won't retry; we have the log to investigate
+      return new Response("OK", { status: 200 });
     }
   }
+
+  const hashValid = hashResult.ok;
 
   if (sourceIp && !CPX_IPS.has(sourceIp)) {
     console.warn(`[postback/cpx_research] unexpected source IP: ${sourceIp} (trans_id=${transId})`);
   }
-
-  const admin = createServerClient();
 
   // ─── STATUS 2: Fraud reversal ────────────────────────────────────────────
   if (status === "2") {
@@ -91,6 +123,7 @@ async function handleCpxPostback(req: NextRequest): Promise<Response> {
 
     if (!existing || existing.status !== "credited") {
       console.log(`[postback/cpx_research] reversal for unknown/already-reversed trans ${transId}`);
+      await logPostback(admin, rawParams, hashValid, "reversed", `trans not found or already reversed: ${transId}`);
       return new Response("OK", { status: 200 });
     }
 
@@ -101,7 +134,7 @@ async function handleCpxPostback(req: NextRequest): Promise<Response> {
 
     const { data: profile } = await admin.from("profiles").select("nexcoins").eq("id", contributorId).single();
     const currentBalance = (profile as { nexcoins: number | null } | null)?.nexcoins ?? 0;
-    await admin.from("profiles").update({ nexcoins: currentBalance - coinsToReverse }).eq("id", contributorId);
+    await admin.from("profiles").update({ nexcoins: Math.max(0, currentBalance - coinsToReverse) }).eq("id", contributorId);
 
     await admin.from("coin_transactions").insert({
       contributor_id: contributorId,
@@ -119,6 +152,7 @@ async function handleCpxPostback(req: NextRequest): Promise<Response> {
     });
 
     console.log(`[postback/cpx_research] reversed ${coinsToReverse} coins from ${contributorId}`);
+    await logPostback(admin, rawParams, hashValid, "reversed");
     return new Response("OK", { status: 200 });
   }
 
@@ -126,11 +160,13 @@ async function handleCpxPostback(req: NextRequest): Promise<Response> {
   if (status === "1") {
     if (type === "out") {
       console.log(`[postback/cpx_research] screen-out user=${userId} offer=${offerId}`);
+      await logPostback(admin, rawParams, hashValid, "error", `screen-out (offer: ${offerId})`);
       return new Response("OK", { status: 200 });
     }
 
     if (type !== "complete" && type !== "bonus") {
       console.log(`[postback/cpx_research] unhandled type=${type} — returning OK`);
+      await logPostback(admin, rawParams, hashValid, "error", `unhandled type: ${type}`);
       return new Response("OK", { status: 200 });
     }
 
@@ -142,7 +178,8 @@ async function handleCpxPostback(req: NextRequest): Promise<Response> {
 
     if (provErr || !provider) {
       console.error("[postback/cpx_research] cpx_research row not found in offerwall_providers", provErr?.message);
-      return new Response("Provider not found", { status: 404 });
+      await logPostback(admin, rawParams, hashValid, "error", `provider lookup failed: ${provErr?.message}`);
+      return new Response("OK", { status: 200 });
     }
 
     const sharePct        = Number(provider.contributor_share_pct);
@@ -162,7 +199,7 @@ async function handleCpxPostback(req: NextRequest): Promise<Response> {
       nexcoins_awarded:        nexcoinsAwarded,
       status:                  "credited",
       raw_payload: {
-        query:      Object.fromEntries(q.entries()),
+        query:      rawParams,
         subid_1:    subid1,
         subid_2:    subid2,
         ip_click:   ipClick,
@@ -175,10 +212,12 @@ async function handleCpxPostback(req: NextRequest): Promise<Response> {
     if (insertErr) {
       if (insertErr.code === "23505") {
         console.log(`[postback/cpx_research] duplicate trans ${transId} — skipping`);
+        await logPostback(admin, rawParams, hashValid, "duplicate");
         return new Response("OK", { status: 200 });
       }
       console.error("[postback/cpx_research] insert error:", insertErr.message);
-      return new Response("Internal Server Error", { status: 500 });
+      await logPostback(admin, rawParams, hashValid, "error", `tx insert failed: ${insertErr.message}`);
+      return new Response("OK", { status: 200 });
     }
 
     // Credit NexCoins
@@ -187,7 +226,7 @@ async function handleCpxPostback(req: NextRequest): Promise<Response> {
       p_coins:          nexcoinsAwarded,
     });
     if (rpcErr) {
-      console.warn("[postback/cpx_research] increment_nexcoins RPC failed, falling back to direct update:", rpcErr.message);
+      console.warn("[postback/cpx_research] increment_nexcoins RPC failed, falling back:", rpcErr.message);
       const { data: p } = await admin.from("profiles").select("nexcoins").eq("id", userId).single();
       const cur = (p as { nexcoins: number | null } | null)?.nexcoins ?? 0;
       await admin.from("profiles").update({ nexcoins: cur + nexcoinsAwarded }).eq("id", userId);
@@ -209,10 +248,12 @@ async function handleCpxPostback(req: NextRequest): Promise<Response> {
     });
 
     console.log(`[postback/cpx_research] ✓ credited ${nexcoinsAwarded} coins → ${userId} (trans=${transId})`);
+    await logPostback(admin, rawParams, hashValid, "credited");
     return new Response("OK", { status: 200 });
   }
 
   console.log(`[postback/cpx_research] unhandled status=${status}`);
+  await logPostback(admin, rawParams, hashValid, "error", `unhandled status: ${status}`);
   return new Response("OK", { status: 200 });
 }
 
