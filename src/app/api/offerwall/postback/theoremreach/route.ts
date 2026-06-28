@@ -1,8 +1,16 @@
 import { NextRequest } from "next/server";
 import { createHmac } from "crypto";
+import { createClient } from "@supabase/supabase-js";
 import { createServerClient } from "@/lib/supabase-server";
 
 type AdminClient = ReturnType<typeof createServerClient>;
+
+// Dedicated service-role client for postback_logs writes — guaranteed to bypass RLS
+const logAdmin = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  { auth: { persistSession: false } },
+);
 
 function computeHash(secret: string, urlStr: string): string {
   const raw = createHmac("sha1", secret).update(urlStr).digest("base64");
@@ -19,14 +27,12 @@ function verifyHash(req: NextRequest, incomingHash: string): boolean {
 }
 
 async function logPostback(
-  admin: AdminClient,
   rawParams: Record<string, string>,
   hashValid: boolean | null,
   actionTaken: string,
   errorMessage?: string,
 ) {
-  // Supabase client returns { error } rather than throwing — must check the return value
-  const { error } = await admin.from("postback_logs").insert({
+  const { error } = await logAdmin.from("postback_logs").insert({
     provider:      "theoremreach",
     raw_params:    rawParams,
     hash_valid:    hashValid,
@@ -53,7 +59,7 @@ async function handlePostback(req: NextRequest): Promise<Response> {
   // TheoremReach debug/test callbacks — log and return 200, no credit
   if (q.get("debug") === "true" || q.get("debug") === "1") {
     console.log("[postback/theoremreach] debug callback — ignoring");
-    await logPostback(admin, rawParams, null, "debug_ignored");
+    await logPostback(rawParams, null, "debug_ignored");
     return new Response("OK", { status: 200 });
   }
 
@@ -63,7 +69,7 @@ async function handlePostback(req: NextRequest): Promise<Response> {
   if (hashValid === false) {
     // Log the suspicious callback but always return 200 — TheoremReach won't retry on 200
     console.warn("[postback/theoremreach] hash validation failed");
-    await logPostback(admin, rawParams, false, "hash_invalid");
+    await logPostback(rawParams, false, "hash_invalid");
     return new Response("OK", { status: 200 });
   }
 
@@ -75,7 +81,7 @@ async function handlePostback(req: NextRequest): Promise<Response> {
 
   if (!userId || !txId) {
     console.warn("[postback/theoremreach] missing user_id or tx_id");
-    await logPostback(admin, rawParams, hashValid, "error", "missing user_id or tx_id");
+    await logPostback(rawParams, hashValid, "error", "missing user_id or tx_id");
     return new Response("OK", { status: 200 });
   }
 
@@ -99,7 +105,7 @@ async function handlePostback(req: NextRequest): Promise<Response> {
 
     if (!existing || existing.status !== "credited") {
       console.log(`[postback/theoremreach] reversal: tx ${txId} not found or already reversed`);
-      await logPostback(admin, rawParams, hashValid, "reversed", `tx not found or already reversed: ${txId}`);
+      await logPostback(rawParams, hashValid, "reversed", `tx not found or already reversed: ${txId}`);
       return new Response("OK", { status: 200 });
     }
 
@@ -128,14 +134,14 @@ async function handlePostback(req: NextRequest): Promise<Response> {
     });
 
     console.log(`[postback/theoremreach] reversed ${coinsToReverse} coins from ${contributorId} (tx=${txId})`);
-    await logPostback(admin, rawParams, hashValid, "reversed");
+    await logPostback(rawParams, hashValid, "reversed");
     return new Response("OK", { status: 200 });
   }
 
   // ─── Completion ──────────────────────────────────────────────────────────
   if (reward <= 0) {
     console.log(`[postback/theoremreach] zero reward — ignoring (tx=${txId}, screenout=${screenout})`);
-    await logPostback(admin, rawParams, hashValid, "error", "zero reward");
+    await logPostback(rawParams, hashValid, "error", "zero reward");
     return new Response("OK", { status: 200 });
   }
 
@@ -147,7 +153,7 @@ async function handlePostback(req: NextRequest): Promise<Response> {
 
   if (provErr || !provider) {
     console.error("[postback/theoremreach] provider row not found:", provErr?.message);
-    await logPostback(admin, rawParams, hashValid, "error", `provider lookup failed: ${provErr?.message}`);
+    await logPostback(rawParams, hashValid, "error", `provider lookup failed: ${provErr?.message}`);
     return new Response("OK", { status: 200 });
   }
 
@@ -168,11 +174,11 @@ async function handlePostback(req: NextRequest): Promise<Response> {
   if (insertErr) {
     if (insertErr.code === "23505") {
       console.log(`[postback/theoremreach] duplicate tx ${txId} — skipping`);
-      await logPostback(admin, rawParams, hashValid, "duplicate");
+      await logPostback(rawParams, hashValid, "duplicate");
       return new Response("OK", { status: 200 });
     }
     console.error("[postback/theoremreach] insert error:", insertErr.message);
-    await logPostback(admin, rawParams, hashValid, "error", `tx insert failed: ${insertErr.message}`);
+    await logPostback(rawParams, hashValid, "error", `tx insert failed: ${insertErr.message}`);
     return new Response("OK", { status: 200 });
   }
 
@@ -204,7 +210,7 @@ async function handlePostback(req: NextRequest): Promise<Response> {
   });
 
   console.log(`[postback/theoremreach] ✓ credited ${reward} coins → ${userId} (tx=${txId})`);
-  await logPostback(admin, rawParams, hashValid, "credited");
+  await logPostback(rawParams, hashValid, "credited");
   return new Response("OK", { status: 200 });
 }
 

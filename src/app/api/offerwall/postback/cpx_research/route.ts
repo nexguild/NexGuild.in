@@ -1,5 +1,6 @@
 import { NextRequest } from "next/server";
 import { createHash } from "crypto";
+import { createClient } from "@supabase/supabase-js";
 import { createServerClient } from "@/lib/supabase-server";
 
 // Set CPX_POSTBACK_DEBUG=true in Vercel env vars to bypass hash validation
@@ -7,6 +8,13 @@ import { createServerClient } from "@/lib/supabase-server";
 const DEBUG = process.env.CPX_POSTBACK_DEBUG === "true";
 
 type AdminClient = ReturnType<typeof createServerClient>;
+
+// Dedicated service-role client for postback_logs writes — guaranteed to bypass RLS
+const logAdmin = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  { auth: { persistSession: false } },
+);
 
 const CPX_IPS = new Set(["188.40.3.73", "157.90.97.92"]);
 
@@ -43,14 +51,12 @@ function getClientIp(req: NextRequest): string {
 }
 
 async function logPostback(
-  admin: AdminClient,
   rawParams: Record<string, string>,
   hashValid: boolean | null,
   actionTaken: string,
   errorMessage?: string,
 ) {
-  // Supabase client returns { error } rather than throwing — must check the return value
-  const { error } = await admin.from("postback_logs").insert({
+  const { error } = await logAdmin.from("postback_logs").insert({
     provider:      "cpx_research",
     raw_params:    rawParams,
     hash_valid:    hashValid,
@@ -89,7 +95,7 @@ async function handleCpxPostback(req: NextRequest): Promise<Response> {
 
   if (!transId || !userId || !status) {
     console.warn("[postback/cpx_research] missing required fields", { transId, userId, status });
-    await logPostback(admin, rawParams, null, "error", "missing trans_id, user_id, or status");
+    await logPostback(rawParams, null, "error", "missing trans_id, user_id, or status");
     return new Response("OK", { status: 200 });
   }
 
@@ -101,7 +107,7 @@ async function handleCpxPostback(req: NextRequest): Promise<Response> {
       console.warn(`[postback/cpx_research] DEBUG MODE — hash failed (${hashResult.detail}) but continuing`);
     } else {
       console.warn(`[postback/cpx_research] hash validation failed (${hashResult.detail})`);
-      await logPostback(admin, rawParams, false, "hash_invalid", hashResult.detail);
+      await logPostback(rawParams, false, "hash_invalid", hashResult.detail);
       // Always return 200 — CPX won't retry; we have the log to investigate
       return new Response("OK", { status: 200 });
     }
@@ -123,7 +129,7 @@ async function handleCpxPostback(req: NextRequest): Promise<Response> {
 
     if (!existing || existing.status !== "credited") {
       console.log(`[postback/cpx_research] reversal for unknown/already-reversed trans ${transId}`);
-      await logPostback(admin, rawParams, hashValid, "reversed", `trans not found or already reversed: ${transId}`);
+      await logPostback(rawParams, hashValid, "reversed", `trans not found or already reversed: ${transId}`);
       return new Response("OK", { status: 200 });
     }
 
@@ -152,7 +158,7 @@ async function handleCpxPostback(req: NextRequest): Promise<Response> {
     });
 
     console.log(`[postback/cpx_research] reversed ${coinsToReverse} coins from ${contributorId}`);
-    await logPostback(admin, rawParams, hashValid, "reversed");
+    await logPostback(rawParams, hashValid, "reversed");
     return new Response("OK", { status: 200 });
   }
 
@@ -160,13 +166,13 @@ async function handleCpxPostback(req: NextRequest): Promise<Response> {
   if (status === "1") {
     if (type === "out") {
       console.log(`[postback/cpx_research] screen-out user=${userId} offer=${offerId}`);
-      await logPostback(admin, rawParams, hashValid, "error", `screen-out (offer: ${offerId})`);
+      await logPostback(rawParams, hashValid, "error", `screen-out (offer: ${offerId})`);
       return new Response("OK", { status: 200 });
     }
 
     if (type !== "complete" && type !== "bonus") {
       console.log(`[postback/cpx_research] unhandled type=${type} — returning OK`);
-      await logPostback(admin, rawParams, hashValid, "error", `unhandled type: ${type}`);
+      await logPostback(rawParams, hashValid, "error", `unhandled type: ${type}`);
       return new Response("OK", { status: 200 });
     }
 
@@ -178,7 +184,7 @@ async function handleCpxPostback(req: NextRequest): Promise<Response> {
 
     if (provErr || !provider) {
       console.error("[postback/cpx_research] cpx_research row not found in offerwall_providers", provErr?.message);
-      await logPostback(admin, rawParams, hashValid, "error", `provider lookup failed: ${provErr?.message}`);
+      await logPostback(rawParams, hashValid, "error", `provider lookup failed: ${provErr?.message}`);
       return new Response("OK", { status: 200 });
     }
 
@@ -212,11 +218,11 @@ async function handleCpxPostback(req: NextRequest): Promise<Response> {
     if (insertErr) {
       if (insertErr.code === "23505") {
         console.log(`[postback/cpx_research] duplicate trans ${transId} — skipping`);
-        await logPostback(admin, rawParams, hashValid, "duplicate");
+        await logPostback(rawParams, hashValid, "duplicate");
         return new Response("OK", { status: 200 });
       }
       console.error("[postback/cpx_research] insert error:", insertErr.message);
-      await logPostback(admin, rawParams, hashValid, "error", `tx insert failed: ${insertErr.message}`);
+      await logPostback(rawParams, hashValid, "error", `tx insert failed: ${insertErr.message}`);
       return new Response("OK", { status: 200 });
     }
 
@@ -248,12 +254,12 @@ async function handleCpxPostback(req: NextRequest): Promise<Response> {
     });
 
     console.log(`[postback/cpx_research] ✓ credited ${nexcoinsAwarded} coins → ${userId} (trans=${transId})`);
-    await logPostback(admin, rawParams, hashValid, "credited");
+    await logPostback(rawParams, hashValid, "credited");
     return new Response("OK", { status: 200 });
   }
 
   console.log(`[postback/cpx_research] unhandled status=${status}`);
-  await logPostback(admin, rawParams, hashValid, "error", `unhandled status: ${status}`);
+  await logPostback(rawParams, hashValid, "error", `unhandled status: ${status}`);
   return new Response("OK", { status: 200 });
 }
 
