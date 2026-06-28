@@ -201,19 +201,6 @@ async function handleCpxPostback(req: NextRequest): Promise<Response> {
       description:    `CPX Research ${type} (trans: ${transId})`,
     });
 
-    // Streak update
-    const today = new Date().toISOString().split("T")[0];
-    const { data: sp } = await admin
-      .from("profiles")
-      .select("last_task_approved_date, tasks_approved_today")
-      .eq("id", userId)
-      .single();
-    const spr = sp as { last_task_approved_date: string | null; tasks_approved_today: number | null } | null;
-    await admin.from("profiles").update({
-      last_task_approved_date: today,
-      tasks_approved_today:    spr?.last_task_approved_date === today ? (spr.tasks_approved_today ?? 0) + 1 : 1,
-    }).eq("id", userId);
-
     await admin.from("notifications").insert({
       user_id: userId,
       title:   "NexCoins Earned!",

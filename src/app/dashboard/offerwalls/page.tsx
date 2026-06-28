@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Layers, Info, Star, Clock } from "lucide-react";
+import { Layers, Info, Loader2 } from "lucide-react";
 import { NexCoinIcon } from "@/components/ui/nexcoin-icon";
 import { supabase } from "@/lib/supabase";
 import { applyWidgetConfig, injectScript, type WidgetInitConfig } from "@/lib/offerwall-widget-inject";
@@ -19,16 +19,6 @@ interface Provider {
   isLive: boolean;
 }
 
-interface TRSurvey {
-  campaign_id:    string;
-  loi:            number;
-  cpi:            number;
-  rank:           number;
-  average_rating: number;
-  rating_count:   number;
-  nexcoins:       number;
-  entry_link:     string;
-}
 
 export default function OfferwallsPage() {
   const router = useRouter();
@@ -38,9 +28,9 @@ export default function OfferwallsPage() {
   const [loading, setLoading]       = useState(true);
   const [activeSlug, setActiveSlug] = useState<string | null>(null);
 
-  // TheoremReach survey state
-  const [trSurveys, setTrSurveys]         = useState<TRSurvey[]>([]);
-  const [trLoading, setTrLoading]         = useState(false);
+  // TheoremReach iframe state
+  const [trIframeUrl, setTrIframeUrl]     = useState<string | null>(null);
+  const [trIframeLoading, setTrIframeLoading] = useState(false);
   const [trToken, setTrToken]             = useState<string | null>(null);
 
   useEffect(() => {
@@ -86,18 +76,18 @@ export default function OfferwallsPage() {
 
   const activeProv = taskOfferwalls.find((p) => p.slug === activeSlug) ?? null;
 
-  // Fetch TheoremReach surveys whenever their tab becomes active (re-fetches on every switch)
+  // Fetch signed TheoremReach iframe URL whenever their tab becomes active
   useEffect(() => {
-    if (activeProv?.slug !== "theoremreach" || activeProv?.integration_type !== "api" || !trToken) return;
-    setTrSurveys([]);   // clear stale data so skeleton shows immediately
-    setTrLoading(true);
-    fetch("/api/offerwall/theoremreach/surveys", {
+    if (activeProv?.slug !== "theoremreach" || !trToken) return;
+    setTrIframeUrl(null);
+    setTrIframeLoading(true);
+    fetch("/api/offerwall/theoremreach/iframe-url", {
       headers: { Authorization: `Bearer ${trToken}` },
     })
       .then((r) => r.json())
-      .then((d: { surveys?: TRSurvey[] }) => setTrSurveys(d.surveys ?? []))
-      .catch(() => setTrSurveys([]))
-      .finally(() => setTrLoading(false));
+      .then((d: { iframeUrl?: string }) => setTrIframeUrl(d.iframeUrl ?? null))
+      .catch(() => setTrIframeUrl(null))
+      .finally(() => setTrIframeLoading(false));
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeSlug]);
 
@@ -135,107 +125,39 @@ export default function OfferwallsPage() {
     return p.embed_url_template.replace(/\{user_id\}/g, userId);
   }
 
-  function renderStars(rating: number) {
-    return Array.from({ length: 5 }).map((_, i) => (
-      <Star
-        key={i}
-        className={`h-3 w-3 ${i < Math.round(rating) ? "text-amber-400 fill-amber-400" : "text-stone-300"}`}
-      />
-    ));
-  }
-
-  function renderApiSurveys() {
-    if (trLoading) {
-      return (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="rounded-xl border border-[var(--border-default)] bg-[var(--surface-card)] p-5 space-y-3 animate-pulse">
-              <div className="h-4 w-3/4 bg-[var(--surface-subtle)] rounded" />
-              <div className="h-3 w-1/2 bg-[var(--surface-subtle)] rounded" />
-              <div className="h-8 w-full bg-[var(--surface-subtle)] rounded-lg mt-4" />
-            </div>
-          ))}
-        </div>
-      );
-    }
-
-    if (trSurveys.length === 0) {
-      return (
-        <div className="rounded-xl border border-[var(--border-default)] bg-[var(--surface-card)] py-20 flex flex-col items-center gap-4 text-center px-6">
-          <div className="h-14 w-14 rounded-full bg-[#E6FAF5] flex items-center justify-center">
-            <Layers className="h-7 w-7 text-[#02b491]" />
-          </div>
-          <p className="font-semibold text-[var(--text-primary)]">No surveys available right now</p>
-          <p className="text-sm text-[var(--text-secondary)] max-w-sm">
-            TheoremReach matches surveys to your profile. Check back soon — new surveys appear throughout the day.
-          </p>
-        </div>
-      );
-    }
-
-    return (
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <p className="text-sm text-[var(--text-secondary)]">
-            <span className="font-semibold text-[var(--text-primary)]">{trSurveys.length}</span> surveys available
-          </p>
-          <p className="text-xs text-[var(--text-muted)]">Sorted by best match</p>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {trSurveys.map((s) => (
-            <div
-              key={s.campaign_id}
-              className="rounded-xl border border-[var(--border-default)] bg-[var(--surface-card)] p-5 flex flex-col gap-4 hover:border-[var(--brand-500)] transition-colors"
-            >
-              {/* Rating row */}
-              <div className="flex items-center gap-1.5">
-                <div className="flex items-center gap-0.5">{renderStars(s.average_rating)}</div>
-                <span className="text-xs text-[var(--text-muted)]">
-                  {s.average_rating.toFixed(1)} ({s.rating_count})
-                </span>
-              </div>
-
-              {/* Reward + time */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1.5">
-                  <NexCoinIcon size={18} />
-                  <span className="text-lg font-bold text-[var(--text-primary)]">{s.nexcoins}</span>
-                  <span className="text-xs text-[var(--text-muted)]">NexCoins</span>
-                </div>
-                <div className="flex items-center gap-1 text-xs text-[var(--text-muted)]">
-                  <Clock className="h-3.5 w-3.5" />
-                  <span>~{s.loi} min</span>
-                </div>
-              </div>
-
-              {/* CTA */}
-              <a
-                href={s.entry_link}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-full text-center text-sm font-semibold py-2 rounded-lg bg-[var(--brand-500)] text-white hover:opacity-90 transition-opacity"
-              >
-                Start Survey →
-              </a>
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  }
-
   function renderEmbedArea(p: Provider) {
-    if (p.integration_type === "api") {
+    // TheoremReach: server-signed direct offerwall (surveys + app installs + offers)
+    if (p.slug === "theoremreach") {
       return (
         <div className="rounded-xl border border-[var(--border-default)] bg-[var(--surface-card)] overflow-hidden">
           <div className="px-5 py-3 border-b border-[var(--border-default)] bg-[var(--surface-subtle)] flex items-center gap-2">
             <NexCoinIcon size={16} />
             <p className="text-xs text-[var(--text-muted)]">
-              Earnings from <span className="font-semibold text-[var(--text-primary)]">{p.name}</span> are credited to your NexCoins automatically after survey completion.
+              Earnings from <span className="font-semibold text-[var(--text-primary)]">{p.name}</span> are credited automatically after each offer completes.
             </p>
           </div>
-          <div className="p-5">{renderApiSurveys()}</div>
+          {trIframeLoading ? (
+            <div className="flex items-center justify-center py-24">
+              <Loader2 className="h-6 w-6 animate-spin text-[var(--brand-500)]" />
+            </div>
+          ) : trIframeUrl ? (
+            <iframe
+              key={activeSlug ?? "tr"}
+              src={trIframeUrl}
+              className="w-full border-0"
+              style={{ height: "600px" }}
+              sandbox="allow-popups allow-popups-to-escape-sandbox allow-forms allow-scripts allow-same-origin allow-top-navigation"
+              title="TheoremReach Offerwall"
+            />
+          ) : (
+            <div className="flex flex-col items-center justify-center py-24 px-6 text-center bg-[var(--surface-page)]">
+              <Layers className="h-10 w-10 text-[var(--text-muted)] mb-4" />
+              <p className="font-semibold text-[var(--text-primary)] mb-2">Unable to load</p>
+              <p className="text-sm text-[var(--text-secondary)] max-w-sm">
+                Could not load the TheoremReach offerwall. Please try refreshing.
+              </p>
+            </div>
+          )}
         </div>
       );
     }
