@@ -49,16 +49,16 @@ async function logPostback(
   actionTaken: string,
   errorMessage?: string,
 ) {
-  try {
-    await admin.from("postback_logs").insert({
-      provider:      "cpx_research",
-      raw_params:    rawParams,
-      hash_valid:    hashValid,
-      action_taken:  actionTaken,
-      error_message: errorMessage ?? null,
-    });
-  } catch (e) {
-    console.error("[postback/cpx_research] log write failed:", e);
+  // Supabase client returns { error } rather than throwing — must check the return value
+  const { error } = await admin.from("postback_logs").insert({
+    provider:      "cpx_research",
+    raw_params:    rawParams,
+    hash_valid:    hashValid,
+    action_taken:  actionTaken,
+    error_message: errorMessage ?? null,
+  });
+  if (error) {
+    console.error("[postback/cpx_research] postback_logs insert failed:", error.code, error.message, error.details);
   }
 }
 

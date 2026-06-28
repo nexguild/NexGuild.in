@@ -25,16 +25,16 @@ async function logPostback(
   actionTaken: string,
   errorMessage?: string,
 ) {
-  try {
-    await admin.from("postback_logs").insert({
-      provider:      "theoremreach",
-      raw_params:    rawParams,
-      hash_valid:    hashValid,
-      action_taken:  actionTaken,
-      error_message: errorMessage ?? null,
-    });
-  } catch (e) {
-    console.error("[postback/theoremreach] log write failed:", e);
+  // Supabase client returns { error } rather than throwing — must check the return value
+  const { error } = await admin.from("postback_logs").insert({
+    provider:      "theoremreach",
+    raw_params:    rawParams,
+    hash_valid:    hashValid,
+    action_taken:  actionTaken,
+    error_message: errorMessage ?? null,
+  });
+  if (error) {
+    console.error("[postback/theoremreach] postback_logs insert failed:", error.code, error.message, error.details);
   }
 }
 
@@ -79,10 +79,15 @@ async function handlePostback(req: NextRequest): Promise<Response> {
     return new Response("OK", { status: 200 });
   }
 
+  // Confirm hash validation outcome — visible in Vercel logs for every real postback
   console.log("[postback/theoremreach]", {
     userId, txId, reward, isReversal, screenout,
+    hash_valid: hashValid,         // true = validated, null = no hash param sent
     hash_prefix: hash.slice(0, 8) + "...",
   });
+
+  // Screenout logic: TheoremReach sends reward > 0 for partial screenouts → credit it.
+  // Zero-reward screenouts are caught by the reward <= 0 check below and not credited.
 
   // ─── Reversal ─────────────────────────────────────────────────────────────
   if (isReversal) {
