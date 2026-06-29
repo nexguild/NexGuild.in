@@ -100,7 +100,7 @@ export default function ContributorAboutPage() {
             <div className="flex flex-wrap gap-4">
               <Link
                 href="/signup"
-                className="inline-flex items-center gap-2 h-11 px-6 rounded-lg bg-[#14b8a6] text-[#0A1628] text-sm font-semibold hover:bg-[#5eead4] transition-colors"
+                className="inline-flex items-center gap-2 h-11 px-6 rounded-lg bg-[#14b8a6] text-[#ffffff] text-sm font-semibold hover:bg-[#5eead4] transition-colors"
               >
                 Sign Up Free →
               </Link>
