@@ -82,7 +82,7 @@ export function ContributorHeader() {
             </Link>
             <Link
               href="/signup"
-              className="h-9 px-5 inline-flex items-center rounded-lg bg-[#14b8a6] text-[#0A1628] text-sm font-semibold hover:bg-[#5eead4] transition-colors"
+              className="h-9 px-5 inline-flex items-center rounded-lg bg-[#14b8a6] text-[#DAF6F4] text-sm font-semibold hover:bg-[#5eead4] transition-colors"
             >
               Sign Up Free →
             </Link>
