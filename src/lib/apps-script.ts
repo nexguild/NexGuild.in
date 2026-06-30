@@ -22,14 +22,12 @@ export async function callAppsScript<T = unknown>(
     throw new Error("Apps Script not configured (APPS_SCRIPT_WEB_APP_URL / APPS_SCRIPT_SHARED_SECRET missing)");
   }
 
+  // Apps Script doPost cannot read custom HTTP headers — secret goes in the JSON body.
   const res = await fetch(url, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "X-Shared-Secret": secret,
-    },
-    body: JSON.stringify({ action, ...payload }),
-    // Apps Script deployments can be slow on cold start; give it 30 s
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ action, _secret: secret, ...payload }),
+    // Apps Script can be slow on cold start; give it 30 s
     signal: AbortSignal.timeout(30_000),
   });
 
