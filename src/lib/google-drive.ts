@@ -60,29 +60,29 @@ export async function createSheet(name: string, parentId: string): Promise<strin
   const sheets = sheetsClient();
   if (!drive || !sheets) return null;
 
-  const res = await sheets.spreadsheets.create({
+  // Create the spreadsheet via the Drive API so it lands directly inside the
+  // shared parent folder. Using sheets.spreadsheets.create() creates it in
+  // the service account's personal Drive root (zero-quota) and then requires
+  // a separate move — that move fails with 403 because the service account
+  // only has writer access on the shared folder, not on its own root.
+  const res = await drive.files.create({
     requestBody: {
-      properties: { title: name },
-      sheets: [{ properties: { title: "Submissions" } }],
+      name,
+      mimeType: "application/vnd.google-apps.spreadsheet",
+      parents: [parentId],
     },
+    fields: "id",
   });
-  const fileId = res.data.spreadsheetId!;
-
-  // Move out of root into parent folder
-  await drive.files.update({
-    fileId,
-    addParents: parentId,
-    removeParents: "root",
-    fields: "id, parents",
-  });
+  const fileId = res.data.id!;
 
   // Share so admins can open the link directly
   await setFilePublic(fileId);
 
-  // Header row
+  // Add header row via Sheets API (modifying an existing file is allowed
+  // once it's inside the shared folder we have access to)
   await sheets.spreadsheets.values.update({
     spreadsheetId: fileId,
-    range: "Submissions!A1:I1",
+    range: "Sheet1!A1:I1",
     valueInputOption: "RAW",
     requestBody: {
       values: [["Contributor ID", "Submission ID", "Stage", "Filename", "Drive URL", "Status", "Submitted At", "Reviewed At", "Notes"]],
@@ -122,7 +122,7 @@ export async function appendSheetRow(spreadsheetId: string, values: (string | nu
   if (!sheets) return;
   await sheets.spreadsheets.values.append({
     spreadsheetId,
-    range: "Submissions!A:I",
+    range: "Sheet1!A:I",
     valueInputOption: "RAW",
     requestBody: { values: [values.map(String)] },
   });
@@ -139,7 +139,7 @@ export async function syncSheetStatus(
 
   const res = await sheets.spreadsheets.values.get({
     spreadsheetId,
-    range: "Submissions!A:I",
+    range: "Sheet1!A:I",
   });
 
   const rows = res.data.values ?? [];
