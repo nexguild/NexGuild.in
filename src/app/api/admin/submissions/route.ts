@@ -32,7 +32,7 @@ export async function GET(req: NextRequest) {
         coins_awarded,
         feedback,
         submitted_at,
-        tasks ( id, title, pay_per_task ),
+        tasks ( id, title, pay_per_task, steps ),
         profiles ( full_name, email )
       `)
       .order("submitted_at", { ascending: false });
@@ -42,7 +42,42 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    return NextResponse.json({ submissions: data ?? [] });
+    const submissions = data ?? [];
+
+    // Fetch step submissions for all task IDs in this result set
+    const taskIds = [
+      ...new Set(
+        submissions
+          .map((s) => (s.tasks as unknown as { id: string } | null)?.id)
+          .filter((id): id is string => !!id)
+      ),
+    ];
+
+    // key → sorted list of step subs
+    const byKey = new Map<string, object[]>();
+
+    if (taskIds.length > 0) {
+      const { data: stepSubs } = await admin
+        .from("task_step_submissions")
+        .select("task_id, contributor_id, step_index, submission_type, text_value, file_url, submitted_at")
+        .in("task_id", taskIds)
+        .order("step_index", { ascending: true });
+
+      for (const ss of stepSubs ?? []) {
+        const key = `${ss.task_id}::${ss.contributor_id}`;
+        const arr = byKey.get(key) ?? [];
+        arr.push(ss);
+        byKey.set(key, arr);
+      }
+    }
+
+    const enriched = submissions.map((sub) => {
+      const taskId = (sub.tasks as unknown as { id: string } | null)?.id ?? "";
+      const key    = `${taskId}::${sub.contributor_id}`;
+      return { ...sub, step_submissions: byKey.get(key) ?? [] };
+    });
+
+    return NextResponse.json({ submissions: enriched });
   } catch (err) {
     return NextResponse.json({ error: String(err) }, { status: 500 });
   }

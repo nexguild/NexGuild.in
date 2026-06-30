@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { FROM_NOREPLY, getResend, taskApprovedHtml, taskRejectedHtml, resubmissionRequestedHtml } from "@/lib/email";
+import { syncSheetStatus } from "@/lib/google-drive";
 
 export async function POST(req: NextRequest) {
   const admin = createClient(
@@ -39,7 +40,7 @@ export async function POST(req: NextRequest) {
     // ── Fetch submission + task ──────────────────────────────────
     const { data: sub, error: subFetchErr } = await admin
       .from("submissions")
-      .select("id, contributor_id, tasks(pay_per_task, title, xp_reward)")
+      .select("id, contributor_id, tasks(id, pay_per_task, title, xp_reward, drive_sheet_id)")
       .eq("id", submissionId)
       .single();
 
@@ -49,7 +50,7 @@ export async function POST(req: NextRequest) {
     }
 
     const now = new Date().toISOString();
-    const taskMeta = sub.tasks as unknown as { pay_per_task: number | null; title: string; xp_reward: number | null } | null;
+    const taskMeta = sub.tasks as unknown as { id: string; pay_per_task: number | null; title: string; xp_reward: number | null; drive_sheet_id: string | null } | null;
     const taskTitle = taskMeta?.title ?? "a task";
 
     // ── APPROVE ──────────────────────────────────────────────────
@@ -169,6 +170,12 @@ export async function POST(req: NextRequest) {
         }
       }
 
+      // Sync Sheet status (non-blocking)
+      if (taskMeta?.drive_sheet_id) {
+        syncSheetStatus(taskMeta.drive_sheet_id, submissionId, "approved", now)
+          .catch((err) => console.error("[review-submission] sheet sync failed:", err));
+      }
+
       return NextResponse.json({ success: true, coins_awarded: coins });
     }
 
@@ -193,6 +200,12 @@ export async function POST(req: NextRequest) {
         type:    "submission_rejected",
       });
       if (e2) console.error("[review-submission] reject notification:", e2.message);
+
+      // Sync Sheet status (non-blocking)
+      if (taskMeta?.drive_sheet_id) {
+        syncSheetStatus(taskMeta.drive_sheet_id, submissionId, "rejected", now)
+          .catch((err) => console.error("[review-submission] sheet sync failed:", err));
+      }
 
       // Email (non-critical)
       const resend = getResend();

@@ -17,6 +17,19 @@ interface FileItem {
   size: number;
 }
 
+interface StepSubmission {
+  step_index: number;
+  submission_type: string;
+  text_value: string | null;
+  file_url: string | null;
+  submitted_at: string;
+}
+
+interface TaskStep {
+  title: string;
+  submitType: string;
+}
+
 interface Submission {
   id: string;
   contributor_id: string;
@@ -26,8 +39,67 @@ interface Submission {
   coins_awarded: number | null;
   feedback: string | null;
   submitted_at: string;
-  tasks: { id: string; title: string; pay_per_task: number | null } | null;
+  tasks: { id: string; title: string; pay_per_task: number | null; steps: TaskStep[] | null } | null;
   profiles: { full_name: string | null; email: string | null } | null;
+  step_submissions: StepSubmission[];
+}
+
+function isDriveUrl(url: string): boolean {
+  return url.includes("drive.google.com");
+}
+
+function isImageFile(url: string): boolean {
+  return /\.(jpg|jpeg|png|gif|webp|bmp|svg)(\?|$)/i.test(url);
+}
+
+function StepSubmissionItem({ ss, stepTitle }: { ss: StepSubmission; stepTitle: string }) {
+  const isDrive = ss.file_url ? isDriveUrl(ss.file_url) : false;
+  const isImg   = ss.file_url ? (isDrive || isImageFile(ss.file_url)) : false;
+
+  return (
+    <div className="rounded-lg border border-[var(--border-default)] bg-[var(--surface-subtle)] p-3 space-y-2">
+      <p className="text-xs font-bold text-[var(--text-primary)]">{stepTitle}</p>
+
+      {ss.submission_type === "text" && ss.text_value && (
+        <p className="text-sm text-[var(--text-secondary)] whitespace-pre-wrap">{ss.text_value}</p>
+      )}
+
+      {ss.submission_type === "proof_code" && ss.text_value && (
+        <p className="text-sm text-green-400 font-mono font-semibold">
+          ✓ Verified automatically: {ss.text_value}
+        </p>
+      )}
+
+      {ss.submission_type === "none" && (
+        <p className="text-sm text-green-400">✓ Marked complete</p>
+      )}
+
+      {ss.submission_type === "file" && ss.file_url && (
+        <div className="space-y-2">
+          {isDrive && isImg ? (
+            <iframe
+              src={ss.file_url.replace("/view", "/preview")}
+              className="w-full rounded border border-[var(--border-default)]"
+              style={{ height: 200 }}
+              allow="autoplay"
+            />
+          ) : !isDrive && isImg ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={ss.file_url} alt="submission" className="max-h-48 rounded border border-[var(--border-default)]" />
+          ) : null}
+          <a
+            href={ss.file_url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 text-xs text-[var(--brand-500)] hover:underline"
+          >
+            <ExternalLink className="h-3 w-3" />
+            {isDrive ? "Open in Google Drive" : "View file"}
+          </a>
+        </div>
+      )}
+    </div>
+  );
 }
 
 const TABS = ["submitted", "approved", "rejected"] as const;
@@ -319,15 +391,33 @@ export default function AdminSubmissionsPage() {
                 </div>
               )}
 
-              {/* Files */}
+              {/* Step submissions (tasks with guided stages) */}
+              {sub.step_submissions && sub.step_submissions.length > 0 && (
+                <div className="space-y-2">
+                  <p className="text-xs font-semibold text-[var(--text-secondary)]">Stage Submissions</p>
+                  {sub.step_submissions.map((ss) => {
+                    const steps = sub.tasks?.steps ?? [];
+                    const stepMeta = steps[ss.step_index];
+                    const label = stepMeta?.title
+                      ? `Stage ${ss.step_index + 1}: ${stepMeta.title}`
+                      : `Stage ${ss.step_index + 1}`;
+                    return <StepSubmissionItem key={ss.step_index} ss={ss} stepTitle={label} />;
+                  })}
+                </div>
+              )}
+
+              {/* Files (classic mode) */}
               {sub.files && sub.files.length > 0 && (
-                <div className="flex flex-wrap gap-2">
-                  {sub.files.map((f, i) => (
-                    <a key={i} href={f.url} target="_blank" rel="noopener noreferrer"
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-[var(--border-default)] bg-[var(--surface-subtle)] text-xs text-[var(--brand-500)] hover:bg-[var(--surface-card)] transition-colors">
-                      <ExternalLink className="h-3 w-3" /> {f.name}
-                    </a>
-                  ))}
+                <div className="space-y-1">
+                  <p className="text-xs font-semibold text-[var(--text-secondary)]">Files</p>
+                  <div className="flex flex-wrap gap-2">
+                    {sub.files.map((f, i) => (
+                      <a key={i} href={f.url} target="_blank" rel="noopener noreferrer"
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-[var(--border-default)] bg-[var(--surface-subtle)] text-xs text-[var(--brand-500)] hover:bg-[var(--surface-card)] transition-colors">
+                        <ExternalLink className="h-3 w-3" /> {f.name}
+                      </a>
+                    ))}
+                  </div>
                 </div>
               )}
 

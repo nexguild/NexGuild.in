@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { FROM_NOREPLY, getResend, newTaskHtml } from "@/lib/email";
+import { createDriveResourcesForTask, isDriveConfigured } from "@/lib/google-drive";
 
 export async function POST(req: NextRequest) {
   const admin = createClient(
@@ -99,6 +100,25 @@ export async function POST(req: NextRequest) {
     if (insertErr || !task) {
       console.error("[admin/tasks] insert error:", insertErr?.message);
       return NextResponse.json({ error: insertErr?.message ?? "Failed to create task" }, { status: 500 });
+    }
+
+    // ── Google Drive folder + sheet (non-blocking — task is already created) ──
+    if (isDriveConfigured()) {
+      createDriveResourcesForTask(task.id, task.title)
+        .then(async (resources) => {
+          if (!resources) {
+            console.error("[admin/tasks] Drive resource creation returned null for task", task.id);
+            return;
+          }
+          const { error: driveErr } = await admin.from("tasks").update({
+            drive_folder_id:        resources.folderId,
+            drive_images_folder_id: resources.imagesFolderId,
+            drive_sheet_id:         resources.sheetId,
+          }).eq("id", task.id);
+          if (driveErr) console.error("[admin/tasks] failed to store drive IDs:", driveErr.message);
+          else console.log("[admin/tasks] Drive resources created for task", task.id);
+        })
+        .catch((err) => console.error("[admin/tasks] Drive creation threw:", err));
     }
 
     // ── Email blast for active tasks ──────────────────────────────────────────

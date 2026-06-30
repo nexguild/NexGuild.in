@@ -197,14 +197,29 @@ export default function TaskWorkPage() {
       if (!textValue) { setModalError("Please enter a response."); setSubmittingModal(false); return; }
     } else if (step.submitType === "file") {
       if (!modalFile) { setModalError("Please select a file."); setSubmittingModal(false); return; }
-      const ext  = modalFile.name.split(".").pop() ?? "bin";
-      const path = `${userId}/${id}/step${modalStep}_${Date.now()}.${ext}`;
-      const { data: upData, error: upErr } = await supabase.storage
-        .from("submissions")
-        .upload(path, modalFile, { upsert: true });
-      if (upErr) { setModalError("Upload failed: " + upErr.message); setSubmittingModal(false); return; }
-      const { data: urlData } = supabase.storage.from("submissions").getPublicUrl(upData.path);
-      fileUrl = urlData.publicUrl;
+      const { data: { session } } = await supabase.auth.getSession();
+      const formData = new FormData();
+      formData.append("file", modalFile);
+      formData.append("stepIndex", String(modalStep));
+      const upRes = await fetch(`/api/tasks/${id}/upload-to-drive`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${session?.access_token ?? ""}` },
+        body: formData,
+      });
+      if (!upRes.ok) {
+        // Drive not configured — fall back to Supabase Storage
+        const ext  = modalFile.name.split(".").pop() ?? "bin";
+        const path = `${userId}/${id}/step${modalStep}_${Date.now()}.${ext}`;
+        const { data: upData, error: upErr } = await supabase.storage
+          .from("submissions")
+          .upload(path, modalFile, { upsert: true });
+        if (upErr) { setModalError("Upload failed: " + upErr.message); setSubmittingModal(false); return; }
+        const { data: urlData } = supabase.storage.from("submissions").getPublicUrl(upData.path);
+        fileUrl = urlData.publicUrl;
+      } else {
+        const upJson = await upRes.json();
+        fileUrl = upJson.url;
+      }
     } else if (step.submitType === "proof_code") {
       const code = modalText.trim().toUpperCase();
       if (!code || code.length !== 8) {
@@ -289,19 +304,33 @@ export default function TaskWorkPage() {
     setClassicSubmitting(true);
     setClassicError(null);
 
+    const { data: { session: classicSession } } = await supabase.auth.getSession();
     const uploaded: FileItem[] = [];
     for (const file of classicFiles) {
-      const path = `${userId}/${id}/${Date.now()}_${file.name}`;
-      const { data: upData, error: upErr } = await supabase.storage
-        .from("submissions")
-        .upload(path, file, { upsert: true });
-      if (upErr) {
-        setClassicError(`Failed to upload "${file.name}": ${upErr.message}`);
-        setClassicSubmitting(false);
-        return;
+      const classicFormData = new FormData();
+      classicFormData.append("file", file);
+      const upRes = await fetch(`/api/tasks/${id}/upload-to-drive`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${classicSession?.access_token ?? ""}` },
+        body: classicFormData,
+      });
+      if (upRes.ok) {
+        const upJson = await upRes.json();
+        uploaded.push({ name: upJson.name, url: upJson.url, size: upJson.size });
+      } else {
+        // Fall back to Supabase Storage
+        const path = `${userId}/${id}/${Date.now()}_${file.name}`;
+        const { data: upData, error: upErr } = await supabase.storage
+          .from("submissions")
+          .upload(path, file, { upsert: true });
+        if (upErr) {
+          setClassicError(`Failed to upload "${file.name}": ${upErr.message}`);
+          setClassicSubmitting(false);
+          return;
+        }
+        const { data: urlData } = supabase.storage.from("submissions").getPublicUrl(upData.path);
+        uploaded.push({ name: file.name, url: urlData.publicUrl, size: file.size });
       }
-      const { data: urlData } = supabase.storage.from("submissions").getPublicUrl(upData.path);
-      uploaded.push({ name: file.name, url: urlData.publicUrl, size: file.size });
     }
 
     const { error: updateErr } = await supabase.from("submissions").update({
