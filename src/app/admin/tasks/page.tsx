@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { ClipboardList, Plus, Search, Pause, X, Pencil, BarChart2, Loader2, Sheet } from "lucide-react";
+import { ClipboardList, Plus, Search, Pause, X, Pencil, BarChart2, Loader2, Sheet, Trash2, Rocket } from "lucide-react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { usePageGuard } from "@/components/layout/admin-auth-guard";
@@ -45,6 +45,9 @@ export default function AdminTasksPage() {
   const [analytics, setAnalytics]     = useState<TaskStat[] | null>(null);
   const [analyticsLoading, setAnalyticsLoading] = useState(false);
   const [analyticsError, setAnalyticsError]     = useState<string | null>(null);
+  // Delete confirmation dialog
+  const [deleteTarget, setDeleteTarget] = useState<Task | null>(null);
+  const [deleting, setDeleting]         = useState(false);
 
   useEffect(() => {
     async function fetchTasks() {
@@ -54,6 +57,7 @@ export default function AdminTasksPage() {
       const { data } = await supabase
         .from("tasks")
         .select("id, title, task_type, pay_per_task, total_slots, filled_slots, status, created_at, drive_sheet_id")
+        .is("deleted_at", null)
         .order("created_at", { ascending: false });
       setTasks(data ?? []);
       setLoading(false);
@@ -85,9 +89,28 @@ export default function AdminTasksPage() {
 
   async function updateStatus(id: string, newStatus: string) {
     setUpdating(id);
-    const { error } = await supabase.from("tasks").update({ status: newStatus }).eq("id", id);
-    if (!error) setTasks((prev) => prev.map((t) => t.id === id ? { ...t, status: newStatus } : t));
+    // Use server-side API so publishing a draft (draft→active) triggers email notifications
+    const res = await fetch(`/api/admin/tasks/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${tokenRef.current}` },
+      body: JSON.stringify({ status: newStatus }),
+    });
+    if (res.ok) setTasks((prev) => prev.map((t) => t.id === id ? { ...t, status: newStatus } : t));
     setUpdating(null);
+  }
+
+  async function confirmDelete() {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    const res = await fetch(`/api/admin/tasks/${deleteTarget.id}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${tokenRef.current}` },
+    });
+    if (res.ok) {
+      setTasks((prev) => prev.filter((t) => t.id !== deleteTarget.id));
+    }
+    setDeleting(false);
+    setDeleteTarget(null);
   }
 
   const filtered = tasks.filter((t) => {
@@ -215,29 +238,46 @@ export default function AdminTasksPage() {
                         </span>
                       </td>
                       <td className="px-4 py-3">
-                        <div className="flex items-center gap-1.5">
+                        <div className="flex items-center gap-1.5 flex-wrap">
                           <Button variant="secondary" size="sm" asChild>
                             <Link href={`/admin/tasks/${task.id}/edit`}>
                               <Pencil className="h-3.5 w-3.5" />
                             </Link>
                           </Button>
-                          {task.status === "active" ? (
+                          {task.status === "draft" && (
+                            <Button size="sm" disabled={updating === task.id}
+                              onClick={() => updateStatus(task.id, "active")}
+                              className="bg-[var(--brand-500)] hover:brightness-105 text-white">
+                              {updating === task.id
+                                ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                : <><Rocket className="h-3.5 w-3.5" /> Publish</>}
+                            </Button>
+                          )}
+                          {task.status === "active" && (
                             <Button variant="secondary" size="sm" disabled={updating === task.id}
                               onClick={() => updateStatus(task.id, "paused")}>
                               <Pause className="h-3.5 w-3.5" /> Pause
                             </Button>
-                          ) : task.status === "paused" ? (
+                          )}
+                          {task.status === "paused" && (
                             <Button variant="secondary" size="sm" disabled={updating === task.id}
                               onClick={() => updateStatus(task.id, "active")}>
                               ▶ Resume
                             </Button>
-                          ) : null}
-                          {task.status !== "archived" && (
+                          )}
+                          {task.status !== "archived" && task.status !== "draft" && (
                             <Button variant="destructive" size="sm" disabled={updating === task.id}
                               onClick={() => updateStatus(task.id, "archived")}>
                               <X className="h-3.5 w-3.5" /> Close
                             </Button>
                           )}
+                          <Button
+                            variant="secondary" size="sm"
+                            onClick={() => setDeleteTarget(task)}
+                            className="text-red-400 hover:text-red-300 hover:border-red-500/30"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
                         </div>
                       </td>
                     </tr>
@@ -247,6 +287,30 @@ export default function AdminTasksPage() {
             </div>
           )}
         </>
+      )}
+      {/* Delete confirmation modal */}
+      {deleteTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+          <div className="w-full max-w-sm bg-[var(--surface-card)] rounded-2xl border border-[var(--border-default)] shadow-2xl p-6 space-y-4">
+            <h2 className="font-bold text-[var(--text-primary)]">Delete Task?</h2>
+            <p className="text-sm text-[var(--text-secondary)]">
+              <span className="font-semibold text-[var(--text-primary)]">&ldquo;{deleteTarget.title}&rdquo;</span>{" "}
+              will be hidden from the admin list and the public board. Submission and payment history is preserved in the database.
+            </p>
+            <div className="flex gap-3">
+              <Button variant="ghost" className="flex-1" onClick={() => setDeleteTarget(null)} disabled={deleting}>
+                Cancel
+              </Button>
+              <Button
+                className="flex-1 bg-red-500 hover:bg-red-600 text-white"
+                disabled={deleting}
+                onClick={confirmDelete}
+              >
+                {deleting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Yes, Delete"}
+              </Button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import { uploadFile } from "@/lib/google-drive";
+import { uploadFile, isDriveConfigured } from "@/lib/google-drive";
 
 const admin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -48,34 +48,47 @@ export async function POST(
   }
 
   const driveImagesFolderId = task.drive_images_folder_id as string | null;
-  if (!driveImagesFolderId) {
-    return NextResponse.json({ error: "Drive folder not configured for this task" }, { status: 503 });
-  }
-
-  // ── Upload file to Drive ──────────────────────────────────────────────────
   const buffer   = Buffer.from(await file.arrayBuffer());
   const mimeType = file.type || "application/octet-stream";
   const fileName = `${user.id}_step${stepIndex ?? "x"}_${Date.now()}_${file.name}`;
 
-  let driveResult: { id: string; viewUrl: string; previewUrl: string } | null = null;
-  try {
-    driveResult = await uploadFile(buffer, fileName, mimeType, driveImagesFolderId);
-  } catch (err) {
-    console.error("[upload-to-drive] Drive upload failed:", err);
-    return NextResponse.json({ error: "Drive upload failed" }, { status: 500 });
+  // ── Upload via Apps Script (Drive) or fall back to Supabase Storage ───────
+  if (driveImagesFolderId && isDriveConfigured()) {
+    let driveResult: { id: string; viewUrl: string; previewUrl: string } | null = null;
+    try {
+      driveResult = await uploadFile(buffer, fileName, mimeType, driveImagesFolderId);
+    } catch (err) {
+      console.error("[upload-to-drive] Drive upload failed, falling back to Supabase:", err);
+    }
+
+    if (driveResult) {
+      return NextResponse.json({
+        url:        driveResult.viewUrl,
+        previewUrl: driveResult.previewUrl,
+        driveId:    driveResult.id,
+        name:       file.name,
+        size:       file.size,
+      });
+    }
   }
 
-  if (!driveResult) {
-    return NextResponse.json({ error: "Drive not configured" }, { status: 503 });
+  // ── Supabase Storage fallback ─────────────────────────────────────────────
+  const storagePath = `task-submissions/${taskId}/${user.id}/${Date.now()}_${file.name}`;
+  const { data: storageData, error: storageErr } = await admin.storage
+    .from("submissions")
+    .upload(storagePath, buffer, { contentType: mimeType, upsert: false });
+
+  if (storageErr || !storageData) {
+    console.error("[upload-to-drive] Supabase Storage fallback failed:", storageErr?.message);
+    return NextResponse.json({ error: "Upload failed — Drive and storage both unavailable" }, { status: 500 });
   }
 
-  // Sheet row is written ONCE when the full submission is complete (via /api/submissions/notify),
-  // not on each individual file upload step.
+  const { data: { publicUrl } } = admin.storage.from("submissions").getPublicUrl(storagePath);
 
   return NextResponse.json({
-    url:        driveResult.viewUrl,
-    previewUrl: driveResult.previewUrl,
-    driveId:    driveResult.id,
+    url:        publicUrl,
+    previewUrl: publicUrl,
+    driveId:    null,
     name:       file.name,
     size:       file.size,
   });

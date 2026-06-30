@@ -120,7 +120,7 @@ export default function OpportunitiesPage() {
       setUserId(user?.id ?? null);
 
       const [tasksRes, subsRes, assignRes, profileRes] = await Promise.all([
-        supabase.from("tasks").select("*").eq("status", "active").order("created_at", { ascending: false }),
+        supabase.from("tasks").select("*").eq("status", "active").or("is_private.eq.false,is_private.is.null").is("deleted_at", null).order("created_at", { ascending: false }),
         user
           ? supabase.from("submissions").select("task_id, status").eq("contributor_id", user.id)
           : Promise.resolve({ data: [] }),

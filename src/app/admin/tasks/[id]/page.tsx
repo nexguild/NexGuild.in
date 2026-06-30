@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   ArrowLeft, CheckCircle2, XCircle, Loader2, FileText,
-  ExternalLink, Users, Coins, Clock, Edit, Sheet, Link2, X,
+  ExternalLink, Users, Coins, Clock, Edit, Sheet, Copy, Lock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar } from "@/components/ui/avatar";
@@ -25,6 +25,7 @@ interface Task {
   deadline: string | null;
   status: string;
   assignment_required: boolean;
+  is_private: boolean | null;
   drive_folder_id: string | null;
   drive_sheet_id: string | null;
   steps: { title: string; submitType: string }[] | null;
@@ -68,12 +69,7 @@ export default function AdminTaskDetailPage() {
   const [feedbacks, setFeedbacks]     = useState<Record<string, string>>({});
   const [reviewing, setReviewing]     = useState<string | null>(null);
   const [coinsMap, setCoinsMap]       = useState<Record<string, string>>({});
-
-  // Sheet linking
-  const [sheetInput, setSheetInput]   = useState("");
-  const [linkingSheet, setLinkingSheet] = useState(false);
-  const [sheetError, setSheetError]   = useState<string | null>(null);
-  const [sheetSuccess, setSheetSuccess] = useState(false);
+  const [copiedLink, setCopiedLink]   = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -122,35 +118,12 @@ export default function AdminTaskDetailPage() {
     setReviewing(null);
   }
 
-  async function linkSheet() {
-    if (!token || !sheetInput.trim()) return;
-    setLinkingSheet(true);
-    setSheetError(null);
-    setSheetSuccess(false);
-    const res = await fetch(`/api/admin/tasks/${id}/link-sheet`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ sheetInput: sheetInput.trim() }),
+  function copyPrivateLink() {
+    const url = `https://nexguild.in/dashboard/tasks/${id}/work`;
+    navigator.clipboard.writeText(url).then(() => {
+      setCopiedLink(true);
+      setTimeout(() => setCopiedLink(false), 2000);
     });
-    const data = await res.json();
-    if (!res.ok) {
-      setSheetError(data.error ?? "Failed to link Sheet");
-    } else {
-      setTask((prev) => prev ? { ...prev, drive_sheet_id: data.sheetId } : prev);
-      setSheetInput("");
-      setSheetSuccess(true);
-    }
-    setLinkingSheet(false);
-  }
-
-  async function unlinkSheet() {
-    if (!token) return;
-    await fetch(`/api/admin/tasks/${id}/link-sheet`, {
-      method: "DELETE",
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    setTask((prev) => prev ? { ...prev, drive_sheet_id: null } : prev);
-    setSheetSuccess(false);
   }
 
   if (loading) {
@@ -231,72 +204,50 @@ export default function AdminTaskDetailPage() {
         )}
       </div>
 
-      {/* Drive Sheet linking */}
-      <div className="rounded-xl border border-[var(--border-default)] bg-[var(--surface-card)] p-5 space-y-4">
-        <div className="flex items-center gap-2">
-          <Sheet className="h-4 w-4 text-[var(--brand-500)]" />
-          <h2 className="font-semibold text-[var(--text-primary)]">Submissions Sheet</h2>
-        </div>
-
-        {task.drive_sheet_id ? (
-          <div className="space-y-3">
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-xs text-green-400 font-semibold bg-green-500/10 border border-green-500/20 px-2.5 py-1 rounded-full">
-                ✓ Sheet linked
-              </span>
+      {/* Drive resources + Private link */}
+      <div className="rounded-xl border border-[var(--border-default)] bg-[var(--surface-card)] p-5 space-y-3">
+        <div className="flex items-center gap-2 flex-wrap">
+          {/* Submissions Sheet */}
+          <div className="flex items-center gap-2">
+            <Sheet className="h-4 w-4 text-[var(--text-muted)]" />
+            {task.drive_sheet_id ? (
               <a
                 href={`https://docs.google.com/spreadsheets/d/${task.drive_sheet_id}`}
-                target="_blank"
-                rel="noopener noreferrer"
+                target="_blank" rel="noopener noreferrer"
                 className="inline-flex items-center gap-1.5 text-xs text-[var(--brand-500)] hover:underline"
               >
-                <ExternalLink className="h-3 w-3" /> Open Sheet
+                <ExternalLink className="h-3 w-3" /> Submissions Sheet
               </a>
-              <button
-                onClick={unlinkSheet}
-                className="inline-flex items-center gap-1 text-xs text-[var(--text-muted)] hover:text-red-400 transition-colors"
-              >
-                <X className="h-3 w-3" /> Unlink
-              </button>
-            </div>
-            {sheetSuccess && (
-              <p className="text-xs text-green-400">Sheet linked and header row written successfully.</p>
+            ) : (
+              <span className="text-xs text-[var(--text-muted)]">
+                Sheet auto-creates on task creation (Apps Script)
+              </span>
             )}
           </div>
-        ) : (
-          <div className="space-y-3">
-            <p className="text-sm text-[var(--text-secondary)]">
-              No Sheet linked yet. Create a Google Sheet in your own Drive account, move it into this task's Drive folder
-              {task.drive_folder_id && (
-                <> (<a href={`https://drive.google.com/drive/folders/${task.drive_folder_id}`} target="_blank" rel="noopener noreferrer" className="text-[var(--brand-500)] hover:underline">open folder</a>)</>
-              )}, then paste its URL or ID below.
-            </p>
-            <div className="flex gap-2 flex-wrap">
-              <a
-                href="https://docs.google.com/spreadsheets/create"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 h-9 px-3 rounded-md border border-[var(--border-default)] bg-[var(--surface-subtle)] text-xs font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors whitespace-nowrap"
-              >
-                <ExternalLink className="h-3.5 w-3.5" /> New Sheet
-              </a>
-              <input
-                type="text"
-                value={sheetInput}
-                onChange={(e) => { setSheetInput(e.target.value); setSheetError(null); }}
-                onKeyDown={(e) => { if (e.key === "Enter") linkSheet(); }}
-                placeholder="Paste Sheet URL or ID…"
-                className="flex-1 min-w-[220px] h-9 px-3 rounded-md border border-[var(--border-default)] bg-[var(--surface-subtle)] text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--border-focus)]"
-              />
-              <Button size="sm" disabled={linkingSheet || !sheetInput.trim()} onClick={linkSheet}>
-                {linkingSheet ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Link2 className="h-4 w-4" /> Save</>}
-              </Button>
-            </div>
-            {sheetError && (
-              <p className="text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2 whitespace-pre-wrap">{sheetError}</p>
-            )}
-          </div>
-        )}
+
+          {/* Drive folder */}
+          {task.drive_folder_id && (
+            <a
+              href={`https://drive.google.com/drive/folders/${task.drive_folder_id}`}
+              target="_blank" rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 text-xs text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
+            >
+              <ExternalLink className="h-3 w-3" /> Drive Folder
+            </a>
+          )}
+
+          {/* Private link copy */}
+          {task.is_private && (
+            <button
+              onClick={copyPrivateLink}
+              className="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full bg-purple-500/10 text-purple-400 hover:bg-purple-500/20 transition-colors"
+            >
+              <Lock className="h-3 w-3" />
+              {copiedLink ? "Copied!" : "Copy Private Link"}
+              <Copy className="h-3 w-3" />
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Submissions */}

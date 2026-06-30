@@ -56,7 +56,7 @@ export async function POST(req: NextRequest) {
       validation_time?: string;
       payment_time?: string;
       terms?: string;
-      steps?: object[];
+      steps?: { title: string; submitType: string }[];
       required_level?: number;
       xp_reward?: number;
       status: "active" | "draft";
@@ -94,7 +94,7 @@ export async function POST(req: NextRequest) {
         xp_reward: xp_reward ?? 0,
         status,
       })
-      .select("id, title, task_type, pay_per_task, total_slots")
+      .select("id, title, task_type, pay_per_task, total_slots, is_private, steps")
       .single();
 
     if (insertErr || !task) {
@@ -102,11 +102,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: insertErr?.message ?? "Failed to create task" }, { status: 500 });
     }
 
-    // ── Google Drive folder + Images subfolder (non-blocking) ───────────────
-    // Sheet is NOT auto-created here — service accounts on free Google accounts
-    // have zero storage quota. Somen links a manually-created Sheet via the admin UI.
+    // ── Google Drive folder + Images subfolder + Sheet (non-blocking) ─────────
+    // Runs via Apps Script Web App (Execute as: Somen) — uses his 5TB storage.
     if (isDriveConfigured()) {
-      createDriveResourcesForTask(task.id, task.title)
+      const taskSteps = (task.steps as { title: string; submitType: string }[] | null) ?? [];
+      createDriveResourcesForTask(task.id, task.title, taskSteps)
         .then(async (resources) => {
           if (!resources) {
             console.error("[admin/tasks] Drive resource creation returned null for task", task.id);
@@ -115,50 +115,21 @@ export async function POST(req: NextRequest) {
           const { error: driveErr } = await admin.from("tasks").update({
             drive_folder_id:        resources.folderId,
             drive_images_folder_id: resources.imagesFolderId,
+            drive_sheet_id:         resources.sheetId,
           }).eq("id", task.id);
           if (driveErr) console.error("[admin/tasks] failed to store drive IDs:", driveErr.message);
-          else console.log("[admin/tasks] Drive folder created for task", task.id);
+          else console.log("[admin/tasks] Drive resources created for task", task.id);
         })
         .catch((err) => console.error("[admin/tasks] Drive creation threw:", err));
     }
 
-    // ── Email blast for active tasks ──────────────────────────────────────────
-    if (status === "active") {
-      const resend = getResend();
-      if (resend) {
-        // Fetch all contributor profiles with email
-        const { data: contributors } = await admin
-          .from("profiles")
-          .select("full_name, email")
-          .eq("role", "contributor")
-          .not("email", "is", null);
-
-        const profiles = (contributors ?? []) as { full_name: string | null; email: string }[];
-
-        if (profiles.length > 0) {
-          const emails = profiles.map((p) => ({
-            from:    FROM_NOREPLY,
-            to:      p.email,
-            subject: `New task available: ${task.title}`,
-            html:    newTaskHtml(
-              p.full_name ?? "Contributor",
-              task.title,
-              task.task_type ?? "",
-              task.pay_per_task ?? 0,
-              task.total_slots ?? null,
-              task.id,
-            ),
-          }));
-
-          // Resend batch allows up to 100 per call
-          const CHUNK = 100;
-          for (let i = 0; i < emails.length; i += CHUNK) {
-            const chunk = emails.slice(i, i + CHUNK);
-            const { error: batchErr } = await resend.batch.send(chunk);
-            if (batchErr) console.error("[admin/tasks] batch email error:", batchErr);
-          }
-        }
-      }
+    // ── Email blast — only for active, non-private tasks ─────────────────────
+    // Drafts never trigger emails. Private tasks don't blast all contributors
+    // (they're meant for specific people via direct link).
+    if (status === "active" && !task.is_private) {
+      sendNewTaskEmails(null, task).catch((err) =>
+        console.error("[admin/tasks] email blast failed:", err)
+      );
     }
 
     return NextResponse.json({ ok: true, task });
@@ -166,5 +137,51 @@ export async function POST(req: NextRequest) {
   } catch (err) {
     console.error("[admin/tasks] unhandled:", err);
     return NextResponse.json({ error: String(err) }, { status: 500 });
+  }
+}
+
+function makeAdmin() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    { auth: { persistSession: false } }
+  );
+}
+
+async function sendNewTaskEmails(
+  _unused: unknown,
+  task: { id: string; title: string; task_type: string | null; pay_per_task: number | null; total_slots: number | null },
+) {
+  const admin = makeAdmin();
+  const resend = getResend();
+  if (!resend) return;
+
+  const { data: contributors } = await admin
+    .from("profiles")
+    .select("full_name, email")
+    .eq("role", "contributor")
+    .not("email", "is", null);
+
+  const profiles = (contributors ?? []) as { full_name: string | null; email: string }[];
+  if (profiles.length === 0) return;
+
+  const emails = profiles.map((p) => ({
+    from:    FROM_NOREPLY,
+    to:      p.email,
+    subject: `New task available: ${task.title}`,
+    html:    newTaskHtml(
+      p.full_name ?? "Contributor",
+      task.title,
+      task.task_type ?? "",
+      task.pay_per_task ?? 0,
+      task.total_slots ?? null,
+      task.id,
+    ),
+  }));
+
+  const CHUNK = 100;
+  for (let i = 0; i < emails.length; i += CHUNK) {
+    const { error } = await resend.batch.send(emails.slice(i, i + CHUNK));
+    if (error) console.error("[admin/tasks] batch email error:", error);
   }
 }
