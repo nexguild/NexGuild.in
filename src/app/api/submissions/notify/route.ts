@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { notifyAdmins } from "@/lib/email";
-import { writeSubmissionRow, type SubmissionRowData } from "@/lib/google-drive";
+import { writeSubmissionRow, syncSheetStatus, type SubmissionRowData } from "@/lib/google-drive";
+import { callAppsScript, isAppsScriptConfigured } from "@/lib/apps-script";
 
 function makeAdmin() {
   return createClient(
@@ -22,10 +23,11 @@ export async function POST(req: NextRequest) {
 
   try {
     const { taskId } = await req.json() as { taskId: string };
+    console.log(`[submissions/notify] ▶ hit — taskId=${taskId} userId=${user.id}`);
 
     const [{ data: profile }, { data: task }, { data: sub }] = await Promise.all([
       admin.from("profiles").select("full_name").eq("id", user.id).single(),
-      admin.from("tasks").select("id, title, steps, drive_sheet_id").eq("id", taskId).single(),
+      admin.from("tasks").select("id, title, steps, drive_folder_id, drive_sheet_id").eq("id", taskId).single(),
       admin.from("submissions")
         .select("id, notes, files, submitted_at")
         .eq("task_id", taskId)
@@ -35,6 +37,10 @@ export async function POST(req: NextRequest) {
 
     const contributorName = (profile as { full_name: string | null } | null)?.full_name ?? "A contributor";
     const taskTitle       = (task as { title: string } | null)?.title ?? "a task";
+    const driveFolderId   = (task as { drive_folder_id: string | null } | null)?.drive_folder_id ?? null;
+    let   sheetId         = (task as { drive_sheet_id: string | null } | null)?.drive_sheet_id ?? null;
+
+    console.log(`[submissions/notify] task="${taskTitle}" drive_folder_id=${driveFolderId ?? "null"} drive_sheet_id=${sheetId ?? "null"} sub_id=${sub?.id ?? "null"}`);
 
     // Fire-and-forget admin emails
     notifyAdmins(admin, "new_submission", {
@@ -43,31 +49,58 @@ export async function POST(req: NextRequest) {
       actionUrl: `https://nexguild.in/admin/submissions`,
     });
 
-    // ── Write complete Sheet row (non-blocking) ───────────────────────────
-    const sheetId = (task as { drive_sheet_id: string | null } | null)?.drive_sheet_id ?? null;
-    if (sheetId && sub) {
-      const taskSteps = (task as { steps: { title: string; submitType: string }[] | null } | null)?.steps ?? [];
-      const hasSteps  = taskSteps.length > 0;
-
-      buildAndWriteSheetRow({
-        sheetId,
-        submissionId:    sub.id,
-        contributorId:   user.id,
-        contributorName,
-        submittedAt:     (sub as { submitted_at: string }).submitted_at,
-        taskId,
-        steps:           taskSteps,
-        hasSteps,
-        classicNotes:    (sub as { notes: string | null }).notes,
-        classicFiles:    (sub as { files: { url: string }[] | null }).files,
-      }).catch((err) => console.error("[submissions/notify] sheet write failed:", err));
-    } else if (!sheetId) {
-      console.log("[submissions/notify] no drive_sheet_id for task", taskId, "— skipping sheet row");
+    if (!sub) {
+      console.error(`[submissions/notify] no submission found for task=${taskId} user=${user.id} — cannot write sheet row`);
+      return NextResponse.json({ ok: true });
     }
+
+    // ── Lazy sheet creation ───────────────────────────────────────────────
+    // Task was created before Apps Script was set up, so drive_sheet_id is null
+    // even though drive_folder_id exists. Create the sheet now, save it, then write.
+    if (!sheetId && driveFolderId && isAppsScriptConfigured()) {
+      console.log(`[submissions/notify] drive_sheet_id missing — calling create_sheet for folder=${driveFolderId}`);
+      try {
+        const taskSteps = (task as { steps: { title: string; submitType: string }[] | null } | null)?.steps ?? [];
+        const res = await callAppsScript<{ sheetId: string }>("create_sheet", {
+          folderId:  driveFolderId,
+          sheetName: `${taskTitle} - Submissions`,
+          steps:     taskSteps,
+        });
+        sheetId = res.sheetId;
+        console.log(`[submissions/notify] created sheet=${sheetId} — saving to task`);
+        await admin.from("tasks").update({ drive_sheet_id: sheetId }).eq("id", taskId);
+      } catch (err) {
+        console.error(`[submissions/notify] create_sheet failed:`, err);
+      }
+    }
+
+    if (!sheetId) {
+      console.warn(`[submissions/notify] drive_sheet_id is null and could not be created — skipping sheet row for task=${taskId}`);
+      return NextResponse.json({ ok: true });
+    }
+
+    // ── Write complete Sheet row (non-blocking) ───────────────────────────
+    const taskSteps = (task as { steps: { title: string; submitType: string }[] | null } | null)?.steps ?? [];
+    const hasSteps  = taskSteps.length > 0;
+
+    console.log(`[submissions/notify] ▶ calling write_submission_row — sheetId=${sheetId} submissionId=${sub.id} hasSteps=${hasSteps}`);
+
+    buildAndWriteSheetRow({
+      sheetId,
+      submissionId:    sub.id,
+      contributorId:   user.id,
+      contributorName,
+      submittedAt:     (sub as { submitted_at: string | null }).submitted_at ?? new Date().toISOString(),
+      taskId,
+      steps:           taskSteps,
+      hasSteps,
+      classicNotes:    (sub as { notes: string | null }).notes,
+      classicFiles:    (sub as { files: { url: string }[] | null }).files,
+    }).catch((err) => console.error("[submissions/notify] buildAndWriteSheetRow threw:", err));
 
     return NextResponse.json({ ok: true });
   } catch (e) {
-    console.error("[submissions/notify]", e);
+    console.error("[submissions/notify] unhandled error:", e);
     return NextResponse.json({ ok: true }); // never block the submitter
   }
 }
@@ -99,13 +132,14 @@ async function buildAndWriteSheetRow({
   let stepContents: string[];
 
   if (hasSteps) {
-    // Fetch all step submissions for this (task_id, contributor_id)
     const { data: stepSubs } = await admin
       .from("task_step_submissions")
       .select("step_index, submission_type, text_value, file_url")
       .eq("task_id", taskId)
       .eq("contributor_id", contributorId)
       .order("step_index", { ascending: true });
+
+    console.log(`[submissions/notify] fetched ${stepSubs?.length ?? 0} step submissions for taskId=${taskId} userId=${contributorId}`);
 
     const byIndex = new Map<number, { submission_type: string; text_value: string | null; file_url: string | null }>();
     for (const ss of stepSubs ?? []) {
@@ -122,11 +156,12 @@ async function buildAndWriteSheetRow({
       return ss.text_value ?? ss.file_url ?? "";
     });
   } else {
-    // Classic mode: notes + file URLs
     const notes = classicNotes ?? "";
     const files = (classicFiles ?? []).map((f) => f.url).join(", ");
     stepContents = [notes, files];
   }
+
+  console.log(`[submissions/notify] stepContents for submissionId=${submissionId}:`, JSON.stringify(stepContents));
 
   const rowData: SubmissionRowData = {
     submissionId,
@@ -137,5 +172,5 @@ async function buildAndWriteSheetRow({
   };
 
   await writeSubmissionRow(sheetId, rowData);
-  console.log("[submissions/notify] sheet row written for submission", submissionId);
+  console.log(`[submissions/notify] ✓ write_submission_row complete for submissionId=${submissionId}`);
 }
