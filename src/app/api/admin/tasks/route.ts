@@ -102,7 +102,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: insertErr?.message ?? "Failed to create task" }, { status: 500 });
     }
 
-    // ── Google Drive folder + sheet (non-blocking — task is already created) ──
+    // ── Google Drive folder + Images subfolder (non-blocking) ───────────────
+    // Sheet is NOT auto-created here — service accounts on free Google accounts
+    // have zero storage quota. Somen links a manually-created Sheet via the admin UI.
     if (isDriveConfigured()) {
       createDriveResourcesForTask(task.id, task.title)
         .then(async (resources) => {
@@ -113,10 +115,9 @@ export async function POST(req: NextRequest) {
           const { error: driveErr } = await admin.from("tasks").update({
             drive_folder_id:        resources.folderId,
             drive_images_folder_id: resources.imagesFolderId,
-            drive_sheet_id:         resources.sheetId,
           }).eq("id", task.id);
           if (driveErr) console.error("[admin/tasks] failed to store drive IDs:", driveErr.message);
-          else console.log("[admin/tasks] Drive resources created for task", task.id);
+          else console.log("[admin/tasks] Drive folder created for task", task.id);
         })
         .catch((err) => console.error("[admin/tasks] Drive creation threw:", err));
     }

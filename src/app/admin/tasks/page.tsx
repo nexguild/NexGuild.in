@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { ClipboardList, Plus, Search, Pause, X, Pencil, BarChart2, Loader2 } from "lucide-react";
+import { ClipboardList, Plus, Search, Pause, X, Pencil, BarChart2, Loader2, Sheet } from "lucide-react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { usePageGuard } from "@/components/layout/admin-auth-guard";
@@ -18,6 +18,7 @@ interface Task {
   filled_slots: number | null;
   status: string;
   created_at: string;
+  drive_sheet_id: string | null;
 }
 
 const STATUS_STYLES: Record<string, string> = {
@@ -52,7 +53,7 @@ export default function AdminTasksPage() {
 
       const { data } = await supabase
         .from("tasks")
-        .select("id, title, task_type, pay_per_task, total_slots, filled_slots, status, created_at")
+        .select("id, title, task_type, pay_per_task, total_slots, filled_slots, status, created_at, drive_sheet_id")
         .order("created_at", { ascending: false });
       setTasks(data ?? []);
       setLoading(false);
@@ -191,8 +192,15 @@ export default function AdminTasksPage() {
                 <tbody className="divide-y divide-[var(--border-default)]">
                   {filtered.map((task) => (
                     <tr key={task.id} className="hover:bg-[var(--surface-subtle)] transition-colors">
-                      <td className="px-4 py-3 font-medium text-[var(--text-primary)] max-w-[200px]">
-                        <p className="truncate">{task.title}</p>
+                      <td className="px-4 py-3 font-medium text-[var(--text-primary)] max-w-[220px]">
+                        <div className="flex items-center gap-1.5 min-w-0">
+                          <p className="truncate">{task.title}</p>
+                          {!task.drive_sheet_id && (
+                            <span title="Submissions Sheet not linked" className="flex-shrink-0 text-[var(--text-muted)] hover:text-yellow-400 transition-colors">
+                              <Sheet className="h-3.5 w-3.5" />
+                            </span>
+                          )}
+                        </div>
                       </td>
                       <td className="px-4 py-3 text-[var(--text-secondary)] whitespace-nowrap">{task.task_type ?? "—"}</td>
                       <td className="px-4 py-3 text-[var(--brand-500)] font-medium whitespace-nowrap">

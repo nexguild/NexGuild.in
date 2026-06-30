@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import { uploadFile, appendSheetRow } from "@/lib/google-drive";
+import { uploadFile } from "@/lib/google-drive";
 
 const admin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -36,10 +36,10 @@ export async function POST(
     return NextResponse.json({ error: "No file provided" }, { status: 400 });
   }
 
-  // ── Get task Drive resources ──────────────────────────────────────────────
+  // ── Get task Drive Images folder ──────────────────────────────────────────
   const { data: task, error: taskErr } = await admin
     .from("tasks")
-    .select("id, title, drive_images_folder_id, drive_sheet_id")
+    .select("id, drive_images_folder_id")
     .eq("id", taskId)
     .single();
 
@@ -47,17 +47,15 @@ export async function POST(
     return NextResponse.json({ error: "Task not found" }, { status: 404 });
   }
 
-  // ── Upload to Drive or fall back to Supabase Storage ─────────────────────
-  const buffer = Buffer.from(await file.arrayBuffer());
-  const mimeType = file.type || "application/octet-stream";
-  const fileName = `${user.id}_step${stepIndex ?? "x"}_${Date.now()}_${file.name}`;
-
   const driveImagesFolderId = task.drive_images_folder_id as string | null;
-
   if (!driveImagesFolderId) {
-    // Drive not yet set up for this task — return error so client falls back
     return NextResponse.json({ error: "Drive folder not configured for this task" }, { status: 503 });
   }
+
+  // ── Upload file to Drive ──────────────────────────────────────────────────
+  const buffer   = Buffer.from(await file.arrayBuffer());
+  const mimeType = file.type || "application/octet-stream";
+  const fileName = `${user.id}_step${stepIndex ?? "x"}_${Date.now()}_${file.name}`;
 
   let driveResult: { id: string; viewUrl: string; previewUrl: string } | null = null;
   try {
@@ -71,29 +69,8 @@ export async function POST(
     return NextResponse.json({ error: "Drive not configured" }, { status: 503 });
   }
 
-  // ── Find submission ID (for sheet row) ───────────────────────────────────
-  const { data: sub } = await admin
-    .from("submissions")
-    .select("id")
-    .eq("task_id", taskId)
-    .eq("contributor_id", user.id)
-    .maybeSingle();
-
-  // ── Append row to task Sheet ──────────────────────────────────────────────
-  const sheetId = task.drive_sheet_id as string | null;
-  if (sheetId) {
-    appendSheetRow(sheetId, [
-      user.id,
-      sub?.id ?? "",
-      stepIndex !== null ? `Stage ${Number(stepIndex) + 1}` : "",
-      file.name,
-      driveResult.viewUrl,
-      "pending",
-      new Date().toISOString(),
-      "",
-      "",
-    ]).catch((err) => console.error("[upload-to-drive] sheet append failed:", err));
-  }
+  // Sheet row is written ONCE when the full submission is complete (via /api/submissions/notify),
+  // not on each individual file upload step.
 
   return NextResponse.json({
     url:        driveResult.viewUrl,
