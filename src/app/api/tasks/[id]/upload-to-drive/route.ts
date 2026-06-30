@@ -21,6 +21,15 @@ export async function POST(
   const { data: { user }, error: authErr } = await admin.auth.getUser(token);
   if (authErr || !user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
+  // ── Apps Script must be configured ────────────────────────────────────────
+  if (!isDriveConfigured()) {
+    console.error("[upload-to-drive] Apps Script not configured — APPS_SCRIPT_WEB_APP_URL / APPS_SCRIPT_SHARED_SECRET missing");
+    return NextResponse.json(
+      { error: "File upload unavailable: Apps Script not configured (contact admin)" },
+      { status: 503 },
+    );
+  }
+
   // ── Parse FormData ────────────────────────────────────────────────────────
   let formData: FormData;
   try {
@@ -48,47 +57,42 @@ export async function POST(
   }
 
   const driveImagesFolderId = task.drive_images_folder_id as string | null;
+  if (!driveImagesFolderId) {
+    console.error(`[upload-to-drive] task ${taskId} has no drive_images_folder_id — task was created before Apps Script was configured`);
+    return NextResponse.json(
+      { error: "This task has no Drive folder — it was created before Drive integration was set up. Ask an admin to recreate the task." },
+      { status: 503 },
+    );
+  }
+
+  // ── Upload via Apps Script ────────────────────────────────────────────────
   const buffer   = Buffer.from(await file.arrayBuffer());
   const mimeType = file.type || "application/octet-stream";
   const fileName = `${user.id}_step${stepIndex ?? "x"}_${Date.now()}_${file.name}`;
 
-  // ── Upload via Apps Script (Drive) or fall back to Supabase Storage ───────
-  if (driveImagesFolderId && isDriveConfigured()) {
-    let driveResult: { id: string; viewUrl: string; previewUrl: string } | null = null;
-    try {
-      driveResult = await uploadFile(buffer, fileName, mimeType, driveImagesFolderId);
-    } catch (err) {
-      console.error("[upload-to-drive] Drive upload failed, falling back to Supabase:", err);
-    }
+  let driveResult: { id: string; viewUrl: string; previewUrl: string } | null = null;
+  let driveError: string | null = null;
 
-    if (driveResult) {
-      return NextResponse.json({
-        url:        driveResult.viewUrl,
-        previewUrl: driveResult.previewUrl,
-        driveId:    driveResult.id,
-        name:       file.name,
-        size:       file.size,
-      });
-    }
+  try {
+    console.log(`[upload-to-drive] calling Apps Script upload_file for task=${taskId} folder=${driveImagesFolderId} file=${fileName}`);
+    driveResult = await uploadFile(buffer, fileName, mimeType, driveImagesFolderId);
+    console.log(`[upload-to-drive] Apps Script returned:`, JSON.stringify(driveResult));
+  } catch (err) {
+    driveError = err instanceof Error ? err.message : String(err);
+    console.error(`[upload-to-drive] Apps Script upload_file threw:`, driveError);
   }
 
-  // ── Supabase Storage fallback ─────────────────────────────────────────────
-  const storagePath = `task-submissions/${taskId}/${user.id}/${Date.now()}_${file.name}`;
-  const { data: storageData, error: storageErr } = await admin.storage
-    .from("submissions")
-    .upload(storagePath, buffer, { contentType: mimeType, upsert: false });
-
-  if (storageErr || !storageData) {
-    console.error("[upload-to-drive] Supabase Storage fallback failed:", storageErr?.message);
-    return NextResponse.json({ error: "Upload failed — Drive and storage both unavailable" }, { status: 500 });
+  if (!driveResult) {
+    return NextResponse.json(
+      { error: `Drive upload failed — ${driveError ?? "no result returned"}` },
+      { status: 500 },
+    );
   }
-
-  const { data: { publicUrl } } = admin.storage.from("submissions").getPublicUrl(storagePath);
 
   return NextResponse.json({
-    url:        publicUrl,
-    previewUrl: publicUrl,
-    driveId:    null,
+    url:        driveResult.viewUrl,
+    previewUrl: driveResult.previewUrl,
+    driveId:    driveResult.id,
     name:       file.name,
     size:       file.size,
   });

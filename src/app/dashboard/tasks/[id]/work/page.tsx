@@ -207,19 +207,13 @@ export default function TaskWorkPage() {
         body: formData,
       });
       if (!upRes.ok) {
-        // Drive not configured — fall back to Supabase Storage
-        const ext  = modalFile.name.split(".").pop() ?? "bin";
-        const path = `${userId}/${id}/step${modalStep}_${Date.now()}.${ext}`;
-        const { data: upData, error: upErr } = await supabase.storage
-          .from("submissions")
-          .upload(path, modalFile, { upsert: true });
-        if (upErr) { setModalError("Upload failed: " + upErr.message); setSubmittingModal(false); return; }
-        const { data: urlData } = supabase.storage.from("submissions").getPublicUrl(upData.path);
-        fileUrl = urlData.publicUrl;
-      } else {
-        const upJson = await upRes.json();
-        fileUrl = upJson.url;
+        const errJson = await upRes.json().catch(() => ({})) as { error?: string };
+        setModalError(errJson.error ?? "Upload failed — please try again.");
+        setSubmittingModal(false);
+        return;
       }
+      const upJson = await upRes.json();
+      fileUrl = upJson.url;
     } else if (step.submitType === "proof_code") {
       const code = modalText.trim().toUpperCase();
       if (!code || code.length !== 8) {
@@ -314,23 +308,14 @@ export default function TaskWorkPage() {
         headers: { Authorization: `Bearer ${classicSession?.access_token ?? ""}` },
         body: classicFormData,
       });
-      if (upRes.ok) {
-        const upJson = await upRes.json();
-        uploaded.push({ name: upJson.name, url: upJson.url, size: upJson.size });
-      } else {
-        // Fall back to Supabase Storage
-        const path = `${userId}/${id}/${Date.now()}_${file.name}`;
-        const { data: upData, error: upErr } = await supabase.storage
-          .from("submissions")
-          .upload(path, file, { upsert: true });
-        if (upErr) {
-          setClassicError(`Failed to upload "${file.name}": ${upErr.message}`);
-          setClassicSubmitting(false);
-          return;
-        }
-        const { data: urlData } = supabase.storage.from("submissions").getPublicUrl(upData.path);
-        uploaded.push({ name: file.name, url: urlData.publicUrl, size: file.size });
+      if (!upRes.ok) {
+        const errJson = await upRes.json().catch(() => ({})) as { error?: string };
+        setClassicError(`Failed to upload "${file.name}": ${errJson.error ?? "upload failed"}`);
+        setClassicSubmitting(false);
+        return;
       }
+      const upJson = await upRes.json();
+      uploaded.push({ name: upJson.name ?? file.name, url: upJson.url, size: upJson.size ?? file.size });
     }
 
     const { error: updateErr } = await supabase.from("submissions").update({
