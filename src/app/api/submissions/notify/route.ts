@@ -13,7 +13,7 @@ function makeAdmin() {
 }
 
 export async function POST(req: NextRequest) {
-  console.log("[submissions/notify] ENTRY");
+  console.log("NOTIFY ROUTE HIT");
 
   const token = req.headers.get("authorization")?.replace("Bearer ", "");
   if (!token) {
@@ -108,7 +108,9 @@ export async function POST(req: NextRequest) {
 
     console.log(`[submissions/notify] ▶ calling write_submission_row — sheetId=${sheetId} submissionId=${sub.id} hasSteps=${hasSteps}`);
 
-    buildAndWriteSheetRow({
+    // MUST be awaited — Vercel terminates the function when the response is sent,
+    // killing any fire-and-forget .catch() before the sheet row is written.
+    await buildAndWriteSheetRow({
       sheetId,
       submissionId:    sub.id,
       contributorId:   user.id,

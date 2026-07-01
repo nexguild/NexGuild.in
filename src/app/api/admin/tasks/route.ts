@@ -4,6 +4,8 @@ import { FROM_NOREPLY, getResend, newTaskHtml } from "@/lib/email";
 import { createDriveResourcesForTask, isDriveConfigured } from "@/lib/google-drive";
 
 export async function POST(req: NextRequest) {
+  console.log("TASKS ROUTE HIT");
+
   const admin = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
@@ -102,25 +104,28 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: insertErr?.message ?? "Failed to create task" }, { status: 500 });
     }
 
-    // ── Google Drive folder + Images subfolder + Sheet (non-blocking) ─────────
-    // Runs via Apps Script Web App (Execute as: Somen) — uses his 5TB storage.
+    // ── Google Drive folder + Images subfolder + Sheet ───────────────────────
+    // MUST be awaited — Vercel terminates the function when the response is sent,
+    // killing any fire-and-forget .then() before drive IDs can be saved to DB.
     if (isDriveConfigured()) {
+      console.log("[admin/tasks] calling createDriveResourcesForTask for task", task.id);
       const taskSteps = (task.steps as { title: string; submitType: string }[] | null) ?? [];
-      createDriveResourcesForTask(task.id, task.title, taskSteps)
-        .then(async (resources) => {
-          if (!resources) {
-            console.error("[admin/tasks] Drive resource creation returned null for task", task.id);
-            return;
-          }
+      try {
+        const resources = await createDriveResourcesForTask(task.id, task.title, taskSteps);
+        if (!resources) {
+          console.error("[admin/tasks] Drive resource creation returned null for task", task.id);
+        } else {
           const { error: driveErr } = await admin.from("tasks").update({
             drive_folder_id:        resources.folderId,
             drive_images_folder_id: resources.imagesFolderId,
             drive_sheet_id:         resources.sheetId,
           }).eq("id", task.id);
           if (driveErr) console.error("[admin/tasks] failed to store drive IDs:", driveErr.message);
-          else console.log("[admin/tasks] Drive resources created for task", task.id);
-        })
-        .catch((err) => console.error("[admin/tasks] Drive creation threw:", err));
+          else console.log("[admin/tasks] Drive resources saved for task", task.id, resources);
+        }
+      } catch (driveErr) {
+        console.error("[admin/tasks] Drive creation threw:", driveErr);
+      }
     }
 
     // ── Email blast — only for active, non-private tasks ─────────────────────
