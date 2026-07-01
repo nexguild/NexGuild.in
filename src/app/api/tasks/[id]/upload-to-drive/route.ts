@@ -65,26 +65,32 @@ export async function POST(
     );
   }
 
-  // ── Upload via Apps Script ────────────────────────────────────────────────
+  // ── Upload via Apps Script (with retry for cold-start timeouts) ──────────
   const buffer   = Buffer.from(await file.arrayBuffer());
   const mimeType = file.type || "application/octet-stream";
   const fileName = `${user.id}_step${stepIndex ?? "x"}_${Date.now()}_${file.name}`;
 
+  const MAX_ATTEMPTS  = 3;
+  const RETRY_DELAY   = 1_000;
+
   let driveResult: { id: string; viewUrl: string; previewUrl: string } | null = null;
   let driveError: string | null = null;
 
-  try {
-    console.log(`[upload-to-drive] calling Apps Script upload_file for task=${taskId} folder=${driveImagesFolderId} file=${fileName}`);
-    driveResult = await uploadFile(buffer, fileName, mimeType, driveImagesFolderId);
-    console.log(`[upload-to-drive] Apps Script returned:`, JSON.stringify(driveResult));
-  } catch (err) {
-    driveError = err instanceof Error ? err.message : String(err);
-    console.error(`[upload-to-drive] Apps Script upload_file threw:`, driveError);
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+    try {
+      console.log(`[upload-to-drive] attempt ${attempt}/${MAX_ATTEMPTS} task=${taskId} file=${fileName}`);
+      driveResult = await uploadFile(buffer, fileName, mimeType, driveImagesFolderId);
+      break;
+    } catch (err) {
+      driveError = err instanceof Error ? err.message : String(err);
+      console.error(`[upload-to-drive] attempt ${attempt} failed:`, driveError);
+      if (attempt < MAX_ATTEMPTS) await new Promise((r) => setTimeout(r, RETRY_DELAY));
+    }
   }
 
   if (!driveResult) {
     return NextResponse.json(
-      { error: `Drive upload failed — ${driveError ?? "no result returned"}` },
+      { error: `Drive upload failed after ${MAX_ATTEMPTS} attempts — ${driveError ?? "no result returned"}` },
       { status: 500 },
     );
   }
