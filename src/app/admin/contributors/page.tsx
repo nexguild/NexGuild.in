@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Users, Search, Eye, Ban, Coins, Loader2, X, CheckCircle2, Minus } from "lucide-react";
+import { Users, Search, Eye, Ban, Coins, Loader2, X, CheckCircle2, Minus, Copy, CheckCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
 import { usePageGuard } from "@/components/layout/admin-auth-guard";
@@ -32,6 +32,15 @@ export default function ContributorsPage() {
   const [loading, setLoading]           = useState(true);
   const [search, setSearch]             = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
+
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  function copyId(id: string) {
+    navigator.clipboard.writeText(id).then(() => {
+      setCopiedId(id);
+      setTimeout(() => setCopiedId(null), 1500);
+    });
+  }
 
   // Ban modal
   const [banTarget, setBanTarget]   = useState<Contributor | null>(null);
@@ -209,7 +218,7 @@ export default function ContributorsPage() {
           <table className="w-full text-sm min-w-[740px]">
             <thead>
               <tr className="bg-[var(--surface-subtle)] border-b border-[var(--border-default)]">
-                {["Name", "Email", "Country", "NexCoins", "Status", "Joined", "Actions"].map((h) => (
+                {["Name / ID", "Email", "Country", "NexCoins", "Status", "Joined", "Actions"].map((h) => (
                   <th key={h} className="text-left px-4 py-3 font-medium text-[var(--text-secondary)] whitespace-nowrap">{h}</th>
                 ))}
               </tr>
@@ -217,8 +226,19 @@ export default function ContributorsPage() {
             <tbody className="divide-y divide-[var(--border-default)]">
               {filtered.map((c) => (
                 <tr key={c.id} className="hover:bg-[var(--surface-subtle)] transition-colors">
-                  <td className="px-4 py-3 font-medium text-[var(--text-primary)] whitespace-nowrap">
-                    {c.full_name ?? "—"}
+                  <td className="px-4 py-3 font-medium text-[var(--text-primary)]">
+                    <div className="whitespace-nowrap">{c.full_name ?? "—"}</div>
+                    <button
+                      onClick={() => copyId(c.id)}
+                      title={c.id}
+                      className="flex items-center gap-1 font-mono font-normal text-xs text-[var(--text-muted)] hover:text-[var(--brand-500)] transition-colors mt-0.5"
+                    >
+                      {c.id.slice(0, 8)}…
+                      {copiedId === c.id
+                        ? <CheckCheck className="h-3 w-3 text-green-400 flex-shrink-0" />
+                        : <Copy className="h-3 w-3 flex-shrink-0 opacity-50" />
+                      }
+                    </button>
                   </td>
                   <td className="px-4 py-3 text-[var(--text-secondary)]">{c.email ?? "—"}</td>
                   <td className="px-4 py-3 text-[var(--text-secondary)]">{c.country ?? "—"}</td>

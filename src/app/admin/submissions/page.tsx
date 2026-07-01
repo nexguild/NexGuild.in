@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import {
   CheckCircle2, XCircle, Loader2, Search,
-  FileText, ExternalLink, CheckSquare, RefreshCw, X,
+  FileText, ExternalLink, CheckSquare, RefreshCw, X, Copy, CheckCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar } from "@/components/ui/avatar";
@@ -138,6 +138,14 @@ export default function AdminSubmissionsPage() {
   const [token, setToken]                 = useState<string | null>(null);
   const [selected, setSelected]           = useState<Set<string>>(new Set());
   const [bulkApproving, setBulkApproving] = useState(false);
+  const [copiedId, setCopiedId]           = useState<string | null>(null);
+
+  function copyId(id: string) {
+    navigator.clipboard.writeText(id).then(() => {
+      setCopiedId(id);
+      setTimeout(() => setCopiedId(null), 1500);
+    });
+  }
 
   // Reject modal
   const [rejectModal, setRejectModal]   = useState<string | null>(null);
@@ -361,6 +369,17 @@ export default function AdminSubmissionsPage() {
                   <div>
                     <p className="text-sm font-semibold text-[var(--text-primary)]">{sub.profiles?.full_name ?? "Unknown"}</p>
                     <p className="text-xs text-[var(--text-muted)]">{sub.profiles?.email ?? "—"}</p>
+                    <button
+                      onClick={() => copyId(sub.contributor_id)}
+                      title={sub.contributor_id}
+                      className="flex items-center gap-1 font-mono text-xs text-[var(--text-muted)] hover:text-[var(--brand-500)] transition-colors mt-0.5"
+                    >
+                      {sub.contributor_id.slice(0, 8)}…
+                      {copiedId === sub.contributor_id
+                        ? <CheckCheck className="h-3 w-3 text-green-400 flex-shrink-0" />
+                        : <Copy className="h-3 w-3 flex-shrink-0 opacity-50" />
+                      }
+                    </button>
                   </div>
                 </div>
                 <div className="flex items-center gap-2 flex-wrap">

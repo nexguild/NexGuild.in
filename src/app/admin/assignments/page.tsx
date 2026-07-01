@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import {
   CheckCircle2, XCircle, Loader2, Search, GraduationCap,
-  ExternalLink, FileText, HelpCircle,
+  ExternalLink, FileText, HelpCircle, Copy, CheckCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar } from "@/components/ui/avatar";
@@ -162,6 +162,14 @@ export default function AdminAssignmentsPage() {
   const [feedbacks, setFeedbacks]     = useState<Record<string, string>>({});
   const [reviewing, setReviewing]     = useState<string | null>(null);
   const [token, setToken]             = useState<string | null>(null);
+  const [copiedId, setCopiedId]       = useState<string | null>(null);
+
+  function copyId(id: string) {
+    navigator.clipboard.writeText(id).then(() => {
+      setCopiedId(id);
+      setTimeout(() => setCopiedId(null), 1500);
+    });
+  }
 
   useEffect(() => {
     async function load() {
@@ -290,6 +298,17 @@ export default function AdminAssignmentsPage() {
                   <div>
                     <p className="text-sm font-semibold text-[var(--text-primary)]">{a.profiles?.full_name ?? "Unknown"}</p>
                     <p className="text-xs text-[var(--text-muted)]">{a.profiles?.email ?? "—"}</p>
+                    <button
+                      onClick={() => copyId(a.contributor_id)}
+                      title={a.contributor_id}
+                      className="flex items-center gap-1 font-mono text-xs text-[var(--text-muted)] hover:text-[var(--brand-500)] transition-colors mt-0.5"
+                    >
+                      {a.contributor_id.slice(0, 8)}…
+                      {copiedId === a.contributor_id
+                        ? <CheckCheck className="h-3 w-3 text-green-400 flex-shrink-0" />
+                        : <Copy className="h-3 w-3 flex-shrink-0 opacity-50" />
+                      }
+                    </button>
                   </div>
                 </div>
                 <div className="flex items-center gap-2 flex-wrap">

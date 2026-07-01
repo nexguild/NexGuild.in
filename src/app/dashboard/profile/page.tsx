@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Camera, X, Loader2, Plus, Star } from "lucide-react";
+import { Camera, X, Loader2, Plus, Star, Copy, CheckCheck } from "lucide-react";
 import { NexCoinIcon } from "@/components/ui/nexcoin-icon";
 import { supabase } from "@/lib/supabase";
 
@@ -36,6 +36,7 @@ export default function ProfilePage() {
   const [tasksCompleted, setTasksCompleted] = useState<number | null>(null);
   const [approvalRate, setApprovalRate]     = useState<number | null>(null);
   const [totalEarned, setTotalEarned]       = useState<number | null>(null);
+  const [copiedId, setCopiedId]             = useState(false);
 
   // File input ref for avatar upload
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -353,6 +354,26 @@ export default function ProfilePage() {
             <p className="text-sm text-[var(--text-primary)] text-right">{row.value}</p>
           </div>
         ))}
+        {!loading && userId && (
+          <div className="px-6 py-4 flex items-center justify-between gap-4">
+            <p className="text-sm text-[var(--text-muted)] w-32 flex-shrink-0">Contributor ID</p>
+            <button
+              onClick={() => {
+                navigator.clipboard.writeText(userId);
+                setCopiedId(true);
+                setTimeout(() => setCopiedId(false), 1500);
+              }}
+              title="Click to copy your ID"
+              className="flex items-center gap-1.5 font-mono text-xs text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
+            >
+              {userId}
+              {copiedId
+                ? <CheckCheck className="h-3.5 w-3.5 text-green-400 flex-shrink-0" />
+                : <Copy className="h-3.5 w-3.5 flex-shrink-0 opacity-50" />
+              }
+            </button>
+          </div>
+        )}
       </div>
 
       {/* NexCoins Balance */}
