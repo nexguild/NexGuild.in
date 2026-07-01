@@ -4,8 +4,6 @@ import { FROM_NOREPLY, getResend, newTaskHtml } from "@/lib/email";
 import { createDriveResourcesForTask, isDriveConfigured } from "@/lib/google-drive";
 
 export async function POST(req: NextRequest) {
-  console.log("TASKS ROUTE HIT");
-
   const admin = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
@@ -108,7 +106,6 @@ export async function POST(req: NextRequest) {
     // MUST be awaited — Vercel terminates the function when the response is sent,
     // killing any fire-and-forget .then() before drive IDs can be saved to DB.
     if (isDriveConfigured()) {
-      console.log("[admin/tasks] calling createDriveResourcesForTask for task", task.id);
       const taskSteps = (task.steps as { title: string; submitType: string }[] | null) ?? [];
       try {
         const resources = await createDriveResourcesForTask(task.id, task.title, taskSteps);
@@ -121,7 +118,6 @@ export async function POST(req: NextRequest) {
             drive_sheet_id:         resources.sheetId,
           }).eq("id", task.id);
           if (driveErr) console.error("[admin/tasks] failed to store drive IDs:", driveErr.message);
-          else console.log("[admin/tasks] Drive resources saved for task", task.id, resources);
         }
       } catch (driveErr) {
         console.error("[admin/tasks] Drive creation threw:", driveErr);

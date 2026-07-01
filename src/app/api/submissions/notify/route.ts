@@ -13,41 +13,28 @@ function makeAdmin() {
 }
 
 export async function POST(req: NextRequest) {
-  console.log("NOTIFY ROUTE HIT");
-
   const token = req.headers.get("authorization")?.replace("Bearer ", "");
-  if (!token) {
-    console.log("[submissions/notify] EARLY RETURN: no token");
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-  console.log("[submissions/notify] token present, calling auth.getUser");
+  if (!token) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const admin = makeAdmin();
   const { data: { user }, error: userErr } = await admin.auth.getUser(token);
   if (!user) {
-    console.log("[submissions/notify] EARLY RETURN: auth failed —", userErr?.message ?? "user null");
+    console.error("[submissions/notify] auth failed —", userErr?.message ?? "user null");
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-  console.log("[submissions/notify] auth OK userId=" + user.id);
 
   let parsedBody: { taskId?: string } = {};
   try {
     parsedBody = await req.json() as { taskId?: string };
-    console.log("[submissions/notify] body parsed:", JSON.stringify(parsedBody));
   } catch (parseErr) {
     console.error("[submissions/notify] EARLY RETURN: req.json() threw:", parseErr);
     return NextResponse.json({ ok: true });
   }
 
   const { taskId } = parsedBody;
-  if (!taskId) {
-    console.log("[submissions/notify] EARLY RETURN: taskId missing from body");
-    return NextResponse.json({ ok: true });
-  }
+  if (!taskId) return NextResponse.json({ ok: true });
 
   try {
-    console.log(`[submissions/notify] ▶ hit — taskId=${taskId} userId=${user.id}`);
-
     const [{ data: profile }, { data: task }, { data: sub }] = await Promise.all([
       admin.from("profiles").select("full_name").eq("id", user.id).single(),
       admin.from("tasks").select("id, title, steps, drive_folder_id, drive_sheet_id").eq("id", taskId).single(),
@@ -62,8 +49,6 @@ export async function POST(req: NextRequest) {
     const taskTitle       = (task as { title: string } | null)?.title ?? "a task";
     const driveFolderId   = (task as { drive_folder_id: string | null } | null)?.drive_folder_id ?? null;
     let   sheetId         = (task as { drive_sheet_id: string | null } | null)?.drive_sheet_id ?? null;
-
-    console.log(`[submissions/notify] task="${taskTitle}" drive_folder_id=${driveFolderId ?? "null"} drive_sheet_id=${sheetId ?? "null"} sub_id=${sub?.id ?? "null"}`);
 
     // Fire-and-forget admin emails
     notifyAdmins(admin, "new_submission", {
@@ -102,11 +87,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ ok: true });
     }
 
-    // ── Write complete Sheet row (non-blocking) ───────────────────────────
+    // ── Write complete Sheet row ──────────────────────────────────────────
     const taskSteps = (task as { steps: { title: string; submitType: string }[] | null } | null)?.steps ?? [];
     const hasSteps  = taskSteps.length > 0;
-
-    console.log(`[submissions/notify] ▶ calling write_submission_row — sheetId=${sheetId} submissionId=${sub.id} hasSteps=${hasSteps}`);
 
     // MUST be awaited — Vercel terminates the function when the response is sent,
     // killing any fire-and-forget .catch() before the sheet row is written.
@@ -164,8 +147,6 @@ async function buildAndWriteSheetRow({
       .eq("contributor_id", contributorId)
       .order("step_index", { ascending: true });
 
-    console.log(`[submissions/notify] fetched ${stepSubs?.length ?? 0} step submissions for taskId=${taskId} userId=${contributorId}`);
-
     const byIndex = new Map<number, { submission_type: string; text_value: string | null; file_url: string | null }>();
     for (const ss of stepSubs ?? []) {
       byIndex.set(ss.step_index, ss);
@@ -186,8 +167,6 @@ async function buildAndWriteSheetRow({
     stepContents = [notes, files];
   }
 
-  console.log(`[submissions/notify] stepContents for submissionId=${submissionId}:`, JSON.stringify(stepContents));
-
   const rowData: SubmissionRowData = {
     submissionId,
     contributorId,
@@ -197,5 +176,4 @@ async function buildAndWriteSheetRow({
   };
 
   await writeSubmissionRow(sheetId, rowData);
-  console.log(`[submissions/notify] ✓ write_submission_row complete for submissionId=${submissionId}`);
 }
