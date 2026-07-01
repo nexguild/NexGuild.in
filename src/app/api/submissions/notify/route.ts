@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { notifyAdmins } from "@/lib/email";
-import { writeSubmissionRow, syncSheetStatus, type SubmissionRowData } from "@/lib/google-drive";
+import { writeSubmissionRow, type SubmissionRowData } from "@/lib/google-drive";
 import { callAppsScript, isAppsScriptConfigured } from "@/lib/apps-script";
 
 function makeAdmin() {
@@ -13,16 +13,39 @@ function makeAdmin() {
 }
 
 export async function POST(req: NextRequest) {
+  console.log("[submissions/notify] ENTRY");
+
   const token = req.headers.get("authorization")?.replace("Bearer ", "");
-  if (!token) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!token) {
+    console.log("[submissions/notify] EARLY RETURN: no token");
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  console.log("[submissions/notify] token present, calling auth.getUser");
 
   const admin = makeAdmin();
+  const { data: { user }, error: userErr } = await admin.auth.getUser(token);
+  if (!user) {
+    console.log("[submissions/notify] EARLY RETURN: auth failed —", userErr?.message ?? "user null");
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  console.log("[submissions/notify] auth OK userId=" + user.id);
 
-  const { data: { user } } = await admin.auth.getUser(token);
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  let parsedBody: { taskId?: string } = {};
+  try {
+    parsedBody = await req.json() as { taskId?: string };
+    console.log("[submissions/notify] body parsed:", JSON.stringify(parsedBody));
+  } catch (parseErr) {
+    console.error("[submissions/notify] EARLY RETURN: req.json() threw:", parseErr);
+    return NextResponse.json({ ok: true });
+  }
+
+  const { taskId } = parsedBody;
+  if (!taskId) {
+    console.log("[submissions/notify] EARLY RETURN: taskId missing from body");
+    return NextResponse.json({ ok: true });
+  }
 
   try {
-    const { taskId } = await req.json() as { taskId: string };
     console.log(`[submissions/notify] ▶ hit — taskId=${taskId} userId=${user.id}`);
 
     const [{ data: profile }, { data: task }, { data: sub }] = await Promise.all([
