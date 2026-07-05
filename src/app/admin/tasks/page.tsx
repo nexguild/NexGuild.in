@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { ClipboardList, Plus, Search, Pause, X, Pencil, BarChart2, Loader2, Sheet, Trash2, Rocket } from "lucide-react";
+import { ClipboardList, Plus, Search, Pause, X, Pencil, Eye, BarChart2, Loader2, Sheet, Trash2, Rocket } from "lucide-react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { usePageGuard } from "@/components/layout/admin-auth-guard";
@@ -239,6 +239,11 @@ export default function AdminTasksPage() {
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-1.5 flex-wrap">
+                          <Button variant="secondary" size="sm" asChild>
+                            <Link href={`/admin/tasks/${task.id}`}>
+                              <Eye className="h-3.5 w-3.5" />
+                            </Link>
+                          </Button>
                           <Button variant="secondary" size="sm" asChild>
                             <Link href={`/admin/tasks/${task.id}/edit`}>
                               <Pencil className="h-3.5 w-3.5" />
