@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { X, Loader2, CheckCircle } from "lucide-react";
 import { supabase } from "@/lib/supabase";
@@ -14,6 +15,7 @@ const NOTIF_KEYS = [
 type NotifKey = typeof NOTIF_KEYS[number]["key"];
 
 export default function SettingsPage() {
+  const router = useRouter();
   const [email, setEmail] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
   const [notifs, setNotifs] = useState<Record<NotifKey, boolean>>({
@@ -37,6 +39,8 @@ export default function SettingsPage() {
 
   // Deactivate confirm
   const [showDeactivate, setShowDeactivate] = useState(false);
+  const [deactivating, setDeactivating]     = useState(false);
+  const [deactivateError, setDeactivateError] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchUser() {
@@ -88,6 +92,28 @@ export default function SettingsPage() {
     if (error) { setPassError(error.message); setPassSaving(false); return; }
     setPassSuccess(true);
     setPassSaving(false);
+  }
+
+  async function handleDeactivate() {
+    setDeactivating(true);
+    setDeactivateError(null);
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) { setDeactivateError("No active session found."); setDeactivating(false); return; }
+
+    const res = await fetch("/api/account/deactivate", {
+      method:  "POST",
+      headers: { Authorization: `Bearer ${session.access_token}` },
+    });
+
+    if (!res.ok) {
+      const d = await res.json().catch(() => ({})) as { error?: string };
+      setDeactivateError(d.error ?? "Failed to deactivate account.");
+      setDeactivating(false);
+      return;
+    }
+
+    await supabase.auth.signOut();
+    router.replace("/deactivated");
   }
 
   function closeEmailModal() {
@@ -264,13 +290,18 @@ export default function SettingsPage() {
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/60">
           <div className="w-full max-w-sm bg-[var(--surface-card)] rounded-xl border border-[var(--danger-text)] p-6 shadow-xl">
             <h2 className="text-lg font-semibold text-[var(--text-primary)] mb-2">Deactivate Account?</h2>
-            <p className="text-sm text-[var(--text-secondary)] mb-6">
-              This will freeze your account and NexCoins balance. This cannot be undone without contacting support.
+            <p className="text-sm text-[var(--text-secondary)] mb-4">
+              This will freeze your account and NexCoins balance. You will be signed out immediately. To reactivate, contact <strong>admin@nexguild.in</strong>.
             </p>
+            {deactivateError && (
+              <p className="text-sm text-red-400 bg-red-500/10 px-3 py-2 rounded-md mb-4">{deactivateError}</p>
+            )}
             <div className="flex gap-3">
-              <Button variant="ghost" className="flex-1" onClick={() => setShowDeactivate(false)}>Cancel</Button>
-              <Button variant="destructive" className="flex-1" onClick={() => supabase.auth.signOut()}>
-                Yes, Deactivate
+              <Button variant="ghost" className="flex-1" disabled={deactivating} onClick={() => { setShowDeactivate(false); setDeactivateError(null); }}>
+                Cancel
+              </Button>
+              <Button variant="destructive" className="flex-1" disabled={deactivating} onClick={handleDeactivate}>
+                {deactivating ? <Loader2 className="h-4 w-4 animate-spin" /> : "Yes, Deactivate"}
               </Button>
             </div>
           </div>

@@ -24,7 +24,7 @@ export async function GET(req: NextRequest) {
 
   const { data, error } = await ctx.admin
     .from("profiles")
-    .select("id, full_name, email, country, status, nexcoins, joined_at")
+    .select("id, full_name, email, country, status, nexcoins, joined_at, is_active")
     .or("role.eq.contributor,role.is.null")
     .order("joined_at", { ascending: false });
 
@@ -37,21 +37,18 @@ export async function PATCH(req: NextRequest) {
   if (!ctx) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const body = await req.json().catch(() => null);
-  const { contributorId, status, reason } = (body ?? {}) as {
+  const { contributorId, status, reason, is_active } = (body ?? {}) as {
     contributorId?: string;
     status?: string;
     reason?: string;
+    is_active?: boolean;
   };
 
-  if (!contributorId || !["active", "suspended", "banned"].includes(status ?? "")) {
-    return NextResponse.json({ error: "contributorId and valid status are required." }, { status: 400 });
+  if (!contributorId) {
+    return NextResponse.json({ error: "contributorId is required." }, { status: 400 });
   }
 
-  if (status === "banned" && !reason?.trim()) {
-    return NextResponse.json({ error: "A ban reason is required." }, { status: 400 });
-  }
-
-  // Protect owner from being banned
+  // Protect owner account
   const { data: target } = await ctx.admin
     .from("profiles")
     .select("role, full_name, email")
@@ -63,14 +60,28 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: "Cannot modify the owner account." }, { status: 403 });
   }
 
+  // Reactivation path — set is_active = true
+  if (is_active === true) {
+    const { error } = await ctx.admin.from("profiles").update({ is_active: true }).eq("id", contributorId);
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ ok: true });
+  }
+
+  // Status path — ban / unban / suspend
+  if (!["active", "suspended", "banned"].includes(status ?? "")) {
+    return NextResponse.json({ error: "Valid status or is_active required." }, { status: 400 });
+  }
+
+  if (status === "banned" && !reason?.trim()) {
+    return NextResponse.json({ error: "A ban reason is required." }, { status: 400 });
+  }
+
   const { error } = await ctx.admin.from("profiles").update({ status }).eq("id", contributorId);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
   if (status === "banned") {
-    // Invalidate all active sessions for this user
     await ctx.admin.auth.admin.signOut(contributorId, "others").catch(() => {});
 
-    // Send ban email (non-critical)
     const resend = getResend();
     if (resend && t?.email) {
       resend.emails.send({

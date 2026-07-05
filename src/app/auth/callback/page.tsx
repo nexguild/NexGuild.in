@@ -9,6 +9,8 @@ export default function AuthCallbackPage() {
   const handled = useRef(false);
 
   useEffect(() => {
+    console.log("[auth/callback] page mounted, search:", window.location.search);
+
     async function handleSession(session: {
       access_token: string;
       user: { email?: string; user_metadata?: Record<string, unknown> };

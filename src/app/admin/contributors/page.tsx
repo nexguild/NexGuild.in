@@ -15,12 +15,14 @@ interface Contributor {
   status: string;
   nexcoins: number;
   joined_at: string | null;
+  is_active: boolean | null;
 }
 
 const STATUS_STYLES: Record<string, string> = {
-  active:    "bg-green-500/10 text-green-400",
-  suspended: "bg-yellow-500/10 text-yellow-400",
-  banned:    "bg-red-500/10 text-red-400",
+  active:      "bg-green-500/10 text-green-400",
+  suspended:   "bg-yellow-500/10 text-yellow-400",
+  banned:      "bg-red-500/10 text-red-400",
+  deactivated: "bg-stone-500/10 text-stone-400",
 };
 
 export default function ContributorsPage() {
@@ -47,6 +49,9 @@ export default function ContributorsPage() {
   const [banReason, setBanReason]   = useState("");
   const [banning, setBanning]       = useState(false);
   const [banErr, setBanErr]         = useState<string | null>(null);
+
+  // Reactivate
+  const [reactivating, setReactivating] = useState<string | null>(null);
 
   // Send / Deduct Coins modal
   const [sendTarget, setSendTarget]   = useState<Contributor | null>(null);
@@ -110,6 +115,22 @@ export default function ContributorsPage() {
       setBanErr(data.error ?? "Failed to update status.");
     }
     setBanning(false);
+  }
+
+  async function handleReactivate(c: Contributor) {
+    if (!confirm(`Reactivate account for "${c.full_name ?? c.email}"? They will be able to log in again.`)) return;
+    setReactivating(c.id);
+    const res = await fetch("/api/admin/contributors", {
+      method:  "PATCH",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${tokenRef.current}` },
+      body:    JSON.stringify({ contributorId: c.id, is_active: true }),
+    });
+    if (res.ok) {
+      setContributors((prev) =>
+        prev.map((co) => co.id === c.id ? { ...co, is_active: true } : co)
+      );
+    }
+    setReactivating(null);
   }
 
   function openSendCoins(c: Contributor, mode: "send" | "deduct" = "send") {
@@ -249,8 +270,12 @@ export default function ContributorsPage() {
                     </div>
                   </td>
                   <td className="px-4 py-3">
-                    <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${STATUS_STYLES[c.status] ?? "bg-[var(--surface-subtle)] text-[var(--text-secondary)]"}`}>
-                      {c.status ?? "active"}
+                    <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${
+                      c.is_active === false
+                        ? STATUS_STYLES.deactivated
+                        : (STATUS_STYLES[c.status] ?? "bg-[var(--surface-subtle)] text-[var(--text-secondary)]")
+                    }`}>
+                      {c.is_active === false ? "deactivated" : (c.status ?? "active")}
                     </span>
                   </td>
                   <td className="px-4 py-3 text-[var(--text-muted)] whitespace-nowrap">
@@ -281,6 +306,20 @@ export default function ContributorsPage() {
                         <Ban className="h-3.5 w-3.5" />
                         {c.status === "banned" ? "Unban" : "Ban"}
                       </Button>
+                      {c.is_active === false && (
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          disabled={reactivating === c.id}
+                          onClick={() => handleReactivate(c)}
+                          className="text-green-400 border-green-500/30 hover:bg-green-500/10"
+                        >
+                          {reactivating === c.id
+                            ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            : "Reactivate"
+                          }
+                        </Button>
+                      )}
                     </div>
                   </td>
                 </tr>

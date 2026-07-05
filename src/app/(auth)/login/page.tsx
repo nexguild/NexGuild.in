@@ -46,7 +46,7 @@ export default function LoginPage() {
   }
 
   async function doLogin(token: string) {
-    const { error: authError } = await supabase.auth.signInWithPassword({
+    const { data, error: authError } = await supabase.auth.signInWithPassword({
       email,
       password,
       options: { captchaToken: token },
@@ -63,6 +63,20 @@ export default function LoginPage() {
       );
       setLoading(false);
       return;
+    }
+
+    // Block deactivated accounts — sign them out and send to the deactivated page
+    if (data.user) {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("is_active")
+        .eq("id", data.user.id)
+        .single();
+      if (profile?.is_active === false) {
+        await supabase.auth.signOut();
+        router.replace("/deactivated");
+        return;
+      }
     }
 
     router.push("/dashboard");
