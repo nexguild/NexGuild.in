@@ -22,14 +22,23 @@ export async function GET(req: NextRequest) {
   const ctx = await verifyContributorAccess(req, false);
   if (!ctx) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { data, error } = await ctx.admin
+  let result = await ctx.admin
     .from("profiles")
     .select("id, full_name, email, country, status, nexcoins, joined_at, is_active")
     .or("role.eq.contributor,role.is.null")
     .order("joined_at", { ascending: false });
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ contributors: data ?? [] });
+  // is_active column may not exist yet — fall back to query without it
+  if (result.error) {
+    result = await ctx.admin
+      .from("profiles")
+      .select("id, full_name, email, country, status, nexcoins, joined_at")
+      .or("role.eq.contributor,role.is.null")
+      .order("joined_at", { ascending: false }) as typeof result;
+  }
+
+  if (result.error) return NextResponse.json({ error: result.error.message }, { status: 500 });
+  return NextResponse.json({ contributors: result.data ?? [] });
 }
 
 export async function PATCH(req: NextRequest) {
