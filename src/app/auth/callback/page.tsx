@@ -13,7 +13,17 @@ export default function AuthCallbackPage() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         if (session && (event === "SIGNED_IN" || event === "USER_UPDATED")) {
-          // Send welcome email (fire-and-forget) — fires once after email confirmation
+          // Track referral signup bonus — await so it completes before redirect
+          if (session.user.user_metadata?.referral_code_used) {
+            try {
+              await fetch("/api/referral/track-signup", {
+                method:  "POST",
+                headers: { "Authorization": `Bearer ${session.access_token}` },
+              });
+            } catch {}
+          }
+
+          // Send welcome email (fire-and-forget)
           fetch("/api/auth/welcome", {
             method: "POST",
             headers: { "Content-Type": "application/json" },

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Eye, EyeOff } from "lucide-react";
@@ -24,6 +24,13 @@ export default function SignupPage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [country, setCountry]                 = useState("India");
   const [referralCode, setReferralCode]       = useState("");
+
+  // Pre-fill referral code from ?ref= query param
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const ref = params.get("ref");
+    if (ref) setReferralCode(ref.toUpperCase());
+  }, []);
   const [termsChecked, setTermsChecked]       = useState(false);
   const [showPassword, setShowPassword]       = useState(false);
   const [error, setError]                     = useState("");

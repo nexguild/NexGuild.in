@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { createHash } from "crypto";
 import { createClient } from "@supabase/supabase-js";
 import { createServerClient } from "@/lib/supabase-server";
+import { checkReferralMilestone } from "@/lib/check-referral-milestone";
 
 // Set CPX_POSTBACK_DEBUG=true in Vercel env vars to bypass hash validation
 // and confirm the rest of the pipeline works. Remove after debugging.
@@ -252,6 +253,11 @@ async function handleCpxPostback(req: NextRequest): Promise<Response> {
       message: `+${nexcoinsAwarded} NexCoins from CPX Research`,
       type:    "bonus_coins",
     });
+
+    // Check if referred user has now hit the 1,000-coin milestone
+    await checkReferralMilestone(admin, userId).catch((err) =>
+      console.error("[postback/cpx_research] referral milestone check failed:", err),
+    );
 
     console.log(`[postback/cpx_research] ✓ credited ${nexcoinsAwarded} coins → ${userId} (trans=${transId})`);
     await logPostback(rawParams, hashValid, "credited");

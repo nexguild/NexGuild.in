@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { createHmac } from "crypto";
 import { createClient } from "@supabase/supabase-js";
 import { createServerClient } from "@/lib/supabase-server";
+import { checkReferralMilestone } from "@/lib/check-referral-milestone";
 
 type AdminClient = ReturnType<typeof createServerClient>;
 
@@ -208,6 +209,11 @@ async function handlePostback(req: NextRequest): Promise<Response> {
     message: `+${reward} NexCoins from TheoremReach`,
     type:    "bonus_coins",
   });
+
+  // Check if referred user has now hit the 1,000-coin milestone
+  await checkReferralMilestone(admin, userId).catch((err) =>
+    console.error("[postback/theoremreach] referral milestone check failed:", err),
+  );
 
   console.log(`[postback/theoremreach] ✓ credited ${reward} coins → ${userId} (tx=${txId})`);
   await logPostback(rawParams, hashValid, "credited");
