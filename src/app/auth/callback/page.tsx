@@ -63,7 +63,21 @@ export default function AuthCallbackPage() {
       }
     });
 
-    return () => subscription.unsubscribe();
+    // No-session fallback: email-verification flows where Supabase requires the user to
+    // log in manually after clicking the link. If neither path above resolves with a
+    // session within 4 s, the verification succeeded but the user is not auto-logged in
+    // — send them to login with ?verified=true so the page can show a success notice.
+    const fallback = setTimeout(() => {
+      if (!handled.current) {
+        handled.current = true;
+        router.replace("/login?verified=true");
+      }
+    }, 4000);
+
+    return () => {
+      subscription.unsubscribe();
+      clearTimeout(fallback);
+    };
   }, [router]);
 
   return (

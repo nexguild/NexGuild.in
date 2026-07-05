@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Eye, EyeOff } from "lucide-react";
@@ -21,6 +21,12 @@ export default function LoginPage() {
   // invisible = Pro trial (no visible challenge); visible = free tier fallback
   const [captchaMode, setCaptchaMode]   = useState<"invisible" | "visible">("invisible");
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const [verified, setVerified]         = useState(false);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("verified") === "true") setVerified(true);
+  }, []);
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -95,6 +101,12 @@ export default function LoginPage() {
         <p className="text-sm text-stone-600 mb-7">Sign in to your contributor account</p>
 
         <form onSubmit={handleSubmit} className="space-y-5">
+          {verified && (
+            <div className="rounded-lg bg-green-50 border border-green-200 px-4 py-3 text-sm text-green-700 flex items-start gap-2">
+              <span className="mt-0.5">&#10003;</span>
+              <span>Email verified! Please log in to continue.</span>
+            </div>
+          )}
           {error && (
             <div className="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-600">
               {error}
