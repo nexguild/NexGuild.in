@@ -4,6 +4,8 @@ import { createServerClient } from "@/lib/supabase-server";
 const SIGNUP_BONUS = 100;
 
 export async function POST(req: NextRequest) {
+  console.log("REFERRAL TRACK SIGNUP HIT");
+
   const token = req.headers.get("authorization")?.replace("Bearer ", "");
   if (!token) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
@@ -15,6 +17,7 @@ export async function POST(req: NextRequest) {
   }
 
   const referralCodeUsed = user.user_metadata?.referral_code_used as string | null | undefined;
+  console.log("[referral/track-signup] user=", user.id, "referral_code_used=", referralCodeUsed ?? "(none)");
   if (!referralCodeUsed) return NextResponse.json({ ok: true, skipped: "no_code" });
 
   // Check if this user already has referred_by set (idempotent)
@@ -24,8 +27,14 @@ export async function POST(req: NextRequest) {
     .eq("id", user.id)
     .single();
 
-  if (!newProfile) return NextResponse.json({ ok: true, skipped: "profile_not_found" });
-  if (newProfile.referred_by) return NextResponse.json({ ok: true, skipped: "already_tracked" });
+  if (!newProfile) {
+    console.warn("[referral/track-signup] profile not found for user", user.id);
+    return NextResponse.json({ ok: true, skipped: "profile_not_found" });
+  }
+  if (newProfile.referred_by) {
+    console.log("[referral/track-signup] already tracked for user", user.id);
+    return NextResponse.json({ ok: true, skipped: "already_tracked" });
+  }
 
   // Find referrer by code (normalise to uppercase)
   const { data: referrer } = await admin
@@ -34,10 +43,16 @@ export async function POST(req: NextRequest) {
     .eq("referral_code", referralCodeUsed.toUpperCase())
     .single();
 
-  if (!referrer) return NextResponse.json({ ok: true, skipped: "code_not_found" });
+  if (!referrer) {
+    console.warn("[referral/track-signup] code not found:", referralCodeUsed.toUpperCase());
+    return NextResponse.json({ ok: true, skipped: "code_not_found" });
+  }
 
   // Prevent self-referral
-  if (referrer.id === user.id) return NextResponse.json({ ok: true, skipped: "self_referral" });
+  if (referrer.id === user.id) {
+    console.warn("[referral/track-signup] self-referral attempted by", user.id);
+    return NextResponse.json({ ok: true, skipped: "self_referral" });
+  }
 
   const ref = referrer as {
     id: string;
