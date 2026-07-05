@@ -116,8 +116,8 @@ export default function LoginPage() {
 
         <form onSubmit={handleSubmit} className="space-y-5">
           {verified && (
-            <div className="rounded-lg bg-green-50 border border-green-200 px-4 py-3 text-sm text-green-700 flex items-start gap-2">
-              <span className="mt-0.5">&#10003;</span>
+            <div className="rounded-lg bg-green-50 border border-green-200 px-4 py-3 text-sm text-green-700 flex items-center gap-2">
+              <span>✅</span>
               <span>Email verified! Please log in to continue.</span>
             </div>
           )}

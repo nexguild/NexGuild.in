@@ -9,35 +9,33 @@ export default function AuthCallbackPage() {
   const handled = useRef(false);
 
   useEffect(() => {
-    console.log("[auth/callback] page mounted, search:", window.location.search);
+    console.log("[auth/callback] page mounted, search:", window.location.search, "hash:", window.location.hash);
 
     async function handleSession(session: {
       access_token: string;
       user: { email?: string; user_metadata?: Record<string, unknown> };
     }) {
-      // Guard against both onAuthStateChange and getSession() firing simultaneously
       if (handled.current) return;
       handled.current = true;
+      console.log("[auth/callback] session found, user:", session.user.email);
 
-      // Track referral signup bonus — await before redirect so it always completes
       const referralCode = session.user.user_metadata?.referral_code_used;
       if (referralCode) {
         console.log("[auth/callback] referral_code_used found, calling track-signup");
         try {
           await fetch("/api/referral/track-signup", {
             method:  "POST",
-            headers: { "Authorization": `Bearer ${session.access_token}` },
+            headers: { Authorization: `Bearer ${session.access_token}` },
           });
         } catch (err) {
           console.error("[auth/callback] track-signup fetch failed:", err);
         }
       }
 
-      // Welcome email — fire-and-forget
       fetch("/api/auth/welcome", {
-        method: "POST",
+        method:  "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+        body:    JSON.stringify({
           email: session.user.email,
           name:  session.user.user_metadata?.full_name ?? session.user.email ?? "Contributor",
         }),
@@ -46,8 +44,48 @@ export default function AuthCallbackPage() {
       router.replace("/dashboard");
     }
 
+    function redirectToLogin() {
+      if (handled.current) return;
+      handled.current = true;
+      console.log("[auth/callback] no session — redirecting to /login?verified=true");
+      router.replace("/login?verified=true");
+    }
+
+    const params = new URLSearchParams(window.location.search);
+
+    // Supabase sends ?error= when the link has expired or already been used
+    const errorParam = params.get("error");
+    if (errorParam) {
+      console.error("[auth/callback] error param:", errorParam, params.get("error_description"));
+      redirectToLogin();
+      return;
+    }
+
+    // ── PKCE flow ──────────────────────────────────────────────────────────
+    // Supabase (new projects / explicit PKCE) sends ?code= in the query string.
+    // We must call exchangeCodeForSession() to turn the code into a session.
+    const code = params.get("code");
+    if (code) {
+      console.log("[auth/callback] PKCE code detected — exchanging for session…");
+      supabase.auth.exchangeCodeForSession(code)
+        .then(({ data: { session }, error }) => {
+          if (session) {
+            handleSession(session);
+          } else {
+            console.error("[auth/callback] code exchange failed:", error?.message);
+            redirectToLogin();
+          }
+        });
+      // No subscription / timeout needed for this path — exchange resolves on its own
+      return;
+    }
+
+    // ── Implicit flow ──────────────────────────────────────────────────────
+    // Older / implicit-mode Supabase projects send #access_token= in the hash.
+    // The Supabase client auto-processes the hash and fires onAuthStateChange.
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log("[auth/callback] onAuthStateChange:", event, !!session);
         if (session && (event === "SIGNED_IN" || event === "USER_UPDATED")) {
           subscription.unsubscribe();
           await handleSession(session);
@@ -55,9 +93,7 @@ export default function AuthCallbackPage() {
       }
     );
 
-    // Fallback: if session already exists when the page loads (token already exchanged
-    // by the Supabase client before onAuthStateChange fires). This path ALSO goes through
-    // handleSession so track-signup is never skipped.
+    // Fallback: session already set before the listener registered
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (session) {
         subscription.unsubscribe();
@@ -65,15 +101,10 @@ export default function AuthCallbackPage() {
       }
     });
 
-    // No-session fallback: email-verification flows where Supabase requires the user to
-    // log in manually after clicking the link. If neither path above resolves with a
-    // session within 4 s, the verification succeeded but the user is not auto-logged in
-    // — send them to login with ?verified=true so the page can show a success notice.
+    // If neither path fires within 4 s, email was verified but login is required manually
     const fallback = setTimeout(() => {
-      if (!handled.current) {
-        handled.current = true;
-        router.replace("/login?verified=true");
-      }
+      console.log("[auth/callback] 4 s timeout — no session found");
+      redirectToLogin();
     }, 4000);
 
     return () => {
