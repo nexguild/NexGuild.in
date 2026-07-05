@@ -25,25 +25,37 @@ export async function GET(req: NextRequest) {
 
   const { admin } = ctx;
 
-  // Platform-wide referral events stats
-  const { data: events } = await admin
+  // Platform-wide referral events stats — calculated from referral_events table
+  const { data: events, error: eventsError } = await admin
     .from("referral_events")
-    .select("event_type, nexcoins_awarded, flagged, created_at");
+    .select("referred_id, event_type, nexcoins_awarded, flagged, created_at");
+
+  if (eventsError) {
+    console.error("[admin/referrals] referral_events query failed:", eventsError.message);
+  }
 
   const allEvents = (events ?? []) as {
+    referred_id: string;
     event_type: string;
     nexcoins_awarded: number;
     flagged: boolean;
     created_at: string;
   }[];
 
-  const totalReferrals      = allEvents.filter((e) => e.event_type === "signup_bonus").length;
-  const totalMilestones     = allEvents.filter((e) => e.event_type === "milestone_bonus").length;
-  const totalNexcoinsPaid   = allEvents.reduce((sum, e) => sum + (e.nexcoins_awarded ?? 0), 0);
-  const signupBonusPaid     = allEvents.filter((e) => e.event_type === "signup_bonus")
-    .reduce((sum, e) => sum + e.nexcoins_awarded, 0);
-  const milestoneBonusPaid  = allEvents.filter((e) => e.event_type === "milestone_bonus")
-    .reduce((sum, e) => sum + e.nexcoins_awarded, 0);
+  // Total Referrals = distinct referred_id values
+  const totalReferrals     = new Set(allEvents.map((e) => e.referred_id)).size;
+  // Milestones Reached = rows where event_type = 'milestone_bonus'
+  const totalMilestones    = allEvents.filter((e) => e.event_type === "milestone_bonus").length;
+  // Signup Bonuses Paid = sum of nexcoins_awarded where event_type = 'signup_bonus'
+  const signupBonusPaid    = allEvents
+    .filter((e) => e.event_type === "signup_bonus")
+    .reduce((sum, e) => sum + (e.nexcoins_awarded ?? 0), 0);
+  // Milestone Bonuses Paid = sum of nexcoins_awarded where event_type = 'milestone_bonus'
+  const milestoneBonusPaid = allEvents
+    .filter((e) => e.event_type === "milestone_bonus")
+    .reduce((sum, e) => sum + (e.nexcoins_awarded ?? 0), 0);
+  // Total NexCoins Paid = sum of all nexcoins_awarded
+  const totalNexcoinsPaid  = allEvents.reduce((sum, e) => sum + (e.nexcoins_awarded ?? 0), 0);
 
   // Top referrers
   const { data: referrers } = await admin
