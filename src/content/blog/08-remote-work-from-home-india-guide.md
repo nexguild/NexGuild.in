@@ -1,8 +1,9 @@
----
+﻿---
 title: "Remote Work from Home in India: A 2026 Guide"
 slug: "remote-work-from-home-india-guide-2026"
 description: "An honest, practical guide to the remote work landscape in India today — opportunities, realistic expectations, and how to get started."
 category: "Remote Work"
+date: "2026-06-21"
 ---
 
 # Remote Work from Home in India: A 2026 Guide

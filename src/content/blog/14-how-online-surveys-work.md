@@ -1,8 +1,9 @@
----
+﻿---
 title: "How Online Surveys Actually Work: What You Earn, How You Get Paid, and What to Expect"
 slug: "how-online-surveys-work-what-you-earn"
 description: "A clear, honest explanation of how paid survey platforms work, what typical earnings look like, and how to choose the right platform for your situation."
 category: "Remote Work"
+date: "2026-07-06"
 ---
 
 # How Online Surveys Actually Work: What You Earn, How You Get Paid, and What to Expect

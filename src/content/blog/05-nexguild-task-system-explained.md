@@ -1,8 +1,9 @@
----
+﻿---
 title: "NexGuild Explained: How Our Task System Works"
 slug: "nexguild-task-system-explained"
 description: "A complete walkthrough of how tasks work on NexGuild — from browsing opportunities to getting approved and earning NexCoins."
 category: "NexGuild"
+date: "2026-06-21"
 ---
 
 # NexGuild Explained: How Our Task System Works

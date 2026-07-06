@@ -1,8 +1,9 @@
----
+﻿---
 title: "NexCoins to Vouchers: How Redemption Works on NexGuild"
 slug: "nexcoins-to-vouchers-redemption"
 description: "Everything you need to know about earning NexCoins and redeeming them for real rewards in NexStore."
 category: "NexGuild"
+date: "2026-06-21"
 ---
 
 # NexCoins to Vouchers: How Redemption Works on NexGuild

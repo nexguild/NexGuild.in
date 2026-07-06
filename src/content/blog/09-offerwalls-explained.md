@@ -1,8 +1,9 @@
----
+﻿---
 title: "What is an Offerwall? How They Work and What You Can Earn"
 slug: "offerwalls-explained-how-to-earn"
 description: "An offerwall is a hub of third-party offers — surveys, app installs, sign-ups — inside a platform you trust. Here's how they work and what you can earn."
 category: "Remote Work"
+date: "2026-06-21"
 ---
 
 # What is an Offerwall? How They Work and What You Can Earn

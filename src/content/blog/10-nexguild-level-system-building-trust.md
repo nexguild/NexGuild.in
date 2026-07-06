@@ -1,8 +1,9 @@
----
+﻿---
 title: "Building Trust as a New Contributor: How NexGuild's Level System Works"
 slug: "nexguild-level-system-building-trust"
 description: "How NexGuild's Level and XP system works, why it exists, and how new contributors can grow their access to better opportunities over time."
 category: "NexGuild"
+date: "2026-06-21"
 ---
 
 # Building Trust as a New Contributor: How NexGuild's Level System Works

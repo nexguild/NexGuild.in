@@ -1,8 +1,9 @@
----
+﻿---
 title: "CPX Research Review 2026: What It Is, How It Works, and What to Expect"
 slug: "cpx-research-review-2026"
 description: "An honest review of CPX Research — how their survey platform works, what typical payouts look like, and how NexGuild integrates with it."
 category: "Remote Work"
+date: "2026-07-06"
 ---
 
 # CPX Research Review 2026: What It Is, How It Works, and What to Expect

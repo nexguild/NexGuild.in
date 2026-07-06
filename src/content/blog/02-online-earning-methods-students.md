@@ -1,8 +1,9 @@
----
+﻿---
 title: "Best Online Earning Methods for Students in 2026"
 slug: "online-earning-methods-students"
 description: "A practical, honest breakdown of how students can earn online without compromising their studies — from micro-tasks to freelancing."
 category: "Remote Work"
+date: "2026-06-21"
 ---
 
 # Best Online Earning Methods for Students in 2026

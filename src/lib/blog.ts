@@ -11,6 +11,7 @@ export interface PostMeta {
   description: string;
   category: string;
   readingTime: number;
+  date: string;
 }
 
 export interface Post extends PostMeta {
@@ -32,11 +33,12 @@ export function getAllPosts(): PostMeta[] {
     const raw = fs.readFileSync(path.join(BLOG_DIR, file), "utf-8");
     const { data, content } = matter(raw);
     return {
-      title: data.title as string,
-      slug: data.slug as string,
+      title:       data.title as string,
+      slug:        data.slug as string,
       description: data.description as string,
-      category: data.category as string,
+      category:    data.category as string,
       readingTime: calcReadingTime(content),
+      date:        (data.date as string | undefined) ?? "2026-06-21",
     };
   });
 }
@@ -51,12 +53,13 @@ export function getPostBySlug(slug: string): Post | null {
     const { data, content } = matter(raw);
     if ((data.slug as string) === slug) {
       return {
-        title: data.title as string,
-        slug: data.slug as string,
+        title:       data.title as string,
+        slug:        data.slug as string,
         description: data.description as string,
-        category: data.category as string,
+        category:    data.category as string,
         readingTime: calcReadingTime(content),
-        html: marked.parse(content) as string,
+        date:        (data.date as string | undefined) ?? "2026-06-21",
+        html:        marked.parse(content) as string,
       };
     }
   }

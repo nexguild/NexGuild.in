@@ -1,8 +1,9 @@
----
+﻿---
 title: "How to Spot Legitimate Online Earning Platforms (And Avoid Scams)"
 slug: "spot-legitimate-online-earning-platforms"
 description: "Practical red flags and trust signals to help you tell genuine earning platforms apart from scams before you invest your time."
 category: "Remote Work"
+date: "2026-06-21"
 ---
 
 # How to Spot Legitimate Online Earning Platforms (And Avoid Scams)

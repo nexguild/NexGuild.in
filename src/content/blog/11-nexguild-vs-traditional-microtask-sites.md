@@ -1,8 +1,9 @@
----
+﻿---
 title: "NexGuild vs Traditional Microtask Sites: What's Actually Different"
 slug: "nexguild-vs-traditional-microtask-sites"
 description: "A clear, honest comparison of how NexGuild's task system differs from established global microtask platforms — and where those platforms still have an edge."
 category: "NexGuild"
+date: "2026-06-21"
 ---
 
 # NexGuild vs Traditional Microtask Sites: What's Actually Different

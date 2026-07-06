@@ -1,8 +1,9 @@
----
+﻿---
 title: "5 Tips to Get Your Submissions Approved Faster on Task Platforms"
 slug: "tips-get-approved-faster-task-platforms"
 description: "Practical, actionable advice to reduce rejections and speed up approvals on micro-task and digital work platforms like NexGuild."
 category: "Remote Work"
+date: "2026-06-21"
 ---
 
 # 5 Tips to Get Your Submissions Approved Faster on Task Platforms

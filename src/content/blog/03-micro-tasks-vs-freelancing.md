@@ -1,8 +1,9 @@
----
+﻿---
 title: "Micro-Tasks vs Freelancing: Which Is Better for You?"
 slug: "micro-tasks-vs-freelancing"
 description: "A clear comparison of micro-task platforms and freelance work to help you decide which fits your goals, skills, and schedule."
 category: "Remote Work"
+date: "2026-06-21"
 ---
 
 # Micro-Tasks vs Freelancing: Which Is Better for You?

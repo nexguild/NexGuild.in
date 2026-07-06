@@ -1,8 +1,9 @@
----
+﻿---
 title: "Why You Keep Getting Disqualified from Surveys (And What to Do About It)"
 slug: "why-survey-disqualification-happens-what-to-do"
 description: "An honest explanation of why survey disqualification happens so often, and practical strategies to reduce it and protect your time."
 category: "Remote Work"
+date: "2026-07-06"
 ---
 
 # Why You Keep Getting Disqualified from Surveys (And What to Do About It)
