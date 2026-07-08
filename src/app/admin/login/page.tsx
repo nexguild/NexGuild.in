@@ -39,54 +39,36 @@ export default function AdminLoginPage() {
   }
 
   async function doLogin(token: string) {
-    // Step 1: authenticate with captcha token
-    const { data, error: authError } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-      options: { captchaToken: token },
+    const res = await fetch("/api/auth/admin-login", {
+      method:  "POST",
+      headers: { "Content-Type": "application/json" },
+      body:    JSON.stringify({ email, password, captchaToken: token }),
     });
 
     captchaRef.current?.resetCaptcha();
     setCaptchaToken(null);
 
-    if (authError || !data.user || !data.session) {
-      setError("Incorrect email or password.");
+    if (res.status === 429) {
+      setError("Too many failed attempts. Please try again in 15 minutes.");
       setLoading(false);
       return;
     }
 
-    // Step 2: verify admin role via server-side API (bypasses RLS)
-    let isAdmin = false;
-    let reason = "";
-    try {
-      const res = await fetch("/api/auth/admin-check", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ access_token: data.session.access_token }),
-      });
-      const json = await res.json();
-      isAdmin = json.isAdmin === true;
-      reason = json.reason ?? "";
-      console.log("[admin-login] admin-check →", JSON.stringify(json));
-    } catch (err) {
-      console.error("[admin-login] admin-check fetch error:", err);
-      await supabase.auth.signOut();
-      setError("Unable to verify account permissions. Please try again.");
+    const data = await res.json() as {
+      session?: { access_token: string; refresh_token: string };
+      error?:   string;
+    };
+
+    if (!res.ok || !data.session) {
+      setError(data.error ?? "Login failed.");
       setLoading(false);
       return;
     }
 
-    if (!isAdmin) {
-      await supabase.auth.signOut();
-      if (reason === "profile_error") {
-        setError("Server error verifying permissions. Check server logs.");
-      } else {
-        setError("Access denied. This account does not have admin privileges.");
-      }
-      setLoading(false);
-      return;
-    }
-
+    await supabase.auth.setSession({
+      access_token:  data.session.access_token,
+      refresh_token: data.session.refresh_token,
+    });
     router.replace("/admin");
   }
 

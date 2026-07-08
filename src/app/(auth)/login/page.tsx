@@ -46,39 +46,42 @@ export default function LoginPage() {
   }
 
   async function doLogin(token: string) {
-    const { data, error: authError } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-      options: { captchaToken: token },
+    const res = await fetch("/api/auth/login", {
+      method:  "POST",
+      headers: { "Content-Type": "application/json" },
+      body:    JSON.stringify({ email, password, captchaToken: token }),
     });
 
     captchaRef.current?.resetCaptcha();
     setCaptchaToken(null);
 
-    if (authError) {
-      setError(
-        authError.message === "Invalid login credentials"
-          ? "Incorrect email or password."
-          : authError.message
-      );
+    if (res.status === 429) {
+      setError("Too many failed attempts. Please try again in 15 minutes.");
       setLoading(false);
       return;
     }
 
-    // Block deactivated accounts — sign them out and send to the deactivated page
-    if (data.user) {
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("is_active")
-        .eq("id", data.user.id)
-        .single();
-      if (profile?.is_active === false) {
-        await supabase.auth.signOut();
-        router.replace("/deactivated");
-        return;
-      }
+    const data = await res.json() as {
+      session?:     { access_token: string; refresh_token: string };
+      deactivated?: boolean;
+      error?:       string;
+    };
+
+    if (data.deactivated) {
+      router.replace("/deactivated");
+      return;
     }
 
+    if (!res.ok || !data.session) {
+      setError(data.error ?? "Login failed. Please try again.");
+      setLoading(false);
+      return;
+    }
+
+    await supabase.auth.setSession({
+      access_token:  data.session.access_token,
+      refresh_token: data.session.refresh_token,
+    });
     router.push("/dashboard");
   }
 

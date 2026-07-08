@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase-server";
+import { clientIp, rateLimit } from "@/lib/rate-limit";
 
 const SIGNUP_BONUS = 100;
 
@@ -14,6 +15,15 @@ export async function POST(req: NextRequest) {
   if (!user) {
     console.error("[referral/track-signup] auth failed —", userErr?.message);
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  // 5 requests per IP per hour — prevents abuse from the same network
+  const { allowed, retryAfterMs } = rateLimit(`track-signup:${clientIp(req)}`, 5, 60 * 60 * 1000);
+  if (!allowed) {
+    return NextResponse.json(
+      { error: "Rate limit exceeded" },
+      { status: 429, headers: { "Retry-After": String(Math.ceil(retryAfterMs / 1000)) } }
+    );
   }
 
   const referralCodeUsed = user.user_metadata?.referral_code_used as string | null | undefined;

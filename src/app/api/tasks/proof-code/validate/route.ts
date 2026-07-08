@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createHash } from "crypto";
 import { createServerClient } from "@/lib/supabase-server";
+import { rateLimit } from "@/lib/rate-limit";
 
 function makeCode(userId: string, siteSlug: string, hourWindow: number, secret: string): string {
   const input = `${userId}:${siteSlug}:${hourWindow}:${secret}`;
@@ -17,6 +18,15 @@ export async function POST(req: NextRequest) {
   const { data: { user } } = await admin.auth.getUser(token);
   if (!user) {
     return NextResponse.json({ valid: false, reason: "unauthorized" }, { status: 401 });
+  }
+
+  // 20 validations per user per hour — proof codes are one-time use anyway
+  const { allowed, retryAfterMs } = rateLimit(`proof-code:${user.id}`, 20, 60 * 60 * 1000);
+  if (!allowed) {
+    return NextResponse.json(
+      { valid: false, reason: "rate_limited" },
+      { status: 429, headers: { "Retry-After": String(Math.ceil(retryAfterMs / 1000)) } }
+    );
   }
 
   const secret = process.env.PROOF_CODE_SECRET;
