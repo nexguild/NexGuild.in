@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Plus, Trash2, Loader2, X, CheckCircle2, Tag, ToggleLeft, ToggleRight, Crown, ChevronDown, Globe, RefreshCw } from "lucide-react";
+import { Plus, Trash2, Loader2, X, CheckCircle2, Tag, ToggleLeft, ToggleRight, Crown, ChevronDown, Globe, RefreshCw, Database, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
 
@@ -114,6 +114,10 @@ export default function AdminSettingsPage() {
   const [savingRates, setSavingRates]             = useState(false);
   const [ratesSaved, setRatesSaved]               = useState(false);
   const [ratesErr, setRatesErr]                   = useState<string | null>(null);
+
+  // Database backup
+  const [backingUp, setBackingUp]   = useState(false);
+  const [backupMsg, setBackupMsg]   = useState<{ ok: boolean; text: string } | null>(null);
 
   // Create coupon modal
   const [showCoupon, setShowCoupon]         = useState(false);
@@ -330,6 +334,21 @@ export default function AdminSettingsPage() {
       setTimeout(() => setDomainsSaved(false), 3000);
     }
     setSavingDomains(false);
+  }
+
+  async function handleBackup() {
+    setBackingUp(true);
+    setBackupMsg(null);
+    const res = await fetch("/api/admin/backup", {
+      method:  "POST",
+      headers: { Authorization: `Bearer ${tokenRef.current}` },
+    });
+    const data = await res.json() as { ok?: boolean; message?: string; error?: string };
+    setBackupMsg({
+      ok:   res.ok && !!data.ok,
+      text: data.message ?? data.error ?? (res.ok ? "Backup triggered." : "Backup failed."),
+    });
+    setBackingUp(false);
   }
 
   async function saveExchangeRates(e: React.FormEvent) {
@@ -721,6 +740,40 @@ export default function AdminSettingsPage() {
               {savingRates ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Save Rates"}
             </Button>
           </form>
+        </section>
+      )}
+
+      {/* Database Backup — owner only */}
+      {isOwner && (
+        <section className="rounded-lg border border-[var(--border-default)] bg-[var(--surface-card)] divide-y divide-[var(--border-default)]">
+          <div className="px-6 py-4 flex items-center justify-between gap-4">
+            <div className="flex items-start gap-2">
+              <Database className="h-4 w-4 text-[var(--brand-500)] mt-0.5 flex-shrink-0" />
+              <div>
+                <h2 className="font-semibold text-[var(--text-primary)]">Database Backup</h2>
+                <p className="text-xs text-[var(--text-muted)] mt-0.5">
+                  Automated daily backup at 2&nbsp;AM IST via GitHub Actions. Last 7 backups kept in Google Drive.
+                </p>
+              </div>
+            </div>
+            <Button
+              size="sm"
+              variant="secondary"
+              disabled={backingUp}
+              onClick={handleBackup}
+              className="flex-shrink-0"
+            >
+              {backingUp ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Backup Now"}
+            </Button>
+          </div>
+          {backupMsg && (
+            <div className={`px-6 py-3 text-sm flex items-center gap-2 ${backupMsg.ok ? "text-green-400 bg-green-500/10" : "text-red-400 bg-red-500/10"}`}>
+              {backupMsg.ok
+                ? <CheckCircle2 className="h-4 w-4 flex-shrink-0" />
+                : <AlertCircle  className="h-4 w-4 flex-shrink-0" />}
+              {backupMsg.text}
+            </div>
+          )}
         </section>
       )}
 
