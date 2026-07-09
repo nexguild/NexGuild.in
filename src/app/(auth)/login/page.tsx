@@ -22,11 +22,24 @@ export default function LoginPage() {
   const [captchaMode, setCaptchaMode]   = useState<"invisible" | "visible">("invisible");
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const [verified, setVerified]         = useState(false);
+  const [resending, setResending]       = useState(false);
+  const [resendDone, setResendDone]     = useState(false);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get("verified") === "true") setVerified(true);
   }, []);
+
+  async function handleResend() {
+    setResending(true);
+    await supabase.auth.resend({
+      type:    "signup",
+      email,
+      options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
+    });
+    setResending(false);
+    setResendDone(true);
+  }
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -126,7 +139,25 @@ export default function LoginPage() {
           )}
           {error && (
             <div className="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-600">
-              {error}
+              {error.toLowerCase().includes("not confirmed") ? (
+                <div className="space-y-2">
+                  <p>Please verify your email first. Check your inbox for a confirmation link from NexGuild.</p>
+                  {resendDone ? (
+                    <p className="text-green-700 font-medium">✓ Email resent! Check your inbox.</p>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={handleResend}
+                      disabled={resending}
+                      className="text-[#0D9488] font-medium underline hover:no-underline disabled:opacity-50"
+                    >
+                      {resending ? "Sending…" : "Resend verification email"}
+                    </button>
+                  )}
+                </div>
+              ) : (
+                error
+              )}
             </div>
           )}
 

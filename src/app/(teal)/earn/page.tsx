@@ -338,6 +338,54 @@ export default function EarnPage() {
         </div>
       </section>
 
+      {/* ── Meet the Founder ────────────────────────────────────────────── */}
+      <section className="py-20 px-6" style={{ borderTop: "1px solid rgba(13,148,136,0.06)" }}>
+        <div className="mx-auto max-w-container">
+          <FadeIn>
+            <div className="max-w-3xl mx-auto rounded-2xl p-8 sm:p-10 flex flex-col sm:flex-row items-center sm:items-start gap-8"
+              style={{
+                background: "rgba(255,255,255,0.55)",
+                border: "1.5px solid rgba(13,148,136,0.14)",
+                backdropFilter: "blur(12px)",
+              }}
+            >
+              {/* Photo placeholder — TODO: replace with <Image src="/founder.jpg" alt="Somen Biswas" width={120} height={120} className="rounded-full object-cover" /> once public/founder.jpg is added */}
+              <div className="flex-shrink-0 flex flex-col items-center gap-2">
+                <div
+                  className="w-[120px] h-[120px] rounded-full flex items-center justify-center text-3xl font-black text-[#0D9488] select-none"
+                  style={{
+                    background: "linear-gradient(135deg, rgba(13,148,136,0.08) 0%, rgba(45,212,191,0.15) 100%)",
+                    border: "3px solid rgba(13,148,136,0.2)",
+                  }}
+                >
+                  SB
+                </div>
+              </div>
+
+              {/* Text */}
+              <div className="flex flex-col gap-3 text-center sm:text-left">
+                <div>
+                  <span className="text-xs font-bold uppercase tracking-widest text-[#0D9488]">Meet the Founder</span>
+                  <h3
+                    className="text-2xl font-extrabold text-[#0F3D36] mt-1"
+                    style={{ fontFamily: "'Instrument Serif', serif" }}
+                  >
+                    Somen Biswas
+                  </h3>
+                  <p className="text-sm font-medium text-stone-500 mt-0.5">Founder, NexGuild</p>
+                </div>
+                <p className="text-sm sm:text-base text-stone-600 leading-relaxed">
+                  &ldquo;I built NexGuild because I wanted to create a platform where anyone can earn real rewards in their free time — honestly and transparently, without fake promises. NexGuild is built and run from India, and I personally review every feature before it goes live.&rdquo;
+                </p>
+                <p className="text-sm font-semibold text-[#0F3D36] italic">
+                  — Somen, Founder &amp; Builder
+                </p>
+              </div>
+            </div>
+          </FadeIn>
+        </div>
+      </section>
+
       {/* ── CTA Section ─────────────────────────────────────────────────── */}
       <section className="py-24 px-6 relative overflow-hidden" style={{ borderTop: "1px solid rgba(13,148,136,0.06)" }}>
         {/* Soft Radial Mint Glow */}
