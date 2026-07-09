@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import Image from "next/image";
 import { FadeIn } from "@/components/ui/fade-in";
 
 export const metadata: Metadata = {
@@ -360,6 +361,85 @@ export default function ClientPage() {
               </FadeIn>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* ── Meet the Founder ──────────────────────────────────────────────── */}
+      <section style={{ padding: "5rem 1.5rem", borderTop: "1px solid rgba(217,119,6,0.08)" }}>
+        <div className="mx-auto max-w-container">
+          <FadeIn>
+            <div
+              className="max-w-3xl mx-auto rounded-2xl p-8 sm:p-10 flex flex-col sm:flex-row items-center sm:items-start gap-8"
+              style={{
+                background: "rgba(255,255,255,0.55)",
+                border: "1.5px solid rgba(217,119,6,0.18)",
+                backdropFilter: "blur(12px)",
+              }}
+            >
+              {/* Photo */}
+              <div style={{ flexShrink: 0 }}>
+                <div
+                  style={{
+                    width: "120px",
+                    height: "120px",
+                    borderRadius: "50%",
+                    overflow: "hidden",
+                    border: "3px solid rgba(217,119,6,0.28)",
+                  }}
+                >
+                  <Image
+                    src="/founder.jpg"
+                    alt="Somen Biswas"
+                    width={120}
+                    height={120}
+                    style={{ borderRadius: "50%", objectFit: "cover", objectPosition: "top" }}
+                    priority
+                  />
+                </div>
+              </div>
+
+              {/* Text */}
+              <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+                <div>
+                  <span
+                    style={{
+                      fontSize: "0.7rem",
+                      fontWeight: 700,
+                      textTransform: "uppercase",
+                      letterSpacing: "0.2em",
+                      color: "#92400E",
+                    }}
+                  >
+                    Meet the Founder
+                  </span>
+                  <h3
+                    style={{
+                      fontFamily: "Instrument Serif, serif",
+                      fontSize: "1.5rem",
+                      fontWeight: 700,
+                      color: "#1C1917",
+                      marginTop: "0.25rem",
+                      marginBottom: 0,
+                    }}
+                  >
+                    Somen Biswas
+                  </h3>
+                  <p style={{ fontSize: "0.875rem", fontWeight: 500, color: "#57534E", marginTop: "0.125rem" }}>
+                    Founder, NexGuild
+                  </p>
+                </div>
+                <p style={{ fontSize: "0.9375rem", color: "#44403C", lineHeight: 1.75 }}>
+                  &ldquo;I started NexGuild to bridge the gap between organizations that need reliable
+                  human-powered work and a global community ready to deliver it. Every feature on this
+                  platform is built with both sides in mind — quality output for clients, fair rewards
+                  for contributors.&rdquo;
+                </p>
+                <p style={{ fontSize: "0.875rem", fontWeight: 600, color: "#92400E", fontStyle: "italic" }}>
+                  — Somen, Founder
+                </p>
+              </div>
+            </div>
+          </FadeIn>
         </div>
       </section>
 
