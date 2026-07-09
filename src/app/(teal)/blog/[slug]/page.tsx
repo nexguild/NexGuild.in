@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import type { Metadata } from "next";
-import { getAllPosts, getPostBySlug } from "@/lib/blog";
+import { getAllPosts, getPostBySlug, type PostMeta } from "@/lib/blog";
 import { AdSlot } from "@/components/ui/ad-slot";
 
 interface Props {
@@ -22,6 +22,27 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
+function getRelatedPosts(current: PostMeta, all: PostMeta[]): PostMeta[] {
+  const others = all.filter((p) => p.slug !== current.slug);
+
+  // Meaningful words from slug (length > 3 filters out stop-words like "the", "for", "how")
+  const slugWords = current.slug.split("-").filter((w) => w.length > 3);
+
+  const related = others.filter(
+    (p) =>
+      p.category === current.category ||
+      slugWords.some((w) => p.slug.includes(w))
+  );
+
+  const byDate = (a: PostMeta, b: PostMeta) =>
+    new Date(b.date).getTime() - new Date(a.date).getTime();
+
+  if (related.length >= 2) return related.sort(byDate).slice(0, 3);
+
+  // Fallback: 3 most recent posts
+  return others.sort(byDate).slice(0, 3);
+}
+
 const CATEGORY_STYLE: Record<string, { bg: string; text: string; border: string }> = {
   "Remote Work": {
     bg: "rgba(13,148,136,0.08)",
@@ -40,7 +61,8 @@ export default async function BlogPostPage({ params }: Props) {
   const post = getPostBySlug(slug);
   if (!post) notFound();
 
-  const catStyle = CATEGORY_STYLE[post.category] ?? CATEGORY_STYLE["Remote Work"];
+  const catStyle     = CATEGORY_STYLE[post.category] ?? CATEGORY_STYLE["Remote Work"];
+  const relatedPosts = getRelatedPosts(post, getAllPosts());
 
   return (
     <div style={{ background: "#EBFBFA", color: "#1E293B", minHeight: "100vh" }}>
@@ -103,6 +125,52 @@ export default async function BlogPostPage({ params }: Props) {
           <AdSlot placement="blog-post-end" />
         </div>
       </div>
+
+      {/* ── Related Posts ─────────────────────────────────────────── */}
+      {relatedPosts.length > 0 && (
+        <div className="px-6 pb-14">
+          <div className="mx-auto max-w-2xl">
+            <h2
+              className="text-xl font-bold text-[#0F3D36] mb-5"
+              style={{ fontFamily: "'Instrument Serif', serif" }}
+            >
+              You Might Also Like
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {relatedPosts.map((p) => (
+                <Link
+                  key={p.slug}
+                  href={`/blog/${p.slug}`}
+                  className="group block"
+                >
+                  <article
+                    className="h-full rounded-xl p-5 flex flex-col gap-2 transition-all duration-200 hover:translate-y-[-2px] hover:bg-white hover:shadow-md"
+                    style={{
+                      background: "rgba(255,255,255,0.55)",
+                      border: "1.5px solid rgba(13,148,136,0.12)",
+                    }}
+                  >
+                    <h3
+                      className="text-sm font-bold text-[#0F3D36] group-hover:text-[#0D9488] transition-colors leading-snug"
+                      style={{ fontFamily: "'Instrument Serif', serif" }}
+                    >
+                      {p.title}
+                    </h3>
+                    <p className="text-xs text-stone-500 leading-relaxed flex-1">
+                      {p.description.length > 100
+                        ? p.description.slice(0, 100) + "…"
+                        : p.description}
+                    </p>
+                    <span className="text-xs font-semibold text-[#0D9488] group-hover:translate-x-0.5 transition-transform inline-block mt-1">
+                      Read More →
+                    </span>
+                  </article>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── Back Link ─────────────────────────────────────────────── */}
       <div className="px-6 pb-20">
