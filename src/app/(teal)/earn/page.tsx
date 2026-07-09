@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { FadeIn } from "@/components/ui/fade-in";
 import { AdSlot } from "@/components/ui/ad-slot";
 
@@ -349,16 +350,19 @@ export default function EarnPage() {
                 backdropFilter: "blur(12px)",
               }}
             >
-              {/* Photo placeholder — TODO: replace with <Image src="/founder.jpg" alt="Somen Biswas" width={120} height={120} className="rounded-full object-cover" /> once public/founder.jpg is added */}
               <div className="flex-shrink-0 flex flex-col items-center gap-2">
                 <div
-                  className="w-[120px] h-[120px] rounded-full flex items-center justify-center text-3xl font-black text-[#0D9488] select-none"
-                  style={{
-                    background: "linear-gradient(135deg, rgba(13,148,136,0.08) 0%, rgba(45,212,191,0.15) 100%)",
-                    border: "3px solid rgba(13,148,136,0.2)",
-                  }}
+                  className="w-[120px] h-[120px] rounded-full overflow-hidden"
+                  style={{ border: "3px solid rgba(13,148,136,0.2)" }}
                 >
-                  SB
+                  <Image
+                    src="/founder.jpg"
+                    alt="Somen Biswas"
+                    width={120}
+                    height={120}
+                    className="rounded-full object-cover object-top"
+                    priority
+                  />
                 </div>
               </div>
 
