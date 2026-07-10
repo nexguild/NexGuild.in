@@ -6,6 +6,7 @@ import { ReceiptText, TrendingUp, Download } from "lucide-react";
 import { NexCoinIcon } from "@/components/ui/nexcoin-icon";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
+import { BlogTipCard } from "@/components/dashboard/BlogTipCard";
 
 interface Transaction {
   id: string;
@@ -465,6 +466,12 @@ export default function EarningsPage() {
           </ul>
         )}
       </div>
+
+      <BlogTipCard
+        slug="how-online-surveys-work-what-you-earn"
+        title="How Online Surveys Work & What You Earn"
+        excerpt="Understand survey payouts, disqualifications, and how to maximize earnings."
+      />
     </div>
   );
 }

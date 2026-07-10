@@ -8,6 +8,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { NexCoinIcon } from "@/components/ui/nexcoin-icon";
 import { supabase } from "@/lib/supabase";
+import { BlogTipCard } from "@/components/dashboard/BlogTipCard";
 
 const WHATSAPP_LINK = "https://chat.whatsapp.com/IW4N8GehjWA5FyxtELNiCi";
 
@@ -193,6 +194,12 @@ function NexLeaderDashboard({ data, copyLink, copied }: {
           ))}
         </div>
       )}
+
+      <BlogTipCard
+        slug="offerwalls-explained-how-to-earn"
+        title="Help Your Members Earn More"
+        excerpt="Share this guide with your members so they understand how to maximize offerwall earnings."
+      />
     </div>
   );
 }
@@ -325,6 +332,11 @@ export default function NexLeaderPage() {
       <PageHero />
       <BenefitCards />
       <EligibilityAndForm {...formProps} />
+      <BlogTipCard
+        slug="offerwalls-explained-how-to-earn"
+        title="Help Your Members Earn More"
+        excerpt="Share this guide with your members so they understand how to maximize offerwall earnings."
+      />
     </div>
   );
 }

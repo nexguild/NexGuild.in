@@ -8,6 +8,7 @@ import {
 import Link from "next/link";
 import { NexCoinIcon } from "@/components/ui/nexcoin-icon";
 import { supabase } from "@/lib/supabase";
+import { BlogTipCard } from "@/components/dashboard/BlogTipCard";
 
 /* ─── Types ─────────────────────────────────────────────────────── */
 interface Profile {
@@ -677,6 +678,12 @@ export default function DashboardHome() {
           })}
         </div>
       </div>
+
+      <BlogTipCard
+        slug="tips-get-approved-faster-task-platforms"
+        title="Tips to Get Approved Faster on Task Platforms"
+        excerpt="Simple habits that help you earn more approvals and build your reputation."
+      />
 
     </div>
   );

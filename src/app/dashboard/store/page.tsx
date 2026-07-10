@@ -6,6 +6,7 @@ import { NexCoinIcon } from "@/components/ui/nexcoin-icon";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
+import { BlogTipCard } from "@/components/dashboard/BlogTipCard";
 
 interface DbVoucher {
   id: string;
@@ -631,6 +632,12 @@ export default function StorePage() {
           </div>
         </div>
       )}
+
+      <BlogTipCard
+        slug="nexcoins-to-vouchers-redemption"
+        title="How to Redeem NexCoins for Vouchers"
+        excerpt="A step-by-step guide to converting your NexCoins into real gift vouchers."
+      />
 
       {/* ── Success Modal ────────────────────────────────────────────── */}
       {showSuccess && (

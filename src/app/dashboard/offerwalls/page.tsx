@@ -6,6 +6,7 @@ import { Layers, Info, Loader2 } from "lucide-react";
 import { NexCoinIcon } from "@/components/ui/nexcoin-icon";
 import { supabase } from "@/lib/supabase";
 import { applyWidgetConfig, injectScript, type WidgetInitConfig } from "@/lib/offerwall-widget-inject";
+import { BlogTipCard } from "@/components/dashboard/BlogTipCard";
 
 interface Provider {
   id: string;
@@ -316,6 +317,12 @@ export default function OfferwallsPage() {
           </div>
         </div>
       )}
+
+      <BlogTipCard
+        slug="offerwalls-explained-how-to-earn"
+        title="What is an Offerwall? How They Work"
+        excerpt="Learn how offerwalls work and how to maximize your survey earnings."
+      />
     </div>
   );
 }

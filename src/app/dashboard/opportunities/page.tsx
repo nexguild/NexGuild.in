@@ -6,6 +6,7 @@ import { NexCoinIcon } from "@/components/ui/nexcoin-icon";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
+import { BlogTipCard } from "@/components/dashboard/BlogTipCard";
 
 interface TaskStep {
   title: string;
@@ -542,6 +543,12 @@ export default function OpportunitiesPage() {
           })}
         </div>
       )}
+
+      <BlogTipCard
+        slug="nexguild-task-system-explained"
+        title="How NexGuild Tasks Work"
+        excerpt="Understand task levels, submission types, and how to complete work correctly."
+      />
 
       {/* T&C Modal */}
       {tncTask && (
