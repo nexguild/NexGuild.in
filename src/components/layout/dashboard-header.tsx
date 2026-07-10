@@ -234,7 +234,7 @@ if (existingChannel) {
           </button>
 
           {open && (
-            <div className="absolute right-0 top-11 w-80 max-h-[480px] flex flex-col rounded-xl border border-slate-200 bg-white shadow-xl overflow-hidden">
+            <div className="absolute right-0 top-full mt-2 w-80 sm:w-96 max-w-[calc(100vw-2rem)] max-h-96 flex flex-col rounded-xl border border-slate-200 bg-white shadow-xl overflow-hidden z-50">
               <div className="px-4 py-3 border-b border-slate-100 flex items-center justify-between flex-shrink-0">
                 <span className="text-sm font-semibold text-slate-800">
                   Notifications {unreadCount > 0 && <span className="text-[#029470]">({unreadCount})</span>}

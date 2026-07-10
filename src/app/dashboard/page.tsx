@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import {
   ClipboardList, Layers, ArrowRight, X, Megaphone,
-  RefreshCw, Flame, Star, Lock, Trophy, CheckCircle2, Clock,
+  RefreshCw, Flame, Star, Lock, CheckCircle2, Clock,
 } from "lucide-react";
 import Link from "next/link";
 import { NexCoinIcon } from "@/components/ui/nexcoin-icon";
@@ -215,8 +215,6 @@ export default function DashboardHome() {
   const [totalEarned, setTotalEarned]       = useState(0);
   const [todayApproved, setTodayApproved]   = useState(0);
   const [chartData, setChartData]           = useState<{ label: string; value: number }[]>([]);
-  const [notifications, setNotifications]   = useState<Notification[]>([]);
-  const [leaderboard, setLeaderboard]       = useState<LeaderboardEntry[]>([]);
   const [liveOfferwalls, setLiveOfferwalls] = useState<OfferwallProvider[]>([]);
   const [loading, setLoading]               = useState(true);
   const [banner, setBanner]                 = useState<{ id: string; title: string; message: string } | null>(null);
@@ -246,23 +244,30 @@ export default function DashboardHome() {
         { data: txData },
         { data: notifData },
         { data: streakSettings },
-        leaderRes,
         offerRes,
       ] = await Promise.all([
         supabase.from("profiles").select("full_name, nexcoins, xp, level, current_streak, longest_streak, last_streak_claim_date, last_task_approved_date, tasks_approved_today").eq("id", user.id).single(),
-        supabase.from("tasks").select("id, title, description, task_type, pay_per_task, xp_reward, required_level").eq("status", "active").order("created_at", { ascending: false }).limit(20),
+        supabase.from("tasks").select("id, title, description, task_type, pay_per_task, xp_reward, required_level").eq("status", "active").or("is_private.eq.false,is_private.is.null").order("created_at", { ascending: false }).limit(20),
         supabase.from("submissions").select("task_id, status, feedback").eq("contributor_id", user.id),
         supabase.from("submissions").select("*", { count: "exact", head: true }).eq("contributor_id", user.id).eq("status", "approved"),
         supabase.from("submissions").select("*", { count: "exact", head: true }).eq("contributor_id", user.id).in("status", ["approved", "rejected"]),
         supabase.from("coin_transactions").select("amount, created_at, source").eq("contributor_id", user.id).eq("type", "earned").gte("created_at", sevenDaysAgo + "T00:00:00"),
         supabase.from("notifications").select("id, title, message, type, created_at").eq("user_id", user.id).order("created_at", { ascending: false }).limit(8),
         supabase.from("platform_settings").select("key, value").in("key", ["streak_daily_bonus", "streak_day7_bonus", "streak_tasks_required_per_day"]),
-        fetch("/api/leaderboard?limit=5", { headers: { Authorization: `Bearer ${session?.access_token}` } }),
         fetch("/api/offerwalls", { headers: { Authorization: `Bearer ${session?.access_token}` } }),
       ]);
 
       const p = profileData as Profile | null;
       setUserLevel(p?.level ?? 1);
+
+      if (p) {
+        const nowIST = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
+        const todayIST = `${nowIST.getFullYear()}-${String(nowIST.getMonth() + 1).padStart(2, "0")}-${String(nowIST.getDate()).padStart(2, "0")}`;
+        if ((p.tasks_approved_today ?? 0) > 0 && p.last_task_approved_date !== todayIST) {
+          await supabase.from("profiles").update({ tasks_approved_today: 0 }).eq("id", user.id);
+          p.tasks_approved_today = 0;
+        }
+      }
 
       const settingsRows = (streakSettings as { key: string; value: string }[] | null) ?? [];
       setDailyBonus(parseInt(settingsRows.find(r => r.key === "streak_daily_bonus")?.value ?? "10") || 10);
@@ -307,12 +312,6 @@ export default function DashboardHome() {
         }))
       );
 
-      setNotifications((notifData as Notification[] | null) ?? []);
-
-      if (leaderRes.ok) {
-        const { leaderboard: lb } = await leaderRes.json() as { leaderboard: LeaderboardEntry[] };
-        setLeaderboard(lb ?? []);
-      }
       if (offerRes.ok) {
         const { providers: offerProviders } = await offerRes.json() as { providers: OfferwallProvider[] };
         setLiveOfferwalls((offerProviders ?? []).filter(p => !p.is_ad_network && p.isLive));
@@ -378,13 +377,7 @@ export default function DashboardHome() {
   const countEarned = useCountUp(totalEarned);
   const countDone   = useCountUp(tasksDone);
 
-  const notifTypeIcon: Record<string, string> = {
-    submission_approved: "✅", submission_rejected: "❌", assignment_approved: "✅",
-    assignment_rejected: "❌", voucher_delivered: "🎁", new_task: "📋",
-    announcement: "📢", bonus_coins: "🪙", support: "💬", system: "ℹ️",
-  };
-
-  /* ── Inline style tag (FIX 6 ring animation only) ──────────────── */
+  /* ── Inline style tag (streak ring animation only) ─────────────── */
   const PULSE_STYLE = `
     @media (prefers-reduced-motion: reduce) {
       .animate-pulse { animation: none !important; }
@@ -454,24 +447,18 @@ export default function DashboardHome() {
         </div>
       </div>
 
-      {/* ── FIX 2: QUICK ACTIONS ROW ────────────────────────────────── */}
-      <div className="animate-fade-slide-up flex flex-wrap gap-3" style={{ animationDelay: "100ms" }}>
-        <Link
-          href="/dashboard/offerwalls"
-          className="flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold bg-white text-indigo-600 border border-indigo-100 shadow-sm hover:bg-indigo-50 transition-all"
-        >
+      {/* ── QUICK ACTIONS GRID ──────────────────────────────────────── */}
+      <div className="animate-fade-slide-up grid grid-cols-2 sm:grid-cols-4 gap-3" style={{ animationDelay: "100ms" }}>
+        <Link href="/dashboard/offerwalls" className="rounded-2xl px-4 py-3 text-sm font-semibold flex items-center gap-2 w-full justify-center transition-all duration-200 hover:-translate-y-0.5 bg-gradient-to-r from-teal-500 to-teal-600 text-white shadow-md hover:shadow-lg">
           <span>🎯</span><span>Complete a Survey</span>
         </Link>
-        <Link
-          href="/dashboard/tasks"
-          className="flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold bg-indigo-600 text-white shadow-sm hover:bg-indigo-700 transition-all"
-        >
+        <Link href="/dashboard/opportunities" className="rounded-2xl px-4 py-3 text-sm font-semibold flex items-center gap-2 w-full justify-center transition-all duration-200 hover:-translate-y-0.5 bg-gradient-to-r from-indigo-500 to-indigo-600 text-white shadow-md hover:shadow-lg">
           <span>📋</span><span>Browse Tasks</span>
         </Link>
-        <Link
-          href="/dashboard/nexleader"
-          className="flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold bg-white text-teal-600 border border-teal-100 shadow-sm hover:bg-teal-50 transition-all"
-        >
+        <Link href="/dashboard/store" className="rounded-2xl px-4 py-3 text-sm font-semibold flex items-center gap-2 w-full justify-center transition-all duration-200 hover:-translate-y-0.5 bg-gradient-to-r from-purple-500 to-purple-600 text-white shadow-md hover:shadow-lg">
+          <span>🛍️</span><span>NexStore</span>
+        </Link>
+        <Link href="/dashboard/nexleader" className="rounded-2xl px-4 py-3 text-sm font-semibold flex items-center gap-2 w-full justify-center transition-all duration-200 hover:-translate-y-0.5 bg-gradient-to-r from-amber-500 to-amber-600 text-white shadow-md hover:shadow-lg">
           <span>👑</span><span>NexLeader Hub</span>
         </Link>
       </div>
@@ -710,66 +697,6 @@ export default function DashboardHome() {
         ) : (
           <EarningsChart data={chartData} />
         )}
-      </div>
-
-      {/* ── RECENT ACTIVITY + TOP CONTRIBUTORS ─────────────────────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-
-        <div className="rounded-2xl bg-white border border-gray-100 shadow-sm p-5">
-          <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wider mb-4">Recent Activity</h2>
-          {loading ? (
-            <div className="space-y-3">{[1, 2, 3].map(i => <div key={i} className="h-10 rounded-lg bg-slate-50 animate-pulse" />)}</div>
-          ) : notifications.length === 0 ? (
-            <div className="py-8 text-center"><p className="text-sm text-slate-400">No activity yet</p></div>
-          ) : (
-            <ul className="space-y-3">
-              {notifications.slice(0, 6).map((n) => (
-                <li key={n.id} className="flex items-start gap-3">
-                  <span className="text-base flex-shrink-0 mt-0.5">{notifTypeIcon[n.type ?? ""] ?? "ℹ️"}</span>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-semibold text-slate-700 truncate">{n.title}</p>
-                    {n.message && <p className="text-xs text-slate-400 truncate">{n.message}</p>}
-                  </div>
-                  <p className="text-[10px] text-slate-300 flex-shrink-0">
-                    {new Date(n.created_at).toLocaleDateString("en-IN", { month: "short", day: "numeric" })}
-                  </p>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-
-        <div className="rounded-2xl bg-white border border-gray-100 shadow-sm p-5">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <Trophy className="h-4 w-4 text-amber-500" />
-              <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wider">Top Contributors</h2>
-            </div>
-            <Link href="/dashboard/leaderboard" className="text-xs font-bold text-cyan-700 hover:underline">View All</Link>
-          </div>
-          {loading ? (
-            <div className="space-y-3">{[1, 2, 3, 4, 5].map(i => <div key={i} className="h-8 rounded-lg bg-slate-50 animate-pulse" />)}</div>
-          ) : leaderboard.length === 0 ? (
-            <div className="py-8 text-center"><p className="text-sm text-slate-400">No data yet — be first!</p></div>
-          ) : (
-            <ul className="space-y-2.5">
-              {leaderboard.map((entry) => (
-                <li key={entry.id} className="flex items-center gap-3">
-                  <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${
-                    entry.rank === 1 ? "bg-amber-100 text-amber-700" :
-                    entry.rank === 2 ? "bg-slate-100 text-slate-600" :
-                    entry.rank === 3 ? "bg-orange-100 text-orange-700" :
-                    "bg-slate-50 text-slate-500"
-                  }`}>{entry.rank}</span>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-slate-700 truncate">{entry.full_name}</p>
-                  </div>
-                  <span className="text-xs font-bold text-cyan-700 flex-shrink-0">{entry.approved_count} tasks</span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
       </div>
 
       <BlogTipCard

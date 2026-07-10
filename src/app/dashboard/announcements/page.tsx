@@ -12,6 +12,13 @@ interface AnnouncementNotif {
   created_at: string;
 }
 
+function formatAnnouncement(text: string): string {
+  return text.split("\n").map(line => {
+    const html = line.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+    return `<p style="margin:0 0 0.25rem">${html || "&nbsp;"}</p>`;
+  }).join("");
+}
+
 export default function AnnouncementsPage() {
   const [items, setItems]     = useState<AnnouncementNotif[]>([]);
   const [loading, setLoading] = useState(true);
@@ -90,7 +97,10 @@ export default function AnnouncementsPage() {
                         </span>
                       )}
                     </div>
-                    <p className="text-sm text-[var(--text-secondary)] leading-relaxed">{item.message}</p>
+                    <div
+                      className="text-sm text-[var(--text-secondary)] leading-relaxed"
+                      dangerouslySetInnerHTML={{ __html: formatAnnouncement(item.message) }}
+                    />
                     <p className="text-xs text-[var(--text-muted)] mt-2">
                       {new Date(item.created_at).toLocaleDateString("en-IN", {
                         day: "numeric", month: "long", year: "numeric",
