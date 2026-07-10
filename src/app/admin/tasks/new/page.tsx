@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -24,7 +24,6 @@ const LANGUAGES = [
   "Japanese", "Korean", "Chinese (Simplified)", "Filipino",
 ];
 
-const TIME_OPTIONS = ["48 hours", "7 days", "14 days", "30 days", "45 days", "60 days"];
 
 interface TaskStep {
   title: string;
@@ -114,8 +113,8 @@ export default function PostNewTaskPage() {
   // Campaign settings
   const [isPrivate, setIsPrivate]   = useState(false);
   const [isFeatured, setIsFeatured] = useState(false);
-  const [validationTime, setValidationTime] = useState("48 hours");
-  const [paymentTime, setPaymentTime]       = useState("7 days");
+  const [validationTime, setValidationTime] = useState("");
+  const [paymentTime, setPaymentTime]       = useState("");
 
   // Gamification
   const [requiredLevel, setRequiredLevel] = useState("1");
@@ -129,6 +128,22 @@ export default function PostNewTaskPage() {
 
   const [saving, setSaving] = useState(false);
   const [error, setError]   = useState<string | null>(null);
+
+  // Load SLA defaults from platform_settings
+  useEffect(() => {
+    supabase
+      .from("platform_settings")
+      .select("key, value")
+      .in("key", ["submission_review_sla", "payment_after_approval_sla"])
+      .then(({ data }) => {
+        if (!data) return;
+        const rows = data as { key: string; value: string }[];
+        const reviewSLA  = rows.find((r) => r.key === "submission_review_sla")?.value;
+        const paymentSLA = rows.find((r) => r.key === "payment_after_approval_sla")?.value;
+        if (reviewSLA)  setValidationTime(reviewSLA);
+        if (paymentSLA) setPaymentTime(paymentSLA);
+      });
+  }, []);
 
   // ── Skills ────────────────────────────────────────────────────────────────
   function addSkill(e: React.KeyboardEvent<HTMLInputElement>) {
@@ -562,16 +577,16 @@ export default function PostNewTaskPage() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
             <div>
-              <label className={labelClass}>Review Time</label>
-              <select value={validationTime} onChange={(e) => setValidationTime(e.target.value)} className={inputClass}>
-                {TIME_OPTIONS.map((t) => <option key={t} value={t}>{t}</option>)}
-              </select>
+              <label className={labelClass}>Review Time (shown to contributors)</label>
+              <input type="text" value={validationTime} onChange={(e) => setValidationTime(e.target.value)}
+                placeholder="e.g. 7 days, 30 days" className={inputClass} />
+              <p className="text-xs text-[var(--text-muted)] mt-1">How long to review a submission</p>
             </div>
             <div>
-              <label className={labelClass}>Payment After Approval</label>
-              <select value={paymentTime} onChange={(e) => setPaymentTime(e.target.value)} className={inputClass}>
-                {TIME_OPTIONS.map((t) => <option key={t} value={t}>{t}</option>)}
-              </select>
+              <label className={labelClass}>Payment Time (when NexCoins are credited)</label>
+              <input type="text" value={paymentTime} onChange={(e) => setPaymentTime(e.target.value)}
+                placeholder="e.g. 7 days, 14 days" className={inputClass} />
+              <p className="text-xs text-[var(--text-muted)] mt-1">Time after approval until coins are credited</p>
             </div>
           </div>
         </section>

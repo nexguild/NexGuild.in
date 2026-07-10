@@ -35,6 +35,8 @@ interface Task {
   assignment_instructions: string | null;
   assignment_questions: QuizQuestion[] | null;
   assignment_passing_score: number | null;
+  validation_time: string | null;
+  payment_time: string | null;
 }
 
 interface Assignment {
@@ -364,6 +366,17 @@ export default function TaskDetailPage() {
             <span className="flex items-center gap-1.5">
               <Clock className="h-4 w-4" />
               Due {new Date(task.deadline).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+            </span>
+          )}
+          {task.validation_time && (
+            <span className="flex items-center gap-1.5">
+              <Clock className="h-4 w-4 text-blue-400" />
+              Review: {task.validation_time}
+            </span>
+          )}
+          {task.payment_time && (
+            <span className="flex items-center gap-1.5">
+              💰 Payment within {task.payment_time} of approval
             </span>
           )}
         </div>

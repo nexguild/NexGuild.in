@@ -13,6 +13,7 @@ interface Task {
   description: string | null;
   requirements: string | null;
   pay_per_task: number | null;
+  validation_time: string | null;
 }
 
 interface FileItem {
@@ -53,7 +54,7 @@ export default function SubmitTaskPage() {
         return;
       }
 
-      const { data: taskData } = await supabase.from("tasks").select("id, title, description, requirements, pay_per_task").eq("id", id).single();
+      const { data: taskData } = await supabase.from("tasks").select("id, title, description, requirements, pay_per_task, validation_time").eq("id", id).single();
       setTask(taskData as Task);
       setLoading(false);
     }
@@ -190,7 +191,7 @@ export default function SubmitTaskPage() {
 
             {/* Review time */}
             <p className="text-sm font-medium text-[var(--text-secondary)]">
-              ⏱ Review within 48 hours
+              ⏱ Review within {task?.validation_time ?? "a few days"}
             </p>
 
             {/* Buttons */}

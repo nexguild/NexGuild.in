@@ -18,6 +18,7 @@ interface Submission {
     title: string;
     task_type: string | null;
     pay_per_task: number | null;
+    validation_time: string | null;
   } | null;
 }
 
@@ -54,7 +55,7 @@ export default function TasksPage() {
 
       const { data, error: fetchErr } = await supabase
         .from("submissions")
-        .select("id, task_id, status, submitted_at, coins_awarded, feedback, tasks(title, task_type, pay_per_task)")
+        .select("id, task_id, status, submitted_at, coins_awarded, feedback, tasks(title, task_type, pay_per_task, validation_time)")
         .eq("contributor_id", user.id)
         .order("submitted_at", { ascending: false });
 
@@ -192,6 +193,9 @@ export default function TasksPage() {
                       {s.tasks?.task_type ?? "Task"} ·{" "}
                       {new Date(s.submitted_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
                     </p>
+                    {s.status === "submitted" && s.tasks?.validation_time && (
+                      <p className="text-xs mt-1 text-blue-400">⏱ Review within {s.tasks.validation_time}</p>
+                    )}
                   </div>
                   <div className="flex items-center gap-2.5 flex-shrink-0">
                     {/* Payout */}

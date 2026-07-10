@@ -24,7 +24,6 @@ const LANGUAGES = [
   "Japanese", "Korean", "Chinese (Simplified)", "Filipino",
 ];
 
-const TIME_OPTIONS = ["48 hours", "7 days", "14 days", "30 days", "45 days", "60 days"];
 
 interface TaskStep {
   title: string;
@@ -197,8 +196,8 @@ export default function EditTaskPage() {
       setRequiredSkills(Array.isArray(data.required_skills) ? (data.required_skills as string[]) : []);
       setIsPrivate(data.is_private ?? false);
       setIsFeatured(data.is_featured ?? false);
-      setValidationTime(data.validation_time ?? "48 hours");
-      setPaymentTime(data.payment_time ?? "7 days");
+      setValidationTime(data.validation_time ?? "");
+      setPaymentTime(data.payment_time ?? "");
       setRequiredLevel(data.required_level != null ? String(data.required_level) : "1");
       setXpReward(data.xp_reward != null ? String(data.xp_reward) : "0");
       setTerms(data.terms ?? "");
@@ -610,16 +609,16 @@ export default function EditTaskPage() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
             <div>
-              <label className={labelClass}>Review Time</label>
-              <select value={validationTime} onChange={(e) => setValidationTime(e.target.value)} className={inputClass}>
-                {TIME_OPTIONS.map((t) => <option key={t} value={t}>{t}</option>)}
-              </select>
+              <label className={labelClass}>Review Time (shown to contributors)</label>
+              <input type="text" value={validationTime} onChange={(e) => setValidationTime(e.target.value)}
+                placeholder="e.g. 7 days, 30 days" className={inputClass} />
+              <p className="text-xs text-[var(--text-muted)] mt-1">How long to review a submission</p>
             </div>
             <div>
-              <label className={labelClass}>Payment After Approval</label>
-              <select value={paymentTime} onChange={(e) => setPaymentTime(e.target.value)} className={inputClass}>
-                {TIME_OPTIONS.map((t) => <option key={t} value={t}>{t}</option>)}
-              </select>
+              <label className={labelClass}>Payment Time (when NexCoins are credited)</label>
+              <input type="text" value={paymentTime} onChange={(e) => setPaymentTime(e.target.value)}
+                placeholder="e.g. 7 days, 14 days" className={inputClass} />
+              <p className="text-xs text-[var(--text-muted)] mt-1">Time after approval until coins are credited</p>
             </div>
           </div>
         </section>

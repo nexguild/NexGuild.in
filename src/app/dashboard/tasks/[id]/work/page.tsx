@@ -385,7 +385,10 @@ export default function TaskWorkPage() {
             </p>
           )}
           {task.validation_time && submissionStatus !== "approved" && (
-            <p className="text-xs text-[var(--text-muted)] mt-1">Review time: {task.validation_time}</p>
+            <p className="text-xs text-[var(--text-muted)] mt-1">⏱ Review: {task.validation_time}</p>
+          )}
+          {task.payment_time && submissionStatus !== "approved" && (
+            <p className="text-xs text-[var(--text-muted)] mt-0.5">💰 Payment: within {task.payment_time} of approval</p>
           )}
         </div>
         <div className="flex gap-3 justify-center">
@@ -450,6 +453,16 @@ export default function TaskWorkPage() {
             {task.task_type && (
               <span className="inline-flex items-center text-xs font-bold text-[var(--brand-500)] bg-[rgba(2,180,145,0.08)] border border-[rgba(2,180,145,0.15)] px-3 py-1.5 rounded-full uppercase tracking-wide">
                 {task.task_type}
+              </span>
+            )}
+            {task.validation_time && (
+              <span className="inline-flex items-center gap-1 text-xs font-medium text-blue-400 bg-blue-500/10 border border-blue-500/20 px-3 py-1.5 rounded-full">
+                ⏱ Review: {task.validation_time}
+              </span>
+            )}
+            {task.payment_time && (
+              <span className="inline-flex items-center gap-1 text-xs font-medium text-[var(--text-secondary)] bg-[var(--surface-subtle)] border border-[var(--border-default)] px-3 py-1.5 rounded-full">
+                💰 Payment: {task.payment_time}
               </span>
             )}
           </div>
