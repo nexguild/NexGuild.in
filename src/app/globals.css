@@ -265,7 +265,7 @@
 }
 
 @keyframes fadeSlideUp {
-  from { opacity: 0; transform: translateY(20px); }
+  from { opacity: 0; transform: translateY(16px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 
@@ -303,6 +303,18 @@
 
   .fade-slide-up {
     animation: fadeSlideUp 0.6s ease both;
+  }
+
+  .animate-fade-slide-up {
+    animation: fadeSlideUp 0.4s ease-out forwards;
+    opacity: 0;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .animate-fade-slide-up {
+      animation: none !important;
+      opacity: 1 !important;
+    }
   }
 
   .section-reveal {
