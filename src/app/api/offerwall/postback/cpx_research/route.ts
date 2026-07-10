@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import { createHash } from "crypto";
 import { createClient } from "@supabase/supabase-js";
 import { createServerClient } from "@/lib/supabase-server";
-import { checkReferralMilestone } from "@/lib/check-referral-milestone";
+import { creditWithCommission } from "@/lib/nexleader-commission";
 
 // Set CPX_POSTBACK_DEBUG=true in Vercel env vars to bypass hash validation
 // and confirm the rest of the pipeline works. Remove after debugging.
@@ -189,13 +189,15 @@ async function handleCpxPostback(req: NextRequest): Promise<Response> {
       return new Response("OK", { status: 200 });
     }
 
-    const sharePct        = Number(provider.contributor_share_pct);
-    const gross           = amountLocal > 0 ? amountLocal : amountUsd;
-    const nexcoinsAwarded = Math.max(1, Math.floor(gross * (sharePct / 100)));
+    const sharePct    = Number(provider.contributor_share_pct);
+    const gross       = amountLocal > 0 ? amountLocal : amountUsd;
+    const nexcoinsGross = Math.max(1, Math.floor(gross * (sharePct / 100)));
+    // Contributor receives 66%; store that in nexcoins_awarded so reversals deduct the right amount
+    const contributorPreview = Math.floor(nexcoinsGross * 0.66);
 
     console.log("[postback/cpx_research] crediting", {
       user_id: userId, trans_id: transId, type,
-      gross, share_pct: sharePct, nexcoins: nexcoinsAwarded,
+      gross, share_pct: sharePct, nexcoins_gross: nexcoinsGross, contributor: contributorPreview,
     });
 
     const { error: insertErr } = await admin.from("offerwall_transactions").insert({
@@ -203,7 +205,7 @@ async function handleCpxPostback(req: NextRequest): Promise<Response> {
       contributor_id:          userId,
       provider_transaction_id: transId,
       gross_amount:            gross,
-      nexcoins_awarded:        nexcoinsAwarded,
+      nexcoins_awarded:        contributorPreview,
       status:                  "credited",
       raw_payload: {
         query:      rawParams,
@@ -227,39 +229,26 @@ async function handleCpxPostback(req: NextRequest): Promise<Response> {
       return new Response("OK", { status: 200 });
     }
 
-    // Credit NexCoins
-    const { error: rpcErr } = await admin.rpc("increment_nexcoins", {
-      p_contributor_id: userId,
-      p_coins:          nexcoinsAwarded,
-    });
-    if (rpcErr) {
-      console.warn("[postback/cpx_research] increment_nexcoins RPC failed, falling back:", rpcErr.message);
-      const { data: p } = await admin.from("profiles").select("nexcoins").eq("id", userId).single();
-      const cur = (p as { nexcoins: number | null } | null)?.nexcoins ?? 0;
-      await admin.from("profiles").update({ nexcoins: cur + nexcoinsAwarded }).eq("id", userId);
-    }
-
-    await admin.from("coin_transactions").insert({
-      contributor_id: userId,
-      amount:         nexcoinsAwarded,
-      type:           "earned",
-      source:         "offerwall",
-      description:    `CPX Research ${type} (trans: ${transId})`,
+    // Apply NexLeader commission split (credits contributor 66%, NexLeader 8%)
+    const { contributorCredit } = await creditWithCommission(
+      admin,
+      userId,
+      nexcoinsGross,
+      "offerwall",
+      `CPX Research ${type} (trans: ${transId})`,
+    ).catch((err) => {
+      console.error("[postback/cpx_research] creditWithCommission failed:", err);
+      return { contributorCredit: contributorPreview };
     });
 
     await admin.from("notifications").insert({
       user_id: userId,
       title:   "NexCoins Earned!",
-      message: `+${nexcoinsAwarded} NexCoins from CPX Research`,
+      message: `+${contributorCredit} NexCoins from CPX Research`,
       type:    "bonus_coins",
     });
 
-    // Check if referred user has now hit the 1,000-coin milestone
-    await checkReferralMilestone(admin, userId).catch((err) =>
-      console.error("[postback/cpx_research] referral milestone check failed:", err),
-    );
-
-    console.log(`[postback/cpx_research] ✓ credited ${nexcoinsAwarded} coins → ${userId} (trans=${transId})`);
+    console.log(`[postback/cpx_research] ✓ credited ${contributorCredit} coins → ${userId} (trans=${transId})`);
     await logPostback(rawParams, hashValid, "credited");
     return new Response("OK", { status: 200 });
   }

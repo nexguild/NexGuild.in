@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import {
   LayoutDashboard, Search, ClipboardList, Layers,
   TrendingUp, ShoppingBag, Gift, Users, Megaphone, Headphones,
-  User, Settings, LogOut, X, Wallet, Share2,
+  User, Settings, LogOut, X, Wallet, Crown,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { NexGuildLogo } from "@/components/ui/nexguild-logo";
@@ -25,7 +25,7 @@ const NAV_ITEMS = [
   { label: "NexCoins",       href: "/dashboard/wallet",         icon: Wallet },
   { label: "NexStore",       href: "/dashboard/store",          icon: ShoppingBag },
   { label: "My Vouchers",    href: "/dashboard/vouchers",       icon: Gift },
-  { label: "Refer & Earn",   href: "/dashboard/referrals",      icon: Share2 },
+  { label: "NexLeader",      href: "/dashboard/nexleader",      icon: Crown },
   { label: "Community",      href: "/dashboard/community",      icon: Users },
   { label: "Announcements",  href: "/dashboard/announcements",  icon: Megaphone },
   { label: "Support",        href: "/dashboard/support",        icon: Headphones },

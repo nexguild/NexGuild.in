@@ -468,7 +468,9 @@ export default function OpportunitiesPage() {
                   <div className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-1.5 text-xs">
                       <NexCoinIcon size={14} />
-                      <span className="text-[var(--brand-500)] font-bold">{task.pay_per_task ?? "—"} coins</span>
+                      <span className="text-[var(--brand-500)] font-bold">
+                        {task.pay_per_task != null ? Math.floor(task.pay_per_task * 0.66) : "—"} coins
+                      </span>
                     </div>
                     {total != null && (
                       <div className="flex items-center gap-1.5 text-xs text-[var(--text-muted)]">
@@ -613,7 +615,7 @@ export default function OpportunitiesPage() {
                 <div className="flex items-center gap-3 rounded-lg bg-[rgba(20,184,166,0.06)] border border-[rgba(20,184,166,0.2)] p-4">
                   <NexCoinIcon size={20} className="flex-shrink-0" />
                   <div>
-                    <p className="text-sm font-bold text-[var(--brand-500)]">{tncTask.pay_per_task} NexCoins</p>
+                    <p className="text-sm font-bold text-[var(--brand-500)]">{Math.floor(tncTask.pay_per_task * 0.66)} NexCoins</p>
                     <p className="text-xs text-[var(--text-muted)]">Credited after your work is approved</p>
                   </div>
                 </div>

@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import { createHmac } from "crypto";
 import { createClient } from "@supabase/supabase-js";
 import { createServerClient } from "@/lib/supabase-server";
-import { checkReferralMilestone } from "@/lib/check-referral-milestone";
+import { creditWithCommission } from "@/lib/nexleader-commission";
 
 type AdminClient = ReturnType<typeof createServerClient>;
 
@@ -158,13 +158,16 @@ async function handlePostback(req: NextRequest): Promise<Response> {
     return new Response("OK", { status: 200 });
   }
 
+  // Contributor receives 66%; store that for correct reversal behavior
+  const contributorPreview = Math.floor(reward * 0.66);
+
   // Idempotent insert — unique constraint on provider_transaction_id
   const { error: insertErr } = await admin.from("offerwall_transactions").insert({
     provider_id:             provider.id,
     contributor_id:          userId,
     provider_transaction_id: txId,
     gross_amount:            reward,
-    nexcoins_awarded:        reward,
+    nexcoins_awarded:        contributorPreview,
     status:                  "credited",
     raw_payload: {
       query: rawParams,
@@ -183,39 +186,26 @@ async function handlePostback(req: NextRequest): Promise<Response> {
     return new Response("OK", { status: 200 });
   }
 
-  // Credit NexCoins
-  const { error: rpcErr } = await admin.rpc("increment_nexcoins", {
-    p_contributor_id: userId,
-    p_coins:          reward,
-  });
-  if (rpcErr) {
-    console.warn("[postback/theoremreach] increment_nexcoins RPC failed, falling back:", rpcErr.message);
-    const { data: p } = await admin.from("profiles").select("nexcoins").eq("id", userId).single();
-    const cur = (p as { nexcoins: number | null } | null)?.nexcoins ?? 0;
-    await admin.from("profiles").update({ nexcoins: cur + reward }).eq("id", userId);
-  }
-
-  await admin.from("coin_transactions").insert({
-    contributor_id: userId,
-    amount:         reward,
-    type:           "earned",
-    source:         "offerwall",
-    description:    `TheoremReach${screenout ? " (screenout)" : ""} (tx: ${txId})`,
+  // Apply NexLeader commission split (credits contributor 66%, NexLeader 8%)
+  const { contributorCredit } = await creditWithCommission(
+    admin,
+    userId,
+    reward,
+    "offerwall",
+    `TheoremReach${screenout ? " (screenout)" : ""} (tx: ${txId})`,
+  ).catch((err) => {
+    console.error("[postback/theoremreach] creditWithCommission failed:", err);
+    return { contributorCredit: contributorPreview };
   });
 
   await admin.from("notifications").insert({
     user_id: userId,
     title:   "NexCoins Earned!",
-    message: `+${reward} NexCoins from TheoremReach`,
+    message: `+${contributorCredit} NexCoins from TheoremReach`,
     type:    "bonus_coins",
   });
 
-  // Check if referred user has now hit the 1,000-coin milestone
-  await checkReferralMilestone(admin, userId).catch((err) =>
-    console.error("[postback/theoremreach] referral milestone check failed:", err),
-  );
-
-  console.log(`[postback/theoremreach] ✓ credited ${reward} coins → ${userId} (tx=${txId})`);
+  console.log(`[postback/theoremreach] ✓ credited ${contributorCredit} coins → ${userId} (tx=${txId})`);
   await logPostback(rawParams, hashValid, "credited");
   return new Response("OK", { status: 200 });
 }

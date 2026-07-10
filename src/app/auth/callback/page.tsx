@@ -19,17 +19,14 @@ export default function AuthCallbackPage() {
       handled.current = true;
       console.log("[auth/callback] session found, user:", session.user.email);
 
-      const referralCode = session.user.user_metadata?.referral_code_used;
-      if (referralCode) {
-        console.log("[auth/callback] referral_code_used found, calling track-signup");
-        try {
-          await fetch("/api/referral/track-signup", {
-            method:  "POST",
-            headers: { Authorization: `Bearer ${session.access_token}` },
-          });
-        } catch (err) {
-          console.error("[auth/callback] track-signup fetch failed:", err);
-        }
+      // Assign NexLeader (handles referral chain resolution; idempotent)
+      try {
+        await fetch("/api/auth/set-nexleader", {
+          method:  "POST",
+          headers: { Authorization: `Bearer ${session.access_token}` },
+        });
+      } catch (err) {
+        console.error("[auth/callback] set-nexleader failed:", err);
       }
 
       fetch("/api/auth/welcome", {

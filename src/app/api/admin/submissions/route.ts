@@ -33,7 +33,7 @@ export async function GET(req: NextRequest) {
         feedback,
         submitted_at,
         tasks ( id, title, pay_per_task, steps ),
-        profiles ( full_name, email )
+        profiles ( full_name, email, nexleader_id )
       `)
       .order("submitted_at", { ascending: false });
 
@@ -43,6 +43,23 @@ export async function GET(req: NextRequest) {
     }
 
     const submissions = data ?? [];
+
+    // Batch-resolve NexLeader names
+    const nlIds = [
+      ...new Set(
+        submissions
+          .map((s) => (s.profiles as unknown as { nexleader_id: string | null } | null)?.nexleader_id)
+          .filter((id): id is string => !!id)
+      ),
+    ];
+    const nlNameMap = new Map<string, string>();
+    if (nlIds.length > 0) {
+      const { data: nlProfiles } = await admin
+        .from("profiles").select("id, full_name").in("id", nlIds);
+      for (const p of (nlProfiles ?? []) as { id: string; full_name: string | null }[]) {
+        nlNameMap.set(p.id, p.full_name ?? "Unknown");
+      }
+    }
 
     // Fetch step submissions for all task IDs in this result set
     const taskIds = [
@@ -72,9 +89,11 @@ export async function GET(req: NextRequest) {
     }
 
     const enriched = submissions.map((sub) => {
-      const taskId = (sub.tasks as unknown as { id: string } | null)?.id ?? "";
-      const key    = `${taskId}::${sub.contributor_id}`;
-      return { ...sub, step_submissions: byKey.get(key) ?? [] };
+      const taskId    = (sub.tasks as unknown as { id: string } | null)?.id ?? "";
+      const key       = `${taskId}::${sub.contributor_id}`;
+      const nlId      = (sub.profiles as unknown as { nexleader_id: string | null } | null)?.nexleader_id ?? null;
+      const nlName    = nlId ? (nlNameMap.get(nlId) ?? "Unknown") : null;
+      return { ...sub, step_submissions: byKey.get(key) ?? [], nexleader_id: nlId, nexleader_name: nlName };
     });
 
     return NextResponse.json({ submissions: enriched });

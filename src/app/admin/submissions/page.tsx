@@ -42,6 +42,8 @@ interface Submission {
   tasks: { id: string; title: string; pay_per_task: number | null; steps: TaskStep[] | null } | null;
   profiles: { full_name: string | null; email: string | null } | null;
   step_submissions: StepSubmission[];
+  nexleader_id: string | null;
+  nexleader_name: string | null;
 }
 
 function isDriveUrl(url: string): boolean {
@@ -132,6 +134,7 @@ export default function AdminSubmissionsPage() {
   const [loading, setLoading]             = useState(true);
   const [activeTab, setActiveTab]         = useState<Tab>("submitted");
   const [search, setSearch]               = useState("");
+  const [nlFilter, setNlFilter]           = useState<string>("all");
   const [feedbacks, setFeedbacks]         = useState<Record<string, string>>({});
   const [coinsMap, setCoinsMap]           = useState<Record<string, string>>({});
   const [approving, setApproving]         = useState<string | null>(null);
@@ -242,17 +245,26 @@ export default function AdminSubmissionsPage() {
 
   const isPending = (s: Submission) => s.status === "submitted" || s.status === "pending";
 
+  // Unique NexLeaders in the data for the filter dropdown
+  const nexleaderOptions = Array.from(
+    new Map(
+      submissions
+        .filter((s) => s.nexleader_id && s.nexleader_name)
+        .map((s) => [s.nexleader_id!, s.nexleader_name!] as [string, string])
+    ).entries()
+  ).sort((a, b) => a[1].localeCompare(b[1]));
+
   const filtered = submissions.filter((s) => {
     let matchTab: boolean;
     if (activeTab === "submitted") {
       matchTab = s.status === "submitted" || s.status === "pending";
     } else if (activeTab === "rejected") {
-      // "Rejected" tab includes both final rejections and retry-allowed rejections
       matchTab = s.status === "rejected" || s.status === "resubmit_requested";
     } else {
       matchTab = s.status === activeTab;
     }
     if (!matchTab) return false;
+    if (nlFilter !== "all" && s.nexleader_id !== nlFilter) return false;
     if (!search) return true;
     const q = search.toLowerCase();
     return (
@@ -320,7 +332,7 @@ export default function AdminSubmissionsPage() {
         ))}
       </div>
 
-      {/* Search + select all */}
+      {/* Search + filter + select all */}
       <div className="flex items-center gap-3 flex-wrap">
         <div className="flex items-center gap-2 h-9 px-3 rounded-md border border-[var(--border-default)] bg-[var(--surface-card)] flex-1 min-w-[200px] max-w-xs">
           <Search className="h-4 w-4 text-[var(--text-muted)] flex-shrink-0" />
@@ -332,6 +344,18 @@ export default function AdminSubmissionsPage() {
             className="flex-1 bg-transparent text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none"
           />
         </div>
+        {nexleaderOptions.length > 0 && (
+          <select
+            value={nlFilter}
+            onChange={(e) => setNlFilter(e.target.value)}
+            className="h-9 px-3 rounded-md border border-[var(--border-default)] bg-[var(--surface-card)] text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--border-focus)]"
+          >
+            <option value="all">All NexLeaders</option>
+            {nexleaderOptions.map(([id, name]) => (
+              <option key={id} value={id}>{name}</option>
+            ))}
+          </select>
+        )}
         {activeTab === "submitted" && pendingFiltered.length > 0 && (
           <label className="flex items-center gap-2 text-sm text-[var(--text-secondary)] cursor-pointer select-none">
             <input type="checkbox" checked={allPendingSelected} onChange={toggleSelectAll} className="accent-[var(--brand-500)]" />
@@ -392,12 +416,17 @@ export default function AdminSubmissionsPage() {
                 </div>
               </div>
 
-              {/* Task */}
+              {/* Task + NexLeader */}
               {sub.tasks && (
                 <p className="text-xs text-[var(--text-muted)]">
                   Task: <span className="font-semibold text-[var(--text-primary)]">{sub.tasks.title}</span>
                   {sub.tasks.pay_per_task != null && (
                     <span className="ml-2 text-[var(--brand-500)] font-semibold">{sub.tasks.pay_per_task} coins</span>
+                  )}
+                  {sub.nexleader_name && (
+                    <span className="ml-3 text-yellow-400">
+                      NexLeader: <span className="font-semibold">{sub.nexleader_name}</span>
+                    </span>
                   )}
                 </p>
               )}

@@ -226,8 +226,13 @@ export default function AdminTasksPage() {
                         </div>
                       </td>
                       <td className="px-4 py-3 text-[var(--text-secondary)] whitespace-nowrap">{task.task_type ?? "—"}</td>
-                      <td className="px-4 py-3 text-[var(--brand-500)] font-medium whitespace-nowrap">
-                        {task.pay_per_task ?? "—"}
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <span className="text-[var(--brand-500)] font-medium">{task.pay_per_task ?? "—"}</span>
+                        {task.pay_per_task != null && (
+                          <span className="block text-[10px] text-[var(--text-muted)] leading-tight mt-0.5">
+                            Contributor gets {Math.floor(task.pay_per_task * 0.66)} NC
+                          </span>
+                        )}
                       </td>
                       <td className="px-4 py-3 text-[var(--text-secondary)] whitespace-nowrap">
                         {task.filled_slots ?? 0} / {task.total_slots ?? "∞"}

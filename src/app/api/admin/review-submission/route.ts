@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { FROM_NOREPLY, getResend, taskApprovedHtml, taskRejectedHtml, resubmissionRequestedHtml } from "@/lib/email";
 import { syncSheetStatus } from "@/lib/google-drive";
+import { creditWithCommission } from "@/lib/nexleader-commission";
 
 export async function POST(req: NextRequest) {
   const admin = createClient(
@@ -55,14 +56,42 @@ export async function POST(req: NextRequest) {
 
     // ── APPROVE ──────────────────────────────────────────────────
     if (action === "approve") {
-      const coins: number = coinsOverride ?? taskMeta?.pay_per_task ?? 0;
+      const grossCoins: number = coinsOverride ?? taskMeta?.pay_per_task ?? 0;
 
-      // 1. Mark submission approved
+      // 1. Apply NexLeader commission split — contributor gets 66%, NexLeader gets 8%
+      let contributorCoins = grossCoins;
+      try {
+        const result = await creditWithCommission(
+          admin,
+          sub.contributor_id,
+          grossCoins,
+          "task",
+          `Task approved: ${taskTitle}`,
+        );
+        contributorCoins = result.contributorCredit;
+      } catch (commErr) {
+        console.error("[review-submission] creditWithCommission failed:", commErr);
+        // Fall back to direct crediting if commission logic fails
+        await admin.rpc("increment_nexcoins", {
+          p_contributor_id: sub.contributor_id,
+          p_coins:          grossCoins,
+        });
+        await admin.from("coin_transactions").insert({
+          contributor_id: sub.contributor_id,
+          amount:         grossCoins,
+          type:           "earned",
+          source:         "task",
+          description:    `Task approved: ${taskTitle}`,
+        });
+        contributorCoins = grossCoins;
+      }
+
+      // 2. Mark submission approved (store what contributor actually received)
       const { error: e1 } = await admin
         .from("submissions")
         .update({
           status:        "approved",
-          coins_awarded: coins,
+          coins_awarded: contributorCoins,
           feedback:      feedback ?? null,
           reviewed_by:   user.id,
           reviewed_at:   now,
@@ -74,33 +103,7 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: "Failed to update submission: " + e1.message }, { status: 500 });
       }
 
-      // 2. Atomic nexcoins increment via SQL function
-      const { error: e2 } = await admin.rpc("increment_nexcoins", {
-        p_contributor_id: sub.contributor_id,
-        p_coins:          coins,
-      });
-
-      if (e2) {
-        console.error("[review-submission] increment_nexcoins:", e2.message);
-        const { data: p } = await admin
-          .from("profiles")
-          .select("nexcoins")
-          .eq("id", sub.contributor_id)
-          .single();
-
-        const current = (p as { nexcoins: number | null } | null)?.nexcoins ?? 0;
-        const { error: e2b } = await admin
-          .from("profiles")
-          .update({ nexcoins: current + coins })
-          .eq("id", sub.contributor_id);
-
-        if (e2b) {
-          console.error("[review-submission] fallback nexcoins update:", e2b.message);
-          return NextResponse.json({ error: "Failed to credit coins: " + e2b.message }, { status: 500 });
-        }
-      }
-
-      // 2b. Award XP
+      // 3. Award XP
       const xpToAward = taskMeta?.xp_reward ?? 0;
       if (xpToAward > 0) {
         const { error: xpErr } = await admin.rpc("award_xp", {
@@ -110,7 +113,7 @@ export async function POST(req: NextRequest) {
         if (xpErr) console.error("[review-submission] award_xp:", xpErr.message);
       }
 
-      // 2c. Update streak eligibility: increment tasks_approved_today (reset if new day)
+      // 4. Update streak eligibility
       const today = new Date().toISOString().split("T")[0];
       const { data: streakProfile } = await admin
         .from("profiles")
@@ -125,26 +128,16 @@ export async function POST(req: NextRequest) {
         .eq("id", sub.contributor_id);
       if (dateErr) console.error("[review-submission] streak update:", dateErr.message);
 
-      // 3. Log coin transaction
-      const { error: e3 } = await admin.from("coin_transactions").insert({
-        contributor_id: sub.contributor_id,
-        amount:         coins,
-        type:           "earned",
-        source:         "task",
-        description:    `Task approved: ${taskTitle}`,
-      });
-      if (e3) console.error("[review-submission] coin_transactions insert:", e3.message);
-
-      // 4. Notify contributor (in-app)
+      // 5. Notify contributor (in-app)
       const { error: e4 } = await admin.from("notifications").insert({
         user_id: sub.contributor_id,
         title:   "Submission Approved!",
-        message: `Your submission for "${taskTitle}" was approved. +${coins} NexCoins added.`,
+        message: `Your submission for "${taskTitle}" was approved. +${contributorCoins} NexCoins added.`,
         type:    "submission_approved",
       });
       if (e4) console.error("[review-submission] notification insert:", e4.message);
 
-      // 5. Email (non-critical — fetch updated profile for balance)
+      // 6. Email (non-critical)
       const resend = getResend();
       if (resend) {
         const { data: contrib } = await admin
@@ -158,12 +151,12 @@ export async function POST(req: NextRequest) {
           const { error: emailErr } = await resend.emails.send({
             from:    FROM_NOREPLY,
             to:      p.email,
-            subject: `Your submission was approved! +${coins} NexCoins`,
+            subject: `Your submission was approved! +${contributorCoins} NexCoins`,
             html:    taskApprovedHtml(
               p.full_name ?? "Contributor",
               taskTitle,
-              coins,
-              p.nexcoins ?? coins,
+              contributorCoins,
+              p.nexcoins ?? contributorCoins,
             ),
           });
           if (emailErr) console.error("[review-submission] email error:", emailErr);
@@ -176,7 +169,7 @@ export async function POST(req: NextRequest) {
           .catch((err) => console.error("[review-submission] sheet sync failed:", err));
       }
 
-      return NextResponse.json({ success: true, coins_awarded: coins });
+      return NextResponse.json({ success: true, coins_awarded: contributorCoins });
     }
 
     // ── REJECT ───────────────────────────────────────────────────
