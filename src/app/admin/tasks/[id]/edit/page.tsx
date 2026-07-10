@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
 import { usePageGuard } from "@/components/layout/admin-auth-guard";
 import { ADMIN_ROLES } from "@/lib/admin-permissions";
+import { PayoutBreakdown } from "@/components/admin/PayoutBreakdown";
 
 const TASK_TYPES = [
   "Audio Recording", "Transcription", "Data Annotation", "App Testing",
@@ -348,6 +349,9 @@ export default function EditTaskPage() {
                 min={1} placeholder="Blank = unlimited" className={inputClass} />
             </div>
           </div>
+
+          <PayoutBreakdown gross={parseFloat(payPerTask) || 0} />
+
           <div>
             <label className={labelClass}>Deadline</label>
             <input type="date" value={deadline} onChange={(e) => setDeadline(e.target.value)} className={inputClass} />
