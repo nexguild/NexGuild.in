@@ -113,7 +113,7 @@ export async function POST(req: NextRequest) {
         if (xpErr) console.error("[review-submission] award_xp:", xpErr.message);
       }
 
-      // 4. Update streak eligibility
+      // 4. Update legacy streak eligibility columns (kept for backward compat)
       const today = new Date().toISOString().split("T")[0];
       const { data: streakProfile } = await admin
         .from("profiles")
@@ -127,6 +127,21 @@ export async function POST(req: NextRequest) {
         .update({ last_task_approved_date: today, tasks_approved_today: newCount })
         .eq("id", sub.contributor_id);
       if (dateErr) console.error("[review-submission] streak update:", dateErr.message);
+
+      // 4b. Upsert streak_days — atomic increment via RPC
+      const todayIST = new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" });
+      const { data: targetSetting } = await admin
+        .from("platform_settings")
+        .select("value")
+        .eq("key", "streak_tasks_required_per_day")
+        .single();
+      const streakTarget = parseInt((targetSetting as { value: string } | null)?.value ?? "5") || 5;
+      const { error: sdErr } = await admin.rpc("increment_streak_day", {
+        p_contributor_id: sub.contributor_id,
+        p_day_date:       todayIST,
+        p_target:         streakTarget,
+      });
+      if (sdErr) console.error("[review-submission] increment_streak_day:", sdErr.message);
 
       // 5. Notify contributor (in-app)
       const { error: e4 } = await admin.from("notifications").insert({

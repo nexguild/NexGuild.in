@@ -32,6 +32,7 @@ interface SubmissionMeta { status: string; feedback: string | null; }
 interface Notification { id: string; title: string; message: string | null; type: string | null; created_at: string; }
 interface CoinTx { amount: number; created_at: string; source?: string | null; }
 interface LeaderboardEntry { rank: number; id: string; full_name: string; approved_count: number; }
+interface StreakDayRow { day_date: string; tasks_completed: number; target_met: boolean; reward_claimed: boolean; reward_amount: number; }
 
 /* ─── Count-Up Hook (FIX 4) ─────────────────────────────────────── */
 function useCountUp(target: number, duration: number = 1000): number {
@@ -115,19 +116,48 @@ function ProgressRing({ value, max, label, sub }: { value: number; max: number; 
   );
 }
 
-/* ─── 7-Day Streak Grid (FIX 6) ─────────────────────────────────── */
+/* ─── Streak helpers ─────────────────────────────────────────────── */
 const STREAK_DAY_NAMES = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
+function getISTDate(daysOffset = 0): string {
+  const d = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
+  d.setDate(d.getDate() + daysOffset);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+function getWeekDates(): string[] {
+  const now = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
+  const dow = now.getDay(); // 0=Sun
+  const mon = new Date(now);
+  mon.setDate(now.getDate() - (dow === 0 ? 6 : dow - 1));
+  return Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(mon);
+    d.setDate(mon.getDate() + i);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  });
+}
+
+/* ─── Streak Grid ────────────────────────────────────────────────── */
 function StreakGrid({
-  streak, canClaim, claimedToday, claimResult, claimError, claimingStreak,
-  dailyBonus, day7Bonus, tasksToday, tasksRequired, onClaim,
+  weekDates, streakDays, todayIST, tasksRequired,
+  streak, dailyBonus, day7Bonus,
+  claimingDay, claimResult, claimError, onClaim,
 }: {
-  streak: number; canClaim: boolean; claimedToday: boolean;
-  claimResult: { awarded: number } | null; claimError: string | null; claimingStreak: boolean;
-  dailyBonus: number; day7Bonus: number; tasksToday: number; tasksRequired: number; onClaim: () => void;
+  weekDates: string[];
+  streakDays: StreakDayRow[];
+  todayIST: string;
+  tasksRequired: number;
+  streak: number;
+  dailyBonus: number;
+  day7Bonus: number;
+  claimingDay: boolean;
+  claimResult: { awarded: number; is_day7_bonus: boolean } | null;
+  claimError: string | null;
+  onClaim: () => void;
 }) {
-  const days = [1, 2, 3, 4, 5, 6, 7];
-  const cyclePos = claimResult && streak === 0 ? 7 : streak;
+  const dayMap = Object.fromEntries(streakDays.map(d => [d.day_date, d]));
+  const todayRow = dayMap[todayIST];
+  const canClaim = (todayRow?.target_met ?? false) && !(todayRow?.reward_claimed ?? false) && !claimResult;
 
   return (
     <div className="rounded-2xl bg-white border border-slate-100 shadow-sm p-5">
@@ -139,47 +169,92 @@ function StreakGrid({
         <span className="text-xs text-slate-400">Day 7 = +{day7Bonus} bonus coins</span>
       </div>
 
-      <div className="flex items-center justify-between gap-1.5 mb-5">
-        {days.map((day) => {
-          const done    = day <= cyclePos;
-          const current = day === cyclePos + 1 && canClaim;
-          const reward  = day === 7 ? day7Bonus : dailyBonus;
+      {/* 7-day circles */}
+      <div className="flex items-start justify-between gap-1 mb-5">
+        {weekDates.map((date, i) => {
+          const row      = dayMap[date];
+          const isToday  = date === todayIST;
+          const isPast   = date < todayIST;
+          const claimed  = row?.reward_claimed ?? false;
+          const targetMet = row?.target_met ?? false;
+          const completed = row?.tasks_completed ?? 0;
+
+          /* reward label above circle */
+          const rewardLabel = claimed
+            ? `+${row?.reward_amount ?? dailyBonus}`
+            : isToday && targetMet
+            ? "Claim!"
+            : i === 6
+            ? `+${day7Bonus}`
+            : `+${dailyBonus}`;
+
+          /* circle appearance */
+          let circleClass = "";
+          let circleContent: React.ReactNode;
+
+          if (isPast) {
+            if (claimed) {
+              circleClass   = "bg-teal-500 text-white";
+              circleContent = "✓";
+            } else {
+              circleClass   = "bg-gray-100 text-gray-300 border-2 border-gray-200";
+              circleContent = "✗";
+            }
+          } else if (isToday) {
+            if (claimed || (claimResult && !canClaim)) {
+              circleClass   = "bg-teal-500 text-white";
+              circleContent = "✓";
+            } else if (targetMet) {
+              circleClass   = "bg-amber-400 text-white animate-pulse";
+              circleContent = "!";
+            } else {
+              circleClass   = "border-2 border-indigo-400 text-indigo-600 bg-indigo-50 animate-pulse";
+              circleContent = <span className="text-[10px] font-bold">{completed}/{tasksRequired}</span>;
+            }
+          } else {
+            /* future */
+            circleClass   = "border-2 border-gray-200 text-gray-300 bg-gray-50";
+            circleContent = null;
+          }
+
           return (
-            <div key={day} className="flex flex-col items-center gap-1.5">
-              <span className="text-[9px] font-bold text-slate-400 leading-none">
-                {day === 7 ? "🔥" : `+${reward}`}
-              </span>
-              <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold transition-all ${
-                done
-                  ? "bg-teal-500 text-white"
-                  : current
-                  ? "bg-indigo-100 text-indigo-600 ring-2 ring-indigo-500 ring-offset-2 animate-pulse"
-                  : "bg-gray-100 text-gray-300"
+            <div key={date} className="flex flex-col items-center gap-1.5 flex-1">
+              <span className={`text-[9px] font-bold leading-none ${
+                claimed ? "text-teal-500" : isToday && targetMet ? "text-amber-500" : "text-slate-400"
               }`}>
-                {done ? "✓" : current ? "🔥" : day}
+                {rewardLabel}
+              </span>
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold transition-all ${circleClass}`}>
+                {circleContent}
               </div>
-              <span className="text-[10px] text-gray-400">{STREAK_DAY_NAMES[day - 1]}</span>
+              <span className={`text-[10px] font-medium ${isToday ? "text-indigo-500" : "text-gray-400"}`}>
+                {STREAK_DAY_NAMES[i]}
+              </span>
             </div>
           );
         })}
       </div>
 
+      {/* Claim / status area */}
       {claimResult ? (
         <div className="flex items-center justify-center gap-2 py-2.5 rounded-xl bg-green-50 border border-green-100 text-sm font-bold text-green-700">
-          <NexCoinIcon size={16} /> +{claimResult.awarded} coins claimed! Keep it up!
+          <NexCoinIcon size={16} />
+          +{claimResult.awarded} coins claimed!{claimResult.is_day7_bonus ? " 🔥 7-Day Bonus!" : " Keep it up!"}
         </div>
       ) : canClaim ? (
         <button
           onClick={onClaim}
-          disabled={claimingStreak}
-          className="w-full py-2.5 rounded-xl text-sm font-bold text-white transition-opacity disabled:opacity-60"
-          style={{ background: "linear-gradient(90deg,#4F46E5,#0891B2)" }}
+          disabled={claimingDay}
+          className="w-full py-3 rounded-xl text-sm font-bold text-white transition-all disabled:opacity-60 hover:opacity-90"
+          style={{ background: "linear-gradient(90deg,#14b8a6,#0891B2)" }}
         >
-          {claimingStreak ? "Claiming…" : `🔥 Claim Day ${cyclePos + 1} Reward (+${cyclePos + 1 === 7 ? day7Bonus : dailyBonus} coins)`}
+          {claimingDay ? "Claiming…" : `🎉 Claim Today's Reward — +${dailyBonus} NexCoins`}
         </button>
       ) : claimError ? (
-        <div className="py-2.5 rounded-xl bg-slate-50 border border-slate-100 text-xs text-center text-slate-500">{claimError}</div>
-      ) : claimedToday ? (
+        <div className="py-2.5 rounded-xl bg-slate-50 border border-slate-100 text-xs text-center text-slate-500">
+          {claimError}
+        </div>
+      ) : (todayRow?.reward_claimed) ? (
         <div className="py-2.5 rounded-xl bg-green-50 border border-green-100 text-xs text-center font-semibold text-green-600">
           ✓ Claimed today — come back tomorrow!
         </div>
@@ -187,16 +262,14 @@ function StreakGrid({
         <div className="space-y-2">
           <div className="flex items-center justify-between text-xs text-slate-500">
             <span>Today&apos;s tasks</span>
-            <span className="font-bold text-slate-700">{tasksToday} / {tasksRequired}</span>
+            <span className="font-bold text-slate-700">{todayRow?.tasks_completed ?? 0} / {tasksRequired}</span>
           </div>
           <div className="h-1.5 rounded-full bg-slate-100 overflow-hidden">
             <div className="h-full rounded-full transition-all duration-500"
-              style={{ width: `${Math.min(100, (tasksToday / tasksRequired) * 100)}%`, background: "#0891B2" }} />
+              style={{ width: `${Math.min(100, ((todayRow?.tasks_completed ?? 0) / tasksRequired) * 100)}%`, background: "#0891B2" }} />
           </div>
           <p className="text-xs text-slate-400 text-center">
-            {tasksRequired - tasksToday > 0
-              ? `Complete ${tasksRequired - tasksToday} more task${tasksRequired - tasksToday !== 1 ? "s" : ""} to unlock today's streak reward`
-              : "All tasks done — claim your reward!"}
+            {Math.max(0, tasksRequired - (todayRow?.tasks_completed ?? 0))} more task{Math.max(0, tasksRequired - (todayRow?.tasks_completed ?? 0)) !== 1 ? "s" : ""} needed to unlock today&apos;s streak reward
           </p>
         </div>
       )}
@@ -217,13 +290,14 @@ export default function DashboardHome() {
   const [chartData, setChartData]           = useState<{ label: string; value: number }[]>([]);
   const [notifications, setNotifications]   = useState<Notification[]>([]);
   const [leaderboard, setLeaderboard]       = useState<LeaderboardEntry[]>([]);
+  const [streakDays, setStreakDays]         = useState<StreakDayRow[]>([]);
   const [liveOfferwalls, setLiveOfferwalls] = useState<OfferwallProvider[]>([]);
   const [loading, setLoading]               = useState(true);
   const [dailyBonus, setDailyBonus]         = useState(10);
   const [day7Bonus, setDay7Bonus]           = useState(50);
   const [tasksRequired, setTasksRequired]   = useState(5);
-  const [claimingStreak, setClaimingStreak] = useState(false);
-  const [claimResult, setClaimResult]       = useState<{ awarded: number; new_streak: number } | null>(null);
+  const [claimingDay, setClaimingDay]       = useState(false);
+  const [claimResult, setClaimResult]       = useState<{ awarded: number; is_day7_bonus: boolean } | null>(null);
   const [claimError, setClaimError]         = useState<string | null>(null);
 
   useEffect(() => {
@@ -235,6 +309,11 @@ export default function DashboardHome() {
       const sevenDaysAgo = new Date(Date.now() - 6 * 86400000).toISOString().split("T")[0];
       const { data: { session } } = await supabase.auth.getSession();
 
+      const todayIST     = getISTDate();
+      const yesterdayIST = getISTDate(-1);
+      const weekDates    = getWeekDates();
+      const datesToFetch = [...new Set([...weekDates, yesterdayIST])];
+
       const [
         { data: profileData },
         { data: tasksData },
@@ -244,6 +323,7 @@ export default function DashboardHome() {
         { data: txData },
         { data: notifData },
         { data: streakSettings },
+        { data: streakDaysData },
         leaderRes,
         offerRes,
       ] = await Promise.all([
@@ -255,6 +335,7 @@ export default function DashboardHome() {
         supabase.from("coin_transactions").select("amount, created_at, source").eq("contributor_id", user.id).eq("type", "earned").gte("created_at", sevenDaysAgo + "T00:00:00"),
         supabase.from("notifications").select("id, title, message, type, created_at").eq("user_id", user.id).order("created_at", { ascending: false }).limit(8),
         supabase.from("platform_settings").select("key, value").in("key", ["streak_daily_bonus", "streak_day7_bonus", "streak_tasks_required_per_day"]),
+        supabase.from("streak_days").select("day_date, tasks_completed, target_met, reward_claimed, reward_amount").eq("contributor_id", user.id).in("day_date", datesToFetch),
         fetch("/api/leaderboard?limit=5", { headers: { Authorization: `Bearer ${session?.access_token}` } }),
         fetch("/api/offerwalls", { headers: { Authorization: `Bearer ${session?.access_token}` } }),
       ]);
@@ -262,12 +343,17 @@ export default function DashboardHome() {
       const p = profileData as Profile | null;
       setUserLevel(p?.level ?? 1);
 
-      if (p) {
-        const nowIST = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
-        const todayIST = `${nowIST.getFullYear()}-${String(nowIST.getMonth() + 1).padStart(2, "0")}-${String(nowIST.getDate()).padStart(2, "0")}`;
-        if ((p.tasks_approved_today ?? 0) > 0 && p.last_task_approved_date !== todayIST) {
-          await supabase.from("profiles").update({ tasks_approved_today: 0 }).eq("id", user.id);
-          p.tasks_approved_today = 0;
+      // Process streak_days for this week
+      const sRows = (streakDaysData as StreakDayRow[] | null) ?? [];
+      setStreakDays(sRows.filter(d => weekDates.includes(d.day_date)));
+
+      // Streak reset check: if yesterday wasn't claimed and today isn't claimed yet, reset
+      if (p && (p.current_streak ?? 0) > 0) {
+        const yRow = sRows.find(d => d.day_date === yesterdayIST);
+        const tRow = sRows.find(d => d.day_date === todayIST);
+        if (!yRow?.reward_claimed && !tRow?.reward_claimed) {
+          await supabase.from("profiles").update({ current_streak: 0 }).eq("id", user.id);
+          p.current_streak = 0;
         }
       }
 
@@ -331,30 +417,33 @@ export default function DashboardHome() {
     fetchData();
   }, []);
 
-  async function claimStreak() {
-    setClaimingStreak(true);
+  async function claimStreakDay() {
+    setClaimingDay(true);
     setClaimError(null);
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      const res = await fetch("/api/streak/claim", {
+      const todayIST = getISTDate();
+      const res = await fetch("/api/streak/claim-day", {
         method: "POST",
-        headers: { Authorization: `Bearer ${session?.access_token ?? ""}` },
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${session?.access_token ?? ""}` },
+        body: JSON.stringify({ date: todayIST }),
       });
-      const data = await res.json() as { success?: boolean; awarded?: number; new_streak?: number; reason?: string; required?: number; completed?: number };
+      const data = await res.json() as { success?: boolean; reward_amount?: number; is_day7_bonus?: boolean; reason?: string };
       if (data.success) {
-        setClaimResult({ awarded: data.awarded ?? 0, new_streak: data.new_streak ?? 0 });
-        setProfile(prev => prev ? { ...prev, nexcoins: prev.nexcoins + (data.awarded ?? 0), current_streak: data.new_streak ?? 0, last_streak_claim_date: new Date().toISOString().split("T")[0] } : prev);
+        const awarded = data.reward_amount ?? 0;
+        setClaimResult({ awarded, is_day7_bonus: data.is_day7_bonus ?? false });
+        setProfile(prev => prev ? { ...prev, nexcoins: prev.nexcoins + awarded, current_streak: (prev.current_streak ?? 0) + 1 } : prev);
+        setStreakDays(prev => prev.map(d => d.day_date === todayIST ? { ...d, reward_claimed: true, reward_amount: awarded } : d));
       } else {
         setClaimError(
-          data.reason === "already_claimed_today" ? "Already claimed today." :
-          data.reason === "insufficient_tasks_today"
-            ? `Need ${data.required ?? tasksRequired} tasks today (${data.completed ?? 0} done so far).`
-            : data.reason === "no_approved_task_today" ? "No approved tasks today yet." :
-          "Could not claim streak."
+          data.reason === "already_claimed" ? "Already claimed today." :
+          data.reason === "target_not_met"  ? "Task target not met yet." :
+          data.reason === "wrong_date"      ? "Can only claim today's reward." :
+          "Could not claim reward."
         );
       }
     } catch { setClaimError("Network error. Try again."); }
-    setClaimingStreak(false);
+    setClaimingDay(false);
   }
 
   /* ── Derived values ─────────────────────────────────────────────── */
@@ -364,10 +453,10 @@ export default function DashboardHome() {
   const xpInLevel    = xp % 1000;
   const xpPct        = Math.round((xpInLevel / 1000) * 100);
   const streak       = profile?.current_streak ?? 0;
-  const today        = new Date().toISOString().split("T")[0];
-  const tasksToday   = profile?.tasks_approved_today ?? 0;
-  const claimedToday = profile?.last_streak_claim_date === today;
-  const canClaim     = tasksToday >= tasksRequired && !claimedToday && !claimResult;
+  const todayIST     = getISTDate();
+  const weekDatesUI  = getWeekDates();
+  const todayRow     = streakDays.find(d => d.day_date === todayIST);
+  const tasksToday   = todayRow?.tasks_completed ?? 0;
   const hour         = new Date().getHours();
   const greeting     = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
 
@@ -550,20 +639,20 @@ export default function DashboardHome() {
         ))}
       </div>
 
-      {/* ── FIX 6: STREAK GRID ──────────────────────────────────────── */}
+      {/* ── STREAK GRID ─────────────────────────────────────────────── */}
       <div className="animate-fade-slide-up" style={{ animationDelay: "300ms" }}>
         <StreakGrid
+          weekDates={weekDatesUI}
+          streakDays={streakDays}
+          todayIST={todayIST}
+          tasksRequired={tasksRequired}
           streak={streak}
-          canClaim={canClaim}
-          claimedToday={claimedToday}
-          claimResult={claimResult}
-          claimError={claimError}
-          claimingStreak={claimingStreak}
           dailyBonus={dailyBonus}
           day7Bonus={day7Bonus}
-          tasksToday={tasksToday}
-          tasksRequired={tasksRequired}
-          onClaim={claimStreak}
+          claimingDay={claimingDay}
+          claimResult={claimResult}
+          claimError={claimError}
+          onClaim={claimStreakDay}
         />
       </div>
 
