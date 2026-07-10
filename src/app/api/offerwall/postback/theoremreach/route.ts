@@ -198,6 +198,19 @@ async function handlePostback(req: NextRequest): Promise<Response> {
     return { contributorCredit: contributorPreview };
   });
 
+  // Increment daily streak counter (debug=true and reversals already returned early above)
+  {
+    const todayIST = new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" });
+    const { data: strTarget } = await admin.from("platform_settings").select("value").eq("key", "streak_tasks_required_per_day").single();
+    const streakTarget = parseInt((strTarget as { value: string } | null)?.value ?? "5") || 5;
+    const { error: sdErr } = await admin.rpc("increment_streak_day", {
+      p_contributor_id: userId,
+      p_day_date:       todayIST,
+      p_target:         streakTarget,
+    });
+    if (sdErr) console.error("[postback/theoremreach] increment_streak_day:", sdErr.message);
+  }
+
   await admin.from("notifications").insert({
     user_id: userId,
     title:   "NexCoins Earned!",
