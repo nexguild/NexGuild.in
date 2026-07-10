@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 import {
-  ClipboardList, Layers, ArrowRight, X, Megaphone,
-  RefreshCw, Flame, Star, Lock, CheckCircle2, Clock,
+  ClipboardList, Layers, ArrowRight,
+  RefreshCw, Flame, Star, Lock, Trophy, CheckCircle2, Clock,
 } from "lucide-react";
 import Link from "next/link";
 import { NexCoinIcon } from "@/components/ui/nexcoin-icon";
@@ -215,10 +215,10 @@ export default function DashboardHome() {
   const [totalEarned, setTotalEarned]       = useState(0);
   const [todayApproved, setTodayApproved]   = useState(0);
   const [chartData, setChartData]           = useState<{ label: string; value: number }[]>([]);
+  const [notifications, setNotifications]   = useState<Notification[]>([]);
+  const [leaderboard, setLeaderboard]       = useState<LeaderboardEntry[]>([]);
   const [liveOfferwalls, setLiveOfferwalls] = useState<OfferwallProvider[]>([]);
   const [loading, setLoading]               = useState(true);
-  const [banner, setBanner]                 = useState<{ id: string; title: string; message: string } | null>(null);
-  const [bannerDismissed, setBannerDismissed] = useState(false);
   const [dailyBonus, setDailyBonus]         = useState(10);
   const [day7Bonus, setDay7Bonus]           = useState(50);
   const [tasksRequired, setTasksRequired]   = useState(5);
@@ -244,6 +244,7 @@ export default function DashboardHome() {
         { data: txData },
         { data: notifData },
         { data: streakSettings },
+        leaderRes,
         offerRes,
       ] = await Promise.all([
         supabase.from("profiles").select("full_name, nexcoins, xp, level, current_streak, longest_streak, last_streak_claim_date, last_task_approved_date, tasks_approved_today").eq("id", user.id).single(),
@@ -254,6 +255,7 @@ export default function DashboardHome() {
         supabase.from("coin_transactions").select("amount, created_at, source").eq("contributor_id", user.id).eq("type", "earned").gte("created_at", sevenDaysAgo + "T00:00:00"),
         supabase.from("notifications").select("id, title, message, type, created_at").eq("user_id", user.id).order("created_at", { ascending: false }).limit(8),
         supabase.from("platform_settings").select("key, value").in("key", ["streak_daily_bonus", "streak_day7_bonus", "streak_tasks_required_per_day"]),
+        fetch("/api/leaderboard?limit=5", { headers: { Authorization: `Bearer ${session?.access_token}` } }),
         fetch("/api/offerwalls", { headers: { Authorization: `Bearer ${session?.access_token}` } }),
       ]);
 
@@ -312,24 +314,22 @@ export default function DashboardHome() {
         }))
       );
 
+      setNotifications((notifData as Notification[] | null) ?? []);
+
+      if (leaderRes.ok) {
+        const { leaderboard: lb } = await leaderRes.json() as { leaderboard: LeaderboardEntry[] };
+        setLeaderboard(lb ?? []);
+      }
       if (offerRes.ok) {
         const { providers: offerProviders } = await offerRes.json() as { providers: OfferwallProvider[] };
         setLiveOfferwalls((offerProviders ?? []).filter(p => !p.is_ad_network && p.isLive));
       }
-
-      const bannerNotif = ((notifData as Notification[] | null) ?? []).find(n => n.type === "announcement");
-      setBanner(bannerNotif ? { id: bannerNotif.id, title: bannerNotif.title.replace(/^📢\s*/, ""), message: bannerNotif.message ?? "" } : null);
 
       setProfile(p ?? { full_name: null, nexcoins: 0, xp: 0, level: 1, current_streak: 0, longest_streak: 0, last_streak_claim_date: null, last_task_approved_date: null, tasks_approved_today: 0 });
       setLoading(false);
     }
     fetchData();
   }, []);
-
-  async function dismissBanner() {
-    setBannerDismissed(true);
-    if (banner?.id) await supabase.from("notifications").update({ is_read: true }).eq("id", banner.id);
-  }
 
   async function claimStreak() {
     setClaimingStreak(true);
@@ -359,7 +359,6 @@ export default function DashboardHome() {
 
   /* ── Derived values ─────────────────────────────────────────────── */
   const displayName  = profile?.full_name ?? "there";
-  const showBanner   = banner && !bannerDismissed;
   const xp           = profile?.xp ?? 0;
   const level        = profile?.level ?? 1;
   const xpInLevel    = xp % 1000;
@@ -376,6 +375,12 @@ export default function DashboardHome() {
   const countCoins  = useCountUp(profile?.nexcoins ?? 0);
   const countEarned = useCountUp(totalEarned);
   const countDone   = useCountUp(tasksDone);
+
+  const notifTypeIcon: Record<string, string> = {
+    submission_approved: "✅", submission_rejected: "❌", assignment_approved: "✅",
+    assignment_rejected: "❌", voucher_delivered: "🎁", new_task: "📋",
+    announcement: "📢", bonus_coins: "🪙", support: "💬", system: "ℹ️",
+  };
 
   /* ── Inline style tag (streak ring animation only) ─────────────── */
   const PULSE_STYLE = `
@@ -732,6 +737,66 @@ export default function DashboardHome() {
         ) : (
           <EarningsChart data={chartData} />
         )}
+      </div>
+
+      {/* ── RECENT ACTIVITY + TOP CONTRIBUTORS ─────────────────────── */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+
+        <div className="rounded-2xl bg-white border border-gray-100 shadow-sm p-5">
+          <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wider mb-4">Recent Activity</h2>
+          {loading ? (
+            <div className="space-y-3">{[1, 2, 3].map(i => <div key={i} className="h-10 rounded-lg bg-slate-50 animate-pulse" />)}</div>
+          ) : notifications.length === 0 ? (
+            <div className="py-8 text-center"><p className="text-sm text-slate-400">No activity yet</p></div>
+          ) : (
+            <ul className="space-y-3">
+              {notifications.slice(0, 6).map((n) => (
+                <li key={n.id} className="flex items-start gap-3">
+                  <span className="text-base flex-shrink-0 mt-0.5">{notifTypeIcon[n.type ?? ""] ?? "ℹ️"}</span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-semibold text-slate-700 truncate">{n.title}</p>
+                    {n.message && <p className="text-xs text-slate-400 truncate">{n.message}</p>}
+                  </div>
+                  <p className="text-[10px] text-slate-300 flex-shrink-0">
+                    {new Date(n.created_at).toLocaleDateString("en-IN", { month: "short", day: "numeric" })}
+                  </p>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+
+        <div className="rounded-2xl bg-white border border-gray-100 shadow-sm p-5">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <Trophy className="h-4 w-4 text-amber-500" />
+              <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wider">Top Contributors</h2>
+            </div>
+            <Link href="/dashboard/leaderboard" className="text-xs font-bold text-cyan-700 hover:underline">View All</Link>
+          </div>
+          {loading ? (
+            <div className="space-y-3">{[1, 2, 3, 4, 5].map(i => <div key={i} className="h-8 rounded-lg bg-slate-50 animate-pulse" />)}</div>
+          ) : leaderboard.length === 0 ? (
+            <div className="py-8 text-center"><p className="text-sm text-slate-400">No data yet — be first!</p></div>
+          ) : (
+            <ul className="space-y-2.5">
+              {leaderboard.map((entry) => (
+                <li key={entry.id} className="flex items-center gap-3">
+                  <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${
+                    entry.rank === 1 ? "bg-amber-100 text-amber-700" :
+                    entry.rank === 2 ? "bg-slate-100 text-slate-600" :
+                    entry.rank === 3 ? "bg-orange-100 text-orange-700" :
+                    "bg-slate-50 text-slate-500"
+                  }`}>{entry.rank}</span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-slate-700 truncate">{entry.full_name}</p>
+                  </div>
+                  <span className="text-xs font-bold text-cyan-700 flex-shrink-0">{entry.approved_count} tasks</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
       </div>
 
       <BlogTipCard
