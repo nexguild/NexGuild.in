@@ -490,7 +490,7 @@ ${btn("Resubmit Now →", "https://nexguild.in/dashboard/tasks")}`);
 // ─────────────────────────────────────────────────────────────────────────────
 // 11. NexLeader Approved
 // ─────────────────────────────────────────────────────────────────────────────
-const WHATSAPP_LINK_EMAIL = "https://chat.whatsapp.com/PLACEHOLDER";
+const WHATSAPP_LINK_EMAIL = "https://chat.whatsapp.com/IW4N8GehjWA5FyxtELNiCi";
 
 export function nexleaderApprovedHtml(
   name: string,

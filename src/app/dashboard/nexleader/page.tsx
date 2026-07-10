@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { NexCoinIcon } from "@/components/ui/nexcoin-icon";
 import { supabase } from "@/lib/supabase";
 
-const WHATSAPP_LINK = "https://chat.whatsapp.com/PLACEHOLDER";
+const WHATSAPP_LINK = "https://chat.whatsapp.com/IW4N8GehjWA5FyxtELNiCi";
 
 interface StatusData {
   profile: {
