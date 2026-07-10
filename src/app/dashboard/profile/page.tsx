@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Camera, X, Loader2, Plus, Star, Copy, CheckCheck } from "lucide-react";
+import { Camera, X, Loader2, Plus, Star, Copy, CheckCheck, Crown } from "lucide-react";
 import { NexCoinIcon } from "@/components/ui/nexcoin-icon";
 import { supabase } from "@/lib/supabase";
 
@@ -18,6 +18,7 @@ interface Profile {
   skills: string[] | null;
   languages: string[] | null;
   avatar_url: string | null;
+  is_nexleader: boolean | null;
 }
 
 const COUNTRIES = [
@@ -68,7 +69,7 @@ export default function ProfilePage() {
       ] = await Promise.all([
         supabase
           .from("profiles")
-          .select("full_name, country, phone, joined_at, nexcoins, xp, level, skills, languages, avatar_url")
+          .select("full_name, country, phone, joined_at, nexcoins, xp, level, skills, languages, avatar_url, is_nexleader")
           .eq("id", user.id)
           .single(),
         supabase
@@ -94,7 +95,7 @@ export default function ProfilePage() {
       setApprovalRate(reviewed > 0 ? Math.round((approved / reviewed) * 100) : null);
       setTotalEarned((txnData ?? []).reduce((s: number, t: { amount: number }) => s + (t.amount ?? 0), 0));
 
-      setProfile(data ?? { full_name: null, country: null, phone: null, joined_at: null, nexcoins: 0, xp: 0, level: 1, skills: [], languages: [], avatar_url: null });
+      setProfile(data ?? { full_name: null, country: null, phone: null, joined_at: null, nexcoins: 0, xp: 0, level: 1, skills: [], languages: [], avatar_url: null, is_nexleader: null });
       setLoading(false);
     }
     fetchProfile();
@@ -297,9 +298,16 @@ export default function ProfilePage() {
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between gap-3 flex-wrap">
               <div className="min-w-0">
-                <h2 className="text-xl font-bold text-[var(--text-primary)]">
-                  {loading ? "Loading…" : displayName}
-                </h2>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h2 className="text-xl font-bold text-[var(--text-primary)]">
+                    {loading ? "Loading…" : displayName}
+                  </h2>
+                  {!loading && profile?.is_nexleader && (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold bg-amber-500/15 text-amber-400 border border-amber-500/30">
+                      <Crown className="h-3 w-3" /> NexLeader
+                    </span>
+                  )}
+                </div>
                 <p className="text-sm text-[var(--text-secondary)]">
                   {loading ? "—" : (email ?? "—")}
                 </p>

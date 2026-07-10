@@ -1,10 +1,15 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { Crown, Copy, Check, Users, TrendingUp, Star, Loader2, AlertCircle } from "lucide-react";
+import {
+  Crown, Copy, Check, Users, TrendingUp, Zap, BookOpen,
+  Loader2, AlertCircle, MessageCircle, ArrowRight, CheckCircle2,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { NexCoinIcon } from "@/components/ui/nexcoin-icon";
 import { supabase } from "@/lib/supabase";
+
+const WHATSAPP_LINK = "https://chat.whatsapp.com/PLACEHOLDER";
 
 interface StatusData {
   profile: {
@@ -36,9 +41,10 @@ interface StatusData {
   activeThisWeek: number;
 }
 
-const SOMEN_ID = "6c95c54a-33e6-489b-9175-3626c774635e";
+const SOMEN_ID  = "6c95c54a-33e6-489b-9175-3626c774635e";
 const MIN_DAYS   = 7;
 const MIN_EARNED = 500;
+const MIN_RECRUITS = 10;
 
 function mask(name: string | null): string {
   if (!name) return "Member";
@@ -50,33 +56,176 @@ function daysAgo(iso: string): number {
   return Math.floor((Date.now() - new Date(iso).getTime()) / 86400000);
 }
 
+// ── NexLeader Dashboard ────────────────────────────────────────────────────────
+function NexLeaderDashboard({ data, copyLink, copied }: {
+  data: StatusData;
+  copyLink: () => void;
+  copied: boolean;
+}) {
+  const { profile, members, commissions, activeThisWeek } = data;
+  const recruitLink = `https://nexguild.in/signup?ref=${profile.referral_code ?? ""}`;
+
+  return (
+    <div className="space-y-6">
+      {/* Header banner */}
+      <div
+        className="rounded-2xl p-6 sm:p-8"
+        style={{ background: "linear-gradient(135deg,#0d1230 0%,#111827 50%,#0a1628 100%)", border: "1px solid rgba(99,102,241,0.25)" }}
+      >
+        <div className="flex items-start gap-4">
+          <div className="flex-shrink-0 h-12 w-12 rounded-xl flex items-center justify-center" style={{ background: "rgba(245,158,11,0.15)", border: "1px solid rgba(245,158,11,0.3)" }}>
+            <Crown className="h-6 w-6 text-amber-400" />
+          </div>
+          <div>
+            <p className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color: "rgba(99,102,241,0.8)" }}>NexLeader Program</p>
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-white">Your NexLeader Dashboard</h1>
+            <p className="text-sm mt-1" style={{ color: "rgba(255,255,255,0.5)" }}>
+              Approved {profile.nexleader_approved_at ? new Date(profile.nexleader_approved_at).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" }) : ""}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Stats row */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        {[
+          { label: "Total Members",     value: profile.guild_total_members,          icon: Users,       color: "text-indigo-400",  bg: "rgba(99,102,241,0.08)",  border: "rgba(99,102,241,0.2)" },
+          { label: "Active This Week",  value: activeThisWeek,                        icon: TrendingUp,  color: "text-green-400",   bg: "rgba(34,197,94,0.08)",   border: "rgba(34,197,94,0.2)"  },
+          { label: "Commission Earned", value: `${profile.guild_total_earned} NC`,    icon: NexCoinIcon, color: "text-amber-400",   bg: "rgba(245,158,11,0.08)",  border: "rgba(245,158,11,0.2)" },
+        ].map((s) => (
+          <div key={s.label} className="rounded-xl p-5" style={{ background: s.bg, border: `1px solid ${s.border}` }}>
+            <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: "rgba(255,255,255,0.4)" }}>{s.label}</p>
+            <p className={`text-2xl font-extrabold ${s.color}`}>{s.value}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Recruitment link */}
+      <div className="rounded-xl p-5 space-y-3" style={{ background: "var(--surface-card)", border: "1px solid var(--border-default)" }}>
+        <p className="text-xs font-bold uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>Your Recruitment Link</p>
+        <div className="flex items-center gap-2">
+          <code className="flex-1 text-sm rounded-lg px-3 py-2 truncate font-mono" style={{ color: "#02b491", background: "rgba(2,180,145,0.07)", border: "1px solid rgba(2,180,145,0.2)" }}>
+            {recruitLink}
+          </code>
+          <Button size="sm" variant="secondary" onClick={copyLink} className="flex-shrink-0 gap-1.5">
+            {copied ? <Check className="h-3.5 w-3.5 text-green-400" /> : <Copy className="h-3.5 w-3.5" />}
+            {copied ? "Copied!" : "Copy"}
+          </Button>
+        </div>
+        <p className="text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>Share this link to recruit members. You earn 8% commission on everything they earn.</p>
+      </div>
+
+      {/* WhatsApp community */}
+      <div className="rounded-xl p-5" style={{ background: "rgba(37,211,102,0.06)", border: "1px solid rgba(37,211,102,0.2)" }}>
+        <div className="flex items-start justify-between gap-4 flex-wrap">
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "rgba(37,211,102,0.15)" }}>
+              <MessageCircle className="h-5 w-5" style={{ color: "#25D366" }} />
+            </div>
+            <div>
+              <p className="font-semibold text-white text-sm">Join the NexLeader WhatsApp Community</p>
+              <p className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.45)" }}>Connect with other NexLeaders, share strategies, get updates</p>
+            </div>
+          </div>
+          <a
+            href={WHATSAPP_LINK}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold flex-shrink-0 transition-colors hover:opacity-90"
+            style={{ background: "#25D366", color: "#000" }}
+          >
+            Join Community <ArrowRight className="h-3.5 w-3.5" />
+          </a>
+        </div>
+      </div>
+
+      {/* Resources */}
+      <a
+        href="/nexleader-handbook.pdf"
+        download
+        className="flex items-center gap-3 rounded-xl p-4 transition-colors hover:opacity-90"
+        style={{ background: "rgba(245,158,11,0.07)", border: "1px solid rgba(245,158,11,0.2)" }}
+      >
+        <BookOpen className="h-5 w-5 text-amber-400 flex-shrink-0" />
+        <div className="flex-1">
+          <p className="text-sm font-semibold text-white">NexLeader Handbook</p>
+          <p className="text-xs" style={{ color: "rgba(255,255,255,0.4)" }}>Download your guide to growing a successful guild</p>
+        </div>
+        <ArrowRight className="h-4 w-4 text-amber-400 flex-shrink-0" />
+      </a>
+
+      {/* Members */}
+      {members.length > 0 && (
+        <div className="rounded-xl overflow-hidden" style={{ border: "1px solid var(--border-default)", background: "var(--surface-card)" }}>
+          <div className="px-5 py-4" style={{ borderBottom: "1px solid var(--border-default)" }}>
+            <h2 className="text-sm font-bold" style={{ color: "var(--text-primary)" }}>Guild Members</h2>
+          </div>
+          <div>
+            {members.map((m) => {
+              const memberComm = commissions
+                .filter((c) => c.member_id === m.id)
+                .reduce((s, c) => s + c.nexleader_credit, 0);
+              return (
+                <div key={m.id} className="flex items-center justify-between px-5 py-3" style={{ borderBottom: "1px solid var(--border-default)" }}>
+                  <div>
+                    <p className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>{mask(m.full_name)}</p>
+                    <p className="text-xs" style={{ color: "var(--text-muted)" }}>Joined {daysAgo(m.created_at)}d ago</p>
+                  </div>
+                  <div className="flex items-center gap-1 text-xs text-amber-400 font-semibold">
+                    <NexCoinIcon size={12} /> +{memberComm} NC
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Commission history */}
+      {commissions.length > 0 && (
+        <div className="rounded-xl overflow-hidden" style={{ border: "1px solid var(--border-default)", background: "var(--surface-card)" }}>
+          <div className="px-5 py-4" style={{ borderBottom: "1px solid var(--border-default)" }}>
+            <h2 className="text-sm font-bold" style={{ color: "var(--text-primary)" }}>Commission History</h2>
+          </div>
+          {commissions.map((c) => (
+            <div key={c.id} className="flex items-center justify-between px-5 py-3" style={{ borderBottom: "1px solid var(--border-default)" }}>
+              <div>
+                <p className="text-sm" style={{ color: "var(--text-secondary)" }}>{c.event_type.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())}</p>
+                <p className="text-xs" style={{ color: "var(--text-muted)" }}>{new Date(c.created_at).toLocaleDateString()}</p>
+              </div>
+              <span className="text-sm font-semibold text-amber-400">+{c.nexleader_credit} NC</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Pending / Rejected banners + Application state machine ────────────────────
 export default function NexLeaderPage() {
   const tokenRef = useRef<string | null>(null);
   const [data, setData]       = useState<StatusData | null>(null);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied]   = useState(false);
 
-  // Application form state
-  const [reason, setReason]             = useState("");
-  const [community, setCommunity]       = useState("");
-  const [recruits, setRecruits]         = useState("");
-  const [submitting, setSubmitting]     = useState(false);
-  const [formError, setFormError]       = useState("");
-  const [submitted, setSubmitted]       = useState(false);
-  const [tncChecked, setTncChecked]     = useState(false);
+  const [reason, setReason]         = useState("");
+  const [community, setCommunity]   = useState("");
+  const [recruits, setRecruits]     = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [formError, setFormError]   = useState("");
+  const [submitted, setSubmitted]   = useState(false);
+  const [tncChecked, setTncChecked] = useState(false);
 
   useEffect(() => {
     async function load() {
       const { data: { session } } = await supabase.auth.getSession();
       tokenRef.current = session?.access_token ?? null;
       if (!tokenRef.current) { setLoading(false); return; }
-
       const res = await fetch("/api/nexleader/status", {
         headers: { Authorization: `Bearer ${tokenRef.current}` },
       });
-      if (res.ok) {
-        setData(await res.json() as StatusData);
-      }
+      if (res.ok) setData(await res.json() as StatusData);
       setLoading(false);
     }
     load();
@@ -93,379 +242,404 @@ export default function NexLeaderPage() {
   async function handleApply(e: React.FormEvent) {
     e.preventDefault();
     setFormError("");
-    if (!tncChecked) { setFormError("Please accept the terms."); return; }
+    if (!tncChecked) { setFormError("Please accept the terms to continue."); return; }
+    const recruitCount = parseInt(recruits, 10);
+    if (!recruits || isNaN(recruitCount) || recruitCount < MIN_RECRUITS) {
+      setFormError(`Please enter at least ${MIN_RECRUITS} community members ready to join.`);
+      return;
+    }
     setSubmitting(true);
-
     const res = await fetch("/api/nexleader/apply", {
       method:  "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${tokenRef.current}` },
-      body:    JSON.stringify({ reason, community_description: community, estimated_recruits: recruits ? parseInt(recruits) : undefined }),
+      body:    JSON.stringify({ reason, community_description: community, estimated_recruits: recruitCount }),
     });
-
     const json = await res.json() as { ok?: boolean; error?: string };
     if (!res.ok || !json.ok) {
-      setFormError(json.error ?? "Failed to submit application.");
+      setFormError(json.error ?? "Failed to submit. Please try again.");
       setSubmitting(false);
       return;
     }
     setSubmitted(true);
-    // Refresh data so pending state shows
-    const statusRes = await fetch("/api/nexleader/status", {
-      headers: { Authorization: `Bearer ${tokenRef.current}` },
-    });
-    if (statusRes.ok) setData(await statusRes.json() as StatusData);
+    const sr = await fetch("/api/nexleader/status", { headers: { Authorization: `Bearer ${tokenRef.current}` } });
+    if (sr.ok) setData(await sr.json() as StatusData);
     setSubmitting(false);
   }
 
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[300px]">
-        <Loader2 className="h-7 w-7 animate-spin text-[var(--brand-500)]" />
+        <Loader2 className="h-7 w-7 animate-spin" style={{ color: "var(--brand-500)" }} />
+      </div>
+    );
+  }
+  if (!data) {
+    return <div className="text-center py-20" style={{ color: "var(--text-muted)" }}>Failed to load. Please refresh.</div>;
+  }
+
+  const { profile, totalEarned, application } = data;
+
+  if (profile.is_nexleader) {
+    return <NexLeaderDashboard data={data} copyLink={copyLink} copied={copied} />;
+  }
+
+  const formProps = { profile, totalEarned, reason, setReason, community, setCommunity, recruits, setRecruits, tncChecked, setTncChecked, formError, submitting, onSubmit: handleApply };
+
+  if (application?.status === "pending") {
+    return <PendingView application={application} />;
+  }
+
+  if (application?.status === "rejected" && !submitted) {
+    return (
+      <div className="max-w-2xl mx-auto space-y-6">
+        <PageHero />
+        <div className="rounded-xl px-5 py-4 flex items-start gap-3" style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.25)" }}>
+          <AlertCircle className="h-4 w-4 text-red-400 flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="text-sm font-semibold text-red-400">Previous Application Not Approved</p>
+            {application.rejection_reason && (
+              <p className="text-sm mt-1" style={{ color: "rgba(255,255,255,0.5)" }}>Reason: {application.rejection_reason}</p>
+            )}
+            <p className="text-xs mt-1" style={{ color: "var(--text-muted)" }}>You may reapply after improving your profile.</p>
+          </div>
+        </div>
+        <BenefitCards />
+        <EligibilityAndForm {...formProps} />
       </div>
     );
   }
 
-  if (!data) {
+  if (submitted) {
     return (
-      <div className="text-center py-20 text-[var(--text-muted)]">Failed to load. Please refresh.</div>
+      <div className="max-w-2xl mx-auto space-y-6">
+        <PageHero />
+        <div className="rounded-xl p-8 text-center space-y-3" style={{ background: "rgba(2,180,145,0.07)", border: "1px solid rgba(2,180,145,0.25)" }}>
+          <p className="text-4xl">🎉</p>
+          <p className="text-lg font-bold text-white">Application Submitted!</p>
+          <p className="text-sm" style={{ color: "rgba(255,255,255,0.5)" }}>We review applications within 3–5 business days. You&apos;ll receive an email when a decision is made.</p>
+        </div>
+      </div>
     );
   }
 
-  const { profile, totalEarned, application, members, commissions, activeThisWeek } = data;
+  return (
+    <div className="max-w-2xl mx-auto space-y-8">
+      <PageHero />
+      <BenefitCards />
+      <EligibilityAndForm {...formProps} />
+    </div>
+  );
+}
 
-  // ── NexLeader Dashboard ──────────────────────────────────────────────────────
-  if (profile.is_nexleader) {
-    const recruitLink = `https://nexguild.in/signup?ref=${profile.referral_code ?? ""}`;
-    return (
-      <div className="space-y-6">
-        <div className="flex items-center gap-3">
-          <Crown className="h-6 w-6 text-yellow-400" />
-          <div>
-            <h1 className="text-2xl font-bold text-[var(--text-primary)]">NexLeader Dashboard</h1>
-            <p className="text-sm text-[var(--text-secondary)]">
-              Approved {profile.nexleader_approved_at ? new Date(profile.nexleader_approved_at).toLocaleDateString() : ""}
-            </p>
-          </div>
-        </div>
+// ── Sub-components ─────────────────────────────────────────────────────────────
 
-        {/* Recruitment Link */}
-        <div className="rounded-xl border border-[var(--border-default)] bg-[var(--surface-card)] p-5 space-y-3">
-          <p className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider">Your Recruitment Link</p>
+function PageHero() {
+  return (
+    <div
+      className="rounded-2xl p-8 sm:p-10 text-center"
+      style={{ background: "linear-gradient(135deg,#0d1230 0%,#111827 60%,#0a1628 100%)", border: "1px solid rgba(99,102,241,0.2)" }}
+    >
+      <div className="inline-flex items-center justify-center h-14 w-14 rounded-2xl mx-auto mb-4" style={{ background: "rgba(245,158,11,0.12)", border: "1px solid rgba(245,158,11,0.25)" }}>
+        <Crown className="h-7 w-7 text-amber-400" />
+      </div>
+      <h1
+        className="text-3xl sm:text-4xl font-extrabold mb-3"
+        style={{ background: "linear-gradient(135deg,#a5b4fc,#67e8f9)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}
+      >
+        Become a NexLeader
+      </h1>
+      <p className="text-sm sm:text-base max-w-md mx-auto" style={{ color: "rgba(255,255,255,0.5)" }}>
+        Recruit members to your guild and earn <strong className="text-white">8% commission</strong> on every NexCoin they earn — from tasks and offerwalls, automatically.
+      </p>
+    </div>
+  );
+}
+
+function BenefitCards() {
+  const benefits = [
+    {
+      icon: NexCoinIcon,
+      label: "EARN",
+      title: "Passive Commission",
+      desc: "Earn 8% of every NexCoin your guild members earn from tasks and offerwalls — automatically, forever.",
+      border: "rgba(2,180,145,0.3)",
+      bg: "rgba(2,180,145,0.06)",
+      iconBg: "rgba(2,180,145,0.15)",
+      color: "#02b491",
+    },
+    {
+      icon: Crown,
+      label: "LEAD",
+      title: "Build Your Guild",
+      desc: "Lead your own community on NexGuild. Your unique link tracks every member you recruit.",
+      border: "rgba(99,102,241,0.3)",
+      bg: "rgba(99,102,241,0.06)",
+      iconBg: "rgba(99,102,241,0.15)",
+      color: "#818cf8",
+    },
+    {
+      icon: TrendingUp,
+      label: "GROW",
+      title: "Scalable Income",
+      desc: "The more active members you have, the more you earn. Commission scales with your guild's activity.",
+      border: "rgba(245,158,11,0.3)",
+      bg: "rgba(245,158,11,0.06)",
+      iconBg: "rgba(245,158,11,0.15)",
+      color: "#f59e0b",
+    },
+  ];
+
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      {benefits.map((b) => (
+        <div key={b.label} className="rounded-xl p-5 space-y-3" style={{ background: b.bg, border: `1px solid ${b.border}` }}>
           <div className="flex items-center gap-2">
-            <code className="flex-1 text-sm text-[var(--brand-500)] bg-[var(--surface-subtle)] rounded-lg px-3 py-2 truncate">
-              {recruitLink}
-            </code>
-            <Button size="sm" variant="secondary" onClick={copyLink} className="flex-shrink-0 gap-1.5">
-              {copied ? <Check className="h-3.5 w-3.5 text-green-400" /> : <Copy className="h-3.5 w-3.5" />}
-              {copied ? "Copied!" : "Copy"}
-            </Button>
+            <div className="h-8 w-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: b.iconBg }}>
+              <b.icon size={16} style={{ color: b.color }} />
+            </div>
+            <span className="text-xs font-extrabold tracking-widest uppercase" style={{ color: b.color }}>{b.label}</span>
           </div>
+          <p className="text-sm font-bold text-white">{b.title}</p>
+          <p className="text-xs leading-relaxed" style={{ color: "rgba(255,255,255,0.5)" }}>{b.desc}</p>
         </div>
+      ))}
+    </div>
+  );
+}
 
-        {/* Stats */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          {[
-            { label: "Total Members",     value: profile.guild_total_members, icon: Users,      color: "text-blue-400" },
-            { label: "Active This Week",  value: activeThisWeek,              icon: TrendingUp,  color: "text-green-400" },
-            { label: "Commission Earned", value: `${profile.guild_total_earned} NC`, icon: NexCoinIcon, color: "text-yellow-400" },
-          ].map((s) => (
-            <div key={s.label} className="rounded-xl border border-[var(--border-default)] bg-[var(--surface-card)] p-5">
-              <p className="text-xs text-[var(--text-muted)] font-medium uppercase tracking-wider mb-1">{s.label}</p>
-              <p className={`text-2xl font-bold ${s.color}`}>{s.value}</p>
+function PendingView({ application }: { application: NonNullable<StatusData["application"]> }) {
+  return (
+    <div className="max-w-2xl mx-auto space-y-6">
+      <PageHero />
+      <div className="rounded-xl p-6 space-y-4" style={{ background: "rgba(245,158,11,0.06)", border: "1px solid rgba(245,158,11,0.25)" }}>
+        <div className="flex items-center gap-3">
+          <Loader2 className="h-5 w-5 text-amber-400 animate-spin" />
+          <p className="font-semibold text-white">Application Under Review</p>
+        </div>
+        <p className="text-sm" style={{ color: "rgba(255,255,255,0.5)" }}>
+          Submitted on {new Date(application.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}.<br />
+          We review applications within 3–5 business days. You&apos;ll receive an email when a decision is made.
+        </p>
+        <div className="flex gap-2 pt-1">
+          {["Submitted", "Under Review", "Decision"].map((step, i) => (
+            <div key={step} className="flex-1 flex flex-col items-center gap-1">
+              <div className="h-2 w-full rounded-full" style={{ background: i === 0 ? "#f59e0b" : i === 1 ? "rgba(245,158,11,0.3)" : "rgba(255,255,255,0.1)" }} />
+              <span className="text-xs" style={{ color: i <= 1 ? "#f59e0b" : "rgba(255,255,255,0.3)" }}>{step}</span>
             </div>
           ))}
         </div>
-
-        {/* Members */}
-        {members.length > 0 && (
-          <div className="rounded-xl border border-[var(--border-default)] bg-[var(--surface-card)]">
-            <div className="px-5 py-4 border-b border-[var(--border-default)]">
-              <h2 className="text-sm font-bold text-[var(--text-primary)]">Guild Members</h2>
-            </div>
-            <div className="divide-y divide-[var(--border-default)]">
-              {members.map((m) => {
-                const memberComm = commissions
-                  .filter((c) => c.member_id === m.id)
-                  .reduce((s, c) => s + c.nexleader_credit, 0);
-                return (
-                  <div key={m.id} className="flex items-center justify-between px-5 py-3">
-                    <div>
-                      <p className="text-sm font-medium text-[var(--text-primary)]">{mask(m.full_name)}</p>
-                      <p className="text-xs text-[var(--text-muted)]">Joined {daysAgo(m.created_at)}d ago</p>
-                    </div>
-                    <div className="flex items-center gap-1 text-xs text-yellow-400 font-semibold">
-                      <NexCoinIcon size={12} />
-                      +{memberComm} NC earned
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {/* Commission history */}
-        {commissions.length > 0 && (
-          <div className="rounded-xl border border-[var(--border-default)] bg-[var(--surface-card)]">
-            <div className="px-5 py-4 border-b border-[var(--border-default)]">
-              <h2 className="text-sm font-bold text-[var(--text-primary)]">Commission History</h2>
-            </div>
-            <div className="divide-y divide-[var(--border-default)]">
-              {commissions.map((c) => (
-                <div key={c.id} className="flex items-center justify-between px-5 py-3">
-                  <div>
-                    <p className="text-sm text-[var(--text-secondary)] capitalize">{c.event_type.replace("_", " ")}</p>
-                    <p className="text-xs text-[var(--text-muted)]">{new Date(c.created_at).toLocaleDateString()}</p>
-                  </div>
-                  <span className="text-sm font-semibold text-yellow-400">+{c.nexleader_credit} NC</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
       </div>
-    );
-  }
-
-  // ── Pending Application ──────────────────────────────────────────────────────
-  if (application?.status === "pending") {
-    return (
-      <div className="max-w-xl mx-auto space-y-6">
-        <div className="flex items-center gap-3">
-          <Crown className="h-6 w-6 text-[var(--brand-500)]" />
-          <h1 className="text-2xl font-bold text-[var(--text-primary)]">NexLeader Application</h1>
-        </div>
-        <div className="rounded-xl border border-yellow-500/30 bg-yellow-500/5 p-6 space-y-3">
-          <div className="flex items-center gap-2 text-yellow-400 font-semibold">
-            <Loader2 className="h-4 w-4 animate-spin" /> Application Under Review
-          </div>
-          <p className="text-sm text-[var(--text-secondary)]">
-            Submitted {new Date(application.created_at).toLocaleDateString()}. We review applications within 3–5 business days.
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  // ── Rejected Application ─────────────────────────────────────────────────────
-  if (application?.status === "rejected" && !submitted) {
-    return (
-      <div className="max-w-xl mx-auto space-y-6">
-        <div className="flex items-center gap-3">
-          <Crown className="h-6 w-6 text-[var(--brand-500)]" />
-          <h1 className="text-2xl font-bold text-[var(--text-primary)]">NexLeader</h1>
-        </div>
-        <div className="rounded-xl border border-red-500/30 bg-red-500/5 p-6 space-y-2">
-          <p className="text-sm font-semibold text-red-400">Application Not Approved</p>
-          {application.rejection_reason && (
-            <p className="text-sm text-[var(--text-secondary)]">Reason: {application.rejection_reason}</p>
-          )}
-          <p className="text-xs text-[var(--text-muted)]">You may reapply after improving your profile.</p>
-        </div>
-        <EligibilityAndForm
-          profile={profile}
-          totalEarned={totalEarned}
-          reason={reason}
-          setReason={setReason}
-          community={community}
-          setCommunity={setCommunity}
-          recruits={recruits}
-          setRecruits={setRecruits}
-          tncChecked={tncChecked}
-          setTncChecked={setTncChecked}
-          formError={formError}
-          submitting={submitting}
-          onSubmit={handleApply}
-        />
-      </div>
-    );
-  }
-
-  // ── Eligible / Not Eligible ──────────────────────────────────────────────────
-  return (
-    <div className="max-w-xl mx-auto space-y-6">
-      <div className="flex items-center gap-3">
-        <Crown className="h-6 w-6 text-[var(--brand-500)]" />
-        <div>
-          <h1 className="text-2xl font-bold text-[var(--text-primary)]">Become a NexLeader</h1>
-          <p className="text-sm text-[var(--text-secondary)]">Recruit members and earn 8% commission on their earnings.</p>
-        </div>
-      </div>
-
-      {submitted ? (
-        <div className="rounded-xl border border-green-500/30 bg-green-500/5 p-6 text-center space-y-3">
-          <p className="text-2xl">✅</p>
-          <p className="font-semibold text-green-400">Application Submitted!</p>
-          <p className="text-sm text-[var(--text-secondary)]">We&apos;ll review your application within 3–5 business days.</p>
-        </div>
-      ) : (
-        <EligibilityAndForm
-          profile={profile}
-          totalEarned={totalEarned}
-          reason={reason}
-          setReason={setReason}
-          community={community}
-          setCommunity={setCommunity}
-          recruits={recruits}
-          setRecruits={setRecruits}
-          tncChecked={tncChecked}
-          setTncChecked={setTncChecked}
-          formError={formError}
-          submitting={submitting}
-          onSubmit={handleApply}
-        />
-      )}
     </div>
   );
 }
 
 interface FormProps {
-  profile:        StatusData["profile"];
-  totalEarned:    number;
-  reason:         string;
-  setReason:      (v: string) => void;
-  community:      string;
-  setCommunity:   (v: string) => void;
-  recruits:       string;
-  setRecruits:    (v: string) => void;
-  tncChecked:     boolean;
-  setTncChecked:  (v: boolean) => void;
-  formError:      string;
-  submitting:     boolean;
-  onSubmit:       (e: React.FormEvent) => void;
+  profile:       StatusData["profile"];
+  totalEarned:   number;
+  reason:        string;
+  setReason:     (v: string) => void;
+  community:     string;
+  setCommunity:  (v: string) => void;
+  recruits:      string;
+  setRecruits:   (v: string) => void;
+  tncChecked:    boolean;
+  setTncChecked: (v: boolean) => void;
+  formError:     string;
+  submitting:    boolean;
+  onSubmit:      (e: React.FormEvent) => void;
 }
 
-function EligibilityAndForm({
-  profile, totalEarned,
-  reason, setReason, community, setCommunity, recruits, setRecruits,
-  tncChecked, setTncChecked, formError, submitting, onSubmit,
-}: FormProps) {
-  const ageMs = profile.created_at ? Date.now() - new Date(profile.created_at).getTime() : 0;
+function EligibilityAndForm(props: FormProps) {
+  const { profile, totalEarned, reason, setReason, community, setCommunity, recruits, setRecruits, tncChecked, setTncChecked, formError, submitting, onSubmit } = props;
+
+  const ageMs   = profile.created_at ? Date.now() - new Date(profile.created_at).getTime() : 0;
   const ageDays = Math.floor(ageMs / 86400000);
 
+  const recruitCount = parseInt(recruits, 10);
+  const recruitMet   = !isNaN(recruitCount) && recruitCount >= MIN_RECRUITS;
+
   const criteria = [
-    { label: "Account at least 7 days old", met: ageDays >= MIN_DAYS,   detail: `${ageDays} days` },
-    { label: "Earned at least 500 NexCoins", met: totalEarned >= MIN_EARNED, detail: `${totalEarned} NC` },
-    { label: "Account in good standing",     met: profile.is_active,    detail: "" },
+    {
+      label:   "Account at least 7 days old",
+      met:     ageDays >= MIN_DAYS,
+      detail:  `${ageDays} / ${MIN_DAYS} days`,
+      progress: Math.min(100, (ageDays / MIN_DAYS) * 100),
+      showBar: ageDays < MIN_DAYS,
+    },
+    {
+      label:   "Earned at least 500 NexCoins",
+      met:     totalEarned >= MIN_EARNED,
+      detail:  `${totalEarned} / ${MIN_EARNED} NC`,
+      progress: Math.min(100, (totalEarned / MIN_EARNED) * 100),
+      showBar: totalEarned < MIN_EARNED,
+    },
+    {
+      label:   "Account in good standing",
+      met:     profile.is_active,
+      detail:  profile.is_active ? "Active" : "Not active",
+      progress: 0,
+      showBar: false,
+    },
+    {
+      label:   "Community of at least 10 people ready to join",
+      met:     recruitMet,
+      detail:  recruits ? `${recruitCount < MIN_RECRUITS ? "Need " + MIN_RECRUITS + "+" : recruitCount + " declared"}` : "Self-declared below",
+      progress: 0,
+      showBar: false,
+      selfDeclared: true,
+    },
   ];
 
-  const allMet = criteria.every((c) => c.met);
+  const autoMet  = criteria.slice(0, 3).every((c) => c.met);
+  const allMet   = autoMet && recruitMet;
 
   return (
     <div className="space-y-5">
-      {/* Eligibility */}
-      <div className="rounded-xl border border-[var(--border-default)] bg-[var(--surface-card)] p-5 space-y-3">
-        <p className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider">Eligibility</p>
+      {/* Eligibility card */}
+      <div className="rounded-xl p-5 space-y-4" style={{ background: "var(--surface-card)", border: "1px solid var(--border-default)" }}>
+        <p className="text-xs font-bold uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>Eligibility Requirements</p>
         {criteria.map((c) => (
-          <div key={c.label} className="flex items-center gap-3">
-            <span className={`flex-shrink-0 h-5 w-5 rounded-full flex items-center justify-center text-xs ${
-              c.met ? "bg-green-500/15 text-green-400" : "bg-[var(--surface-subtle)] text-[var(--text-muted)]"
-            }`}>
-              {c.met ? "✓" : "○"}
-            </span>
-            <span className={`text-sm ${c.met ? "text-[var(--text-primary)]" : "text-[var(--text-muted)]"}`}>
-              {c.label}
-            </span>
-            {c.detail && (
-              <span className="ml-auto text-xs text-[var(--text-muted)]">{c.detail}</span>
+          <div key={c.label} className="space-y-1.5">
+            <div className="flex items-center gap-3">
+              <span
+                className="flex-shrink-0 h-5 w-5 rounded-full flex items-center justify-center text-xs font-bold transition-all"
+                style={c.met
+                  ? { background: "rgba(34,197,94,0.15)", color: "#22c55e" }
+                  : c.selfDeclared
+                  ? { background: "rgba(245,158,11,0.12)", color: "#f59e0b" }
+                  : { background: "rgba(255,255,255,0.07)", color: "rgba(255,255,255,0.3)" }}
+              >
+                {c.met ? <CheckCircle2 className="h-3.5 w-3.5" /> : c.selfDeclared ? <Zap className="h-3 w-3" /> : "○"}
+              </span>
+              <span className="text-sm flex-1" style={{ color: c.met ? "white" : "rgba(255,255,255,0.5)" }}>
+                {c.label}
+                {c.selfDeclared && <span className="ml-1.5 text-xs" style={{ color: "rgba(245,158,11,0.6)" }}>(self-declared)</span>}
+              </span>
+              <span className="text-xs font-medium flex-shrink-0" style={{ color: c.met ? "#22c55e" : "rgba(255,255,255,0.3)" }}>
+                {c.detail}
+              </span>
+            </div>
+            {c.showBar && (
+              <div className="ml-8 h-1.5 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.08)" }}>
+                <div
+                  className="h-full rounded-full transition-all duration-500"
+                  style={{ width: `${c.progress}%`, background: "linear-gradient(90deg,#6366f1,#02b491)" }}
+                />
+              </div>
             )}
           </div>
         ))}
       </div>
 
-      {!allMet ? (
-        <div className="rounded-xl border border-[var(--border-default)] bg-[var(--surface-subtle)] p-4 flex items-start gap-3">
-          <AlertCircle className="h-4 w-4 text-[var(--text-muted)] flex-shrink-0 mt-0.5" />
-          <p className="text-sm text-[var(--text-secondary)]">
-            Meet all eligibility criteria above to apply.
+      {/* Handbook download */}
+      <a
+        href="/nexleader-handbook.pdf"
+        download
+        className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-colors hover:opacity-80"
+        style={{ background: "rgba(245,158,11,0.07)", border: "1px solid rgba(245,158,11,0.2)", color: "#f59e0b" }}
+      >
+        <BookOpen className="h-4 w-4 flex-shrink-0" />
+        Download NexLeader Handbook (PDF)
+      </a>
+
+      {!autoMet ? (
+        <div className="rounded-xl px-5 py-4 flex items-start gap-3" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
+          <AlertCircle className="h-4 w-4 flex-shrink-0 mt-0.5" style={{ color: "var(--text-muted)" }} />
+          <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
+            Meet all eligibility criteria above to unlock the application form.
           </p>
         </div>
       ) : (
-        <form onSubmit={onSubmit} className="space-y-4">
-          {/* T&C */}
-          <div className="rounded-xl border border-[var(--border-default)] bg-[var(--surface-card)] p-5 space-y-3">
+        <form onSubmit={onSubmit} className="space-y-5">
+          {/* Agreement */}
+          <div className="rounded-xl p-5 space-y-3" style={{ background: "rgba(99,102,241,0.06)", border: "1px solid rgba(99,102,241,0.2)" }}>
             <div className="flex items-center gap-2">
-              <Star className="h-4 w-4 text-yellow-400" />
-              <p className="text-sm font-bold text-[var(--text-primary)]">NexLeader Agreement</p>
+              <Crown className="h-4 w-4 text-indigo-400" />
+              <p className="text-sm font-bold text-white">NexLeader Agreement</p>
             </div>
-            <ul className="space-y-2 text-xs text-[var(--text-secondary)]">
-              <li>• You will earn 8% commission on all your members&apos; earnings</li>
-              <li>• If you are under another NexLeader, <strong className="text-[var(--text-primary)]">500 NC will be deducted</strong> from your balance as a transfer fee upon approval</li>
+            <ul className="space-y-1.5 text-xs" style={{ color: "rgba(255,255,255,0.5)" }}>
+              <li>• You will earn <strong className="text-white">8% commission</strong> on all your members&apos; earnings</li>
+              <li>• If you are under another NexLeader, <strong className="text-white">500 NC will be deducted</strong> from your balance as a transfer fee upon approval</li>
               <li>• Your members will never see commission details</li>
-              <li>• NexGuild can revoke NexLeader status for violations</li>
+              <li>• NexGuild can revoke NexLeader status for policy violations</li>
             </ul>
           </div>
 
           {/* Reason */}
           <div>
-            <label className="block text-sm font-semibold text-[var(--text-primary)] mb-1.5">
-              Why do you want to become a NexLeader? <span className="text-[var(--text-muted)] font-normal">(min 100 chars)</span>
+            <label className="block text-sm font-semibold text-white mb-1.5">
+              Why do you want to become a NexLeader? <span className="font-normal text-xs" style={{ color: "var(--text-muted)" }}>(min 100 chars)</span>
             </label>
             <textarea
               required
               value={reason}
               onChange={(e) => setReason(e.target.value)}
               rows={4}
-              placeholder="Describe your motivation…"
-              className="w-full rounded-lg border border-[var(--border-default)] bg-[var(--surface-subtle)] text-sm text-[var(--text-primary)] px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-[var(--border-focus)] resize-none"
+              placeholder="Describe your motivation, what community you have, and how you plan to recruit…"
+              className="w-full rounded-lg text-sm px-3 py-2.5 resize-none focus:outline-none focus:ring-2"
+              style={{ background: "var(--surface-subtle)", border: "1px solid var(--border-default)", color: "var(--text-primary)" }}
             />
-            <p className="text-xs text-[var(--text-muted)] mt-1">{reason.length}/100 minimum</p>
+            <p className="text-xs mt-1" style={{ color: reason.length >= 100 ? "#22c55e" : "var(--text-muted)" }}>{reason.length} / 100 minimum</p>
           </div>
 
-          {/* Community */}
+          {/* Community description */}
           <div>
-            <label className="block text-sm font-semibold text-[var(--text-primary)] mb-1.5">
-              Describe your community <span className="text-[var(--text-muted)] font-normal">(min 50 chars)</span>
+            <label className="block text-sm font-semibold text-white mb-1.5">
+              Describe your community <span className="font-normal text-xs" style={{ color: "var(--text-muted)" }}>(min 50 chars)</span>
             </label>
             <textarea
               required
               value={community}
               onChange={(e) => setCommunity(e.target.value)}
               rows={3}
-              placeholder="WhatsApp group, college batch, Telegram channel…"
-              className="w-full rounded-lg border border-[var(--border-default)] bg-[var(--surface-subtle)] text-sm text-[var(--text-primary)] px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-[var(--border-focus)] resize-none"
+              placeholder="WhatsApp group, college batch, Telegram channel, YouTube audience…"
+              className="w-full rounded-lg text-sm px-3 py-2.5 resize-none focus:outline-none focus:ring-2"
+              style={{ background: "var(--surface-subtle)", border: "1px solid var(--border-default)", color: "var(--text-primary)" }}
             />
           </div>
 
-          {/* Estimated recruits */}
+          {/* Community size — required, min 10 */}
           <div>
-            <label className="block text-sm font-semibold text-[var(--text-primary)] mb-1.5">
-              How many people can you recruit? <span className="text-[var(--text-muted)] font-normal">(optional)</span>
+            <label className="block text-sm font-semibold text-white mb-1.5">
+              How many people in your community are ready to join NexGuild?{" "}
+              <span className="font-normal text-xs" style={{ color: "var(--text-muted)" }}>(minimum 10)</span>
             </label>
             <input
               type="number"
-              min={1}
+              required
+              min={MIN_RECRUITS}
               value={recruits}
               onChange={(e) => setRecruits(e.target.value)}
-              placeholder="e.g. 20"
-              className="w-full h-10 px-3 rounded-lg border border-[var(--border-default)] bg-[var(--surface-subtle)] text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--border-focus)]"
+              placeholder="e.g. 25"
+              className="w-full h-10 px-3 rounded-lg text-sm focus:outline-none focus:ring-2"
+              style={{ background: "var(--surface-subtle)", border: `1px solid ${recruitMet ? "rgba(34,197,94,0.4)" : "var(--border-default)"}`, color: "var(--text-primary)" }}
             />
+            {recruits && !recruitMet && (
+              <p className="text-xs mt-1 text-red-400">Must be at least {MIN_RECRUITS}</p>
+            )}
           </div>
 
-          {/* Terms checkbox */}
+          {/* Terms */}
           <label className="flex items-start gap-3 cursor-pointer select-none">
             <input
               type="checkbox"
               checked={tncChecked}
               onChange={(e) => setTncChecked(e.target.checked)}
-              className="mt-0.5 h-4 w-4 rounded accent-[var(--brand-500)] flex-shrink-0"
+              className="mt-0.5 h-4 w-4 rounded flex-shrink-0"
+              style={{ accentColor: "var(--brand-500)" }}
             />
-            <span className="text-sm text-[var(--text-secondary)]">
+            <span className="text-sm" style={{ color: "var(--text-secondary)" }}>
               I have read and agree to the NexLeader Agreement above
             </span>
           </label>
 
           {formError && (
-            <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400">
+            <div className="rounded-lg px-4 py-3 text-sm text-red-400" style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.25)" }}>
               {formError}
             </div>
           )}
 
-          <Button
-            type="submit"
-            disabled={submitting || !tncChecked}
-            className="w-full"
-          >
+          <Button type="submit" disabled={submitting || !tncChecked || !allMet} className="w-full">
             {submitting ? <><Loader2 className="h-4 w-4 animate-spin mr-2" />Submitting…</> : "Submit Application"}
           </Button>
         </form>

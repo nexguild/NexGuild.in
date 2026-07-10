@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { getResend, FROM_NOREPLY, nexleaderApprovedHtml } from "@/lib/email";
 
 const SOMEN_ID = "6c95c54a-33e6-489b-9175-3626c774635e";
 const PROMOTION_FEE = 500;
@@ -142,11 +143,11 @@ export async function POST(req: NextRequest) {
     // Get applicant profile
     const { data: applicantProfile } = await admin
       .from("profiles")
-      .select("nexcoins, nexleader_id, full_name")
+      .select("nexcoins, nexleader_id, full_name, email, referral_code")
       .eq("id", applicantId)
       .single();
 
-    const ap = applicantProfile as { nexcoins: number; nexleader_id: string | null; full_name: string | null } | null;
+    const ap = applicantProfile as { nexcoins: number; nexleader_id: string | null; full_name: string | null; email: string | null; referral_code: string | null } | null;
     const currentNexleaderId = ap?.nexleader_id ?? SOMEN_ID;
     const hasRealNexleader = currentNexleaderId !== SOMEN_ID;
 
@@ -236,6 +237,19 @@ export async function POST(req: NextRequest) {
       reviewed_at: new Date().toISOString(),
       reviewed_by: caller.id,
     }).eq("id", body.applicationId);
+
+    // Send welcome email (fire-and-forget)
+    const applicantEmail = ap?.email ?? null;
+    if (applicantEmail) {
+      const resend = getResend();
+      const recruitLink = `https://nexguild.in/signup?ref=${ap?.referral_code ?? ""}`;
+      resend?.emails.send({
+        from:    FROM_NOREPLY,
+        to:      applicantEmail,
+        subject: "🎉 Welcome to the NexGuild NexLeader Program!",
+        html:    nexleaderApprovedHtml(ap?.full_name ?? "NexLeader", recruitLink),
+      }).catch((e: unknown) => console.error("[nexleaders/approve] email error:", e));
+    }
 
     return NextResponse.json({ ok: true });
   }

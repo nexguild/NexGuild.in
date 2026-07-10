@@ -488,7 +488,57 @@ ${btn("Resubmit Now →", "https://nexguild.in/dashboard/tasks")}`);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 11. Announcement
+// 11. NexLeader Approved
+// ─────────────────────────────────────────────────────────────────────────────
+const WHATSAPP_LINK_EMAIL = "https://chat.whatsapp.com/PLACEHOLDER";
+
+export function nexleaderApprovedHtml(
+  name: string,
+  recruitLink: string,
+): string {
+  const n = esc(name);
+  const link = esc(recruitLink);
+  return layout(`
+<div style="background:linear-gradient(135deg,#0a0f1f,#0d1530);border:1px solid rgba(99,102,241,0.3);border-radius:10px;padding:20px 24px;margin:0 0 24px;">
+  <p style="margin:0 0 4px;font-size:12px;font-weight:700;color:#818cf8;text-transform:uppercase;letter-spacing:1.5px;">You're Approved!</p>
+  <p style="margin:0;font-size:24px;font-weight:800;color:#fff;">Welcome to the NexLeader Program 🎉</p>
+</div>
+
+<p style="margin:0 0 20px;font-size:15px;color:rgba(255,255,255,0.7);line-height:1.7;">
+  Hi <strong style="color:#fff;">${n}</strong>,<br><br>
+  Congratulations! You have been approved as a <strong style="color:#F59E0B;">NexLeader</strong> on NexGuild. You can now start recruiting members and earning <strong style="color:#02b491;">8% commission</strong> on every NexCoin they earn.
+</p>
+
+<div style="background:#111;border:1px solid rgba(2,180,145,0.25);border-radius:10px;padding:18px 22px;margin:0 0 20px;">
+  <p style="margin:0 0 8px;font-size:12px;font-weight:700;color:#02b491;text-transform:uppercase;letter-spacing:1px;">Your Recruitment Link</p>
+  <p style="margin:0;font-size:13px;color:#02b491;font-family:monospace;word-break:break-all;">${link}</p>
+  <p style="margin:8px 0 0;font-size:12px;color:rgba(255,255,255,0.35);">Share this link to recruit members. You earn commissions on their earnings automatically.</p>
+</div>
+
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#111;border:1px solid #222;border-radius:10px;margin:0 0 24px;">
+  <tr><td style="padding:14px 20px;border-bottom:1px solid #1a1a1a;">
+    <span style="font-size:12px;color:rgba(255,255,255,0.38);">NexLeader Handbook</span><br>
+    <a href="https://nexguild.in/nexleader-handbook.pdf" style="font-size:14px;color:#F59E0B;font-weight:600;text-decoration:none;">📘 Download Handbook →</a>
+  </td></tr>
+  <tr><td style="padding:14px 20px;border-bottom:1px solid #1a1a1a;">
+    <span style="font-size:12px;color:rgba(255,255,255,0.38);">WhatsApp Community</span><br>
+    <a href="${WHATSAPP_LINK_EMAIL}" style="font-size:14px;color:#25D366;font-weight:600;text-decoration:none;">💬 Join NexLeader WhatsApp →</a>
+  </td></tr>
+  <tr><td style="padding:14px 20px;">
+    <span style="font-size:12px;color:rgba(255,255,255,0.38);">Need help?</span><br>
+    <a href="mailto:admin@nexguild.in" style="font-size:14px;color:#F59E0B;text-decoration:none;">admin@nexguild.in</a>
+  </td></tr>
+</table>
+
+${btn("Open NexLeader Dashboard →", "https://nexguild.in/dashboard/nexleader")}
+
+<p style="margin:16px 0 0;font-size:13px;color:rgba(255,255,255,0.3);">
+  Questions? Contact us at <a href="mailto:admin@nexguild.in" style="color:#F59E0B;text-decoration:none;">admin@nexguild.in</a>
+</p>`);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 12. Announcement
 // ─────────────────────────────────────────────────────────────────────────────
 export function announcementHtml(
   name: string,
