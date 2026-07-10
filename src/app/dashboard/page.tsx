@@ -397,49 +397,84 @@ export default function DashboardHome() {
         {/* noise texture overlay */}
         <div className="absolute inset-0 bg-white/5 pointer-events-none" />
 
-        <div className="relative p-6 sm:p-8">
-          <div className="flex items-start justify-between gap-4 flex-wrap">
-            <div>
-              <p className="text-white/60 text-xs font-medium tracking-widest uppercase mb-1">{greeting}</p>
-              <h1 className="text-3xl font-bold text-white">
-                {loading ? "Welcome back!" : `${displayName}!`}
-              </h1>
-              <p className="text-white/70 text-sm mt-1">Here&apos;s your overview for today.</p>
+        <div className="relative p-6 sm:p-8 flex flex-col md:flex-row gap-6 items-start">
+
+          {/* ── Left: greeting + balance + XP ───────────────────────── */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-start justify-between gap-4 flex-wrap">
+              <div>
+                <p className="text-white/60 text-xs font-medium tracking-widest uppercase mb-1">{greeting}</p>
+                <h1 className="text-3xl font-bold text-white">
+                  {loading ? "Welcome back!" : `${displayName}!`}
+                </h1>
+                <p className="text-white/70 text-sm mt-1">Here&apos;s your overview for today.</p>
+              </div>
+              {!loading && streak > 0 && (
+                <div className="flex items-center gap-1.5 bg-white/20 backdrop-blur-sm rounded-full px-4 py-2 flex-shrink-0">
+                  <Flame className="h-4 w-4 text-orange-300" />
+                  <span className="text-white font-bold text-sm">{streak} day streak</span>
+                </div>
+              )}
             </div>
-            {!loading && streak > 0 && (
-              <div className="flex items-center gap-1.5 bg-white/20 backdrop-blur-sm rounded-full px-4 py-2 flex-shrink-0">
-                <Flame className="h-4 w-4 text-orange-300" />
-                <span className="text-white font-bold text-sm">{streak} day streak</span>
+
+            {!loading && (
+              <div className="mt-6 flex items-center gap-3 flex-wrap">
+                {/* NexCoins pill */}
+                <div className="flex items-center gap-3 bg-white/15 backdrop-blur-sm rounded-2xl border border-white/20 px-5 py-3">
+                  <NexCoinIcon size={22} />
+                  <div>
+                    <p className="text-white/60 text-xs font-medium">NexCoins Balance</p>
+                    <p className="text-white font-bold text-2xl leading-tight">{countCoins.toLocaleString()}</p>
+                  </div>
+                </div>
+                {/* Level badge */}
+                <div className="bg-white/20 rounded-full px-3 py-1">
+                  <p className="text-white/70 text-[10px] font-medium">LEVEL</p>
+                  <p className="text-white font-bold text-xl leading-tight text-center">{level}</p>
+                </div>
+                {/* XP bar */}
+                <div className="flex-1 min-w-[160px]">
+                  <div className="flex justify-between text-[11px] text-white/60 mb-2">
+                    <span>XP Progress</span>
+                    <span>{xpInLevel.toLocaleString()} / 1,000</span>
+                  </div>
+                  <div className="h-2 rounded-full bg-white/20 overflow-hidden">
+                    <div
+                      className="h-full rounded-full bg-white transition-all duration-1000"
+                      style={{ width: `${xpPct}%` }}
+                    />
+                  </div>
+                </div>
               </div>
             )}
           </div>
 
+          {/* ── Right: Today's Snapshot (desktop only) ──────────────── */}
           {!loading && (
-            <div className="mt-6 flex items-center gap-3 flex-wrap">
-              {/* NexCoins pill */}
-              <div className="flex items-center gap-3 bg-white/15 backdrop-blur-sm rounded-2xl border border-white/20 px-5 py-3">
-                <NexCoinIcon size={22} />
-                <div>
-                  <p className="text-white/60 text-xs font-medium">NexCoins Balance</p>
-                  <p className="text-white font-bold text-2xl leading-tight">{countCoins.toLocaleString()}</p>
+            <div className="hidden md:block w-64 flex-shrink-0 bg-white/15 backdrop-blur-sm rounded-2xl p-4">
+              <p className="text-white/60 text-xs font-medium tracking-widest uppercase mb-3">Today&apos;s Snapshot</p>
+              <div className="space-y-2.5">
+                <div className="flex items-center gap-2">
+                  <span className="text-lg leading-none">🔥</span>
+                  <span className="text-white/70 text-sm flex-1">Day Streak</span>
+                  <span className="text-white font-bold text-sm">{streak}</span>
                 </div>
-              </div>
-              {/* Level badge */}
-              <div className="bg-white/20 rounded-full px-3 py-1">
-                <p className="text-white/70 text-[10px] font-medium">LEVEL</p>
-                <p className="text-white font-bold text-xl leading-tight text-center">{level}</p>
-              </div>
-              {/* XP bar */}
-              <div className="flex-1 min-w-[160px]">
-                <div className="flex justify-between text-[11px] text-white/60 mb-2">
-                  <span>XP Progress</span>
-                  <span>{xpInLevel.toLocaleString()} / 1,000</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-lg leading-none">✅</span>
+                  <span className="text-white/70 text-sm flex-1">Tasks Today</span>
+                  <span className="text-white font-bold text-sm">{tasksToday} / {tasksRequired}</span>
                 </div>
-                <div className="h-2 rounded-full bg-white/20 overflow-hidden">
-                  <div
-                    className="h-full rounded-full bg-white transition-all duration-1000"
-                    style={{ width: `${xpPct}%` }}
-                  />
+                <div className="flex items-center gap-2">
+                  <span className="text-lg leading-none">💰</span>
+                  <span className="text-white/70 text-sm flex-1">NC Earned Today</span>
+                  <span className="text-white font-bold text-sm">
+                    {chartData.find(d => d.label === new Date().toLocaleDateString("en-IN", { weekday: "short" }))?.value ?? 0}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-lg leading-none">⭐</span>
+                  <span className="text-white/70 text-sm flex-1">Level {level}</span>
+                  <span className="text-white font-bold text-sm">{xpInLevel.toLocaleString()} / 1,000 XP</span>
                 </div>
               </div>
             </div>
