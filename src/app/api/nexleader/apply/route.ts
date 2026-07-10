@@ -32,11 +32,11 @@ export async function POST(req: NextRequest) {
 
   const { data: profile } = await admin
     .from("profiles")
-    .select("is_nexleader, is_active, created_at")
+    .select("is_nexleader, is_active")
     .eq("id", user.id)
     .single();
 
-  const p = profile as { is_nexleader: boolean | null; is_active: boolean | null; created_at: string | null } | null;
+  const p = profile as { is_nexleader: boolean | null; is_active: boolean | null } | null;
 
   if (p?.is_nexleader) {
     return NextResponse.json({ error: "You are already a NexLeader." }, { status: 400 });
@@ -45,9 +45,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Your account is not active." }, { status: 403 });
   }
 
-  // Account age check
-  const createdAt = p?.created_at ? new Date(p.created_at) : null;
-  const ageMs = createdAt ? Date.now() - createdAt.getTime() : 0;
+  // Account age check — use auth user.created_at (authoritative)
+  const authCreatedAt = user.created_at ? new Date(user.created_at) : null;
+  const ageMs = authCreatedAt ? Date.now() - authCreatedAt.getTime() : 0;
   if (ageMs < MIN_DAYS * 86400000) {
     return NextResponse.json({ error: `Your account must be at least ${MIN_DAYS} days old.` }, { status: 400 });
   }

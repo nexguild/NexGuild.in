@@ -2,7 +2,7 @@ import { SupabaseClient } from "@supabase/supabase-js";
 
 const SOMEN_ID = "6c95c54a-33e6-489b-9175-3626c774635e";
 const CONTRIBUTOR_PCT = 0.66;
-const NEXLEADER_PCT   = 0.08;
+const NEXLEADER_PCT   = 0.10;
 
 export interface CommissionResult {
   contributorCredit: number;
@@ -12,7 +12,7 @@ export interface CommissionResult {
 
 /**
  * Credits NexCoins to a contributor with the NexLeader commission split:
- *   Contributor 66% | NexLeader 8% | Platform 26%
+ *   Contributor 66% | NexLeader 10% | Platform 24%
  *
  * @param supabaseAdmin  Service-role Supabase client
  * @param contributorId  User receiving the earnings

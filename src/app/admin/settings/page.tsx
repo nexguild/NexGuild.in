@@ -46,6 +46,7 @@ const MAINTENANCE_SECTIONS: { key: string; label: string; desc: string }[] = [
   { key: "dashboard",    label: "Dashboard",            desc: "Contributor dashboard (/dashboard/*)" },
   { key: "store",        label: "Store",                desc: "NexGuild store (/dashboard/store)" },
   { key: "offerwalls",   label: "Offerwalls",           desc: "Offerwall section (/dashboard/offerwalls)" },
+  { key: "nexleader",    label: "NexLeader",            desc: "NexLeader program page (/dashboard/nexleader)" },
   { key: "signup",       label: "New Registrations",    desc: "Prevent new signups (/signup)" },
 ];
 

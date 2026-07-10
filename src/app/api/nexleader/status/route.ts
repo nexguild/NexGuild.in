@@ -17,7 +17,7 @@ export async function GET(req: NextRequest) {
   // Profile
   const { data: profile } = await admin
     .from("profiles")
-    .select("nexcoins, is_nexleader, nexleader_approved_at, guild_total_members, guild_total_earned, referral_code, is_active, created_at")
+    .select("nexcoins, is_nexleader, nexleader_approved_at, guild_total_members, guild_total_earned, referral_code, is_active")
     .eq("id", user.id)
     .single();
 
@@ -29,7 +29,6 @@ export async function GET(req: NextRequest) {
     guild_total_earned: number | null;
     referral_code: string | null;
     is_active: boolean | null;
-    created_at: string | null;
   } | null;
 
   // Total ever earned
@@ -107,7 +106,7 @@ export async function GET(req: NextRequest) {
       guild_total_earned:    p?.guild_total_earned ?? 0,
       referral_code:         p?.referral_code ?? null,
       is_active:             p?.is_active ?? true,
-      created_at:            p?.created_at ?? null,
+      auth_created_at:       user.created_at ?? null,
     },
     totalEarned,
     application,
