@@ -121,10 +121,12 @@ export default function TaskWorkPage() {
 
       const [taskRes, subRes] = await Promise.all([
         supabase.from("tasks").select("*").eq("id", id).single(),
+        // .limit(1) prevents maybeSingle() from erroring if duplicate rows exist
         supabase.from("submissions")
           .select("id, status")
           .eq("task_id", id)
           .eq("contributor_id", user.id)
+          .limit(1)
           .maybeSingle(),
       ]);
 

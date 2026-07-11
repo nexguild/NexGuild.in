@@ -60,7 +60,20 @@ export default function TasksPage() {
         .order("submitted_at", { ascending: false });
 
       if (fetchErr) console.error("submissions fetch error:", fetchErr.message);
-      setSubmissions((data as unknown as Submission[]) ?? []);
+
+      // Deduplicate by task_id: keep the row with the highest-priority status.
+      // This guards against duplicate in_progress rows created by multiple visits.
+      const STATUS_PRIORITY: Record<string, number> = {
+        approved: 5, rejected: 4, submitted: 3, resubmit_requested: 2, in_progress: 1,
+      };
+      const byTask: Record<string, Submission> = {};
+      for (const s of (data as unknown as Submission[]) ?? []) {
+        const existing = byTask[s.task_id];
+        const cur = STATUS_PRIORITY[s.status] ?? 0;
+        const prev = existing ? (STATUS_PRIORITY[existing.status] ?? 0) : -1;
+        if (!existing || cur > prev) byTask[s.task_id] = s;
+      }
+      setSubmissions(Object.values(byTask));
       setLoading(false);
     }
     fetchSubmissions();
