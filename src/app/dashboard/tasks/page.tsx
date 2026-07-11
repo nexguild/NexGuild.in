@@ -200,13 +200,27 @@ export default function TasksPage() {
               ? "Needs Resubmission"
               : TABS.find((t) => t.status === s.status)?.label ?? s.status;
 
+            const accentColor =
+              s.status === "approved"            ? "#22c55e"
+              : s.status === "resubmit_requested" ? "#f97316"
+              : s.status === "rejected"           ? "#ef4444"
+              : s.status === "submitted"          ? "#f59e0b"
+              :                                     "#6366f1";
+
             return (
               <li
                 key={s.id}
-                className={`space-y-3 rounded-2xl border bg-white px-5 py-4 shadow-sm ${
+                className={`relative space-y-3 overflow-hidden rounded-2xl border bg-white py-4 pr-5 shadow-sm ${
                   isResubmit ? "border-orange-200" : isRejected ? "border-red-200" : "border-slate-100"
                 }`}
+                style={{ paddingLeft: "1.25rem" }}
               >
+                {/* Left accent bar */}
+                <div
+                  className="absolute left-0 top-0 h-full w-1 rounded-l-2xl"
+                  style={{ background: accentColor }}
+                />
+
                 {/* Top row */}
                 <div className="flex items-center justify-between gap-4">
                   <div className="min-w-0">

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ShoppingBag, TrendingUp, History } from "lucide-react";
+import { ShoppingBag, TrendingUp, History, ArrowDownLeft, ArrowUpRight } from "lucide-react";
 import { NexCoinIcon } from "@/components/ui/nexcoin-icon";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
@@ -185,22 +185,34 @@ export default function NexCoinsPage() {
           </div>
         ) : (
           <ul className="divide-y divide-slate-50">
-            {transactions.map((tx) => (
-              <li key={tx.id} className="flex items-center justify-between gap-4 px-5 py-3.5">
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-semibold text-slate-700">
-                    {tx.description ?? tx.source ?? tx.type}
-                  </p>
-                  <p className="text-xs text-slate-400">
-                    {new Date(tx.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
-                    {tx.source && <span> · {tx.source}</span>}
-                  </p>
-                </div>
-                <span className={`flex-shrink-0 text-sm font-bold ${tx.type === "earned" ? "text-green-600" : "text-indigo-500"}`}>
-                  {tx.type === "earned" ? "+" : "−"}{Math.abs(tx.amount).toLocaleString()}
-                </span>
-              </li>
-            ))}
+            {transactions.map((tx) => {
+              const isEarned = tx.type === "earned";
+              return (
+                <li key={tx.id} className="flex items-center gap-3 px-5 py-3.5">
+                  {/* Direction icon */}
+                  <div className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full ${
+                    isEarned ? "bg-green-100" : "bg-indigo-100"
+                  }`}>
+                    {isEarned
+                      ? <ArrowDownLeft className="h-4 w-4 text-green-600" />
+                      : <ArrowUpRight className="h-4 w-4 text-indigo-500" />
+                    }
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-semibold text-slate-700">
+                      {tx.description ?? tx.source ?? tx.type}
+                    </p>
+                    <p className="text-xs text-slate-400">
+                      {new Date(tx.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+                      {tx.source && <span> · {tx.source}</span>}
+                    </p>
+                  </div>
+                  <span className={`flex-shrink-0 text-sm font-bold ${isEarned ? "text-green-600" : "text-indigo-500"}`}>
+                    {isEarned ? "+" : "−"}{Math.abs(tx.amount).toLocaleString()}
+                  </span>
+                </li>
+              );
+            })}
           </ul>
         )}
       </div>
