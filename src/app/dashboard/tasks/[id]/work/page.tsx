@@ -375,6 +375,9 @@ export default function TaskWorkPage() {
     );
   }
 
+  // Compute contributor-facing coin amount (66% of gross) — used in all display locations
+  const contributorCoins = task.pay_per_task != null ? Math.floor(task.pay_per_task * 0.66) : null;
+
   if (done || submissionStatus === "submitted" || submissionStatus === "approved") {
     return (
       <div className="max-w-md mx-auto space-y-6 py-12 text-center">
@@ -390,9 +393,9 @@ export default function TaskWorkPage() {
               ? "Your submission has been approved and NexCoins have been credited to your account."
               : "Our admin team will review your work and get back to you."}
           </p>
-          {task.pay_per_task && (
+          {contributorCoins != null && (
             <p className="text-sm font-bold text-teal-600 mt-3">
-              Reward: {task.pay_per_task} NexCoins
+              Reward: {contributorCoins} NexCoins
             </p>
           )}
           {task.validation_time && submissionStatus !== "approved" && (
@@ -461,9 +464,9 @@ export default function TaskWorkPage() {
 
           {/* Unified pills row */}
           <div className="relative z-10 flex flex-wrap gap-2">
-            {task.pay_per_task && (
+            {contributorCoins != null && (
               <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-300/40 bg-amber-400/20 px-3 py-1 text-xs font-bold text-amber-100">
-                🪙 {task.pay_per_task} NexCoins
+                🪙 {contributorCoins} NexCoins
               </span>
             )}
             {task.task_type && (
@@ -907,12 +910,12 @@ export default function TaskWorkPage() {
         <div className="fixed bottom-0 left-0 right-0 lg:left-[240px] z-30 border-t border-indigo-100/60 bg-white/85 backdrop-blur-md shadow-lg">
           <div className="max-w-3xl mx-auto px-4 py-3 flex items-center gap-4">
             {/* Left: coin earn amount */}
-            {task.pay_per_task && (
+            {contributorCoins != null && (
               <div className="flex min-w-0 flex-1 items-center gap-1.5">
                 <span className="flex-shrink-0 text-base">🪙</span>
                 <span className="whitespace-nowrap text-sm text-slate-500">
                   Earn up to:{" "}
-                  <span className="font-bold text-amber-500">{task.pay_per_task} NexCoins</span>
+                  <span className="font-bold text-amber-500">{contributorCoins} NexCoins</span>
                 </span>
               </div>
             )}

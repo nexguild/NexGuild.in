@@ -355,7 +355,7 @@ export default function TaskDetailPage() {
         <div className="flex flex-wrap gap-4 text-sm text-[var(--text-muted)]">
           <span className="flex items-center gap-1.5 text-[var(--brand-500)] font-bold">
             <Coins className="h-4 w-4" />
-            {task.pay_per_task != null ? `${task.pay_per_task} NexCoins` : "—"}
+            {task.pay_per_task != null ? `${Math.floor(task.pay_per_task * 0.66)} NexCoins` : "—"}
           </span>
           {slotsLeft != null && (
             <span className="flex items-center gap-1.5">

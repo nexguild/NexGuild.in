@@ -167,7 +167,7 @@ export default function TasksPage() {
             const isRejected  = s.status === "rejected";
             const payout      = s.status === "approved" && s.coins_awarded != null
               ? s.coins_awarded
-              : s.tasks?.pay_per_task ?? null;
+              : s.tasks?.pay_per_task != null ? Math.floor(s.tasks.pay_per_task * 0.66) : null;
             const displayLabel = isResubmit
               ? "Needs Resubmission"
               : TABS.find((t) => t.status === s.status)?.label ?? s.status;
