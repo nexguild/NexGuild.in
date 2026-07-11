@@ -345,7 +345,7 @@ export default function NexLeaderPage() {
 
 function PageHero() {
   return (
-    <div className="rounded-2xl p-8 sm:p-10 text-center" style={{
+    <div className="animate-fade-slide-up rounded-2xl p-8 sm:p-10 text-center" style={{
       background: "linear-gradient(135deg,#312e81 0%,#3730a3 60%,#1e1b4b 100%)",
       border: "1px solid rgba(99,102,241,0.3)",
     }}>
@@ -394,7 +394,7 @@ function BenefitCards() {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
       {benefits.map((b) => (
-        <div key={b.label} className="rounded-xl p-5 space-y-3 bg-white shadow-sm"
+        <div key={b.label} className="rounded-xl p-5 space-y-3 bg-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
           style={{ border: "1px solid #E5E7EB", borderTop: `3px solid ${b.accentColor}` }}>
           <div className="flex items-center gap-2">
             <b.icon size={16} style={{ color: b.accentColor }} />
@@ -542,17 +542,14 @@ function EligibilityAndForm(props: FormProps) {
       </a>
 
       {!autoMet ? (
-        <div className="rounded-xl px-5 py-4 flex items-start gap-3 bg-[var(--surface-subtle)]"
-          style={{ border: "1px solid var(--border-default)" }}>
-          <AlertCircle className="h-4 w-4 flex-shrink-0 mt-0.5 text-[var(--text-muted)]" />
-          <p className="text-sm text-[var(--text-secondary)]">
-            Meet all eligibility criteria above to unlock the application form.
-          </p>
+        <div className="flex items-start gap-3 rounded-xl border border-slate-200 bg-slate-50 px-5 py-4">
+          <AlertCircle className="h-4 w-4 flex-shrink-0 mt-0.5 text-slate-400" />
+          <p className="text-sm text-slate-600">Meet all eligibility criteria above to unlock the application form.</p>
         </div>
       ) : (
         <form onSubmit={onSubmit} className="space-y-5">
           {/* Agreement */}
-          <div className="rounded-xl p-5 space-y-3 bg-indigo-50" style={{ border: "1px solid rgba(99,102,241,0.25)" }}>
+          <div className="rounded-xl border border-indigo-100 bg-indigo-50 p-5 space-y-3">
             <div className="flex items-center gap-2">
               <Crown className="h-4 w-4 text-indigo-600" />
               <p className="text-sm font-bold text-indigo-700">NexLeader Agreement</p>
@@ -567,73 +564,72 @@ function EligibilityAndForm(props: FormProps) {
 
           {/* Reason */}
           <div>
-            <label className="block text-sm font-semibold text-[var(--text-primary)] mb-1.5">
+            <label className="mb-1.5 block text-sm font-semibold text-slate-700">
               Why do you want to become a NexLeader?{" "}
-              <span className="font-normal text-xs text-[var(--text-muted)]">(min 100 chars)</span>
+              <span className="font-normal text-xs text-slate-400">(min 100 chars)</span>
             </label>
             <textarea
               required value={reason} onChange={(e) => setReason(e.target.value)}
               rows={4}
               placeholder="Describe your motivation, what community you have, and how you plan to recruit…"
-              className="w-full rounded-lg text-sm px-3 py-2.5 resize-none focus:outline-none focus:ring-2 focus:ring-indigo-300 text-[var(--text-primary)]"
-              style={{ background: "var(--surface-subtle)", border: "1px solid var(--border-default)" }}
+              className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-800 placeholder:text-slate-400 shadow-sm resize-none focus:outline-none focus:ring-2 focus:ring-indigo-100 focus:border-indigo-300 transition-all"
             />
-            <p className="text-xs mt-1" style={{ color: reason.length >= 100 ? "#16a34a" : "var(--text-muted)" }}>
+            <p className={`mt-1 text-xs ${reason.length >= 100 ? "text-green-600" : "text-slate-400"}`}>
               {reason.length} / 100 minimum
             </p>
           </div>
 
           {/* Community description */}
           <div>
-            <label className="block text-sm font-semibold text-[var(--text-primary)] mb-1.5">
+            <label className="mb-1.5 block text-sm font-semibold text-slate-700">
               Describe your community{" "}
-              <span className="font-normal text-xs text-[var(--text-muted)]">(min 50 chars)</span>
+              <span className="font-normal text-xs text-slate-400">(min 50 chars)</span>
             </label>
             <textarea
               required value={community} onChange={(e) => setCommunity(e.target.value)}
               rows={3}
               placeholder="WhatsApp group, college batch, Telegram channel, YouTube audience…"
-              className="w-full rounded-lg text-sm px-3 py-2.5 resize-none focus:outline-none focus:ring-2 focus:ring-indigo-300 text-[var(--text-primary)]"
-              style={{ background: "var(--surface-subtle)", border: "1px solid var(--border-default)" }}
+              className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-800 placeholder:text-slate-400 shadow-sm resize-none focus:outline-none focus:ring-2 focus:ring-indigo-100 focus:border-indigo-300 transition-all"
             />
           </div>
 
           {/* Community size */}
           <div>
-            <label className="block text-sm font-semibold text-[var(--text-primary)] mb-1.5">
+            <label className="mb-1.5 block text-sm font-semibold text-slate-700">
               How many people in your community are ready to join NexGuild?{" "}
-              <span className="font-normal text-xs text-[var(--text-muted)]">(minimum 10)</span>
+              <span className="font-normal text-xs text-slate-400">(minimum 10)</span>
             </label>
             <input
               type="number" required min={MIN_RECRUITS}
               value={recruits} onChange={(e) => setRecruits(e.target.value)}
               placeholder="e.g. 25"
-              className="w-full h-10 px-3 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 text-[var(--text-primary)]"
-              style={{ background: "var(--surface-subtle)", border: `1px solid ${recruitMet ? "#86efac" : "var(--border-default)"}` }}
+              className="w-full h-10 rounded-xl border bg-white px-3 text-sm text-slate-800 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-100 focus:border-indigo-300 transition-all"
+              style={{ borderColor: recruits && recruitMet ? "#86efac" : "#e2e8f0" }}
             />
-            {recruits && !recruitMet && <p className="text-xs mt-1 text-red-500">Must be at least {MIN_RECRUITS}</p>}
+            {recruits && !recruitMet && <p className="mt-1 text-xs text-red-500">Must be at least {MIN_RECRUITS}</p>}
           </div>
 
           {/* Terms */}
-          <label className="flex items-start gap-3 cursor-pointer select-none">
+          <label className="flex cursor-pointer select-none items-start gap-3">
             <input
               type="checkbox" checked={tncChecked} onChange={(e) => setTncChecked(e.target.checked)}
-              className="mt-0.5 h-4 w-4 rounded flex-shrink-0 accent-indigo-600"
+              className="mt-0.5 h-4 w-4 flex-shrink-0 rounded accent-indigo-600"
             />
-            <span className="text-sm text-[var(--text-secondary)]">
-              I have read and agree to the NexLeader Agreement above
-            </span>
+            <span className="text-sm text-slate-600">I have read and agree to the NexLeader Agreement above</span>
           </label>
 
           {formError && (
-            <div className="rounded-lg px-4 py-3 text-sm text-red-600 bg-red-50" style={{ border: "1px solid #fca5a5" }}>
-              {formError}
-            </div>
+            <div className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-600">{formError}</div>
           )}
 
-          <Button type="submit" disabled={submitting || !tncChecked || !allMet} className="w-full">
-            {submitting ? <><Loader2 className="h-4 w-4 animate-spin mr-2" />Submitting…</> : "Submit Application"}
-          </Button>
+          <button
+            type="submit"
+            disabled={submitting || !tncChecked || !allMet}
+            className="flex w-full items-center justify-center gap-2 rounded-xl py-3 text-sm font-bold text-white shadow-md transition-all hover:opacity-90 disabled:opacity-40"
+            style={{ background: "linear-gradient(135deg, #6366f1 0%, #14b8a6 100%)" }}
+          >
+            {submitting ? <><Loader2 className="h-4 w-4 animate-spin" />Submitting…</> : "Submit Application"}
+          </button>
         </form>
       )}
     </div>

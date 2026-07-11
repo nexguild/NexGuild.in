@@ -44,12 +44,34 @@ export function DashboardSidebar({ open, onClose }: DashboardSidebarProps) {
     return pathname.startsWith(href);
   }
 
+  function NavItem({ href, icon: Icon, label }: { href: string; icon: typeof LayoutDashboard; label: string }) {
+    const active = isActive(href);
+    return (
+      <li>
+        <Link
+          href={href}
+          onClick={onClose}
+          className={cn(
+            "flex items-center gap-3 h-10 px-3 rounded-xl text-sm transition-all duration-150",
+            active
+              ? "font-semibold text-white shadow-md"
+              : "font-medium text-slate-500 hover:bg-slate-100 hover:text-slate-900"
+          )}
+          style={active ? { background: "linear-gradient(135deg, #6366f1 0%, #14b8a6 100%)" } : undefined}
+        >
+          <Icon className={cn("h-4 w-4 flex-shrink-0", active ? "text-white" : "text-slate-400")} />
+          {label}
+        </Link>
+      </li>
+    );
+  }
+
   return (
     <>
       {/* Mobile backdrop */}
       <div
         className={cn(
-          "fixed inset-0 z-30 bg-black/60 transition-opacity duration-200 ease-out lg:hidden",
+          "fixed inset-0 z-30 bg-black/60 backdrop-blur-sm transition-opacity duration-200 ease-out lg:hidden",
           open ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
         )}
         onClick={onClose}
@@ -58,81 +80,47 @@ export function DashboardSidebar({ open, onClose }: DashboardSidebarProps) {
 
       <aside
         className={cn(
-          "fixed left-0 top-0 bottom-0 w-sidebar flex flex-col z-40 sidebar-bg border-r border-[var(--border-default)]",
+          "fixed left-0 top-0 bottom-0 w-sidebar flex flex-col z-40",
+          "bg-white border-r border-slate-100 shadow-sm",
           "will-change-transform transition-transform duration-300 ease-out",
           open ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
         )}
       >
         {/* Logo */}
-        <div className="h-16 flex items-center justify-between px-4 border-b border-[var(--border-default)] flex-shrink-0">
+        <div className="h-16 flex items-center justify-between px-4 border-b border-slate-100 flex-shrink-0">
           <NexGuildLogo theme="light" href="/dashboard" />
           <button
             onClick={onClose}
-            className="lg:hidden h-8 w-8 flex items-center justify-center rounded-md text-[var(--sidebar-text)] hover:text-[var(--text-primary)] hover:bg-[var(--sidebar-item-hover)] transition-colors"
+            className="lg:hidden h-8 w-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
             aria-label="Close menu"
           >
             <X className="h-4 w-4" />
           </button>
         </div>
 
-        {/* Main Nav */}
-        <nav className="flex-1 px-3 py-4 overflow-y-auto scrollbar-thin">
+        {/* Nav */}
+        <nav className="flex-1 px-3 py-4 overflow-y-auto" style={{ scrollbarWidth: "none" }}>
+
+          <p className="mb-2 px-3 text-[10px] font-bold uppercase tracking-widest text-slate-400">Main</p>
           <ul className="space-y-0.5">
-            {NAV_ITEMS.map((item) => {
-              const Icon = item.icon;
-              const active = isActive(item.href);
-              return (
-                <li key={item.href}>
-                  <Link
-                    href={item.href}
-                    onClick={onClose}
-                    className={cn(
-                      "flex items-center gap-3 h-10 px-3 rounded-md text-sm font-medium transition-colors duration-150",
-                      active
-                        ? "bg-[var(--sidebar-item-active)] text-[var(--sidebar-active-text)]"
-                        : "text-[var(--sidebar-text)] hover:bg-[var(--sidebar-item-hover)] hover:text-[var(--text-primary)]"
-                    )}
-                  >
-                    <Icon className="h-4 w-4 flex-shrink-0" />
-                    {item.label}
-                  </Link>
-                </li>
-              );
-            })}
+            {NAV_ITEMS.map((item) => (
+              <NavItem key={item.href} href={item.href} icon={item.icon} label={item.label} />
+            ))}
           </ul>
 
-          <div className="h-px bg-[var(--border-default)] my-3" />
-
+          <p className="mt-5 mb-2 px-3 text-[10px] font-bold uppercase tracking-widest text-slate-400">Account</p>
           <ul className="space-y-0.5">
-            {ACCOUNT_ITEMS.map((item) => {
-              const Icon = item.icon;
-              const active = isActive(item.href);
-              return (
-                <li key={item.href}>
-                  <Link
-                    href={item.href}
-                    onClick={onClose}
-                    className={cn(
-                      "flex items-center gap-3 h-10 px-3 rounded-md text-sm font-medium transition-colors duration-150",
-                      active
-                        ? "bg-[var(--sidebar-item-active)] text-[var(--sidebar-active-text)]"
-                        : "text-[var(--sidebar-text)] hover:bg-[var(--sidebar-item-hover)] hover:text-[var(--text-primary)]"
-                    )}
-                  >
-                    <Icon className="h-4 w-4 flex-shrink-0" />
-                    {item.label}
-                  </Link>
-                </li>
-              );
-            })}
+            {ACCOUNT_ITEMS.map((item) => (
+              <NavItem key={item.href} href={item.href} icon={item.icon} label={item.label} />
+            ))}
           </ul>
         </nav>
 
-        {/* Log Out */}
-        <div className="px-3 py-4 border-t border-[var(--border-default)]">
+        {/* Sign Out */}
+        <div className="px-3 py-4 border-t border-slate-100">
           <button
             onClick={() => supabase.auth.signOut()}
-            className="flex items-center gap-3 h-10 px-3 w-full rounded-md text-sm font-medium text-[var(--text-secondary)] hover:text-[var(--danger-text)] hover:bg-[rgba(239,68,68,0.08)] transition-colors"
+            className="flex items-center gap-3 h-10 px-3 w-full rounded-xl text-sm font-medium text-slate-500 hover:text-red-500 hover:bg-red-50 transition-all duration-150"
           >
             <LogOut className="h-4 w-4 flex-shrink-0" />
             Log Out

@@ -71,16 +71,16 @@ function EarningsChart({ data }: { data: { label: string; value: number }[] }) {
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-28" preserveAspectRatio="none">
         <defs>
           <linearGradient id="earnGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#0891B2" stopOpacity="0.28" />
-            <stop offset="100%" stopColor="#0891B2" stopOpacity="0" />
+            <stop offset="0%" stopColor="#6366f1" stopOpacity="0.25" />
+            <stop offset="100%" stopColor="#14b8a6" stopOpacity="0" />
           </linearGradient>
         </defs>
         <path d={areaPath} fill="url(#earnGrad)" />
-        <polyline points={polyline} fill="none" stroke="#0891B2" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+        <polyline points={polyline} fill="none" stroke="#6366f1" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
         {data.map((d, i) => {
           const x = pad + (i / (data.length - 1)) * (W - 2 * pad);
           const y = H - pad - ((d.value / max) * (H - 2 * pad));
-          return <circle key={i} cx={x} cy={y} r="3.5" fill="#0891B2" />;
+          return <circle key={i} cx={x} cy={y} r="3.5" fill="#6366f1" />;
         })}
       </svg>
       <div className="flex justify-between mt-1">
@@ -101,8 +101,8 @@ function ProgressRing({ value, max, label, sub }: { value: number; max: number; 
     <div className="flex flex-col items-center gap-1">
       <div className="relative w-24 h-24">
         <svg viewBox="0 0 88 88" className="w-full h-full -rotate-90">
-          <circle cx="44" cy="44" r={r} fill="none" stroke="#E0F2FE" strokeWidth="8" />
-          <circle cx="44" cy="44" r={r} fill="none" stroke="#0891B2" strokeWidth="8"
+          <circle cx="44" cy="44" r={r} fill="none" stroke="#e0e7ff" strokeWidth="8" />
+          <circle cx="44" cy="44" r={r} fill="none" stroke="#6366f1" strokeWidth="8"
             strokeDasharray={`${dash} ${circ}`} strokeLinecap="round"
             style={{ transition: "stroke-dasharray 0.6s ease" }} />
         </svg>
@@ -266,7 +266,7 @@ function StreakGrid({
           </div>
           <div className="h-1.5 rounded-full bg-slate-100 overflow-hidden">
             <div className="h-full rounded-full transition-all duration-500"
-              style={{ width: `${Math.min(100, ((todayRow?.tasks_completed ?? 0) / tasksRequired) * 100)}%`, background: "#0891B2" }} />
+              style={{ width: `${Math.min(100, ((todayRow?.tasks_completed ?? 0) / tasksRequired) * 100)}%`, background: "linear-gradient(90deg, #6366f1, #14b8a6)" }} />
           </div>
           <p className="text-xs text-slate-400 text-center">
             {Math.max(0, tasksRequired - (todayRow?.tasks_completed ?? 0))} more task{Math.max(0, tasksRequired - (todayRow?.tasks_completed ?? 0)) !== 1 ? "s" : ""} needed to unlock today&apos;s streak reward
@@ -663,7 +663,7 @@ export default function DashboardHome() {
         <div className="lg:col-span-3 rounded-2xl bg-white border border-gray-100 shadow-sm p-5">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wider">Available Now</h2>
-            <Link href="/dashboard/tasks" className="text-xs font-bold text-cyan-700 hover:underline flex items-center gap-1">
+            <Link href="/dashboard/tasks" className="text-xs font-bold text-indigo-500 hover:underline flex items-center gap-1">
               Browse all <ArrowRight className="h-3 w-3" />
             </Link>
           </div>
@@ -819,7 +819,7 @@ export default function DashboardHome() {
             <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wider">Earnings Overview</h2>
             <p className="text-xs text-slate-400 mt-0.5">NexCoins earned — last 7 days</p>
           </div>
-          <Link href="/dashboard/earnings" className="text-xs font-bold text-cyan-700 hover:underline">View All</Link>
+          <Link href="/dashboard/earnings" className="text-xs font-bold text-indigo-500 hover:underline">View All</Link>
         </div>
         {loading ? (
           <div className="h-28 rounded-xl bg-slate-50 animate-pulse" />
@@ -861,7 +861,7 @@ export default function DashboardHome() {
               <Trophy className="h-4 w-4 text-amber-500" />
               <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wider">Top Contributors</h2>
             </div>
-            <Link href="/dashboard/leaderboard" className="text-xs font-bold text-cyan-700 hover:underline">View All</Link>
+            <Link href="/dashboard/leaderboard" className="text-xs font-bold text-indigo-500 hover:underline">View All</Link>
           </div>
           {loading ? (
             <div className="space-y-3">{[1, 2, 3, 4, 5].map(i => <div key={i} className="h-8 rounded-lg bg-slate-50 animate-pulse" />)}</div>
@@ -880,7 +880,7 @@ export default function DashboardHome() {
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold text-slate-700 truncate">{entry.full_name}</p>
                   </div>
-                  <span className="text-xs font-bold text-cyan-700 flex-shrink-0">{entry.approved_count} tasks</span>
+                  <span className="text-xs font-bold text-indigo-500 flex-shrink-0">{entry.approved_count} tasks</span>
                 </li>
               ))}
             </ul>

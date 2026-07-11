@@ -23,17 +23,17 @@ const PAGE_TITLES: Record<string, string> = {
 };
 
 const TYPE_COLORS: Record<string, string> = {
-  submission_approved:  "text-green-400",
-  submission_rejected:  "text-red-400",
-  assignment_approved:  "text-green-400",
-  assignment_rejected:  "text-red-400",
-  voucher_delivered:    "text-[var(--brand-500)]",
-  voucher:              "text-[var(--brand-500)]",
-  support:              "text-blue-400",
-  new_task:             "text-blue-400",
-  announcement:         "text-[var(--brand-500)]",
-  bonus_coins:          "text-amber-400",
-  system:               "text-[var(--text-secondary)]",
+  submission_approved:  "text-green-600",
+  submission_rejected:  "text-red-500",
+  assignment_approved:  "text-green-600",
+  assignment_rejected:  "text-red-500",
+  voucher_delivered:    "text-teal-600",
+  voucher:              "text-teal-600",
+  support:              "text-indigo-500",
+  new_task:             "text-indigo-500",
+  announcement:         "text-indigo-500",
+  bonus_coins:          "text-amber-500",
+  system:               "text-slate-500",
 };
 
 const TYPE_HREF: Record<string, string> = {
@@ -209,40 +209,52 @@ if (existingChannel) {
       <div className="flex items-center gap-3">
         <button
           onClick={onMenuToggle}
-          className="lg:hidden h-9 w-9 flex items-center justify-center rounded-md text-slate-600 hover:bg-slate-100 transition-colors"
+          className="lg:hidden h-9 w-9 flex items-center justify-center rounded-xl text-slate-600 hover:bg-slate-100 transition-colors"
           aria-label="Toggle menu"
         >
           <Menu className="h-5 w-5" />
         </button>
-        <h1 className="text-lg font-semibold text-slate-800">{title}</h1>
+        <h1 className="text-lg font-bold text-slate-800">{title}</h1>
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1.5">
         {/* Notification Bell */}
         <div ref={bellRef} className="relative">
           <button
             onClick={() => setOpen((v) => !v)}
-            className="relative h-9 w-9 flex items-center justify-center rounded-md text-slate-500 hover:bg-slate-100 hover:text-slate-700 transition-colors"
+            className="relative h-9 w-9 flex items-center justify-center rounded-xl text-slate-500 hover:bg-slate-100 hover:text-slate-700 transition-colors"
             aria-label="Notifications"
           >
             <Bell className="h-5 w-5" />
             {unreadCount > 0 && (
-              <span className="absolute top-1 right-1 h-4 min-w-[16px] px-0.5 rounded-full bg-[var(--brand-500)] text-white text-[10px] font-bold flex items-center justify-center leading-none">
+              <span
+                className="absolute top-1 right-1 h-4 min-w-[16px] px-0.5 rounded-full text-white text-[10px] font-bold flex items-center justify-center leading-none"
+                style={{ background: "linear-gradient(135deg, #6366f1 0%, #14b8a6 100%)" }}
+              >
                 {unreadCount > 9 ? "9+" : unreadCount}
               </span>
             )}
           </button>
 
           {open && (
-            <div className="absolute right-0 top-full mt-2 w-80 sm:w-96 max-w-[calc(100vw-2rem)] max-h-96 flex flex-col rounded-xl border border-slate-200 bg-white shadow-xl overflow-hidden z-50">
-              <div className="px-4 py-3 border-b border-slate-100 flex items-center justify-between flex-shrink-0">
-                <span className="text-sm font-semibold text-slate-800">
-                  Notifications {unreadCount > 0 && <span className="text-[#029470]">({unreadCount})</span>}
-                </span>
+            <div className="absolute right-0 top-full mt-2 w-80 sm:w-96 max-w-[calc(100vw-2rem)] max-h-[28rem] flex flex-col rounded-2xl border border-slate-200 bg-white shadow-2xl overflow-hidden z-50">
+              {/* Dropdown header */}
+              <div className="px-4 py-3 border-b border-slate-100 flex items-center justify-between flex-shrink-0"
+                style={{ background: "linear-gradient(135deg, rgba(99,102,241,0.04) 0%, rgba(20,184,166,0.04) 100%)" }}
+              >
+                <div className="flex items-center gap-2">
+                  <Bell className="h-4 w-4 text-indigo-500" />
+                  <span className="text-sm font-bold text-slate-800">Notifications</span>
+                  {unreadCount > 0 && (
+                    <span className="rounded-full px-1.5 py-0.5 text-[10px] font-bold text-indigo-600 bg-indigo-100">
+                      {unreadCount} new
+                    </span>
+                  )}
+                </div>
                 {unreadCount > 0 && (
                   <button
                     onClick={markAllRead}
-                    className="flex items-center gap-1 text-xs text-slate-400 hover:text-slate-700 transition-colors"
+                    className="flex items-center gap-1 text-xs text-indigo-500 hover:text-indigo-700 transition-colors font-medium"
                   >
                     <CheckCheck className="h-3.5 w-3.5" /> Mark all read
                   </button>
@@ -251,13 +263,19 @@ if (existingChannel) {
 
               <div className="flex-1 overflow-y-auto">
                 {notifications.length === 0 ? (
-                  <div className="py-10 flex flex-col items-center gap-2 text-center px-4">
-                    <Bell className="h-8 w-8 text-slate-300" />
-                    <p className="text-sm font-medium text-slate-700">No notifications yet</p>
-                    <p className="text-xs text-slate-400">Task approvals and updates will appear here.</p>
+                  <div className="py-12 flex flex-col items-center gap-3 text-center px-4">
+                    <div className="h-12 w-12 rounded-2xl flex items-center justify-center"
+                      style={{ background: "linear-gradient(135deg, rgba(99,102,241,0.1), rgba(20,184,166,0.1))" }}
+                    >
+                      <Bell className="h-6 w-6 text-indigo-400" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-slate-700">All caught up!</p>
+                      <p className="text-xs text-slate-400 mt-0.5">Task updates will appear here.</p>
+                    </div>
                   </div>
                 ) : (
-                  <ul className="divide-y divide-slate-100">
+                  <ul className="divide-y divide-slate-50">
                     {notifications.map((n) => {
                       const href = n.type ? (TYPE_HREF[n.type] ?? "/dashboard") : "/dashboard";
                       return (
@@ -265,19 +283,21 @@ if (existingChannel) {
                           <Link
                             href={href}
                             onClick={() => { markRead(n.id); setOpen(false); }}
-                            className={`flex items-start gap-2 px-4 py-3 hover:bg-slate-50 transition-colors ${!n.is_read ? "bg-[#E6FAF5]/60" : ""}`}
+                            className={`flex items-start gap-3 px-4 py-3.5 hover:bg-slate-50 transition-colors ${!n.is_read ? "bg-indigo-50/40" : ""}`}
                           >
-                            {!n.is_read && (
-                              <span className="mt-1.5 h-2 w-2 rounded-full bg-[#02b491] flex-shrink-0" />
+                            {!n.is_read ? (
+                              <span className="mt-1.5 h-2 w-2 rounded-full flex-shrink-0 bg-indigo-500" />
+                            ) : (
+                              <span className="mt-1.5 h-2 w-2 flex-shrink-0" />
                             )}
-                            <div className={!n.is_read ? "" : "ml-4"}>
+                            <div className="min-w-0 flex-1">
                               <p className={`text-xs font-semibold ${n.type ? (TYPE_COLORS[n.type] ?? "text-slate-800") : "text-slate-800"}`}>
                                 {n.title}
                               </p>
                               {n.message && (
-                                <p className="text-xs text-slate-500 mt-0.5 line-clamp-2">{n.message}</p>
+                                <p className="text-xs text-slate-500 mt-0.5 line-clamp-2 leading-relaxed">{n.message}</p>
                               )}
-                              <p className="text-[10px] text-slate-400 mt-1">
+                              <p className="text-[10px] text-slate-400 mt-1.5">
                                 {new Date(n.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
                               </p>
                             </div>
@@ -296,22 +316,40 @@ if (existingChannel) {
         <div ref={menuRef} className="relative">
           <button
             onClick={() => setMenuOpen((v) => !v)}
-            className="flex items-center gap-2 h-9 px-2 rounded-md hover:bg-slate-100 transition-colors"
+            className="flex items-center gap-2 h-9 pl-2 pr-2.5 rounded-xl hover:bg-slate-100 transition-colors"
             aria-label="User menu"
           >
-            <Avatar src={avatarUrl} name={userInitials} size="sm" />
-            <span className="hidden sm:block text-sm font-medium text-slate-700 max-w-[100px] truncate">
+            <div className="relative">
+              <Avatar src={avatarUrl} name={userInitials} size="sm" />
+              <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-white bg-emerald-400" />
+            </div>
+            <span className="hidden sm:block text-sm font-semibold text-slate-700 max-w-[100px] truncate">
               {userName ? userName.split(" ")[0] : ""}
             </span>
-            <ChevronDown className={`h-4 w-4 text-[var(--text-muted)] transition-transform duration-200 ${menuOpen ? "rotate-180" : ""}`} />
+            <ChevronDown className={`h-4 w-4 text-slate-400 transition-transform duration-200 ${menuOpen ? "rotate-180" : ""}`} />
           </button>
 
           {menuOpen && (
-            <div className="absolute right-0 top-11 w-48 rounded-xl border border-slate-200 bg-white shadow-xl overflow-hidden z-50">
+            <div className="absolute right-0 top-11 w-56 rounded-2xl border border-slate-200 bg-white shadow-2xl overflow-hidden z-50">
+              {/* Profile header */}
+              <div className="px-4 py-3.5 border-b border-slate-100"
+                style={{ background: "linear-gradient(135deg, rgba(99,102,241,0.05) 0%, rgba(20,184,166,0.05) 100%)" }}
+              >
+                <div className="flex items-center gap-3">
+                  <div className="relative">
+                    <Avatar src={avatarUrl} name={userInitials} size="sm" />
+                    <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-white bg-emerald-400" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-bold text-slate-800 truncate">{userName || "Member"}</p>
+                    <p className="text-[11px] text-slate-400 font-medium">NexGuild Member</p>
+                  </div>
+                </div>
+              </div>
               <Link
                 href="/dashboard/profile"
                 onClick={() => setMenuOpen(false)}
-                className="flex items-center gap-3 px-4 py-3 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
+                className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-indigo-50 hover:text-indigo-600 transition-colors"
               >
                 <User className="h-4 w-4 text-slate-400" />
                 View Profile
@@ -319,15 +357,15 @@ if (existingChannel) {
               <Link
                 href="/dashboard/settings"
                 onClick={() => setMenuOpen(false)}
-                className="flex items-center gap-3 px-4 py-3 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
+                className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-indigo-50 hover:text-indigo-600 transition-colors"
               >
                 <Settings className="h-4 w-4 text-slate-400" />
                 Settings
               </Link>
-              <div className="border-t border-slate-100" />
+              <div className="border-t border-slate-100 mx-2" />
               <button
                 onClick={handleSignOut}
-                className="w-full flex items-center gap-3 px-4 py-3 text-sm text-red-500 hover:bg-red-50 transition-colors"
+                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 transition-colors"
               >
                 <LogOut className="h-4 w-4" />
                 Log Out

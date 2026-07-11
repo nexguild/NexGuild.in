@@ -79,7 +79,7 @@ export default function NexCoinsPage() {
     <div className="space-y-5">
 
       {/* ── HERO ─────────────────────────────────────────────────── */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-600 to-teal-500 p-6 shadow-lg">
+      <div className="animate-fade-slide-up relative overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-600 to-teal-500 p-6 shadow-lg" style={{ animationDelay: "0ms" }}>
         <div aria-hidden className="pointer-events-none absolute -right-10 -top-10 h-36 w-36 rounded-full bg-white/10" />
         <div aria-hidden className="pointer-events-none absolute -left-6 -bottom-8 h-28 w-28 rounded-full bg-white/5" />
         <div className="relative z-10 flex flex-wrap items-center justify-between gap-5">
@@ -104,8 +104,8 @@ export default function NexCoinsPage() {
       </div>
 
       {/* ── STAT CARDS ───────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 gap-3">
-        <div className="rounded-2xl border border-green-100 bg-green-50 p-4 shadow-sm">
+      <div className="animate-fade-slide-up grid grid-cols-2 gap-3" style={{ animationDelay: "100ms" }}>
+        <div className="rounded-2xl border border-green-100 bg-green-50 p-4 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
           <div className="mb-2 flex items-center gap-1.5">
             <TrendingUp className="h-3.5 w-3.5 text-green-600" />
             <span className="text-xs text-green-600">Total Earned</span>
@@ -113,7 +113,7 @@ export default function NexCoinsPage() {
           <p className="text-xl font-extrabold text-green-700">{loading ? "—" : totalEarned.toLocaleString()}</p>
           <p className="mt-0.5 text-xs text-green-500">From tasks &amp; offers</p>
         </div>
-        <div className="rounded-2xl border border-indigo-100 bg-indigo-50 p-4 shadow-sm">
+        <div className="rounded-2xl border border-indigo-100 bg-indigo-50 p-4 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
           <div className="mb-2 flex items-center gap-1.5">
             <ShoppingBag className="h-3.5 w-3.5 text-indigo-500" />
             <span className="text-xs text-indigo-600">Total Spent</span>
@@ -125,7 +125,7 @@ export default function NexCoinsPage() {
 
       {/* ── VOUCHER REQUESTS ─────────────────────────────────────── */}
       {vouchers.length > 0 && (
-        <div className="overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm">
+        <div className="animate-fade-slide-up overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm" style={{ animationDelay: "150ms" }}>
           <div
             className="border-b border-slate-50 px-5 py-4"
             style={{ background: "linear-gradient(135deg, rgba(99,102,241,0.05), rgba(20,184,166,0.03))" }}
@@ -152,7 +152,7 @@ export default function NexCoinsPage() {
       )}
 
       {/* ── TRANSACTION HISTORY ──────────────────────────────────── */}
-      <div className="overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm">
+      <div className="animate-fade-slide-up overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm" style={{ animationDelay: "200ms" }}>
         <div
           className="flex items-center gap-2 border-b border-slate-50 px-5 py-4"
           style={{ background: "linear-gradient(135deg, rgba(99,102,241,0.04), rgba(20,184,166,0.02))" }}
@@ -188,7 +188,7 @@ export default function NexCoinsPage() {
             {transactions.map((tx) => {
               const isEarned = tx.type === "earned";
               return (
-                <li key={tx.id} className="flex items-center gap-3 px-5 py-3.5">
+                <li key={tx.id} className="flex items-center gap-3 px-5 py-3.5 transition-colors hover:bg-slate-50">
                   {/* Direction icon */}
                   <div className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full ${
                     isEarned ? "bg-green-100" : "bg-indigo-100"

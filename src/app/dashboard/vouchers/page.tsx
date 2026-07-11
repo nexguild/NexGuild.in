@@ -101,7 +101,7 @@ export default function MyVouchersPage() {
     <div className="space-y-5">
 
       {/* ── HERO ─────────────────────────────────────────────────── */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-600 to-teal-500 p-6 shadow-lg">
+      <div className="animate-fade-slide-up relative overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-600 to-teal-500 p-6 shadow-lg" style={{ animationDelay: "0ms" }}>
         <div aria-hidden className="pointer-events-none absolute -right-10 -top-10 h-36 w-36 rounded-full bg-white/10" />
         <div aria-hidden className="pointer-events-none absolute -left-6 -bottom-8 h-28 w-28 rounded-full bg-white/5" />
         <div className="relative z-10 flex flex-wrap items-start justify-between gap-4">
@@ -158,7 +158,7 @@ export default function MyVouchersPage() {
           </Link>
         </div>
       ) : (
-        <div className="space-y-6">
+        <div className="animate-fade-slide-up space-y-6" style={{ animationDelay: "100ms" }}>
 
           {/* ── Delivered ────────────────────────────────────────── */}
           {delivered.length > 0 && (
@@ -173,7 +173,7 @@ export default function MyVouchersPage() {
                 {delivered.map((r) => (
                   <li
                     key={r.id}
-                    className="overflow-hidden rounded-2xl shadow-lg"
+                    className="overflow-hidden rounded-2xl shadow-lg transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl"
                     style={{ border: "1px solid rgba(16,185,129,0.25)" }}
                   >
                     {/* ── GRADIENT HEADER ── */}
@@ -262,7 +262,7 @@ export default function MyVouchersPage() {
                 {pending.map((r) => {
                   const st = STATUS_META[r.status] ?? STATUS_META.pending;
                   return (
-                    <li key={r.id} className="overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm">
+                    <li key={r.id} className="overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
                       {/* Top accent bar */}
                       <div className="h-1 w-full bg-gradient-to-r from-amber-400 to-orange-400" />
                       <div className="p-5">

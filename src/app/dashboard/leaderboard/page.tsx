@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Trophy, ArrowLeft, Medal } from "lucide-react";
-import Link from "next/link";
+import { Trophy, Medal, Loader2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
 interface LeaderboardEntry {
@@ -12,10 +11,34 @@ interface LeaderboardEntry {
   approved_count: number;
 }
 
-const RANK_STYLES: Record<number, { bg: string; text: string; icon: React.ReactNode }> = {
-  1: { bg: "bg-amber-50 border-amber-200",   text: "text-amber-700",   icon: <Trophy className="h-4 w-4 text-amber-500" /> },
-  2: { bg: "bg-slate-50 border-slate-200",   text: "text-slate-600",   icon: <Medal  className="h-4 w-4 text-slate-400" /> },
-  3: { bg: "bg-orange-50 border-orange-200", text: "text-orange-700",  icon: <Medal  className="h-4 w-4 text-orange-400" /> },
+const RANK_META: Record<number, {
+  rowBg: string;
+  badgeBg: string;
+  badgeText: string;
+  icon: React.ReactNode;
+  label: string;
+}> = {
+  1: {
+    rowBg:     "bg-amber-50/60",
+    badgeBg:   "bg-amber-100",
+    badgeText: "text-amber-700",
+    icon:      <Trophy className="h-4 w-4 text-amber-500" />,
+    label:     "Gold",
+  },
+  2: {
+    rowBg:     "bg-slate-50/60",
+    badgeBg:   "bg-slate-100",
+    badgeText: "text-slate-600",
+    icon:      <Medal className="h-4 w-4 text-slate-400" />,
+    label:     "Silver",
+  },
+  3: {
+    rowBg:     "bg-orange-50/60",
+    badgeBg:   "bg-orange-100",
+    badgeText: "text-orange-700",
+    icon:      <Medal className="h-4 w-4 text-orange-400" />,
+    label:     "Bronze",
+  },
 };
 
 export default function LeaderboardPage() {
@@ -39,48 +62,68 @@ export default function LeaderboardPage() {
   }, []);
 
   return (
-    <div className="max-w-2xl space-y-6">
-      <div className="flex items-center gap-3">
-        <Link href="/dashboard" className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-700 transition-colors">
-          <ArrowLeft className="h-4 w-4" /> Back to Dashboard
-        </Link>
-      </div>
+    <div className="max-w-2xl space-y-5">
 
-      <div>
-        <div className="flex items-center gap-3 mb-1">
-          <Trophy className="h-6 w-6 text-amber-500" />
-          <h1 className="text-2xl font-bold text-slate-900">Top Contributors</h1>
+      {/* ── HERO ─────────────────────────────────────────────────────── */}
+      <div className="animate-fade-slide-up relative overflow-hidden rounded-2xl p-6 shadow-lg"
+        style={{ background: "linear-gradient(135deg, #6366f1 0%, #14b8a6 100%)", animationDelay: "0ms" }}
+      >
+        <div aria-hidden className="pointer-events-none absolute -right-10 -top-10 h-36 w-36 rounded-full bg-white/10" />
+        <div aria-hidden className="pointer-events-none absolute -left-6 -bottom-8 h-28 w-28 rounded-full bg-white/5" />
+        <div className="relative z-10">
+          <div className="mb-2 flex items-center gap-2">
+            <Trophy className="h-4 w-4 text-white/70" />
+            <span className="text-xs font-semibold uppercase tracking-widest text-white/70">All-time Rankings</span>
+          </div>
+          <h1 className="mb-1 text-2xl font-extrabold text-white">Top Contributors</h1>
+          <p className="text-sm text-white/75">Ranked by total approved tasks — keep completing to climb higher.</p>
         </div>
-        <p className="text-sm text-slate-500">All-time rankings by approved task count.</p>
       </div>
 
-      <div className="rounded-2xl border border-slate-100 bg-white shadow-sm overflow-hidden">
+      {/* ── LIST ─────────────────────────────────────────────────────── */}
+      <div className="animate-fade-slide-up overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm" style={{ animationDelay: "100ms" }}>
         {loading ? (
-          <div className="py-16 flex flex-col items-center gap-3">
-            <div className="h-8 w-8 rounded-full border-2 border-[#99F6D9] border-t-[#02b491] animate-spin" />
+          <div className="flex flex-col items-center gap-3 py-16">
+            <Loader2 className="h-6 w-6 animate-spin text-indigo-500" />
             <p className="text-sm text-slate-400">Loading leaderboard…</p>
           </div>
         ) : entries.length === 0 ? (
-          <div className="py-16 text-center">
-            <Trophy className="h-10 w-10 text-slate-200 mx-auto mb-3" />
-            <p className="font-semibold text-slate-600">No data yet</p>
-            <p className="text-sm text-slate-400 mt-1">Complete and get tasks approved to appear here.</p>
+          <div className="flex flex-col items-center gap-3 py-16 text-center px-6">
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl"
+              style={{ background: "linear-gradient(135deg, rgba(99,102,241,0.1), rgba(20,184,166,0.1))" }}
+            >
+              <Trophy className="h-7 w-7 text-indigo-400" />
+            </div>
+            <div>
+              <p className="font-bold text-slate-800">No data yet</p>
+              <p className="mt-0.5 text-sm text-slate-400">Complete and get tasks approved to appear here.</p>
+            </div>
           </div>
         ) : (
           <ul className="divide-y divide-slate-50">
             {entries.map((entry) => {
-              const style = RANK_STYLES[entry.rank] ?? { bg: "bg-white border-slate-100", text: "text-slate-500", icon: null };
+              const meta = RANK_META[entry.rank];
               return (
-                <li key={entry.id} className={`flex items-center gap-4 px-6 py-4 ${entry.rank <= 3 ? style.bg + " border-b" : ""}`}>
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0 ${entry.rank <= 3 ? style.bg + " border " + style.text : "bg-slate-100 text-slate-500"}`}>
-                    {entry.rank <= 3 ? style.icon : entry.rank}
+                <li
+                  key={entry.id}
+                  className={`flex items-center gap-4 px-5 py-3.5 transition-colors ${meta ? meta.rowBg : "hover:bg-slate-50"}`}
+                >
+                  {/* Rank badge */}
+                  <div className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full text-sm font-bold ${
+                    meta ? `${meta.badgeBg} ${meta.badgeText}` : "bg-slate-100 text-slate-500"
+                  }`}>
+                    {meta ? meta.icon : entry.rank}
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-slate-800 truncate">{entry.full_name}</p>
+
+                  {/* Name */}
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-semibold text-slate-800">{entry.full_name}</p>
                     <p className="text-xs text-slate-400">{entry.approved_count} approved task{entry.approved_count !== 1 ? "s" : ""}</p>
                   </div>
-                  {entry.rank <= 3 && (
-                    <span className={`text-xs font-bold px-2 py-1 rounded-full ${style.bg} ${style.text}`}>
+
+                  {/* Rank label for top 3 */}
+                  {meta && (
+                    <span className={`flex-shrink-0 rounded-full px-2.5 py-0.5 text-[10px] font-bold ${meta.badgeBg} ${meta.badgeText}`}>
                       #{entry.rank}
                     </span>
                   )}

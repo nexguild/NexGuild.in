@@ -96,7 +96,7 @@ export default function TasksPage() {
     <div className="space-y-5">
 
       {/* ── HERO ─────────────────────────────────────────────────── */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-600 to-teal-500 p-6 shadow-lg">
+      <div className="animate-fade-slide-up relative overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-600 to-teal-500 p-6 shadow-lg" style={{ animationDelay: "0ms" }}>
         <div aria-hidden className="pointer-events-none absolute -right-10 -top-10 h-36 w-36 rounded-full bg-white/10" />
         <div aria-hidden className="pointer-events-none absolute -left-6 -bottom-8 h-28 w-28 rounded-full bg-white/5" />
         <div className="relative z-10">
@@ -110,7 +110,7 @@ export default function TasksPage() {
       </div>
 
       {/* ── TABS ─────────────────────────────────────────────────── */}
-      <div className="flex gap-1.5 overflow-x-auto pb-1" style={{ scrollbarWidth: "none" }}>
+      <div className="animate-fade-slide-up flex gap-1.5 overflow-x-auto pb-1" style={{ scrollbarWidth: "none", animationDelay: "80ms" }}>
         {TABS.map((tab) => {
           const count   = tabCount(tab.status);
           const isActive = activeTab === tab.status;
@@ -139,7 +139,7 @@ export default function TasksPage() {
       </div>
 
       {/* ── SEARCH ───────────────────────────────────────────────── */}
-      <div className="flex h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 shadow-sm transition-all focus-within:border-indigo-300 focus-within:ring-2 focus-within:ring-indigo-100">
+      <div className="animate-fade-slide-up flex h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 shadow-sm transition-all focus-within:border-indigo-300 focus-within:ring-2 focus-within:ring-indigo-100" style={{ animationDelay: "130ms" }}>
         <Search className="h-4 w-4 flex-shrink-0 text-slate-400" />
         <input
           type="text"
@@ -210,7 +210,7 @@ export default function TasksPage() {
             return (
               <li
                 key={s.id}
-                className={`relative space-y-3 overflow-hidden rounded-2xl border bg-white py-4 pr-5 shadow-sm ${
+                className={`relative space-y-3 overflow-hidden rounded-2xl border bg-white py-4 pr-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md ${
                   isResubmit ? "border-orange-200" : isRejected ? "border-red-200" : "border-slate-100"
                 }`}
                 style={{ paddingLeft: "1.25rem" }}

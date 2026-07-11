@@ -52,56 +52,74 @@ export default function AnnouncementsPage() {
   }, []);
 
   return (
-    <div className="space-y-6 max-w-2xl">
-      <div>
-        <h1 className="text-2xl font-bold text-[var(--text-primary)]">Announcements</h1>
-        <p className="text-sm text-[var(--text-secondary)]">Platform updates and messages from the NexGuild team.</p>
+    <div className="space-y-5 max-w-2xl">
+
+      {/* ── HERO ─────────────────────────────────────────────────── */}
+      <div className="animate-fade-slide-up relative overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-600 to-teal-500 p-6 shadow-lg" style={{ animationDelay: "0ms" }}>
+        <div aria-hidden className="pointer-events-none absolute -right-10 -top-10 h-36 w-36 rounded-full bg-white/10" />
+        <div aria-hidden className="pointer-events-none absolute -left-6 -bottom-8 h-28 w-28 rounded-full bg-white/5" />
+        <div className="relative z-10">
+          <div className="mb-2 flex items-center gap-2">
+            <Megaphone className="h-4 w-4 text-white/70" />
+            <span className="text-xs font-semibold uppercase tracking-widest text-white/70">NexGuild Team</span>
+          </div>
+          <h1 className="mb-1 text-2xl font-extrabold text-white">Announcements</h1>
+          <p className="text-sm text-white/75">Platform updates and messages from the NexGuild team.</p>
+        </div>
       </div>
 
       {loading ? (
         <div className="flex items-center justify-center py-16">
-          <Loader2 className="h-6 w-6 animate-spin text-[var(--brand-500)]" />
+          <Loader2 className="h-6 w-6 animate-spin text-indigo-500" />
         </div>
       ) : items.length === 0 ? (
-        <div className="rounded-xl border border-[var(--border-default)] bg-[var(--surface-card)] py-16 flex flex-col items-center gap-3 text-center px-6">
-          <Megaphone className="h-10 w-10 text-[var(--text-muted)]" />
-          <p className="font-semibold text-[var(--text-primary)]">No announcements yet</p>
-          <p className="text-sm text-[var(--text-secondary)]">We&apos;ll post updates here when there&apos;s something new.</p>
+        <div className="flex flex-col items-center gap-4 rounded-2xl border border-slate-100 bg-white px-6 py-16 text-center shadow-sm">
+          <div
+            className="flex h-14 w-14 items-center justify-center rounded-full"
+            style={{ background: "linear-gradient(135deg, rgba(99,102,241,0.1), rgba(20,184,166,0.1))" }}
+          >
+            <Megaphone className="h-7 w-7 text-indigo-500" />
+          </div>
+          <div>
+            <p className="mb-1 font-bold text-slate-800">No announcements yet</p>
+            <p className="text-sm text-slate-500">We&apos;ll post updates here when there&apos;s something new.</p>
+          </div>
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="animate-fade-slide-up space-y-3" style={{ animationDelay: "100ms" }}>
           {items.map((item) => {
             const cleanTitle = item.title.replace(/^📢\s*/, "");
             const unread     = !item.is_read;
             return (
               <div
                 key={item.id}
-                className={`rounded-xl border p-5 transition-colors ${
-                  unread
-                    ? "border-[#14b8a6]/30 bg-gradient-to-r from-[#14b8a6]/8 to-transparent"
-                    : "border-[var(--border-default)] bg-[var(--surface-card)]"
+                className={`overflow-hidden rounded-2xl bg-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md ${
+                  unread ? "border border-indigo-200" : "border border-slate-100"
                 }`}
               >
-                <div className="flex items-start gap-3">
-                  <div className={`mt-0.5 h-8 w-8 rounded-lg flex items-center justify-center flex-shrink-0 ${
-                    unread ? "bg-[#14b8a6]/15" : "bg-[var(--surface-subtle)]"
+                {unread && (
+                  <div className="h-1 w-full" style={{ background: "linear-gradient(90deg, #6366f1, #14b8a6)" }} />
+                )}
+                <div className="flex items-start gap-4 p-5">
+                  <div className={`mt-0.5 flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl ${
+                    unread ? "bg-indigo-100" : "bg-slate-100"
                   }`}>
-                    <Megaphone className={`h-4 w-4 ${unread ? "text-[#14b8a6]" : "text-[var(--text-muted)]"}`} />
+                    <Megaphone className={`h-4 w-4 ${unread ? "text-indigo-600" : "text-slate-400"}`} />
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1 flex-wrap">
-                      <p className="text-sm font-semibold text-[var(--text-primary)]">{cleanTitle}</p>
+                  <div className="min-w-0 flex-1">
+                    <div className="mb-1.5 flex flex-wrap items-center gap-2">
+                      <p className="text-sm font-semibold text-slate-800">{cleanTitle}</p>
                       {unread && (
-                        <span className="text-xs font-medium px-1.5 py-0.5 rounded-full bg-[#14b8a6]/15 text-[#14b8a6]">
-                          New
+                        <span className="rounded-full bg-indigo-100 px-2 py-0.5 text-[10px] font-bold text-indigo-600">
+                          NEW
                         </span>
                       )}
                     </div>
                     <div
-                      className="text-sm text-[var(--text-secondary)] leading-relaxed"
+                      className="text-sm leading-relaxed text-slate-600"
                       dangerouslySetInnerHTML={{ __html: formatAnnouncement(item.message) }}
                     />
-                    <p className="text-xs text-[var(--text-muted)] mt-2">
+                    <p className="mt-2.5 text-xs text-slate-400">
                       {new Date(item.created_at).toLocaleDateString("en-IN", {
                         day: "numeric", month: "long", year: "numeric",
                         hour: "2-digit", minute: "2-digit",

@@ -12,7 +12,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
       <DashboardSidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       <DashboardHeader onMenuToggle={() => setSidebarOpen((v) => !v)} />
       <main className="pt-16 lg:pl-sidebar">
-        <div className="p-6 max-w-content">{children}</div>
+        <div className="p-4 sm:p-6 max-w-content">{children}</div>
       </main>
     </>
   );
