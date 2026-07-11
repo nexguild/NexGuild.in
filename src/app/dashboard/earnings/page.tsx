@@ -1,10 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { StatCard } from "@/components/ui/stat-card";
 import { ReceiptText, TrendingUp, Download } from "lucide-react";
 import { NexCoinIcon } from "@/components/ui/nexcoin-icon";
-import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
 import { BlogTipCard } from "@/components/dashboard/BlogTipCard";
 
@@ -59,8 +57,8 @@ function EarningsBarChart({ data }: { data: { label: string; value: number }[] }
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-24" preserveAspectRatio="none">
         <defs>
           <linearGradient id="barGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#02b491" stopOpacity="0.9" />
-            <stop offset="100%" stopColor="#02b491" stopOpacity="0.5" />
+            <stop offset="0%" stopColor="#6366f1" stopOpacity="0.9" />
+            <stop offset="100%" stopColor="#14b8a6" stopOpacity="0.6" />
           </linearGradient>
         </defs>
         {data.map((d, i) => {
@@ -255,55 +253,84 @@ export default function EarningsPage() {
   }, []);
 
   const totalEarned  = transactions.reduce((s, t) => s + t.amount, 0);
-  const pendingCoins = pending.reduce((s, p) => s + (p.tasks?.pay_per_task ?? 0), 0);
+  const pendingCoins = pending.reduce((s, p) => s + (p.tasks?.pay_per_task != null ? Math.floor(p.tasks.pay_per_task * 0.66) : 0), 0);
 
   const filtered    = applyFilters(transactions, sourceFilter, dateRange, customFrom, customTo);
   const chartData   = buildChartData(transactions, chartRange);
 
-  const pillBase    = "px-3 py-1.5 rounded-lg text-xs font-medium transition-colors whitespace-nowrap";
-  const pillActive  = `${pillBase} bg-[var(--brand-500)] text-white`;
-  const pillInactive= `${pillBase} bg-[var(--surface-subtle)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]`;
+  const activePill   = "text-white shadow-sm";
+  const inactivePill = "bg-slate-100 text-slate-500 hover:bg-slate-200";
+  const pillBase     = "px-3 py-1.5 rounded-full text-xs font-semibold transition-all whitespace-nowrap";
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-[var(--text-primary)] mb-1">Earnings</h1>
-        <p className="text-sm text-[var(--text-secondary)]">Your complete NexCoins earning history.</p>
-      </div>
+    <div className="space-y-5">
 
-      {/* Stat cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-        <StatCard
-          label="Current Balance"
-          value={loading ? "—" : nexcoins.toLocaleString() + " coins"}
-          icon={<NexCoinIcon size={20} />}
-        />
-        <StatCard
-          label="Total Earned"
-          value={loading ? "—" : totalEarned.toLocaleString() + " coins"}
-          icon={<NexCoinIcon size={20} />}
-        />
-        <StatCard
-          label="Pending Review"
-          value={loading ? "—" : pendingCoins.toLocaleString() + " coins"}
-          icon={<TrendingUp className="h-5 w-5" />}
-          trend="Awaiting approval"
-        />
-      </div>
-
-      {/* Earnings overview chart */}
-      <div className="rounded-lg border border-[var(--border-default)] bg-[var(--surface-card)] p-5">
-        <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
-          <div className="flex items-center gap-2">
-            <NexCoinIcon size={16} />
-            <h2 className="font-semibold text-[var(--text-primary)]">Earnings Overview</h2>
+      {/* ── HERO ─────────────────────────────────────────────────── */}
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-600 to-teal-500 p-6 shadow-lg">
+        <div aria-hidden className="pointer-events-none absolute -right-10 -top-10 h-36 w-36 rounded-full bg-white/10" />
+        <div aria-hidden className="pointer-events-none absolute -left-6 -bottom-8 h-28 w-28 rounded-full bg-white/5" />
+        <div className="relative z-10 flex items-start justify-between gap-4 flex-wrap">
+          <div>
+            <div className="mb-2 flex items-center gap-2">
+              <TrendingUp className="h-4 w-4 text-white/70" />
+              <span className="text-xs font-semibold uppercase tracking-widest text-white/70">NexCoins</span>
+            </div>
+            <h1 className="text-2xl font-extrabold text-white mb-1">Earnings</h1>
+            <p className="text-sm text-white/75">Your complete NexCoins earning history.</p>
           </div>
-          <div className="flex gap-1">
+          {!loading && (
+            <div className="flex-shrink-0 rounded-xl border border-white/25 bg-white/15 px-4 py-3 text-center">
+              <p className="text-xs text-white/70 mb-0.5">Balance</p>
+              <p className="text-xl font-extrabold text-white">🪙 {nexcoins.toLocaleString()}</p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* ── STAT CARDS ───────────────────────────────────────────── */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+        <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
+          <div className="mb-2 flex items-center gap-1.5">
+            <NexCoinIcon size={14} />
+            <span className="text-xs text-slate-400">Total Earned</span>
+          </div>
+          <p className="text-xl font-extrabold text-slate-800">{loading ? "—" : totalEarned.toLocaleString()}</p>
+          <p className="mt-0.5 text-xs text-slate-400">NexCoins</p>
+        </div>
+        <div className="rounded-2xl border border-amber-100 bg-amber-50 p-4 shadow-sm">
+          <div className="mb-2 flex items-center gap-1.5">
+            <TrendingUp className="h-3.5 w-3.5 text-amber-500" />
+            <span className="text-xs text-amber-600">Pending</span>
+          </div>
+          <p className="text-xl font-extrabold text-amber-700">{loading ? "—" : pendingCoins.toLocaleString()}</p>
+          <p className="mt-0.5 text-xs text-amber-500">Awaiting approval</p>
+        </div>
+        <div className="col-span-2 sm:col-span-1 rounded-2xl border border-green-100 bg-green-50 p-4 shadow-sm">
+          <div className="mb-2 flex items-center gap-1.5">
+            <ReceiptText className="h-3.5 w-3.5 text-green-600" />
+            <span className="text-xs text-green-600">Transactions</span>
+          </div>
+          <p className="text-xl font-extrabold text-green-700">{loading ? "—" : transactions.length}</p>
+          <p className="mt-0.5 text-xs text-green-500">All time</p>
+        </div>
+      </div>
+
+      {/* ── CHART ────────────────────────────────────────────────── */}
+      <div className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
+        <div className="mb-4 flex items-center justify-between gap-3 flex-wrap">
+          <div className="flex items-center gap-2">
+            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-50">
+              <NexCoinIcon size={14} />
+            </div>
+            <h2 className="font-bold text-slate-800">Earnings Overview</h2>
+          </div>
+          <div className="flex gap-1.5">
             {(["week", "month", "all"] as const).map((r) => (
               <button
                 key={r}
                 onClick={() => setChartRange(r)}
-                className={chartRange === r ? pillActive : pillInactive}
+                className={`${pillBase} ${chartRange === r ? activePill : inactivePill}`}
+                style={chartRange === r ? { background: "linear-gradient(135deg, #6366f1, #14b8a6)" } : undefined}
               >
                 {r === "week" ? "This Week" : r === "month" ? "This Month" : "All Time"}
               </button>
@@ -311,36 +338,37 @@ export default function EarningsPage() {
           </div>
         </div>
         {loading ? (
-          <div className="h-24 rounded-lg bg-[var(--surface-subtle)] animate-pulse" />
+          <div className="h-24 rounded-xl bg-slate-100 animate-pulse" />
         ) : (
           <EarningsBarChart data={chartData} />
         )}
       </div>
 
-      {/* Pending submissions */}
+      {/* ── PENDING SUBMISSIONS ───────────────────────────────────── */}
       {!loading && pending.length > 0 && (
-        <div className="rounded-lg border border-yellow-500/30 bg-yellow-500/5">
-          <div className="px-5 py-4 border-b border-yellow-500/20">
-            <h2 className="font-semibold text-[var(--text-primary)]">Pending Review</h2>
-            <p className="text-xs text-[var(--text-muted)] mt-0.5">These submissions are awaiting admin approval.</p>
+        <div className="overflow-hidden rounded-2xl border border-amber-100 bg-white shadow-sm">
+          <div
+            className="border-b border-amber-50 px-5 py-4"
+            style={{ background: "linear-gradient(135deg, rgba(251,191,36,0.08), rgba(245,158,11,0.04))" }}
+          >
+            <h2 className="font-bold text-slate-800">Pending Review</h2>
+            <p className="mt-0.5 text-xs text-slate-400">These submissions are awaiting admin approval.</p>
           </div>
-          <ul className="divide-y divide-yellow-500/10">
+          <ul className="divide-y divide-slate-50">
             {pending.map((p) => (
-              <li key={p.id} className="px-5 py-4 flex items-center justify-between gap-4">
+              <li key={p.id} className="flex items-center justify-between gap-4 px-5 py-4">
                 <div className="min-w-0">
-                  <p className="text-sm font-medium text-[var(--text-primary)] truncate">
-                    {p.tasks?.title ?? "Task"}
-                  </p>
-                  <p className="text-xs text-[var(--text-muted)]">
+                  <p className="truncate text-sm font-semibold text-slate-700">{p.tasks?.title ?? "Task"}</p>
+                  <p className="text-xs text-slate-400">
                     Submitted {new Date(p.submitted_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
                   </p>
                 </div>
-                <div className="flex items-center gap-3 flex-shrink-0">
-                  <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-yellow-500/10 text-yellow-400">
+                <div className="flex flex-shrink-0 items-center gap-2.5">
+                  <span className="rounded-full bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-600">
                     Under Review
                   </span>
-                  <span className="flex items-center gap-1 text-sm font-bold text-yellow-400">
-                    +<NexCoinIcon size={13} className="opacity-80" />{(p.tasks?.pay_per_task ?? 0).toLocaleString()}
+                  <span className="flex items-center gap-1 text-sm font-bold text-amber-600">
+                    +<NexCoinIcon size={13} />{(p.tasks?.pay_per_task != null ? Math.floor(p.tasks.pay_per_task * 0.66) : 0).toLocaleString()}
                   </span>
                 </div>
               </li>
@@ -349,19 +377,21 @@ export default function EarningsPage() {
         </div>
       )}
 
-      {/* Filters + history */}
-      <div className="rounded-lg border border-[var(--border-default)] bg-[var(--surface-card)]">
-        <div className="px-5 py-4 border-b border-[var(--border-default)] space-y-3">
+      {/* ── FILTERS + HISTORY ─────────────────────────────────────── */}
+      <div className="overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm">
+        <div
+          className="space-y-3 border-b border-slate-50 px-5 py-4"
+          style={{ background: "linear-gradient(135deg, rgba(99,102,241,0.04), rgba(20,184,166,0.02))" }}
+        >
           <div className="flex items-center justify-between gap-3 flex-wrap">
-            <h2 className="font-semibold text-[var(--text-primary)]">Earned History</h2>
-            <Button
-              variant="secondary"
-              size="sm"
+            <h2 className="font-bold text-slate-800">Earned History</h2>
+            <button
               onClick={() => exportCsv(filtered)}
               disabled={loading || filtered.length === 0}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 transition-colors hover:border-indigo-300 hover:text-indigo-600 disabled:opacity-40"
             >
               <Download className="h-3.5 w-3.5" /> Export CSV
-            </Button>
+            </button>
           </div>
 
           {/* Source filter */}
@@ -370,7 +400,8 @@ export default function EarningsPage() {
               <button
                 key={s}
                 onClick={() => setSourceFilter(s)}
-                className={sourceFilter === s ? pillActive : pillInactive}
+                className={`${pillBase} ${sourceFilter === s ? activePill : inactivePill}`}
+                style={sourceFilter === s ? { background: "linear-gradient(135deg, #6366f1, #14b8a6)" } : undefined}
               >
                 {SOURCE_LABELS[s]}
               </button>
@@ -383,25 +414,26 @@ export default function EarningsPage() {
               <button
                 key={r}
                 onClick={() => setDateRange(r)}
-                className={dateRange === r ? pillActive : pillInactive}
+                className={`${pillBase} ${dateRange === r ? activePill : inactivePill}`}
+                style={dateRange === r ? { background: "linear-gradient(135deg, #6366f1, #14b8a6)" } : undefined}
               >
                 {DATE_LABELS[r]}
               </button>
             ))}
             {dateRange === "custom" && (
-              <div className="flex items-center gap-2 mt-1.5 w-full">
+              <div className="mt-1.5 flex w-full items-center gap-2">
                 <input
                   type="date"
                   value={customFrom}
                   onChange={(e) => setCustomFrom(e.target.value)}
-                  className="h-8 px-2 rounded-md border border-[var(--border-default)] bg-[var(--surface-subtle)] text-xs text-[var(--text-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--border-focus)]"
+                  className="h-8 rounded-lg border border-slate-200 bg-white px-2 text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-300"
                 />
-                <span className="text-xs text-[var(--text-muted)]">to</span>
+                <span className="text-xs text-slate-400">to</span>
                 <input
                   type="date"
                   value={customTo}
                   onChange={(e) => setCustomTo(e.target.value)}
-                  className="h-8 px-2 rounded-md border border-[var(--border-default)] bg-[var(--surface-subtle)] text-xs text-[var(--text-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--border-focus)]"
+                  className="h-8 rounded-lg border border-slate-200 bg-white px-2 text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-300"
                 />
               </div>
             )}
@@ -409,56 +441,62 @@ export default function EarningsPage() {
 
           {/* Result count */}
           {!loading && (
-            <p className="text-xs text-[var(--text-muted)]">
+            <p className="text-xs text-slate-400">
               {filtered.length} transaction{filtered.length !== 1 ? "s" : ""} ·{" "}
-              {filtered.reduce((s, t) => s + t.amount, 0).toLocaleString()} NexCoins
+              <span className="font-semibold text-indigo-600">
+                {filtered.reduce((s, t) => s + t.amount, 0).toLocaleString()} NexCoins
+              </span>
             </p>
           )}
         </div>
 
         {loading ? (
-          <div className="divide-y divide-[var(--border-default)]">
+          <div className="divide-y divide-slate-50">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="px-5 py-4 flex items-center justify-between gap-4">
+              <div key={i} className="flex items-center justify-between gap-4 px-5 py-4">
                 <div className="flex flex-col gap-2">
-                  <div className="h-3 w-48 rounded bg-[var(--surface-subtle)] animate-pulse" />
-                  <div className="h-2 w-28 rounded bg-[var(--surface-subtle)] animate-pulse" />
+                  <div className="h-3 w-48 rounded-full bg-slate-100 animate-pulse" />
+                  <div className="h-2 w-28 rounded-full bg-slate-100 animate-pulse" />
                 </div>
-                <div className="h-5 w-20 rounded bg-[var(--surface-subtle)] animate-pulse" />
+                <div className="h-5 w-20 rounded-full bg-slate-100 animate-pulse" />
               </div>
             ))}
           </div>
         ) : filtered.length === 0 ? (
-          <div className="py-16 flex flex-col items-center gap-3 text-center">
-            <ReceiptText className="h-10 w-10 text-[var(--text-muted)]" />
-            <p className="font-semibold text-[var(--text-primary)]">
-              {transactions.length === 0 ? "No earnings yet" : "No transactions match these filters"}
-            </p>
-            <p className="text-sm text-[var(--text-secondary)]">
-              {transactions.length === 0
-                ? "Complete and get tasks approved to earn NexCoins."
-                : "Try adjusting the source or date filter."}
-            </p>
+          <div className="flex flex-col items-center gap-3 py-16 text-center px-6">
+            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-slate-100">
+              <ReceiptText className="h-7 w-7 text-slate-400" />
+            </div>
+            <div>
+              <p className="mb-1 font-bold text-slate-700">
+                {transactions.length === 0 ? "No earnings yet" : "No transactions match"}
+              </p>
+              <p className="text-sm text-slate-400">
+                {transactions.length === 0
+                  ? "Complete and get tasks approved to earn NexCoins."
+                  : "Try adjusting the source or date filter."}
+              </p>
+            </div>
           </div>
         ) : (
-          <ul className="divide-y divide-[var(--border-default)]">
+          <ul className="divide-y divide-slate-50">
             {filtered.map((t) => (
-              <li key={t.id} className="px-5 py-4 flex items-center justify-between gap-4">
+              <li key={t.id} className="flex items-center justify-between gap-4 px-5 py-3.5">
                 <div className="min-w-0">
-                  <p className="text-sm font-medium text-[var(--text-primary)] truncate">
+                  <p className="truncate text-sm font-semibold text-slate-700">
                     {t.description ?? t.source ?? "Task Reward"}
                   </p>
-                  <p className="text-xs text-[var(--text-muted)]">
+                  <p className="text-xs text-slate-400">
                     {new Date(t.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
                     {t.source && <span> · {SOURCE_LABELS[t.source as SourceFilter] ?? t.source}</span>}
                   </p>
                 </div>
-                <div className="flex items-center gap-2.5 flex-shrink-0">
-                  <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-green-500/10 text-green-400">
+                <div className="flex flex-shrink-0 items-center gap-2.5">
+                  <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs font-semibold text-green-600">
                     Confirmed
                   </span>
-                  <span className="flex items-center gap-1 text-sm font-bold text-green-400">
-                    +<NexCoinIcon size={13} className="opacity-80" />{t.amount.toLocaleString()}
+                  <span className="flex items-center gap-1 text-sm font-bold text-green-600">
+                    +<NexCoinIcon size={13} />{t.amount.toLocaleString()}
                   </span>
                 </div>
               </li>

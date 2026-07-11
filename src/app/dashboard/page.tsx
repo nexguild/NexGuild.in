@@ -725,7 +725,7 @@ export default function DashboardHome() {
                           <div className="flex flex-col items-end gap-1 flex-shrink-0">
                             {task.pay_per_task != null && (
                               <span className="inline-flex items-center gap-0.5 text-base font-bold text-teal-600">
-                                <NexCoinIcon size={12} />{task.pay_per_task}
+                                <NexCoinIcon size={12} />{Math.floor(task.pay_per_task * 0.66)}
                               </span>
                             )}
                             {(task.xp_reward ?? 0) > 0 && (

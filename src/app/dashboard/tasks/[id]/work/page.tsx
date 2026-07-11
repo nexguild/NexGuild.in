@@ -106,6 +106,7 @@ export default function TaskWorkPage() {
   const [classicError, setClassicError]         = useState<string | null>(null);
 
   const [done, setDone] = useState(false);
+  const [stageSuccessModal, setStageSuccessModal] = useState(false);
   const [now, setNow]   = useState(() => new Date());
 
   useEffect(() => {
@@ -286,9 +287,8 @@ export default function TaskWorkPage() {
       status: "submitted",
       submitted_at: new Date().toISOString(),
     }).eq("id", submissionId);
-    setSubmissionStatus("submitted");
-    setDone(true);
     setFinalSubmitting(false);
+    setStageSuccessModal(true);
 
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.access_token) {
@@ -529,7 +529,7 @@ export default function TaskWorkPage() {
               {steps.map((step, idx) => {
                 const isCompleted = doneSet.has(idx);
                 const isLocked    = !isCompleted && idx > 0 && !doneSet.has(idx - 1);
-                const isOpen      = !collapsedSteps.has(idx);
+                const isOpen      = collapsedSteps.has(idx);
                 const stepSub     = stepSubs.find((s) => s.step_index === idx);
 
                 function toggleCollapse() {
@@ -602,62 +602,65 @@ export default function TaskWorkPage() {
                 return (
                   <div
                     key={idx}
-                    className={`overflow-hidden rounded-2xl ${isOpen ? "border border-indigo-200/40 shadow-md" : "border border-slate-200 shadow-sm"}`}
+                    className="overflow-hidden rounded-2xl bg-white shadow-sm"
+                    style={{ border: isOpen ? "1.5px solid rgba(99,102,241,0.4)" : "1px solid #e2e8f0" }}
                   >
-                    {/* Gradient header when open, plain white when collapsed */}
+                    {/* Indigo→teal gradient header — always visible */}
                     <div
                       onClick={toggleCollapse}
-                      className="flex cursor-pointer items-center gap-3 px-5 py-4 transition-colors"
-                      style={isOpen
-                        ? { background: "linear-gradient(135deg, #6366f1 0%, #14b8a6 100%)" }
-                        : { background: "#ffffff" }
-                      }
+                      className="flex cursor-pointer items-center gap-3 px-5 py-4"
+                      style={{ background: "linear-gradient(135deg, #6366f1 0%, #14b8a6 100%)" }}
                     >
                       <div
-                        className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full text-sm font-bold transition-colors"
-                        style={isOpen
-                          ? { background: "rgba(255,255,255,0.2)", border: "1.5px solid rgba(255,255,255,0.3)", color: "#ffffff" }
-                          : { background: "#eef2ff", border: "1.5px solid #c7d2fe", color: "#4f46e5" }
-                        }
+                        className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full text-sm font-bold"
+                        style={{ background: "rgba(255,255,255,0.2)", border: "1.5px solid rgba(255,255,255,0.35)", color: "#ffffff" }}
                       >
                         {idx + 1}
                       </div>
-                      <p className={`flex-1 text-sm font-bold leading-snug transition-colors ${isOpen ? "text-white" : "text-slate-700"}`}>
-                        Stage {idx + 1}: {step.title}
-                      </p>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-bold leading-snug text-white">Stage {idx + 1}: {step.title}</p>
+                        {!isOpen && (step.description || step.url) && (
+                          <p className="mt-0.5 text-xs text-white/55">Tap to view instructions</p>
+                        )}
+                      </div>
                       <ChevronDown
-                        className={`h-5 w-5 flex-shrink-0 transition-all duration-200 ${isOpen ? "rotate-180 text-white/70" : "text-slate-400"}`}
+                        className={`h-5 w-5 flex-shrink-0 text-white/80 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
                       />
                     </div>
 
-                    {/* Expandable body */}
-                    <div className={`overflow-hidden transition-all duration-300 ${isOpen ? "max-h-[400px]" : "max-h-0"}`}>
-                      <div className="space-y-4 border-t border-indigo-100 bg-white px-5 py-5">
-                        {step.description && (
-                          <p className="text-sm leading-relaxed text-slate-600">{step.description}</p>
-                        )}
-                        {step.url && (
-                          <a
-                            href={buildStepUrl(step.url)}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1.5 rounded-lg border border-indigo-200 bg-indigo-50 px-4 py-2 text-sm font-semibold text-indigo-600 transition-colors hover:bg-indigo-100"
-                          >
-                            <ExternalLink className="h-3.5 w-3.5" /> Open Link
-                          </a>
-                        )}
-                        <button
-                          onClick={() => openModal(idx)}
-                          className="flex w-full items-center justify-center gap-2 rounded-xl py-3 text-sm font-bold text-white transition-all hover:opacity-95"
-                          style={{
-                            background: "linear-gradient(135deg, #6366f1 0%, #14b8a6 100%)",
-                            boxShadow: "0 4px 14px rgba(99,102,241,0.3)",
-                          }}
-                        >
-                          <Send className="h-4 w-4" />
-                          {step.submitType === "none" ? "Mark as Complete" : step.submitType === "proof_code" ? "Verify Code →" : "Submit Stage →"}
-                        </button>
-                      </div>
+                    {/* Collapsible middle — description + Open Link */}
+                    <div className={`overflow-hidden transition-all duration-300 ${isOpen ? "max-h-64" : "max-h-0"}`}>
+                      {(step.description || step.url) && (
+                        <div className="flex items-start justify-between gap-4 bg-white px-5 py-4" style={{ borderTop: "1px solid rgba(99,102,241,0.1)" }}>
+                          {step.description && (
+                            <p className="flex-1 text-sm leading-relaxed text-slate-600 pt-0.5">{step.description}</p>
+                          )}
+                          {step.url && (
+                            <div className="flex-shrink-0">
+                              <a
+                                href={buildStepUrl(step.url)}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors whitespace-nowrap"
+                                style={{ border: "1px solid rgba(99,102,241,0.3)", background: "rgba(99,102,241,0.06)", color: "#6366f1" }}
+                              >
+                                <ExternalLink className="h-3 w-3" /> Open Link
+                              </a>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Fixed bottom — gradient strip with button inside */}
+                    <div className="px-5 py-3.5" style={{ background: "linear-gradient(135deg, #6366f1 0%, #14b8a6 100%)" }}>
+                      <button
+                        onClick={() => openModal(idx)}
+                        className="flex w-full items-center justify-center gap-2 rounded-xl border border-white/25 bg-white/15 py-2.5 text-sm font-bold text-white transition-colors hover:bg-white/25"
+                      >
+                        <Send className="h-4 w-4" />
+                        {step.submitType === "none" ? "Mark as Complete" : step.submitType === "proof_code" ? "Verify Code →" : "Submit Stage →"}
+                      </button>
                     </div>
                   </div>
                 );
@@ -900,6 +903,81 @@ export default function TaskWorkPage() {
                   {submittingModal
                     ? <><Loader2 className="h-4 w-4 animate-spin" /> Submitting…</>
                     : <><Send className="h-3.5 w-3.5" /> {activeStep.submitType === "none" ? "Confirm" : activeStep.submitType === "proof_code" ? "Verify →" : "Submit"}</>}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── STAGE SUCCESS MODAL ──────────────────────────────────────── */}
+      {stageSuccessModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+          onClick={() => router.push("/dashboard/tasks")}
+        >
+          <div
+            className="w-full max-w-md rounded-2xl bg-white shadow-xl overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Gradient accent bar */}
+            <div className="h-1.5 w-full" style={{ background: "linear-gradient(90deg, #6366f1, #14b8a6)" }} />
+
+            <div className="p-5 sm:p-8 space-y-5 text-center">
+              {/* Check icon */}
+              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-green-100">
+                <CheckCircle2 className="h-8 w-8 text-green-500" />
+              </div>
+
+              {/* Title + body */}
+              <div>
+                <h2 className="text-xl font-bold text-slate-800 mb-2">Submission Received!</h2>
+                <p className="text-sm text-slate-500 leading-relaxed">
+                  Our admin team will review your work and get back to you.
+                </p>
+              </div>
+
+              {/* Info card — 3-column grid */}
+              <div className="rounded-xl bg-indigo-50 border border-indigo-100 p-4">
+                <div className="grid grid-cols-3 divide-x divide-indigo-100">
+                  {contributorCoins != null && (
+                    <div className="flex flex-col items-center gap-1 px-2">
+                      <span className="text-xl">🪙</span>
+                      <p className="text-xs text-slate-400">Reward</p>
+                      <p className="text-sm font-bold text-slate-700 text-center">{contributorCoins} NexCoins</p>
+                    </div>
+                  )}
+                  {task.validation_time && (
+                    <div className="flex flex-col items-center gap-1 px-2">
+                      <span className="text-xl">⏱</span>
+                      <p className="text-xs text-slate-400">Review</p>
+                      <p className="text-sm font-bold text-slate-700 text-center">{task.validation_time}</p>
+                    </div>
+                  )}
+                  {task.payment_time && (
+                    <div className="flex flex-col items-center gap-1 px-2">
+                      <span className="text-xl">💳</span>
+                      <p className="text-xs text-slate-400">Payment</p>
+                      <p className="text-xs sm:text-sm font-bold text-slate-700 text-center">{task.payment_time}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Action buttons */}
+              <div className="flex gap-3">
+                <button
+                  onClick={() => router.push("/dashboard/tasks")}
+                  className="flex-1 rounded-xl py-2.5 text-sm font-bold text-white transition-all hover:opacity-90"
+                  style={{ background: "linear-gradient(135deg, #6366f1 0%, #14b8a6 100%)" }}
+                >
+                  My Tasks
+                </button>
+                <button
+                  onClick={() => router.push("/dashboard/opportunities")}
+                  className="flex-1 rounded-xl border border-slate-200 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-colors"
+                >
+                  Browse More
                 </button>
               </div>
             </div>

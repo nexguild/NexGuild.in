@@ -497,7 +497,7 @@ export default function TaskDetailPage() {
               <CheckCircle2 className="h-5 w-5 text-green-400 flex-shrink-0 mt-0.5" />
               <div>
                 <p className="text-sm font-bold text-green-400">
-                  Approved! +{submission.coins_awarded ?? task.pay_per_task ?? 0} NexCoins
+                  Approved! +{submission.coins_awarded ?? (task.pay_per_task != null ? Math.floor(task.pay_per_task * 0.66) : 0)} NexCoins
                 </p>
                 <p className="text-xs text-green-300/70 mt-0.5">Coins have been credited to your wallet.</p>
               </div>

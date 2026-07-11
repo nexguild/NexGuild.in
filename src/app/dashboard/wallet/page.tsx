@@ -4,8 +4,6 @@ import { useEffect, useState } from "react";
 import { ShoppingBag, TrendingUp, History } from "lucide-react";
 import { NexCoinIcon } from "@/components/ui/nexcoin-icon";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { StatCard } from "@/components/ui/stat-card";
 import { supabase } from "@/lib/supabase";
 
 interface Transaction {
@@ -28,9 +26,9 @@ interface VoucherRequest {
 }
 
 const STATUS_STYLES: Record<string, string> = {
-  pending:    "bg-yellow-500/10 text-yellow-400",
-  processing: "bg-blue-500/10 text-blue-400",
-  delivered:  "bg-green-500/10 text-green-400",
+  pending:    "bg-amber-100 text-amber-600",
+  processing: "bg-blue-100 text-blue-600",
+  delivered:  "bg-green-100 text-green-600",
 };
 
 export default function NexCoinsPage() {
@@ -78,65 +76,73 @@ export default function NexCoinsPage() {
   }, []);
 
   return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="text-2xl font-bold text-[var(--text-primary)] mb-1">NexCoins</h1>
-        <p className="text-sm text-[var(--text-secondary)]">Your coin balance and redemption history.</p>
-      </div>
+    <div className="space-y-5">
 
-      {/* Balance Hero */}
-      <div className="rounded-xl border border-[var(--brand-200)] bg-[var(--surface-card)] p-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
-        <div className="flex items-center gap-5">
-          <div className="h-14 w-14 rounded-full bg-[var(--brand-100)] flex items-center justify-center flex-shrink-0">
-            <NexCoinIcon size={28} />
-          </div>
+      {/* ── HERO ─────────────────────────────────────────────────── */}
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-600 to-teal-500 p-6 shadow-lg">
+        <div aria-hidden className="pointer-events-none absolute -right-10 -top-10 h-36 w-36 rounded-full bg-white/10" />
+        <div aria-hidden className="pointer-events-none absolute -left-6 -bottom-8 h-28 w-28 rounded-full bg-white/5" />
+        <div className="relative z-10 flex flex-wrap items-center justify-between gap-5">
           <div>
-            <p className="text-sm text-[var(--text-muted)] mb-1">Available NexCoins</p>
-            <p className="text-5xl font-bold text-[var(--brand-500)]">
+            <div className="mb-2 flex items-center gap-2">
+              <NexCoinIcon size={16} />
+              <span className="text-xs font-semibold uppercase tracking-widest text-white/70">Wallet</span>
+            </div>
+            <p className="mb-1 text-sm text-white/75">Available Balance</p>
+            <p className="text-5xl font-extrabold text-white">
               {loading ? "—" : (nexcoins ?? 0).toLocaleString()}
             </p>
+            <p className="mt-1 text-sm text-white/60">NexCoins</p>
           </div>
-        </div>
-        <Button asChild size="lg">
-          <Link href="/dashboard/store">
-            <ShoppingBag className="h-5 w-5" /> Redeem in Store
+          <Link
+            href="/dashboard/store"
+            className="inline-flex flex-shrink-0 items-center gap-2 rounded-xl border border-white/30 bg-white/15 px-5 py-2.5 text-sm font-bold text-white transition-colors hover:bg-white/25"
+          >
+            <ShoppingBag className="h-4 w-4" /> Redeem in Store
           </Link>
-        </Button>
+        </div>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 gap-4">
-        <StatCard
-          label="Total Earned"
-          value={loading ? "—" : totalEarned.toLocaleString()}
-          icon={<TrendingUp className="h-5 w-5" />}
-          trend="Coins earned from tasks & offers"
-        />
-        <StatCard
-          label="Total Spent"
-          value={loading ? "—" : totalSpent.toLocaleString()}
-          icon={<ShoppingBag className="h-5 w-5" />}
-          trend="Coins redeemed for vouchers"
-        />
-      </div>
-
-      {/* Pending Voucher Requests */}
-      {vouchers.length > 0 && (
-        <div className="rounded-lg border border-[var(--border-default)] bg-[var(--surface-card)]">
-          <div className="px-5 py-4 border-b border-[var(--border-default)]">
-            <h2 className="font-semibold text-[var(--text-primary)]">Voucher Requests</h2>
+      {/* ── STAT CARDS ───────────────────────────────────────────── */}
+      <div className="grid grid-cols-2 gap-3">
+        <div className="rounded-2xl border border-green-100 bg-green-50 p-4 shadow-sm">
+          <div className="mb-2 flex items-center gap-1.5">
+            <TrendingUp className="h-3.5 w-3.5 text-green-600" />
+            <span className="text-xs text-green-600">Total Earned</span>
           </div>
-          <ul className="divide-y divide-[var(--border-default)]">
+          <p className="text-xl font-extrabold text-green-700">{loading ? "—" : totalEarned.toLocaleString()}</p>
+          <p className="mt-0.5 text-xs text-green-500">From tasks &amp; offers</p>
+        </div>
+        <div className="rounded-2xl border border-indigo-100 bg-indigo-50 p-4 shadow-sm">
+          <div className="mb-2 flex items-center gap-1.5">
+            <ShoppingBag className="h-3.5 w-3.5 text-indigo-500" />
+            <span className="text-xs text-indigo-600">Total Spent</span>
+          </div>
+          <p className="text-xl font-extrabold text-indigo-700">{loading ? "—" : totalSpent.toLocaleString()}</p>
+          <p className="mt-0.5 text-xs text-indigo-400">Redeemed for vouchers</p>
+        </div>
+      </div>
+
+      {/* ── VOUCHER REQUESTS ─────────────────────────────────────── */}
+      {vouchers.length > 0 && (
+        <div className="overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm">
+          <div
+            className="border-b border-slate-50 px-5 py-4"
+            style={{ background: "linear-gradient(135deg, rgba(99,102,241,0.05), rgba(20,184,166,0.03))" }}
+          >
+            <h2 className="font-bold text-slate-800">Voucher Requests</h2>
+          </div>
+          <ul className="divide-y divide-slate-50">
             {vouchers.map((v) => (
-              <li key={v.id} className="px-5 py-4 flex items-center justify-between gap-4">
+              <li key={v.id} className="flex items-center justify-between gap-4 px-5 py-4">
                 <div className="min-w-0">
-                  <p className="text-sm font-medium text-[var(--text-primary)] truncate">{v.voucher_type}</p>
-                  <p className="text-xs text-[var(--text-muted)]">
+                  <p className="truncate text-sm font-semibold text-slate-700">{v.voucher_type}</p>
+                  <p className="text-xs text-slate-400">
                     {v.coins_spent.toLocaleString()} coins ·{" "}
                     {new Date(v.requested_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
                   </p>
                 </div>
-                <span className={`text-xs font-medium px-2.5 py-1 rounded-full flex-shrink-0 ${STATUS_STYLES[v.status] ?? "bg-[var(--surface-subtle)] text-[var(--text-secondary)]"}`}>
+                <span className={`flex-shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold ${STATUS_STYLES[v.status] ?? "bg-slate-100 text-slate-500"}`}>
                   {v.status.charAt(0).toUpperCase() + v.status.slice(1)}
                 </span>
               </li>
@@ -145,45 +151,52 @@ export default function NexCoinsPage() {
         </div>
       )}
 
-      {/* Transaction History */}
-      <div className="rounded-lg border border-[var(--border-default)] bg-[var(--surface-card)]">
-        <div className="px-5 py-4 border-b border-[var(--border-default)] flex items-center gap-2">
-          <History className="h-4 w-4 text-[var(--text-muted)]" />
-          <h2 className="font-semibold text-[var(--text-primary)]">Transaction History</h2>
+      {/* ── TRANSACTION HISTORY ──────────────────────────────────── */}
+      <div className="overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm">
+        <div
+          className="flex items-center gap-2 border-b border-slate-50 px-5 py-4"
+          style={{ background: "linear-gradient(135deg, rgba(99,102,241,0.04), rgba(20,184,166,0.02))" }}
+        >
+          <History className="h-4 w-4 text-indigo-400" />
+          <h2 className="font-bold text-slate-800">Transaction History</h2>
         </div>
 
         {loading ? (
-          <div className="divide-y divide-[var(--border-default)]">
+          <div className="divide-y divide-slate-50">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="px-5 py-4 flex items-center justify-between gap-4">
+              <div key={i} className="flex items-center justify-between gap-4 px-5 py-4">
                 <div className="flex flex-col gap-2">
-                  <div className="h-3 w-40 rounded bg-[var(--surface-subtle)] animate-pulse" />
-                  <div className="h-2 w-24 rounded bg-[var(--surface-subtle)] animate-pulse" />
+                  <div className="h-3 w-40 animate-pulse rounded-full bg-slate-100" />
+                  <div className="h-2 w-24 animate-pulse rounded-full bg-slate-100" />
                 </div>
-                <div className="h-5 w-16 rounded bg-[var(--surface-subtle)] animate-pulse" />
+                <div className="h-5 w-16 animate-pulse rounded-full bg-slate-100" />
               </div>
             ))}
           </div>
         ) : transactions.length === 0 ? (
-          <div className="py-14 flex flex-col items-center gap-3 text-center px-6">
-            <History className="h-8 w-8 text-[var(--text-muted)]" />
-            <p className="font-semibold text-[var(--text-primary)]">No transactions yet</p>
-            <p className="text-sm text-[var(--text-secondary)]">Complete tasks or offers to start earning NexCoins.</p>
+          <div className="flex flex-col items-center gap-3 px-6 py-14 text-center">
+            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-slate-100">
+              <History className="h-7 w-7 text-slate-400" />
+            </div>
+            <div>
+              <p className="mb-1 font-bold text-slate-700">No transactions yet</p>
+              <p className="text-sm text-slate-400">Complete tasks or offers to start earning NexCoins.</p>
+            </div>
           </div>
         ) : (
-          <ul className="divide-y divide-[var(--border-default)]">
+          <ul className="divide-y divide-slate-50">
             {transactions.map((tx) => (
-              <li key={tx.id} className="px-5 py-4 flex items-center justify-between gap-4">
+              <li key={tx.id} className="flex items-center justify-between gap-4 px-5 py-3.5">
                 <div className="min-w-0">
-                  <p className="text-sm font-medium text-[var(--text-primary)] truncate">
-                    {tx.description ?? (tx.source ?? tx.type)}
+                  <p className="truncate text-sm font-semibold text-slate-700">
+                    {tx.description ?? tx.source ?? tx.type}
                   </p>
-                  <p className="text-xs text-[var(--text-muted)]">
+                  <p className="text-xs text-slate-400">
                     {new Date(tx.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
                     {tx.source && <span> · {tx.source}</span>}
                   </p>
                 </div>
-                <span className={`text-sm font-bold flex-shrink-0 ${tx.type === "earned" ? "text-green-400" : "text-[var(--brand-500)]"}`}>
+                <span className={`flex-shrink-0 text-sm font-bold ${tx.type === "earned" ? "text-green-600" : "text-indigo-500"}`}>
                   {tx.type === "earned" ? "+" : "−"}{Math.abs(tx.amount).toLocaleString()}
                 </span>
               </li>
