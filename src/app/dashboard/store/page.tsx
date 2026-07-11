@@ -31,7 +31,7 @@ interface CouponResult {
   couponId: string;
 }
 
-// UI-only color mapping per brand (DB stores emoji; colors stay here)
+// Modal icon colors (kept for brand detail modal header)
 const BRAND_COLORS: Record<string, { bg: string; text: string }> = {
   "Amazon":      { bg: "bg-orange-500/15", text: "text-orange-400" },
   "Flipkart":    { bg: "bg-blue-500/15",   text: "text-blue-400" },
@@ -39,11 +39,25 @@ const BRAND_COLORS: Record<string, { bg: string; text: string }> = {
   "Zomato":      { bg: "bg-red-500/15",    text: "text-red-400" },
 };
 
+// Card top-banner gradients
+const BRAND_GRADIENTS: Record<string, string> = {
+  "Amazon":      "from-orange-400 to-orange-500",
+  "Flipkart":    "from-blue-500 to-blue-600",
+  "Google Play": "from-green-400 to-green-500",
+  "Zomato":      "from-red-400 to-red-500",
+};
+
 function brandColor(brand: string) {
   return BRAND_COLORS[brand] ?? { bg: "bg-[var(--brand-500)]/15", text: "text-[var(--brand-500)]" };
 }
+function brandGradient(brand: string): string {
+  return BRAND_GRADIENTS[brand] ?? "from-teal-400 to-teal-500";
+}
 
 const CATEGORIES = ["All", "Shopping", "Apps", "Food"];
+const CATEGORY_EMOJIS: Record<string, string> = {
+  All: "🎁", Shopping: "🛍️", Apps: "📱", Food: "🍽️",
+};
 
 const CATEGORY_MAP: Record<string, string> = {
   Shopping: "shopping", Apps: "apps", Food: "food",
@@ -72,9 +86,8 @@ export default function StorePage() {
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [showAffordable, setShowAffordable]     = useState(false);
 
-  // Modal — open by brand; user picks denomination
-  const [detailBrand, setDetailBrand]               = useState<string | null>(null);
-  const [selectedVoucherId, setSelectedVoucherId]   = useState<string>("");
+  const [detailBrand, setDetailBrand]             = useState<string | null>(null);
+  const [selectedVoucherId, setSelectedVoucherId] = useState<string>("");
 
   const [cart, setCart]         = useState<CartEntry[]>([]);
   const [cartOpen, setCartOpen] = useState(false);
@@ -112,7 +125,6 @@ export default function StorePage() {
     fetchData();
   }, []);
 
-  // Unique ordered brand list from fetched vouchers
   const brandList = Array.from(new Map(vouchers.map((v) => [v.brand_name, v.category])).entries()).map(
     ([brand, category]) => ({ brand, category })
   );
@@ -120,11 +132,9 @@ export default function StorePage() {
   function brandVouchers(brand: string) {
     return vouchers.filter((v) => v.brand_name === brand);
   }
-
   function isBrandAvailable(brand: string) {
     return brandVouchers(brand).some((v) => v.is_available);
   }
-
   function openBrandModal(brand: string) {
     const bv = brandVouchers(brand);
     const def = bv.find((v) => v.is_available) ?? bv[0];
@@ -133,7 +143,7 @@ export default function StorePage() {
     setDetailBrand(brand);
   }
 
-  const modalVouchers  = detailBrand ? brandVouchers(detailBrand) : [];
+  const modalVouchers   = detailBrand ? brandVouchers(detailBrand) : [];
   const selectedVoucher = vouchers.find((v) => v.id === selectedVoucherId) ?? null;
 
   const cartTotal  = cart.reduce((s, e) => s + e.voucher.coins_required * e.qty, 0);
@@ -158,11 +168,9 @@ export default function StorePage() {
     setDetailBrand(null);
     setCartOpen(true);
   }
-
   function removeFromCart(id: string) {
     setCart((prev) => prev.filter((e) => e.voucher.id !== id));
   }
-
   function updateQty(id: string, delta: number) {
     setCart((prev) =>
       prev.map((e) => e.voucher.id === id ? { ...e, qty: e.qty + delta } : e).filter((e) => e.qty > 0)
@@ -236,27 +244,36 @@ export default function StorePage() {
 
   return (
     <div className="space-y-8">
-      {/* Header */}
+
+      {/* ── Header ──────────────────────────────────────────────────── */}
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
-          <h1 className="text-2xl font-bold text-[var(--text-primary)] mb-1">NexStore</h1>
-          <p className="text-sm text-[var(--text-secondary)]">Redeem your NexCoins for gift vouchers.</p>
+          <h1 className="text-2xl font-bold text-slate-900 mb-1">NexStore</h1>
+          <p className="text-sm text-slate-500">Redeem your NexCoins for real gift vouchers.</p>
         </div>
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 rounded-lg border border-[var(--border-default)] bg-[var(--surface-card)] px-4 py-2">
-            <NexCoinIcon size={16} />
-            <span className="text-sm font-semibold text-[var(--brand-500)]">
-              {loading ? "—" : (nexcoins ?? 0).toLocaleString()} coins
-            </span>
+          {/* Premium balance card */}
+          <div className="rounded-2xl bg-gradient-to-r from-amber-400 to-amber-500 px-4 py-2 shadow-md">
+            <div className="flex items-center gap-2">
+              <span className="text-xl">🪙</span>
+              <div>
+                <p className="text-white font-bold text-lg leading-tight">
+                  {loading ? "—" : (nexcoins ?? 0).toLocaleString()}
+                  <span className="text-white/80 font-semibold text-sm ml-1">NexCoins</span>
+                </p>
+                <p className="text-white/70 text-xs">Available to redeem</p>
+              </div>
+            </div>
           </div>
+          {/* Cart button */}
           <button
             onClick={() => setCartOpen(true)}
-            className="relative h-10 w-10 flex items-center justify-center rounded-lg border border-[var(--border-default)] bg-[var(--surface-card)] hover:bg-[var(--surface-subtle)] transition-colors"
+            className="relative h-10 w-10 flex items-center justify-center rounded-xl border border-slate-200 bg-white shadow-sm hover:bg-slate-50 transition-colors"
             aria-label="Open cart"
           >
-            <ShoppingCart className="h-5 w-5 text-[var(--text-secondary)]" />
+            <ShoppingCart className="h-5 w-5 text-slate-500" />
             {cartCount > 0 && (
-              <span className="absolute -top-1.5 -right-1.5 h-5 min-w-[20px] px-1 rounded-full bg-[var(--brand-500)] text-white text-[10px] font-bold flex items-center justify-center leading-none">
+              <span className="absolute -top-1.5 -right-1.5 h-5 min-w-[20px] px-1 rounded-full bg-teal-500 text-white text-[10px] font-bold flex items-center justify-center leading-none">
                 {cartCount}
               </span>
             )}
@@ -264,128 +281,143 @@ export default function StorePage() {
         </div>
       </div>
 
-      {/* Category + Affordability Filters */}
-      <div className="flex items-center gap-2 flex-wrap">
-        {CATEGORIES.map((cat) => (
-          <button
-            key={cat}
-            onClick={() => setSelectedCategory(cat)}
-            className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
-              selectedCategory === cat
-                ? "bg-[var(--brand-500)] text-white"
-                : "bg-[var(--surface-subtle)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
-            }`}
+      {/* ── Filters ─────────────────────────────────────────────────── */}
+      <div className="space-y-3">
+        {/* Category pills */}
+        <div className="flex items-center gap-2 flex-wrap">
+          {CATEGORIES.map((cat) => (
+            <button
+              key={cat}
+              onClick={() => setSelectedCategory(cat)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium border transition-all ${
+                selectedCategory === cat
+                  ? "bg-teal-500 text-white border-teal-500"
+                  : "bg-white text-slate-600 border-slate-200 hover:border-teal-300 hover:text-teal-600"
+              }`}
+            >
+              {CATEGORY_EMOJIS[cat]} {cat}
+            </button>
+          ))}
+        </div>
+
+        {/* Affordability toggle */}
+        <div className="flex items-center justify-end gap-2.5">
+          <span className="text-sm text-slate-600 select-none">Show only what I can afford</span>
+          <div
+            role="switch"
+            aria-checked={showAffordable}
+            onClick={() => !loading && setShowAffordable(!showAffordable)}
+            className={`relative h-6 w-10 flex-shrink-0 rounded-full transition-colors duration-200 ${
+              showAffordable ? "bg-teal-500" : "bg-slate-200"
+            } ${loading ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
           >
-            {cat}
-          </button>
-        ))}
-        <div className="ml-auto flex items-center gap-2">
-          <button
-            onClick={() => setShowAffordable(!showAffordable)}
-            disabled={loading}
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium border transition-colors disabled:opacity-50 ${
-              showAffordable
-                ? "bg-green-500/15 border-green-500/40 text-green-400"
-                : "bg-[var(--surface-subtle)] border-[var(--border-default)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
-            }`}
-          >
-            <span className={`h-2 w-2 rounded-full flex-shrink-0 ${showAffordable ? "bg-green-400" : "bg-[var(--text-muted)]"}`} />
-            I can afford
-          </button>
+            <span className={`absolute top-[2px] h-5 w-5 rounded-full bg-white shadow-sm transition-transform duration-200 ${showAffordable ? "translate-x-[18px]" : "translate-x-[2px]"}`} />
+          </div>
         </div>
       </div>
 
-      {/* Brand Grid */}
+      {/* ── Brand Grid ──────────────────────────────────────────────── */}
       {loading ? (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="h-36 rounded-xl border border-[var(--border-default)] bg-[var(--surface-card)] animate-pulse" />
+            <div key={i} className="h-64 rounded-2xl border border-slate-100 bg-white animate-pulse shadow-[0_2px_12px_rgba(0,0,0,0.06)]" />
           ))}
         </div>
       ) : displayedBrands.length === 0 ? (
-        <div className="rounded-xl border border-[var(--border-default)] bg-[var(--surface-card)] py-16 text-center px-6">
+        <div className="rounded-2xl border border-slate-100 bg-white shadow-[0_2px_12px_rgba(0,0,0,0.06)] py-16 text-center px-6">
           {showAffordable ? (
             <>
-              <p className="text-2xl mb-3">🏆</p>
-              <p className="font-semibold text-[var(--text-primary)] mb-1">Almost there!</p>
-              <p className="text-sm text-[var(--text-secondary)] mb-4 max-w-xs mx-auto">
+              <p className="text-4xl mb-3">🏆</p>
+              <p className="font-bold text-slate-800 text-lg mb-1">Almost there!</p>
+              <p className="text-sm text-slate-500 mb-4 max-w-xs mx-auto">
                 Complete a few more tasks to unlock vouchers — you&apos;re getting close!
               </p>
               <Link
                 href="/dashboard/opportunities"
-                className="inline-flex items-center gap-1.5 text-sm font-medium text-[var(--brand-500)] hover:underline"
+                className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-teal-500 to-teal-600 px-5 py-2.5 text-sm font-semibold text-white hover:from-teal-600 hover:to-teal-700 transition-all"
               >
                 Browse Opportunities →
               </Link>
             </>
           ) : (
-            <p className="text-[var(--text-muted)] text-sm">No vouchers available in this category.</p>
+            <>
+              <p className="text-4xl mb-3">🎁</p>
+              <p className="font-bold text-slate-800 text-lg mb-1">More vouchers coming soon!</p>
+              <p className="text-sm text-slate-500">Check back later for new brands and deals.</p>
+            </>
           )}
         </div>
       ) : (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {displayedBrands.map(({ brand }) => {
-            const colors      = brandColor(brand);
-            const bv          = brandVouchers(brand);
-            const available   = isBrandAvailable(brand);
-            const minCoins    = Math.min(...bv.map((v) => v.coins_required));
-            const emoji       = bv[0]?.emoji ?? "🎁";
-            const canAfford   = available && (nexcoins ?? 0) >= minCoins;
+            const bv        = brandVouchers(brand);
+            const available = isBrandAvailable(brand);
+            const minCoins  = Math.min(...bv.map((v) => v.coins_required));
+            const emoji     = bv[0]?.emoji ?? "🎁";
+            const canAfford = available && (nexcoins ?? 0) >= minCoins;
+            const gradient  = brandGradient(brand);
+            const needed    = minCoins - (nexcoins ?? 0);
 
             return (
               <div
                 key={brand}
                 onClick={() => !loading && openBrandModal(brand)}
-                className={`rounded-xl border bg-[var(--surface-card)] p-4 flex flex-col gap-3 cursor-pointer transition-colors group ${
-                  canAfford
-                    ? "border-green-500/40 hover:border-green-500/70"
-                    : "border-[var(--border-default)] hover:border-[var(--brand-500)]"
-                } ${!available ? "opacity-60" : ""}`}
+                className={`flex flex-col overflow-hidden rounded-2xl border border-slate-100 bg-white
+                  shadow-[0_2px_12px_rgba(0,0,0,0.06)] hover:shadow-[0_8px_24px_rgba(0,0,0,0.10)]
+                  hover:-translate-y-1 transition-all duration-200 cursor-pointer
+                  ${!available ? "opacity-60" : ""}`}
               >
-                <div className="flex items-start justify-between gap-2">
-                  <div className={`h-10 w-10 rounded-xl ${colors.bg} flex items-center justify-center text-xl flex-shrink-0`}>
+                {/* Top gradient banner */}
+                <div className={`h-20 bg-gradient-to-r ${gradient} flex items-center justify-center flex-shrink-0`}>
+                  <div className="h-12 w-12 rounded-xl bg-white/20 flex items-center justify-center text-2xl">
                     {emoji}
                   </div>
-                  {!available ? (
-                    <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-[var(--surface-subtle)] text-[var(--text-muted)] border border-[var(--border-default)] leading-none">
-                      Sold Out
-                    </span>
-                  ) : canAfford ? (
-                    <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-green-500/15 text-green-400 border border-green-500/30 leading-none">
-                      ✓ Affordable
-                    </span>
-                  ) : null}
                 </div>
 
-                <div className="flex-1">
-                  <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-2">{brand}</h3>
-                  <div className="flex flex-wrap gap-1">
+                {/* Content */}
+                <div className="p-4 flex flex-col gap-3 flex-1">
+                  <h3 className="font-bold text-slate-800 text-base leading-tight">{brand}</h3>
+
+                  {/* Denomination pills */}
+                  <div className="flex flex-wrap gap-1.5">
                     {bv.map((v) => (
                       <span
                         key={v.id}
-                        className={`text-[11px] font-medium px-2 py-0.5 rounded-full ${
+                        className={`rounded-full px-2.5 py-0.5 text-xs font-semibold border ${
                           v.is_available
-                            ? `${colors.bg} ${colors.text}`
-                            : "bg-[var(--surface-subtle)] text-[var(--text-muted)] line-through"
+                            ? "bg-slate-100 text-slate-700 border-slate-200"
+                            : "bg-slate-50 text-slate-300 border-slate-100 line-through"
                         }`}
                       >
                         ₹{v.value_inr}
                       </span>
                     ))}
                   </div>
-                </div>
 
-                <div className="pt-1 border-t border-[var(--border-default)]">
-                  <p className="text-[10px] text-[var(--text-muted)] mb-0.5">From</p>
-                  <div className="flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-1">
-                      <NexCoinIcon size={12} />
-                      <span className="text-xs font-bold text-[var(--brand-500)]">{minCoins.toLocaleString()}</span>
-                    </div>
-                    <span className="text-[10px] font-medium text-[var(--brand-500)] group-hover:underline">
-                      {available ? "Select →" : "—"}
-                    </span>
+                  {/* Coin cost — prominent */}
+                  <div className="flex items-center gap-1.5">
+                    <NexCoinIcon size={18} />
+                    <span className="text-xl font-bold text-slate-800">{minCoins.toLocaleString()}</span>
+                    <span className="text-sm text-slate-400">NexCoins</span>
                   </div>
+
+                  {/* Spacer */}
+                  <div className="flex-1" />
+
+                  {/* CTA — visual only, card click opens modal */}
+                  {!available ? (
+                    <div className="w-full rounded-xl bg-slate-100 text-slate-400 text-sm font-semibold text-center py-2.5">
+                      Sold Out
+                    </div>
+                  ) : !canAfford ? (
+                    <div className="w-full rounded-xl bg-slate-100 text-slate-400 text-sm font-medium text-center py-2.5 leading-tight">
+                      Need {needed.toLocaleString()} more coins
+                    </div>
+                  ) : (
+                    <div className="w-full rounded-xl bg-gradient-to-r from-teal-500 to-teal-600 text-white text-sm font-semibold text-center py-2.5">
+                      Redeem Now →
+                    </div>
+                  )}
                 </div>
               </div>
             );
@@ -419,7 +451,6 @@ export default function StorePage() {
             </div>
 
             <div className="overflow-y-auto flex-1 p-6 space-y-6">
-              {/* Value selector */}
               <div>
                 <p className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-3">Select Value</p>
                 <div className="flex flex-wrap gap-2">
@@ -447,7 +478,6 @@ export default function StorePage() {
                 </div>
               </div>
 
-              {/* Selected summary */}
               <div className="rounded-lg bg-[var(--surface-subtle)] border border-[var(--border-default)] p-4 flex items-center justify-between">
                 <div>
                   <p className="text-xs text-[var(--text-muted)] mb-1">Voucher Value</p>
@@ -462,7 +492,6 @@ export default function StorePage() {
                 </div>
               </div>
 
-              {/* How to use */}
               <div>
                 <p className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-3">How to use</p>
                 <ol className="space-y-2.5">
@@ -477,7 +506,6 @@ export default function StorePage() {
                 </ol>
               </div>
 
-              {/* Terms */}
               <div className="rounded-lg bg-[var(--surface-subtle)] p-4">
                 <p className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-3">Terms &amp; Conditions</p>
                 <ul className="space-y-1.5">

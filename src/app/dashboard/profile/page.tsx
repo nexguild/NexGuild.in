@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Camera, X, Loader2, Plus, Star, Copy, CheckCheck, Crown } from "lucide-react";
+import { Camera, X, Loader2, Plus, Star, Copy, CheckCheck, Crown, CheckCircle2, Calendar, User } from "lucide-react";
 import { NexCoinIcon } from "@/components/ui/nexcoin-icon";
+import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 
 interface Profile {
@@ -27,6 +27,14 @@ const COUNTRIES = [
   "Sri Lanka", "Nepal", "Philippines", "Other",
 ];
 
+const SUGGESTED_SKILLS = [
+  "Transcription", "Data Entry", "Data Annotation", "App Testing",
+  "Game Testing", "Web Research", "Audio Recording", "Survey Completion",
+  "Content Writing", "Translation", "Proofreading", "Social Media",
+  "Image Labeling", "Video Review", "Voice Recording", "Copywriting",
+  "Subtitling", "Product Review",
+];
+
 export default function ProfilePage() {
   const [email, setEmail]       = useState<string | null>(null);
   const [profile, setProfile]   = useState<Profile | null>(null);
@@ -39,20 +47,18 @@ export default function ProfilePage() {
   const [totalEarned, setTotalEarned]       = useState<number | null>(null);
   const [copiedId, setCopiedId]             = useState(false);
 
-  // File input ref for avatar upload
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Edit modal state
-  const [showEdit, setShowEdit]     = useState(false);
+  const [showEdit, setShowEdit]       = useState(false);
   const [skillInput, setSkillInput]   = useState("");
   const [skillSaving, setSkillSaving] = useState(false);
   const [langInput, setLangInput]     = useState("");
   const [langSaving, setLangSaving]   = useState(false);
-  const [editName, setEditName]     = useState("");
+  const [editName, setEditName]       = useState("");
   const [editCountry, setEditCountry] = useState("");
-  const [editPhone, setEditPhone]   = useState("");
-  const [saving, setSaving]         = useState(false);
-  const [saveError, setSaveError]   = useState<string | null>(null);
+  const [editPhone, setEditPhone]     = useState("");
+  const [saving, setSaving]           = useState(false);
+  const [saveError, setSaveError]     = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchProfile() {
@@ -104,17 +110,8 @@ export default function ProfilePage() {
   async function handleAvatarUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file || !userId) return;
-
-    // Validate type
-    if (!file.type.startsWith("image/")) {
-      setUploadError("Please select an image file.");
-      return;
-    }
-    // Max 5 MB
-    if (file.size > 5 * 1024 * 1024) {
-      setUploadError("Image must be under 5 MB.");
-      return;
-    }
+    if (!file.type.startsWith("image/")) { setUploadError("Please select an image file."); return; }
+    if (file.size > 5 * 1024 * 1024) { setUploadError("Image must be under 5 MB."); return; }
 
     setUploading(true);
     setUploadError(null);
@@ -128,9 +125,7 @@ export default function ProfilePage() {
 
     if (uploadErr) {
       setUploadError("Upload failed. Please try again.");
-      console.error("[avatar] upload error:", uploadErr.message);
       setUploading(false);
-      // Reset file input so the same file can be retried
       if (fileInputRef.current) fileInputRef.current.value = "";
       return;
     }
@@ -138,17 +133,11 @@ export default function ProfilePage() {
     const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(path);
     const publicUrl = urlData.publicUrl;
 
-    const { error: updateErr } = await supabase
-      .from("profiles")
-      .update({ avatar_url: publicUrl })
-      .eq("id", userId);
-
+    const { error: updateErr } = await supabase.from("profiles").update({ avatar_url: publicUrl }).eq("id", userId);
     if (updateErr) {
       setUploadError("Saved image but failed to update profile.");
-      console.error("[avatar] profile update error:", updateErr.message);
     } else {
       setProfile((prev) => prev ? { ...prev, avatar_url: publicUrl } : prev);
-      // Notify the dashboard header (same tab) so it updates without a page refresh
       window.dispatchEvent(new CustomEvent("nexguild:avatar-updated", { detail: { url: publicUrl } }));
     }
 
@@ -169,25 +158,13 @@ export default function ProfilePage() {
     if (!userId) return;
     setSaving(true);
     setSaveError(null);
-
-    const { error } = await supabase
-      .from("profiles")
-      .update({
-        full_name: editName.trim() || null,
-        country: editCountry || null,
-        phone: editPhone.trim() || null,
-      })
-      .eq("id", userId);
-
-    if (error) {
-      setSaveError("Failed to save. Please try again.");
-      setSaving(false);
-      return;
-    }
-
-    setProfile((prev) => prev
-      ? { ...prev, full_name: editName.trim() || null, country: editCountry || null, phone: editPhone.trim() || null }
-      : prev);
+    const { error } = await supabase.from("profiles").update({
+      full_name: editName.trim() || null,
+      country: editCountry || null,
+      phone: editPhone.trim() || null,
+    }).eq("id", userId);
+    if (error) { setSaveError("Failed to save. Please try again."); setSaving(false); return; }
+    setProfile((prev) => prev ? { ...prev, full_name: editName.trim() || null, country: editCountry || null, phone: editPhone.trim() || null } : prev);
     setSaving(false);
     setShowEdit(false);
   }
@@ -201,12 +178,18 @@ export default function ProfilePage() {
     setSkillSaving(true);
     const updated = [...current, skill];
     const { error } = await supabase.from("profiles").update({ skills: updated }).eq("id", userId);
-    if (error) {
-      console.error("[profile] addSkill error:", error.message);
-    } else {
-      setProfile((prev) => prev ? { ...prev, skills: updated } : prev);
-      setSkillInput("");
-    }
+    if (!error) { setProfile((prev) => prev ? { ...prev, skills: updated } : prev); setSkillInput(""); }
+    setSkillSaving(false);
+  }
+
+  async function addSkillByValue(skill: string) {
+    if (!skill || !userId) return;
+    const current = profile?.skills ?? [];
+    if (current.includes(skill)) return;
+    setSkillSaving(true);
+    const updated = [...current, skill];
+    const { error } = await supabase.from("profiles").update({ skills: updated }).eq("id", userId);
+    if (!error) setProfile((prev) => prev ? { ...prev, skills: updated } : prev);
     setSkillSaving(false);
   }
 
@@ -215,7 +198,6 @@ export default function ProfilePage() {
     const updated = (profile?.skills ?? []).filter((s) => s !== skill);
     const { error } = await supabase.from("profiles").update({ skills: updated }).eq("id", userId);
     if (!error) setProfile((prev) => prev ? { ...prev, skills: updated } : prev);
-    else console.error("[profile] removeSkill error:", error.message);
   }
 
   async function addLanguage(e: React.FormEvent) {
@@ -227,12 +209,7 @@ export default function ProfilePage() {
     setLangSaving(true);
     const updated = [...current, lang];
     const { error } = await supabase.from("profiles").update({ languages: updated }).eq("id", userId);
-    if (error) {
-      console.error("[profile] addLanguage error:", error.message);
-    } else {
-      setProfile((prev) => prev ? { ...prev, languages: updated } : prev);
-      setLangInput("");
-    }
+    if (!error) { setProfile((prev) => prev ? { ...prev, languages: updated } : prev); setLangInput(""); }
     setLangSaving(false);
   }
 
@@ -241,13 +218,12 @@ export default function ProfilePage() {
     const updated = (profile?.languages ?? []).filter((l) => l !== lang);
     const { error } = await supabase.from("profiles").update({ languages: updated }).eq("id", userId);
     if (!error) setProfile((prev) => prev ? { ...prev, languages: updated } : prev);
-    else console.error("[profile] removeLanguage error:", error.message);
   }
 
-  const level      = profile?.level ?? 1;
-  const xp         = profile?.xp ?? 0;
-  const xpInLevel  = xp % 1000;
-  const xpPct      = (xpInLevel / 1000) * 100;
+  const level     = profile?.level ?? 1;
+  const xp        = profile?.xp ?? 0;
+  const xpInLevel = xp % 1000;
+  const xpPct     = (xpInLevel / 1000) * 100;
 
   const displayName = profile?.full_name ?? email ?? "—";
   const initials = profile?.full_name
@@ -265,180 +241,247 @@ export default function ProfilePage() {
         <p className="text-sm text-[var(--text-secondary)]">Your contributor profile and account details.</p>
       </div>
 
-      {/* Profile Header */}
-      <div className="rounded-lg border border-[var(--border-default)] bg-[var(--surface-card)] p-6">
-        <div className="flex items-start gap-5">
-          {/* Avatar with camera button */}
+      {/* ── Premium Hero Card ──────────────────────────────────────── */}
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-indigo-600 to-teal-500 p-6 text-white shadow-lg">
+        {/* Decorative circles */}
+        <div className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-white/10" />
+        <div className="pointer-events-none absolute -bottom-12 -left-12 h-32 w-32 rounded-full bg-white/5" />
+
+        {/* Edit button — top right */}
+        <button
+          onClick={openEdit}
+          disabled={loading}
+          className="absolute right-4 top-4 z-10 flex items-center gap-1.5 rounded-xl border border-white/30 bg-white/20 px-4 py-2 text-sm font-medium text-white backdrop-blur-sm transition-all hover:bg-white/30 disabled:opacity-50"
+        >
+          ✏️ Edit Profile
+        </button>
+
+        <div className="relative flex items-start gap-5 flex-wrap sm:flex-nowrap">
+          {/* Avatar */}
           <div className="relative flex-shrink-0">
-            <Avatar src={profile?.avatar_url} name={initials} size="lg" />
-
-            {/* Hidden file input */}
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={handleAvatarUpload}
-            />
-
-            {/* Camera button */}
+            <div className="h-24 w-24 rounded-full border-4 border-white shadow-xl overflow-hidden bg-gradient-to-br from-indigo-400 to-teal-400 flex items-center justify-center">
+              {profile?.avatar_url ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={profile.avatar_url} alt={displayName} className="h-full w-full object-cover" />
+              ) : (
+                <span className="text-white text-3xl font-bold">{initials}</span>
+              )}
+            </div>
+            <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarUpload} />
             <button
               onClick={() => fileInputRef.current?.click()}
               disabled={uploading}
-              className="absolute bottom-0 right-0 h-7 w-7 rounded-full bg-[var(--brand-500)] flex items-center justify-center border-2 border-[var(--surface-card)] hover:bg-[var(--brand-400)] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+              className="absolute bottom-0 right-0 h-8 w-8 rounded-full bg-white shadow-md border-2 border-indigo-100 flex items-center justify-center hover:bg-slate-50 transition-colors disabled:opacity-60"
               title="Change profile picture"
             >
               {uploading
-                ? <Loader2 className="h-3.5 w-3.5 text-white animate-spin" />
-                : <Camera className="h-3.5 w-3.5 text-white" />
+                ? <Loader2 className="h-3.5 w-3.5 text-slate-600 animate-spin" />
+                : <Camera className="h-3.5 w-3.5 text-slate-600" />
               }
             </button>
           </div>
 
-          <div className="flex-1 min-w-0">
-            <div className="flex items-start justify-between gap-3 flex-wrap">
-              <div className="min-w-0">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <h2 className="text-xl font-bold text-[var(--text-primary)]">
-                    {loading ? "Loading…" : displayName}
-                  </h2>
-                  {!loading && profile?.is_nexleader && (
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold bg-amber-500/15 text-amber-400 border border-amber-500/30">
-                      <Crown className="h-3 w-3" /> NexLeader
-                    </span>
-                  )}
-                </div>
-                <p className="text-sm text-[var(--text-secondary)]">
-                  {loading ? "—" : (email ?? "—")}
-                </p>
-              </div>
-              {!loading && (
-                <div className="flex items-center gap-1.5 rounded-lg border border-[var(--border-default)] bg-[var(--surface-subtle)] px-3 py-1.5 flex-shrink-0">
-                  <Star className="h-3.5 w-3.5 text-[var(--brand-500)]" />
-                  <span className="text-sm font-bold text-[var(--text-primary)]">Level {level}</span>
-                </div>
-              )}
-            </div>
-            {!loading && (
-              <div className="mt-2">
-                <div className="flex items-center justify-between text-xs text-[var(--text-muted)] mb-1">
-                  <span>{xpInLevel.toLocaleString()} / 1,000 XP</span>
-                  <span>Next level</span>
-                </div>
-                <div className="h-1.5 rounded-full bg-[var(--surface-subtle)] overflow-hidden">
-                  <div
-                    className="h-full rounded-full transition-all duration-500"
-                    style={{ width: `${xpPct}%`, background: "linear-gradient(90deg,#02b491,#029470)" }}
-                  />
-                </div>
-              </div>
+          {/* Name + email + badge */}
+          <div className="flex-1 min-w-0 pt-1">
+            <h2 className="text-2xl font-bold text-white leading-tight">
+              {loading ? "Loading…" : displayName}
+            </h2>
+            <p className="text-white/70 text-sm mt-0.5">{loading ? "—" : (email ?? "—")}</p>
+            {!loading && profile?.is_nexleader && (
+              <span className="mt-2 inline-flex items-center gap-1 rounded-full bg-white/20 px-3 py-1 text-xs font-bold text-white">
+                <Crown className="h-3 w-3" /> NexLeader
+              </span>
             )}
-            {uploadError && (
-              <p className="text-xs text-red-400 mt-1">{uploadError}</p>
-            )}
-            <div className="mt-3">
-              <Button size="sm" variant="secondary" onClick={openEdit} disabled={loading}>
-                Edit Profile
-              </Button>
-            </div>
+            {uploadError && <p className="mt-1 text-xs text-red-200">{uploadError}</p>}
           </div>
+
+          {/* Level + XP */}
+          {!loading && (
+            <div className="flex flex-col items-center gap-3 flex-shrink-0 sm:ml-auto">
+              <div className="rounded-2xl bg-white/20 p-3 text-center min-w-[72px] backdrop-blur-sm">
+                <p className="text-white/60 text-[10px] uppercase tracking-widest font-semibold">Level</p>
+                <p className="text-white text-4xl font-bold leading-none mt-0.5">{level}</p>
+              </div>
+              <div className="text-center">
+                <p className="text-white/50 text-xs mb-1">Next level</p>
+                <div className="w-28 h-1.5 rounded-full bg-white/20 overflow-hidden">
+                  <div className="h-full rounded-full bg-white transition-all duration-700" style={{ width: `${xpPct}%` }} />
+                </div>
+                <p className="text-white/60 text-xs mt-1">{xpInLevel.toLocaleString()} / 1,000 XP</p>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Account Details */}
-      <div className="rounded-lg border border-[var(--border-default)] bg-[var(--surface-card)] divide-y divide-[var(--border-default)]">
-        <div className="px-6 py-4">
-          <h3 className="font-semibold text-[var(--text-primary)]">Account Details</h3>
-        </div>
-        {[
-          { label: "Full Name",    value: loading ? "Loading…" : (profile?.full_name ?? "Not set") },
-          { label: "Email",        value: loading ? "Loading…" : (email ?? "—") },
-          { label: "Country",      value: loading ? "Loading…" : (profile?.country ?? "Not set") },
-          { label: "Phone",        value: loading ? "Loading…" : (profile?.phone ?? "Not set") },
-          { label: "Member Since", value: loading ? "Loading…" : joinedDate },
-        ].map((row) => (
-          <div key={row.label} className="px-6 py-4 flex items-center justify-between gap-4">
-            <p className="text-sm text-[var(--text-muted)] w-32 flex-shrink-0">{row.label}</p>
-            <p className="text-sm text-[var(--text-primary)] text-right">{row.value}</p>
-          </div>
-        ))}
-        {!loading && userId && (
-          <div className="px-6 py-4 flex items-center justify-between gap-4">
-            <p className="text-sm text-[var(--text-muted)] w-32 flex-shrink-0">Contributor ID</p>
-            <button
-              onClick={() => {
-                navigator.clipboard.writeText(userId);
-                setCopiedId(true);
-                setTimeout(() => setCopiedId(false), 1500);
-              }}
-              title="Click to copy your ID"
-              className="flex items-center gap-1.5 font-mono text-xs text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
-            >
-              {userId}
-              {copiedId
-                ? <CheckCheck className="h-3.5 w-3.5 text-green-400 flex-shrink-0" />
-                : <Copy className="h-3.5 w-3.5 flex-shrink-0 opacity-50" />
-              }
-            </button>
-          </div>
-        )}
-      </div>
-
-      {/* NexCoins Balance */}
-      <div className="rounded-lg border border-[var(--border-default)] bg-[var(--surface-card)] p-6 flex items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <NexCoinIcon size={20} />
+      {/* ── NexCoins Balance ────────────────────────────────────────── */}
+      <div className="flex items-center justify-between gap-4 rounded-2xl bg-gradient-to-r from-amber-400 to-amber-500 p-5 shadow-md">
+        <div className="flex items-center gap-4">
+          <span className="text-5xl">🪙</span>
           <div>
-            <p className="text-sm font-medium text-[var(--text-primary)]">NexCoins Balance</p>
-            <p className="text-xs text-[var(--text-muted)]">Redeem in the store for vouchers</p>
+            <p className="text-white/80 text-sm font-medium">NexCoins Balance</p>
+            <p className="text-white text-4xl font-bold leading-tight">
+              {loading ? "—" : (profile?.nexcoins ?? 0).toLocaleString()}
+            </p>
           </div>
         </div>
-        <p className="text-2xl font-bold text-[var(--brand-500)]">
-          {loading ? "—" : (profile?.nexcoins ?? 0).toLocaleString()}
-        </p>
+        <Link
+          href="/dashboard/store"
+          className="flex-shrink-0 rounded-xl bg-white px-4 py-2 text-sm font-semibold text-amber-600 transition-colors hover:bg-amber-50"
+        >
+          Redeem in Store →
+        </Link>
       </div>
 
-      {/* Skills */}
-      <div className="rounded-lg border border-[var(--border-default)] bg-[var(--surface-card)] p-6">
-        <h3 className="font-semibold text-[var(--text-primary)] mb-4">Skills</h3>
+      {/* ── Account Details ─────────────────────────────────────────── */}
+      <div className="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
+        <div className="flex items-center gap-2 mb-5">
+          <User className="h-4 w-4 text-slate-400" />
+          <h3 className="font-bold text-slate-800">Account Details</h3>
+        </div>
+        <div className="divide-y divide-slate-50">
+          {[
+            { label: "Full Name",    value: loading ? "Loading…" : (profile?.full_name ?? "Not set") },
+            { label: "Email",        value: loading ? "Loading…" : (email ?? "—") },
+            { label: "Country",      value: loading ? "Loading…" : (profile?.country ?? "Not set") },
+            { label: "Phone",        value: loading ? "Loading…" : (profile?.phone ?? "Not set") },
+            { label: "Member Since", value: loading ? "Loading…" : joinedDate },
+          ].map((row) => (
+            <div key={row.label} className="flex items-center justify-between py-3">
+              <p className="text-sm text-slate-400 w-32 flex-shrink-0">{row.label}</p>
+              <p className="text-sm text-slate-800 font-medium text-right">{row.value}</p>
+            </div>
+          ))}
+          {!loading && userId && (
+            <div className="flex items-center justify-between py-3">
+              <p className="text-sm text-slate-400 w-32 flex-shrink-0">Contributor ID</p>
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(userId);
+                  setCopiedId(true);
+                  setTimeout(() => setCopiedId(false), 1500);
+                }}
+                title="Click to copy your ID"
+                className="flex items-center gap-1.5 rounded-lg bg-slate-50 px-3 py-1.5 font-mono text-xs text-slate-600 transition-colors hover:bg-slate-100"
+              >
+                {userId.slice(0, 8)}…{userId.slice(-4)}
+                {copiedId
+                  ? <CheckCheck className="h-3 w-3 text-green-500 flex-shrink-0" />
+                  : <Copy className="h-3 w-3 opacity-50 flex-shrink-0" />
+                }
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* ── Lifetime Stats ──────────────────────────────────────────── */}
+      <div className="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
+        <h3 className="font-bold text-slate-800 mb-5">Lifetime Stats</h3>
+        <div className="grid grid-cols-2 gap-4">
+          {[
+            {
+              label: "Tasks Completed",
+              value: loading || tasksCompleted === null ? "—" : tasksCompleted.toLocaleString(),
+              icon: <CheckCircle2 className="h-6 w-6 text-teal-500" />,
+            },
+            {
+              label: "Approval Rate",
+              value: loading || approvalRate === null ? (loading ? "—" : "N/A") : `${approvalRate}%`,
+              icon: <Star className="h-6 w-6 text-indigo-500 fill-indigo-100" />,
+            },
+            {
+              label: "Member Since",
+              value: loading ? "—" : (profile?.joined_at
+                ? new Date(profile.joined_at).toLocaleDateString("en-IN", { month: "short", year: "numeric" })
+                : "—"),
+              icon: <Calendar className="h-6 w-6 text-slate-400" />,
+            },
+            {
+              label: "Total Earned",
+              value: loading || totalEarned === null ? "—" : totalEarned.toLocaleString(),
+              icon: <NexCoinIcon size={24} />,
+            },
+          ].map((stat) => (
+            <div key={stat.label} className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm text-center">
+              <div className="flex justify-center mb-2">{stat.icon}</div>
+              <p className="text-2xl font-bold text-slate-800">{stat.value}</p>
+              <p className="text-xs text-slate-400 uppercase tracking-wide mt-1">{stat.label}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ── Skills ──────────────────────────────────────────────────── */}
+      <div className="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
+        <div className="flex items-center gap-2 mb-4">
+          <span className="text-base">🎯</span>
+          <h3 className="font-bold text-slate-800">Skills</h3>
+        </div>
         <div className="flex flex-wrap gap-2 mb-4 min-h-[28px]">
           {(profile?.skills ?? []).map((skill) => (
-            <span key={skill} className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--brand-100)] text-[var(--brand-500)] text-sm font-medium">
+            <span key={skill} className="inline-flex items-center gap-1.5 rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1 text-sm font-medium text-indigo-700">
               {skill}
-              <button onClick={() => removeSkill(skill)} className="hover:text-red-400 transition-colors leading-none ml-0.5">×</button>
+              <button onClick={() => removeSkill(skill)} className="ml-0.5 leading-none transition-colors hover:text-red-500">×</button>
             </span>
           ))}
           {!loading && (profile?.skills ?? []).length === 0 && (
-            <p className="text-sm text-[var(--text-muted)]">No skills added yet.</p>
+            <p className="text-sm text-slate-400">No skills added yet.</p>
           )}
         </div>
+        {/* Quick-select skill chips */}
+        {SUGGESTED_SKILLS.filter(s => !(profile?.skills ?? []).includes(s)).length > 0 && (
+          <div className="mb-3">
+            <p className="text-xs text-slate-400 mb-1.5">Quick add:</p>
+            <div className="flex flex-wrap gap-1.5">
+              {SUGGESTED_SKILLS.filter(s => !(profile?.skills ?? []).includes(s)).map(s => (
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() => addSkillByValue(s)}
+                  disabled={skillSaving}
+                  className="px-2.5 py-1 rounded-full border border-dashed border-indigo-200 bg-white text-xs text-indigo-500 hover:bg-indigo-50 hover:border-indigo-400 transition-colors disabled:opacity-50"
+                >
+                  + {s}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
         <form onSubmit={addSkill} className="flex gap-2">
           <input
             value={skillInput}
             onChange={(e) => setSkillInput(e.target.value)}
             placeholder="e.g. Transcription, Data Annotation…"
-            className="flex-1 h-9 px-3 rounded-md border border-[var(--border-strong)] bg-[var(--surface-subtle)] text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--border-focus)] focus:border-transparent"
+            className="flex-1 h-9 px-3 rounded-xl border border-slate-200 bg-white text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-300 focus:border-teal-300"
           />
-          <Button type="submit" size="sm" disabled={skillSaving || !skillInput.trim()}>
+          <button
+            type="submit"
+            disabled={skillSaving || !skillInput.trim()}
+            className="h-9 w-9 flex-shrink-0 rounded-xl bg-teal-500 text-white flex items-center justify-center hover:bg-teal-600 transition-colors disabled:opacity-50"
+          >
             {skillSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
-          </Button>
+          </button>
         </form>
-        <p className="text-xs text-[var(--text-muted)] mt-2">Skills help match you with relevant project opportunities.</p>
+        <p className="mt-2 text-xs text-slate-400">Skills help match you with relevant project opportunities.</p>
       </div>
 
-      {/* Languages */}
-      <div className="rounded-lg border border-[var(--border-default)] bg-[var(--surface-card)] p-6">
-        <h3 className="font-semibold text-[var(--text-primary)] mb-1">Languages</h3>
-        <p className="text-xs text-[var(--text-muted)] mb-4">Add languages you speak fluently — used to match you with language-specific tasks.</p>
+      {/* ── Languages ───────────────────────────────────────────────── */}
+      <div className="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
+        <div className="flex items-center gap-2 mb-1">
+          <span className="text-base">🌐</span>
+          <h3 className="font-bold text-slate-800">Languages</h3>
+        </div>
+        <p className="text-xs text-slate-400 mb-4">Add languages you speak fluently — used to match you with language-specific tasks.</p>
         <div className="flex flex-wrap gap-2 mb-4 min-h-[28px]">
           {(profile?.languages ?? []).map((lang) => (
-            <span key={lang} className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-500/10 text-blue-400 text-sm font-medium">
+            <span key={lang} className="inline-flex items-center gap-1.5 rounded-full border border-teal-200 bg-teal-50 px-3 py-1 text-sm font-medium text-teal-700">
               {lang}
-              <button onClick={() => removeLanguage(lang)} className="hover:text-red-400 transition-colors leading-none ml-0.5">×</button>
+              <button onClick={() => removeLanguage(lang)} className="ml-0.5 leading-none transition-colors hover:text-red-500">×</button>
             </span>
           ))}
           {!loading && (profile?.languages ?? []).length === 0 && (
-            <p className="text-sm text-[var(--text-muted)]">No languages added yet.</p>
+            <p className="text-sm text-slate-400">No languages added yet.</p>
           )}
         </div>
         <form onSubmit={addLanguage} className="flex gap-2">
@@ -446,51 +489,19 @@ export default function ProfilePage() {
             value={langInput}
             onChange={(e) => setLangInput(e.target.value)}
             placeholder="e.g. English, Hindi, Tamil…"
-            className="flex-1 h-9 px-3 rounded-md border border-[var(--border-strong)] bg-[var(--surface-subtle)] text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--border-focus)] focus:border-transparent"
+            className="flex-1 h-9 px-3 rounded-xl border border-slate-200 bg-white text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-300 focus:border-teal-300"
           />
-          <Button type="submit" size="sm" disabled={langSaving || !langInput.trim()}>
+          <button
+            type="submit"
+            disabled={langSaving || !langInput.trim()}
+            className="h-9 w-9 flex-shrink-0 rounded-xl bg-teal-500 text-white flex items-center justify-center hover:bg-teal-600 transition-colors disabled:opacity-50"
+          >
             {langSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
-          </Button>
+          </button>
         </form>
       </div>
 
-      {/* Lifetime Stats */}
-      <div className="rounded-lg border border-[var(--border-default)] bg-[var(--surface-card)] p-6">
-        <h3 className="font-semibold text-[var(--text-primary)] mb-4">Lifetime Stats</h3>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          {[
-            {
-              label: "Tasks Completed",
-              value: loading || tasksCompleted === null ? "—" : tasksCompleted.toLocaleString(),
-            },
-            {
-              label: "Approval Rate",
-              value: loading || approvalRate === null ? (loading ? "—" : "N/A") : `${approvalRate}%`,
-            },
-            {
-              label: "Member Since",
-              value: loading ? "—" : (profile?.joined_at
-                ? new Date(profile.joined_at).toLocaleDateString("en-IN", { month: "long", year: "numeric" })
-                : "—"),
-            },
-            {
-              label: "Total Earned",
-              value: loading || totalEarned === null ? "—" : totalEarned.toLocaleString(),
-              isCoins: true,
-            },
-          ].map((stat) => (
-            <div key={stat.label} className="rounded-lg bg-[var(--surface-subtle)] px-4 py-3 text-center">
-              <p className="text-xs text-[var(--text-muted)] mb-1.5">{stat.label}</p>
-              <div className="flex items-center justify-center gap-1">
-                {stat.isCoins && !loading && <NexCoinIcon size={14} />}
-                <p className="text-xl font-bold text-[var(--text-primary)]">{stat.value}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Edit Profile Modal */}
+      {/* ── Edit Profile Modal ───────────────────────────────────────── */}
       {showEdit && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/60">
           <div className="w-full max-w-md bg-[var(--surface-card)] rounded-xl border border-[var(--border-default)] p-6 shadow-xl">
@@ -512,7 +523,6 @@ export default function ProfilePage() {
                   className="w-full h-10 px-3 rounded-md border border-[var(--border-strong)] bg-[var(--surface-subtle)] text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--border-focus)] focus:border-transparent"
                 />
               </div>
-
               <div>
                 <label className="block text-sm font-medium text-[var(--text-primary)] mb-1.5">Country</label>
                 <select
@@ -524,7 +534,6 @@ export default function ProfilePage() {
                   {COUNTRIES.map((c) => <option key={c}>{c}</option>)}
                 </select>
               </div>
-
               <div>
                 <label className="block text-sm font-medium text-[var(--text-primary)] mb-1.5">
                   Phone <span className="text-[var(--text-muted)] font-normal">(optional)</span>
@@ -537,11 +546,9 @@ export default function ProfilePage() {
                   className="w-full h-10 px-3 rounded-md border border-[var(--border-strong)] bg-[var(--surface-subtle)] text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--border-focus)] focus:border-transparent"
                 />
               </div>
-
               {saveError && (
                 <p className="text-sm text-red-400 bg-red-500/10 px-3 py-2 rounded-md">{saveError}</p>
               )}
-
               <div className="flex gap-3 pt-1">
                 <Button type="button" variant="ghost" className="flex-1" onClick={() => setShowEdit(false)}>
                   Cancel
