@@ -45,15 +45,18 @@ export default function MyVouchersPage() {
   }
 
   useEffect(() => {
+    let cancelled = false;
     let channel: ReturnType<typeof supabase.channel> | null = null;
 
     async function init() {
       await fetchRequests();
+      if (cancelled) return;
 
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      if (!user || cancelled) return;
 
       // Real-time: auto-update when admin delivers
+      // .on() must be registered BEFORE .subscribe()
       channel = supabase
         .channel(`voucher_requests_page:${user.id}`)
         .on(
@@ -74,7 +77,10 @@ export default function MyVouchersPage() {
     }
 
     init();
-    return () => { if (channel) supabase.removeChannel(channel); };
+    return () => {
+      cancelled = true;
+      if (channel) supabase.removeChannel(channel);
+    };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
