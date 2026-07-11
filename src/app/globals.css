@@ -390,11 +390,24 @@
 .blog-prose a             { color: #0D9488; text-decoration: underline; text-underline-offset: 2px; }
 .blog-prose a:hover       { color: #0F3D36; }
 .blog-prose blockquote {
-  border-left: 3px solid #0D9488;
-  padding-left: 1.1em;
-  color: #475569;
-  font-style: italic;
+  border-left: 4px solid #0D9488;
+  background: rgba(13,148,136,0.06);
+  border-radius: 0 0.5rem 0.5rem 0;
+  padding: 1rem 1.25rem;
+  color: #115E59;
+  font-style: normal;
   margin: 1.5em 0;
+}
+.blog-prose blockquote::before {
+  content: '💡';
+  display: block;
+  font-size: 1em;
+  margin-bottom: 0.35em;
+}
+.blog-prose blockquote p {
+  margin: 0;
+  font-size: 0.9375rem;
+  line-height: 1.7;
 }
 .blog-prose code {
   background: rgba(13,148,136,0.07);

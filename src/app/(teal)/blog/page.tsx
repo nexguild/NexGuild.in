@@ -1,39 +1,14 @@
-import Link from "next/link";
 import type { Metadata } from "next";
 import { FadeIn } from "@/components/ui/fade-in";
 import { getAllPosts } from "@/lib/blog";
 import { AdSlot } from "@/components/ui/ad-slot";
+import { BlogFilter } from "@/components/blog/BlogFilter";
 
 export const metadata: Metadata = {
   title: "Blog",
   description:
     "Practical guides on remote work, online earning, micro-tasks, and making the most of NexGuild.",
 };
-
-const CATEGORY_STYLE: Record<string, { bg: string; text: string; border: string }> = {
-  "Remote Work": {
-    bg: "rgba(13,148,136,0.08)",
-    text: "#0D9488",
-    border: "rgba(13,148,136,0.2)",
-  },
-  NexGuild: {
-    bg: "rgba(15,61,54,0.08)",
-    text: "#0F3D36",
-    border: "rgba(15,61,54,0.18)",
-  },
-};
-
-function CategoryBadge({ category }: { category: string }) {
-  const s = CATEGORY_STYLE[category] ?? CATEGORY_STYLE["Remote Work"];
-  return (
-    <span
-      className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold uppercase tracking-wider"
-      style={{ background: s.bg, color: s.text, border: `1px solid ${s.border}` }}
-    >
-      {category}
-    </span>
-  );
-}
 
 export default function BlogIndexPage() {
   const posts = getAllPosts();
@@ -85,44 +60,10 @@ export default function BlogIndexPage() {
         </div>
       </div>
 
-      {/* ── Post Grid ─────────────────────────────────────────────── */}
-      <section className="py-10 px-6 pb-24">
+      {/* ── Posts (filtered) ──────────────────────────────────────── */}
+      <section className="py-4 px-6 pb-24">
         <div className="mx-auto max-w-container">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {posts.map((post, i) => (
-              <FadeIn key={post.slug} delay={i * 45} className="h-full">
-                <Link href={`/blog/${post.slug}`} className="block h-full group">
-                  <article
-                    className="h-full rounded-2xl p-7 flex flex-col gap-3 transition-all duration-300 hover:translate-y-[-4px] hover:bg-white hover:shadow-md"
-                    style={{
-                      background: "rgba(255,255,255,0.45)",
-                      border: "1.5px solid rgba(13,148,136,0.12)",
-                      backdropFilter: "blur(12px)",
-                    }}
-                  >
-                    <CategoryBadge category={post.category} />
-                    <h2
-                      className="text-xl font-bold text-[#0F3D36] group-hover:text-[#0D9488] transition-colors leading-snug"
-                      style={{ fontFamily: "'Instrument Serif', serif" }}
-                    >
-                      {post.title}
-                    </h2>
-                    <p className="text-sm text-stone-600 leading-relaxed flex-1">
-                      {post.description}
-                    </p>
-                    <div className="flex items-center justify-between mt-auto pt-3 border-t border-[rgba(13,148,136,0.08)]">
-                      <span className="text-xs text-stone-400">
-                        {post.readingTime} min read
-                      </span>
-                      <span className="text-xs font-semibold text-[#0D9488] group-hover:translate-x-1 transition-transform inline-block">
-                        Read more →
-                      </span>
-                    </div>
-                  </article>
-                </Link>
-              </FadeIn>
-            ))}
-          </div>
+          <BlogFilter posts={posts} />
         </div>
       </section>
     </div>
