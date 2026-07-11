@@ -14,11 +14,12 @@ WHERE a.id > b.id
   AND a.contributor_id = b.contributor_id
   AND a.task_id = b.task_id;
 
--- ── STEP 2: Add unique constraint to submissions ──────────────────
--- Prevents future duplicate in-progress records at the database level.
-ALTER TABLE submissions
-ADD CONSTRAINT IF NOT EXISTS unique_submission_per_contributor_task
-  UNIQUE (contributor_id, task_id);
+-- ── STEP 2: Add unique index to submissions ───────────────────────
+-- A unique index enforces uniqueness identically to ADD CONSTRAINT UNIQUE.
+-- Using CREATE UNIQUE INDEX because it supports IF NOT EXISTS; ALTER TABLE
+-- ADD CONSTRAINT does not support IF NOT EXISTS in any Postgres version.
+CREATE UNIQUE INDEX IF NOT EXISTS unique_submission_per_contributor_task
+  ON submissions (contributor_id, task_id);
 
 -- ── STEP 3: Remove duplicate assignments ─────────────────────────
 -- Same cleanup for the assignments table (assignment-required tasks).
@@ -28,7 +29,6 @@ WHERE a.id > b.id
   AND a.contributor_id = b.contributor_id
   AND a.task_id = b.task_id;
 
--- ── STEP 4: Add unique constraint to assignments ──────────────────
-ALTER TABLE assignments
-ADD CONSTRAINT IF NOT EXISTS unique_assignment_per_contributor_task
-  UNIQUE (contributor_id, task_id);
+-- ── STEP 4: Add unique index to assignments ───────────────────────
+CREATE UNIQUE INDEX IF NOT EXISTS unique_assignment_per_contributor_task
+  ON assignments (contributor_id, task_id);
