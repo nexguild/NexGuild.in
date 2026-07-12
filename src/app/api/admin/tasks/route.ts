@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
       terms, steps,
       assignment_instructions, assignment_questions, assignment_passing_score,
       required_level, xp_reward,
-      status,
+      status, project_id,
     } = body as {
       title: string;
       task_type: string;
@@ -60,6 +60,7 @@ export async function POST(req: NextRequest) {
       required_level?: number;
       xp_reward?: number;
       status: "active" | "draft";
+      project_id?: string;
     };
 
     if (!title?.trim() || !task_type || !description?.trim()) {
@@ -93,6 +94,7 @@ export async function POST(req: NextRequest) {
         required_level: required_level ?? 1,
         xp_reward: xp_reward ?? 0,
         status,
+        project_id: project_id || null,
       })
       .select("id, title, task_type, pay_per_task, total_slots, is_private, steps")
       .single();

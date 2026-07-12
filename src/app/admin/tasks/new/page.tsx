@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
   ArrowLeft, Loader2, Plus, Trash2, ChevronUp, ChevronDown, GripVertical,
@@ -83,11 +83,19 @@ const inputClass = "w-full h-10 px-3 rounded-lg border border-[var(--border-defa
 const labelClass = "block text-sm font-semibold text-[var(--text-primary)] mb-1.5";
 const textareaClass = "w-full px-3 py-2.5 rounded-lg border border-[var(--border-default)] bg-[var(--surface-subtle)] text-[var(--text-primary)] text-sm placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--border-focus)] focus:border-transparent resize-y";
 
+interface ProjectOption { id: string; name: string; }
+
 export default function PostNewTaskPage() {
-  const router = useRouter();
+  const router       = useRouter();
+  const searchParams = useSearchParams();
 
   // Basic info
   const allowed = usePageGuard(ADMIN_ROLES.UPPER);
+
+  // Project linking
+  const [projectId, setProjectId]     = useState(searchParams.get("project_id") ?? "");
+  const [projects, setProjects]       = useState<ProjectOption[]>([]);
+  const [projectsLoading, setProjectsLoading] = useState(false);
 
   const [title, setTitle]               = useState("");
   const [taskType, setTaskType]         = useState("");
@@ -129,6 +137,18 @@ export default function PostNewTaskPage() {
 
   const [saving, setSaving] = useState(false);
   const [error, setError]   = useState<string | null>(null);
+
+  // Load active projects for linking
+  useEffect(() => {
+    setProjectsLoading(true);
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      const token = session?.access_token;
+      fetch("/api/admin/projects", { headers: { Authorization: `Bearer ${token}` } })
+        .then((r) => r.json())
+        .then((d: { projects?: ProjectOption[] }) => { setProjects(d.projects ?? []); })
+        .finally(() => setProjectsLoading(false));
+    });
+  }, []);
 
   // Load SLA defaults from platform_settings
   useEffect(() => {
@@ -237,6 +257,7 @@ export default function PostNewTaskPage() {
         required_level:              requiredLevel ? parseInt(requiredLevel) : 1,
         xp_reward:                   xpReward ? parseInt(xpReward) : 0,
         status,
+        project_id:                  projectId || null,
       }),
     });
 
@@ -260,6 +281,20 @@ export default function PostNewTaskPage() {
       </div>
 
       <div className="space-y-5">
+        {/* ── Project link (optional) ────────────────────────────────────── */}
+        <section className="rounded-xl border border-[var(--border-default)] bg-[var(--surface-card)] p-6 space-y-3">
+          <h2 className="font-bold text-[var(--text-primary)]">Link to Project <span className="text-xs font-normal text-[var(--text-muted)]">optional</span></h2>
+          <select
+            value={projectId}
+            onChange={(e) => setProjectId(e.target.value)}
+            disabled={projectsLoading}
+            className={inputClass}>
+            <option value="">No project</option>
+            {projects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+          </select>
+          <p className="text-xs text-[var(--text-muted)]">Attach this task to an existing client project for tracking.</p>
+        </section>
+
         {/* ── Basic Info ─────────────────────────────────────────────────── */}
         <section className="rounded-xl border border-[var(--border-default)] bg-[var(--surface-card)] p-6 space-y-5">
           <h2 className="font-bold text-[var(--text-primary)]">Task Details</h2>
