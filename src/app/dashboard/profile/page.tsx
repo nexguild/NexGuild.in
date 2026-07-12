@@ -237,77 +237,84 @@ export default function ProfilePage() {
   return (
     <div className="space-y-6 max-w-2xl">
       <div>
-        <h1 className="text-2xl font-bold text-[var(--text-primary)] mb-1">Profile</h1>
-        <p className="text-sm text-[var(--text-secondary)]">Your contributor profile and account details.</p>
+        <h1 className="text-2xl font-bold text-slate-800 mb-1">Profile</h1>
+        <p className="text-sm text-slate-500">Your contributor profile and account details.</p>
       </div>
 
       {/* ── Premium Hero Card ──────────────────────────────────────── */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-indigo-600 to-teal-500 p-6 text-white shadow-lg">
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-indigo-600 to-teal-500 p-5 sm:p-6 text-white shadow-lg">
         {/* Decorative circles */}
         <div className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-white/10" />
         <div className="pointer-events-none absolute -bottom-12 -left-12 h-32 w-32 rounded-full bg-white/5" />
 
-        {/* Edit button — top right */}
-        <button
-          onClick={openEdit}
-          disabled={loading}
-          className="absolute right-4 top-4 z-10 flex items-center gap-1.5 rounded-xl border border-white/30 bg-white/20 px-4 py-2 text-sm font-medium text-white backdrop-blur-sm transition-all hover:bg-white/30 disabled:opacity-50"
-        >
-          ✏️ Edit Profile
-        </button>
-
-        <div className="relative flex items-start gap-5 flex-wrap sm:flex-nowrap">
-          {/* Avatar */}
-          <div className="relative flex-shrink-0">
-            <div className="h-24 w-24 rounded-full border-4 border-white shadow-xl overflow-hidden bg-gradient-to-br from-indigo-400 to-teal-400 flex items-center justify-center">
-              {profile?.avatar_url ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={profile.avatar_url} alt={displayName} className="h-full w-full object-cover" />
-              ) : (
-                <span className="text-white text-3xl font-bold">{initials}</span>
-              )}
-            </div>
-            <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarUpload} />
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              disabled={uploading}
-              className="absolute bottom-0 right-0 h-8 w-8 rounded-full bg-white shadow-md border-2 border-indigo-100 flex items-center justify-center hover:bg-slate-50 transition-colors disabled:opacity-60"
-              title="Change profile picture"
-            >
-              {uploading
-                ? <Loader2 className="h-3.5 w-3.5 text-slate-600 animate-spin" />
-                : <Camera className="h-3.5 w-3.5 text-slate-600" />
-              }
-            </button>
-          </div>
-
-          {/* Name + email + badge */}
-          <div className="flex-1 min-w-0 pt-1">
-            <h2 className="text-2xl font-bold text-white leading-tight">
-              {loading ? "Loading…" : displayName}
-            </h2>
-            <p className="text-white/70 text-sm mt-0.5">{loading ? "—" : (email ?? "—")}</p>
-            {!loading && profile?.is_nexleader && (
-              <span className="mt-2 inline-flex items-center gap-1 rounded-full bg-white/20 px-3 py-1 text-xs font-bold text-white">
-                <Crown className="h-3 w-3" /> NexLeader
-              </span>
-            )}
-            {uploadError && <p className="mt-1 text-xs text-red-200">{uploadError}</p>}
-          </div>
-
-          {/* Level + XP */}
-          {!loading && (
-            <div className="flex flex-col items-center gap-3 flex-shrink-0 sm:ml-auto">
-              <div className="rounded-2xl bg-white/20 p-3 text-center min-w-[72px] backdrop-blur-sm">
-                <p className="text-white/60 text-[10px] uppercase tracking-widest font-semibold">Level</p>
-                <p className="text-white text-4xl font-bold leading-none mt-0.5">{level}</p>
+        <div className="relative space-y-4">
+          {/* Row 1: Avatar + Name/email/badge + Edit button (all inline — no absolute) */}
+          <div className="flex items-start gap-4">
+            {/* Avatar */}
+            <div className="relative flex-shrink-0">
+              <div className="h-20 w-20 sm:h-24 sm:w-24 rounded-full border-4 border-white shadow-xl overflow-hidden bg-gradient-to-br from-indigo-400 to-teal-400 flex items-center justify-center">
+                {profile?.avatar_url ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={profile.avatar_url} alt={displayName} className="h-full w-full object-cover" />
+                ) : (
+                  <span className="text-white text-2xl sm:text-3xl font-bold">{initials}</span>
+                )}
               </div>
-              <div className="text-center">
-                <p className="text-white/50 text-xs mb-1">Next level</p>
-                <div className="w-28 h-1.5 rounded-full bg-white/20 overflow-hidden">
+              <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarUpload} />
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploading}
+                className="absolute bottom-0 right-0 h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-white shadow-md border-2 border-indigo-100 flex items-center justify-center hover:bg-slate-50 transition-colors disabled:opacity-60"
+                title="Change profile picture"
+              >
+                {uploading
+                  ? <Loader2 className="h-3 w-3 text-slate-600 animate-spin" />
+                  : <Camera className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-slate-600" />}
+              </button>
+            </div>
+
+            {/* Name + email + badge + Edit button */}
+            <div className="flex-1 min-w-0 pt-1">
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <h2 className="text-lg sm:text-2xl font-bold text-white leading-tight truncate">
+                    {loading ? "Loading…" : displayName}
+                  </h2>
+                  <p className="text-white/70 text-xs sm:text-sm mt-0.5 truncate">{loading ? "—" : (email ?? "—")}</p>
+                  {!loading && profile?.is_nexleader && (
+                    <span className="mt-2 inline-flex items-center gap-1 rounded-full bg-white/20 px-2.5 py-1 text-xs font-bold text-white">
+                      <Crown className="h-3 w-3" /> NexLeader
+                    </span>
+                  )}
+                  {uploadError && <p className="mt-1 text-xs text-red-200">{uploadError}</p>}
+                </div>
+                {/* Edit button — inline, not absolute */}
+                <button
+                  onClick={openEdit}
+                  disabled={loading}
+                  className="flex-shrink-0 flex items-center gap-1 rounded-xl border border-white/30 bg-white/20 px-2.5 py-1.5 text-xs font-medium text-white backdrop-blur-sm transition-all hover:bg-white/30 disabled:opacity-50 whitespace-nowrap"
+                >
+                  ✏️ <span className="hidden sm:inline">Edit Profile</span><span className="sm:hidden">Edit</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Row 2: Level badge + XP bar */}
+          {!loading && (
+            <div className="flex items-center gap-4 pt-3 border-t border-white/20">
+              <div className="rounded-xl bg-white/20 px-4 py-2 text-center backdrop-blur-sm flex-shrink-0">
+                <p className="text-white/60 text-[10px] uppercase tracking-widest font-semibold">Level</p>
+                <p className="text-white text-3xl font-bold leading-none mt-0.5">{level}</p>
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex justify-between text-xs text-white/60 mb-1.5">
+                  <span>XP Progress</span>
+                  <span>{xpInLevel.toLocaleString()} / 1,000</span>
+                </div>
+                <div className="h-2 rounded-full bg-white/20 overflow-hidden">
                   <div className="h-full rounded-full bg-white transition-all duration-700" style={{ width: `${xpPct}%` }} />
                 </div>
-                <p className="text-white/60 text-xs mt-1">{xpInLevel.toLocaleString()} / 1,000 XP</p>
               </div>
             </div>
           )}
@@ -317,7 +324,9 @@ export default function ProfilePage() {
       {/* ── NexCoins Balance ────────────────────────────────────────── */}
       <div className="flex items-center justify-between gap-4 rounded-2xl bg-gradient-to-r from-amber-400 to-amber-500 p-5 shadow-md">
         <div className="flex items-center gap-4">
-          <span className="text-5xl">🪙</span>
+          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/20">
+            <NexCoinIcon size={32} />
+          </div>
           <div>
             <p className="text-white/80 text-sm font-medium">NexCoins Balance</p>
             <p className="text-white text-4xl font-bold leading-tight">
@@ -504,46 +513,46 @@ export default function ProfilePage() {
       {/* ── Edit Profile Modal ───────────────────────────────────────── */}
       {showEdit && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/60">
-          <div className="w-full max-w-md bg-[var(--surface-card)] rounded-xl border border-[var(--border-default)] p-6 shadow-xl">
+          <div className="w-full max-w-md bg-white rounded-2xl border border-slate-200 p-6 shadow-xl">
             <div className="flex items-center justify-between mb-5">
-              <h2 className="text-lg font-semibold text-[var(--text-primary)]">Edit Profile</h2>
-              <button onClick={() => setShowEdit(false)} className="text-[var(--text-muted)] hover:text-[var(--text-primary)]">
+              <h2 className="text-lg font-semibold text-slate-800">Edit Profile</h2>
+              <button onClick={() => setShowEdit(false)} className="text-slate-400 hover:text-slate-700">
                 <X className="h-5 w-5" />
               </button>
             </div>
 
             <form onSubmit={handleSave} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-[var(--text-primary)] mb-1.5">Full Name</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1.5">Full Name</label>
                 <input
                   type="text"
                   value={editName}
                   onChange={(e) => setEditName(e.target.value)}
                   placeholder="Your full name"
-                  className="w-full h-10 px-3 rounded-md border border-[var(--border-strong)] bg-[var(--surface-subtle)] text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--border-focus)] focus:border-transparent"
+                  className="w-full h-10 px-3 rounded-lg border border-slate-200 bg-slate-50 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-[var(--text-primary)] mb-1.5">Country</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1.5">Country</label>
                 <select
                   value={editCountry}
                   onChange={(e) => setEditCountry(e.target.value)}
-                  className="w-full h-10 px-3 rounded-md border border-[var(--border-strong)] bg-[var(--surface-subtle)] text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--border-focus)] focus:border-transparent"
+                  className="w-full h-10 px-3 rounded-lg border border-slate-200 bg-slate-50 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent"
                 >
                   <option value="">Select country</option>
                   {COUNTRIES.map((c) => <option key={c}>{c}</option>)}
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-[var(--text-primary)] mb-1.5">
-                  Phone <span className="text-[var(--text-muted)] font-normal">(optional)</span>
+                <label className="block text-sm font-medium text-slate-700 mb-1.5">
+                  Phone <span className="text-slate-400 font-normal">(optional)</span>
                 </label>
                 <input
                   type="tel"
                   value={editPhone}
                   onChange={(e) => setEditPhone(e.target.value)}
                   placeholder="+91 99999 00000"
-                  className="w-full h-10 px-3 rounded-md border border-[var(--border-strong)] bg-[var(--surface-subtle)] text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--border-focus)] focus:border-transparent"
+                  className="w-full h-10 px-3 rounded-lg border border-slate-200 bg-slate-50 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent"
                 />
               </div>
               {saveError && (

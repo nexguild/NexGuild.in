@@ -468,7 +468,7 @@ export default function TaskWorkPage() {
           <div className="relative z-10 flex flex-wrap gap-2">
             {contributorCoins != null && (
               <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-300/40 bg-amber-400/20 px-3 py-1 text-xs font-bold text-amber-100">
-                🪙 {contributorCoins} NexCoins
+                <NexCoinIcon size={12} /> {contributorCoins} NexCoins
               </span>
             )}
             {task.task_type && (
@@ -942,7 +942,7 @@ export default function TaskWorkPage() {
                 <div className="grid grid-cols-3 divide-x divide-indigo-100">
                   {contributorCoins != null && (
                     <div className="flex flex-col items-center gap-1 px-2">
-                      <span className="text-xl">🪙</span>
+                      <NexCoinIcon size={22} />
                       <p className="text-xs text-slate-400">Reward</p>
                       <p className="text-sm font-bold text-slate-700 text-center">{contributorCoins} NexCoins</p>
                     </div>
@@ -987,50 +987,59 @@ export default function TaskWorkPage() {
 
       {/* ── FIXED BOTTOM BAR ─────────────────────────────────────────── */}
       {hasSteps && (
-        <div className="fixed bottom-0 left-0 right-0 lg:left-[240px] z-30 border-t border-indigo-100/60 bg-white/85 backdrop-blur-md shadow-lg">
-          <div className="max-w-3xl mx-auto px-4 py-3 flex items-center gap-4">
-            {/* Left: coin earn amount */}
-            {contributorCoins != null && (
-              <div className="flex min-w-0 flex-1 items-center gap-1.5">
-                <span className="flex-shrink-0 text-base">🪙</span>
-                <span className="whitespace-nowrap text-sm text-slate-500">
-                  Earn up to:{" "}
-                  <span className="font-bold text-amber-500">{contributorCoins} NexCoins</span>
-                </span>
-              </div>
-            )}
-
-            {/* Right: mini progress dots + stage count */}
-            <div className="flex flex-shrink-0 items-center gap-2">
-              <div className="flex items-center gap-1">
-                {steps.map((_, i) => (
-                  <div
-                    key={i}
-                    className={`rounded-full transition-all duration-300 ${
-                      doneSet.has(i) ? "h-2 w-4 bg-indigo-500" : "h-2 w-2 bg-slate-200"
-                    }`}
-                  />
-                ))}
-              </div>
-              <span className="whitespace-nowrap text-xs text-slate-400">
-                {completedCount}/{steps.length} done
-              </span>
-            </div>
-
-            {/* Submit button when all stages done */}
-            {allDone && (
-              <button
-                onClick={finalSubmit}
-                disabled={finalSubmitting}
-                className="flex flex-shrink-0 items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold text-white transition-all hover:opacity-90 disabled:opacity-50"
-                style={{ background: "linear-gradient(135deg, #6366f1 0%, #14b8a6 100%)" }}
-              >
-                {finalSubmitting ? (
-                  <><Loader2 className="h-4 w-4 animate-spin" /> Submitting…</>
-                ) : (
-                  <><Send className="h-4 w-4" /> Submit Task</>
+        <div className="fixed bottom-0 left-0 right-0 lg:left-[240px] z-30 border-t border-indigo-100/60 bg-white/90 backdrop-blur-md shadow-lg">
+          <div className="max-w-3xl mx-auto px-4 py-3">
+            {allDone ? (
+              /* All stages done: stack vertically on mobile, row on sm+ */
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-4">
+                {contributorCoins != null && (
+                  <div className="flex flex-1 items-center gap-1.5">
+                    <NexCoinIcon size={16} />
+                    <span className="text-sm text-slate-500">
+                      Earn up to:{" "}
+                      <span className="font-bold text-amber-500">{contributorCoins} NexCoins</span>
+                    </span>
+                  </div>
                 )}
-              </button>
+                <button
+                  onClick={finalSubmit}
+                  disabled={finalSubmitting}
+                  className="flex items-center justify-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold text-white transition-all hover:opacity-90 disabled:opacity-50"
+                  style={{ background: "linear-gradient(135deg, #6366f1 0%, #14b8a6 100%)" }}
+                >
+                  {finalSubmitting
+                    ? <><Loader2 className="h-4 w-4 animate-spin" /> Submitting…</>
+                    : <><Send className="h-4 w-4" /> Submit Task</>}
+                </button>
+              </div>
+            ) : (
+              /* In progress: coin amount + dots */
+              <div className="flex items-center gap-4">
+                {contributorCoins != null && (
+                  <div className="flex min-w-0 flex-1 items-center gap-1.5">
+                    <NexCoinIcon size={16} className="flex-shrink-0" />
+                    <span className="whitespace-nowrap text-sm text-slate-500">
+                      Earn up to:{" "}
+                      <span className="font-bold text-amber-500">{contributorCoins} NexCoins</span>
+                    </span>
+                  </div>
+                )}
+                <div className="flex flex-shrink-0 items-center gap-2">
+                  <div className="flex items-center gap-1">
+                    {steps.map((_, i) => (
+                      <div
+                        key={i}
+                        className={`rounded-full transition-all duration-300 ${
+                          doneSet.has(i) ? "h-2 w-4 bg-indigo-500" : "h-2 w-2 bg-slate-200"
+                        }`}
+                      />
+                    ))}
+                  </div>
+                  <span className="whitespace-nowrap text-xs text-slate-400">
+                    {completedCount}/{steps.length} done
+                  </span>
+                </div>
+              </div>
             )}
           </div>
         </div>

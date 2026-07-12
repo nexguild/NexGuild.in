@@ -237,7 +237,7 @@ if (existingChannel) {
           </button>
 
           {open && (
-            <div className="absolute right-0 top-full mt-2 w-80 sm:w-96 max-w-[calc(100vw-2rem)] max-h-[28rem] flex flex-col rounded-2xl border border-slate-200 bg-white shadow-2xl overflow-hidden z-50">
+            <div className="fixed right-4 top-[68px] w-80 sm:w-96 max-w-[calc(100vw-2rem)] max-h-[28rem] flex flex-col rounded-2xl border border-slate-200 bg-white shadow-2xl overflow-hidden z-50">
               {/* Dropdown header */}
               <div className="px-4 py-3 border-b border-slate-100 flex items-center justify-between flex-shrink-0"
                 style={{ background: "linear-gradient(135deg, rgba(99,102,241,0.04) 0%, rgba(20,184,166,0.04) 100%)" }}
