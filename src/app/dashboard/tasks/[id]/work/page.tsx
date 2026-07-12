@@ -428,7 +428,9 @@ export default function TaskWorkPage() {
 
   return (
     <>
-      <div className={`space-y-5 max-w-3xl ${hasSteps ? "pb-28" : ""}`}>
+      <div className={`lg:flex lg:gap-6 lg:items-start ${hasSteps ? "pb-28 lg:pb-28" : ""}`}>
+      {/* ── LEFT: main content ───────────────────────────────────────── */}
+      <div className="flex-1 min-w-0 space-y-5">
 
         {/* ── HERO HEADER CARD ─────────────────────────────────────── */}
         <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-600 to-teal-500 p-6 shadow-lg">
@@ -988,12 +990,123 @@ export default function TaskWorkPage() {
         </div>
       )}
 
+      {/* ── RIGHT: sticky task-info panel (desktop only) ─────────────── */}
+      <div className="hidden lg:flex flex-col gap-4 w-64 xl:w-72 flex-shrink-0 sticky top-20">
+
+        {/* Reward card */}
+        {contributorCoins != null && (
+          <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
+            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-3">Your Reward</p>
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50 border border-amber-100 flex-shrink-0">
+                <NexCoinIcon size={22} />
+              </div>
+              <div>
+                <p className="text-xl font-extrabold text-slate-800">{contributorCoins}</p>
+                <p className="text-xs text-slate-400">NexCoins</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Progress card (steps tasks) */}
+        {hasSteps && (
+          <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Progress</p>
+              <span className="text-xs font-bold text-indigo-600">{Math.round(progressPct)}%</span>
+            </div>
+            <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100 mb-2">
+              <div
+                className="h-full rounded-full transition-all duration-700"
+                style={{ width: `${progressPct}%`, background: "linear-gradient(90deg, #6366f1, #14b8a6)" }}
+              />
+            </div>
+            <p className="text-xs text-slate-500">{completedCount} of {steps.length} stages complete</p>
+            {allDone && (
+              <button
+                onClick={finalSubmit}
+                disabled={finalSubmitting}
+                className="mt-3 w-full flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold text-white transition-all hover:opacity-90 active:scale-95 disabled:opacity-50"
+                style={{ background: "linear-gradient(135deg, #6366f1 0%, #14b8a6 100%)" }}
+              >
+                {finalSubmitting ? <><Loader2 className="h-4 w-4 animate-spin" /> Submitting…</> : <><Send className="h-4 w-4" /> Submit Task</>}
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* Task details card */}
+        <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
+          <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-3">Task Details</p>
+          <div className="space-y-3">
+            {task.deadline && (
+              <div className="flex items-center gap-2.5">
+                <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-50 flex-shrink-0">
+                  <Clock className="h-3.5 w-3.5 text-indigo-500" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-[10px] text-slate-400 font-medium uppercase tracking-wide">Deadline</p>
+                  <p className={`text-xs font-semibold truncate ${countdown === "Ended" ? "text-red-500" : "text-slate-700"}`}>{countdown === "Ended" ? "Ended" : `${countdown} left`}</p>
+                </div>
+              </div>
+            )}
+            {task.total_slots != null && (
+              <div className="flex items-center gap-2.5">
+                <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-50 flex-shrink-0">
+                  <Users className="h-3.5 w-3.5 text-indigo-500" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-[10px] text-slate-400 font-medium uppercase tracking-wide">Slots</p>
+                  <p className="text-xs font-semibold text-slate-700">{task.filled_slots ?? 0} / {task.total_slots} filled</p>
+                </div>
+              </div>
+            )}
+            {task.validation_time && (
+              <div className="flex items-center gap-2.5">
+                <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-50 flex-shrink-0">
+                  <Clock className="h-3.5 w-3.5 text-blue-500" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-[10px] text-slate-400 font-medium uppercase tracking-wide">Review Time</p>
+                  <p className="text-xs font-semibold text-slate-700 truncate">{task.validation_time}</p>
+                </div>
+              </div>
+            )}
+            {task.payment_time && (
+              <div className="flex items-center gap-2.5">
+                <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-teal-50 flex-shrink-0">
+                  <CreditCard className="h-3.5 w-3.5 text-teal-500" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-[10px] text-slate-400 font-medium uppercase tracking-wide">Payment</p>
+                  <p className="text-xs font-semibold text-slate-700 truncate">{task.payment_time}</p>
+                </div>
+              </div>
+            )}
+            {task.task_type && (
+              <div className="flex items-center gap-2.5">
+                <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-purple-50 flex-shrink-0">
+                  <FileText className="h-3.5 w-3.5 text-purple-500" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-[10px] text-slate-400 font-medium uppercase tracking-wide">Task Type</p>
+                  <p className="text-xs font-semibold text-slate-700 capitalize">{task.task_type}</p>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+      </div>{/* end right panel */}
+      </div>{/* end outer flex wrapper */}
+
       {/* ── FIXED BOTTOM BAR ─────────────────────────────────────────── */}
       {hasSteps && (
         <div className="fixed bottom-0 left-0 right-0 lg:left-[240px] z-30 bg-white/95 backdrop-blur-md shadow-[0_-1px_0_0_rgba(99,102,241,0.12),0_-4px_16px_0_rgba(0,0,0,0.06)]">
           {/* Gradient accent line at top */}
           <div className="h-[2px] w-full" style={{ background: "linear-gradient(90deg, #6366f1, #14b8a6)" }} />
-          <div className="max-w-3xl mx-auto px-4 py-3">
+          <div className="px-4 sm:px-6 py-3">
             {allDone ? (
               /* All stages complete — single row: reward pill + submit button */
               <div className="flex items-center gap-3">
