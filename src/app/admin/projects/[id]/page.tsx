@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback } from "react";
-import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import {
   ArrowLeft, Loader2, FolderOpen, CheckCircle2, Clock, CreditCard,
@@ -19,15 +19,16 @@ interface Project {
   id: string; name: string; client_name: string | null; description: string | null;
   project_type: string | null; status: string; start_date: string | null;
   deadline: string | null; payment_timeline: string | null; total_budget_nc: number;
-  client_payment_amount: string | null; client_payment_received: boolean;
-  client_payment_received_at: string | null; internal_notes: string | null;
-  created_at: string; updated_at: string | null;
+  client_payment_amount: string | null; client_payment_inr: number | null;
+  client_payment_received: boolean; client_payment_received_at: string | null;
+  internal_notes: string | null; created_at: string; updated_at: string | null;
   task_count: number; nc_paid: number; nexleader_commission: number;
   platform_cut: number; net_contributor_payout: number;
 }
 
 interface ProjectTask {
   id: string; title: string; task_type: string | null; status: string;
+  pay_per_task_inr: number | null;
   pay_per_task: number | null; total_slots: number | null; filled_slots: number | null;
   drive_sheet_id: string | null; submission_count: number; approved_count: number; nc_paid: number;
 }
@@ -94,7 +95,6 @@ function exportCSV(submissions: Submission[], projectName: string) {
 export default function ProjectDetailPage() {
   const params       = useParams();
   const searchParams = useSearchParams();
-  const router       = useRouter();
   const id           = params.id as string;
   const allowed      = usePageGuard(ADMIN_ROLES.REVIEW);
 
@@ -117,9 +117,11 @@ export default function ProjectDetailPage() {
   const [editStartDate, setEditStartDate]           = useState("");
   const [editDeadline, setEditDeadline]             = useState("");
   const [editPaymentTimeline, setEditPaymentTimeline] = useState("");
-  const [editBudgetNC, setEditBudgetNC]             = useState("");
-  const [editClientPayment, setEditClientPayment]   = useState("");
-  const [editInternalNotes, setEditInternalNotes]   = useState("");
+  const [editBudgetNC, setEditBudgetNC]               = useState("");
+  const [editClientPayment, setEditClientPayment]     = useState("");
+  const [editClientPaymentInr, setEditClientPaymentInr] = useState("");
+  const [editInternalNotes, setEditInternalNotes]     = useState("");
+  const [nexcoinPerInr, setNexcoinPerInr]             = useState(12.5);
 
   // Tasks tab
   const [availableTasks, setAvailableTasks] = useState<AvailableTask[]>([]);
@@ -155,11 +157,17 @@ export default function ProjectDetailPage() {
     setEditPaymentTimeline(p.payment_timeline ?? "");
     setEditBudgetNC(String(p.total_budget_nc ?? 0));
     setEditClientPayment(p.client_payment_amount ?? "");
+    setEditClientPaymentInr(p.client_payment_inr != null ? String(p.client_payment_inr) : "");
     setEditInternalNotes(p.internal_notes ?? "");
     setLoading(false);
   }, [id]);
 
   useEffect(() => { load(); }, [load]);
+
+  useEffect(() => {
+    supabase.from("platform_settings").select("value").eq("key", "nexcoin_per_inr").single()
+      .then(({ data }) => { if (data?.value) setNexcoinPerInr(parseFloat(data.value as string)); });
+  }, []);
 
   async function saveOverview() {
     if (!editName.trim()) { setError("Name is required."); return; }
@@ -174,6 +182,7 @@ export default function ProjectDetailPage() {
         payment_timeline: editPaymentTimeline || null,
         total_budget_nc: parseInt(editBudgetNC) || 0,
         client_payment_amount: editClientPayment || null,
+        client_payment_inr: editClientPaymentInr ? parseFloat(editClientPaymentInr) : null,
         internal_notes: editInternalNotes || null,
       }),
     });
@@ -433,12 +442,23 @@ export default function ProjectDetailPage() {
           {/* Client payment tracking */}
           <section className="rounded-xl border border-[var(--border-default)] bg-[var(--surface-card)] p-6 space-y-4">
             <h2 className="font-bold text-[var(--text-primary)]">Client Payment</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
               <div>
-                <label className={lc}>Expected Amount</label>
+                <label className={lc}>Amount (display text)</label>
                 <input type="text" value={editClientPayment}
                   onChange={(e) => setEditClientPayment(e.target.value)}
                   placeholder="e.g. $70 USD" className={ic} />
+                <p className="text-xs text-[var(--text-muted)] mt-1">Free text — shown as-is</p>
+              </div>
+              <div>
+                <label className={lc}>Amount in ₹ INR</label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-[var(--text-muted)] pointer-events-none select-none">₹</span>
+                  <input type="number" min="0" step="0.01" value={editClientPaymentInr}
+                    onChange={(e) => setEditClientPaymentInr(e.target.value)}
+                    placeholder="e.g. 5800" className={`${ic} pl-7`} />
+                </div>
+                <p className="text-xs text-[var(--text-muted)] mt-1">Used for margin calculation</p>
               </div>
               <div className="flex flex-col justify-end">
                 <button onClick={togglePaymentReceived}
@@ -650,57 +670,113 @@ export default function ProjectDetailPage() {
       )}
 
       {/* ── TAB: Financials ─────────────────────────────────────────────────── */}
-      {tab === "financials" && (
-        <div className="space-y-5">
-          {/* NC Breakdown */}
-          <section className="rounded-xl border border-[var(--border-default)] bg-[var(--surface-card)] p-6 space-y-4">
-            <h2 className="font-bold text-[var(--text-primary)]">NexCoin Breakdown</h2>
-            {[
-              { label: "Total NC Paid to Contributors",   value: project.nc_paid,                  highlight: true },
-              { label: "NexLeader Commissions (10%)",     value: project.nexleader_commission,      warn: true },
-              { label: "Platform Cut (24%)",              value: project.platform_cut,              warn: true },
-              { label: "Net Contributor Payouts (66%)",   value: project.net_contributor_payout,    ok: true },
-            ].map((row) => (
-              <div key={row.label} className="flex items-center justify-between py-2.5 border-b border-[var(--border-default)] last:border-0">
-                <span className="text-sm text-[var(--text-secondary)]">{row.label}</span>
-                <span className={`flex items-center gap-1 font-bold text-sm ${
-                  row.highlight ? "text-[var(--text-primary)]" :
-                  row.ok ? "text-green-400" : "text-amber-400"
-                }`}>
-                  <NexCoinIcon size={13} /> {row.value.toLocaleString()} NC
-                </span>
-              </div>
-            ))}
-          </section>
+      {tab === "financials" && (() => {
+        // Auto-calculate budget from linked tasks
+        const totalSlots      = tasks.reduce((s, t) => s + (t.total_slots ?? 0), 0);
+        const potentialNc     = tasks.reduce((s, t) => s + (t.pay_per_task ?? 0) * (t.total_slots ?? 0), 0);
+        const approvedCount   = tasks.reduce((s, t) => s + t.approved_count, 0);
+        const paidNc          = project.nc_paid;
+        const remainingNc     = Math.max(0, potentialNc - paidNc);
+        const budgetPct       = potentialNc > 0 ? Math.min(100, Math.round((paidNc / potentialNc) * 100)) : 0;
+        const potentialInr    = Math.round(potentialNc / nexcoinPerInr);
+        const paidInr         = Math.round(paidNc / nexcoinPerInr);
+        const remainingInr    = Math.round(remainingNc / nexcoinPerInr);
 
-          {/* Budget usage */}
-          {project.total_budget_nc > 0 && (
-            <section className="rounded-xl border border-[var(--border-default)] bg-[var(--surface-card)] p-6 space-y-3">
-              <h2 className="font-bold text-[var(--text-primary)]">Budget Usage</h2>
-              <div className="flex items-center justify-between text-sm mb-1">
-                <span className="text-[var(--text-secondary)]">NC Used</span>
-                <span className="font-bold text-[var(--text-primary)]">{ncPct}%</span>
+        // Margin calculation
+        const clientInr       = project.client_payment_inr ?? 0;
+        const marginInr       = clientInr > 0 ? clientInr - paidInr : null;
+        const marginPct       = clientInr > 0 && paidInr > 0 ? Math.round((marginInr! / clientInr) * 100) : null;
+
+        return (
+          <div className="space-y-5">
+            {/* Project Budget (auto-sum from tasks) */}
+            <section className="rounded-xl border border-[var(--border-default)] bg-[var(--surface-card)] p-6 space-y-4">
+              <div className="flex items-center gap-2">
+                <span className="text-base">📊</span>
+                <h2 className="font-bold text-[var(--text-primary)]">Project Budget</h2>
+                <span className="text-xs text-[var(--text-muted)] ml-auto">auto-calculated from {tasks.length} task{tasks.length !== 1 ? "s" : ""}</span>
               </div>
-              <div className="h-3 rounded-full bg-[var(--surface-subtle)] overflow-hidden">
-                <div className="h-full rounded-full bg-[var(--brand-500)] transition-all duration-700" style={{ width: `${ncPct}%` }} />
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                {[
+                  { label: "Potential total (all slots filled)", nc: potentialNc, inr: potentialInr, slots: `${tasks.length} tasks · ${totalSlots} slots`, cls: "text-[var(--text-primary)]" },
+                  { label: "Paid out so far", nc: paidNc, inr: paidInr, slots: `${approvedCount} approved submissions`, cls: "text-amber-400" },
+                  { label: "Remaining budget", nc: remainingNc, inr: remainingInr, slots: "", cls: remainingNc > 0 ? "text-green-400" : "text-[var(--text-muted)]" },
+                ].map((row) => (
+                  <div key={row.label} className="rounded-lg bg-[var(--surface-subtle)] border border-[var(--border-default)] p-4 space-y-1.5">
+                    <p className="text-xs text-[var(--text-muted)] font-medium">{row.label}</p>
+                    <p className={`text-xl font-bold flex items-center gap-1 ${row.cls}`}>
+                      <NexCoinIcon size={16} /> {row.nc.toLocaleString()} NC
+                    </p>
+                    <p className="text-xs text-[var(--text-muted)]">≈ ₹{row.inr.toLocaleString("en-IN")}</p>
+                    {row.slots && <p className="text-[10px] text-[var(--text-muted)]">{row.slots}</p>}
+                  </div>
+                ))}
               </div>
-              <div className="flex justify-between text-xs text-[var(--text-muted)]">
-                <span>{project.nc_paid.toLocaleString()} NC paid</span>
-                <span>{project.total_budget_nc.toLocaleString()} NC budget</span>
-              </div>
+
+              {potentialNc > 0 && (
+                <div className="space-y-1.5">
+                  <div className="flex justify-between text-xs text-[var(--text-muted)]">
+                    <span>Budget used</span>
+                    <span className="font-semibold text-[var(--text-primary)]">{budgetPct}%</span>
+                  </div>
+                  <div className="h-2.5 rounded-full bg-[var(--surface-subtle)] overflow-hidden">
+                    <div className="h-full rounded-full bg-[var(--brand-500)] transition-all duration-700" style={{ width: `${budgetPct}%` }} />
+                  </div>
+                </div>
+              )}
             </section>
-          )}
 
-          {/* Client payment */}
-          <section className="rounded-xl border border-[var(--border-default)] bg-[var(--surface-card)] p-6 space-y-4">
-            <h2 className="font-bold text-[var(--text-primary)]">Client Payment</h2>
-            <div className="flex items-start justify-between gap-4 flex-wrap">
-              <div className="space-y-1">
-                <p className="text-xs text-[var(--text-muted)] uppercase tracking-wide font-medium">Expected</p>
-                <p className="text-lg font-bold text-[var(--text-primary)]">{project.client_payment_amount ?? "—"}</p>
+            {/* NC Breakdown */}
+            <section className="rounded-xl border border-[var(--border-default)] bg-[var(--surface-card)] p-6 space-y-4">
+              <h2 className="font-bold text-[var(--text-primary)]">Paid NC Breakdown</h2>
+              {[
+                { label: "Total NC Paid to Contributors",   value: project.nc_paid,                 cls: "text-[var(--text-primary)]" },
+                { label: "NexLeader Commissions (10%)",     value: project.nexleader_commission,     cls: "text-amber-400" },
+                { label: "Platform Cut (24%)",              value: project.platform_cut,             cls: "text-amber-400" },
+                { label: "Net Contributor Payouts (66%)",   value: project.net_contributor_payout,   cls: "text-green-400" },
+              ].map((row) => (
+                <div key={row.label} className="flex items-center justify-between py-2.5 border-b border-[var(--border-default)] last:border-0">
+                  <span className="text-sm text-[var(--text-secondary)]">{row.label}</span>
+                  <span className={`flex items-center gap-1 font-bold text-sm ${row.cls}`}>
+                    <NexCoinIcon size={13} /> {row.value.toLocaleString()} NC
+                  </span>
+                </div>
+              ))}
+            </section>
+
+            {/* Client payment + margin */}
+            <section className="rounded-xl border border-[var(--border-default)] bg-[var(--surface-card)] p-6 space-y-4">
+              <h2 className="font-bold text-[var(--text-primary)]">Client Payment & Margin</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <div>
+                  <p className="text-xs text-[var(--text-muted)] font-medium mb-1">Amount (display)</p>
+                  <p className="text-lg font-bold text-[var(--text-primary)]">{project.client_payment_amount ?? "—"}</p>
+                  <p className="text-xs text-[var(--text-muted)] mt-0.5">Free-text e.g. "$70 USD" (set in Overview)</p>
+                </div>
+                <div>
+                  <p className="text-xs text-[var(--text-muted)] font-medium mb-1">Amount in ₹ INR (for margin calc)</p>
+                  <p className="text-lg font-bold text-[var(--text-primary)]">
+                    {clientInr > 0 ? `₹${clientInr.toLocaleString("en-IN")}` : "—"}
+                  </p>
+                  <p className="text-xs text-[var(--text-muted)] mt-0.5">Set in Overview → Client Payment</p>
+                </div>
               </div>
-              <div className="space-y-1">
-                <p className="text-xs text-[var(--text-muted)] uppercase tracking-wide font-medium">Status</p>
+
+              {marginInr !== null && (
+                <div className={`rounded-xl p-4 border ${marginInr >= 0 ? "bg-green-500/5 border-green-500/20" : "bg-red-500/5 border-red-500/20"}`}>
+                  <p className="text-xs font-medium text-[var(--text-muted)] mb-1">Estimated Margin</p>
+                  <p className={`text-2xl font-bold ${marginInr >= 0 ? "text-green-400" : "text-red-400"}`}>
+                    {marginInr >= 0 ? "+" : ""}₹{marginInr.toLocaleString("en-IN")}
+                    {marginPct !== null && <span className="text-sm font-normal ml-2">({marginPct}%)</span>}
+                  </p>
+                  <p className="text-xs text-[var(--text-muted)] mt-1">
+                    ₹{clientInr.toLocaleString("en-IN")} client − ₹{paidInr.toLocaleString("en-IN")} paid out (at {nexcoinPerInr} NC/₹)
+                  </p>
+                </div>
+              )}
+
+              <div className="flex items-center gap-3 flex-wrap pt-1">
                 <button onClick={togglePaymentReceived}
                   className={`h-9 rounded-lg border px-4 text-sm font-semibold flex items-center gap-2 transition-colors ${
                     project.client_payment_received
@@ -708,53 +784,51 @@ export default function ProjectDetailPage() {
                       : "border-amber-500/30 bg-amber-500/10 text-amber-400 hover:bg-amber-500/20"
                   }`}>
                   {project.client_payment_received
-                    ? <><CheckCircle2 className="h-4 w-4" /> Received</>
-                    : <><Clock className="h-4 w-4" /> Mark Received</>}
+                    ? <><CheckCircle2 className="h-4 w-4" /> Payment Received</>
+                    : <><Clock className="h-4 w-4" /> Mark as Received</>}
                 </button>
                 {project.client_payment_received_at && (
-                  <p className="text-xs text-[var(--text-muted)] mt-1">on {fmt(project.client_payment_received_at)}</p>
+                  <p className="text-xs text-[var(--text-muted)]">on {fmt(project.client_payment_received_at)}</p>
                 )}
               </div>
-            </div>
-          </section>
+            </section>
 
-          {/* Payment timeline */}
-          <section className="rounded-xl border border-[var(--border-default)] bg-[var(--surface-card)] p-6 space-y-4">
-            <h2 className="font-bold text-[var(--text-primary)]">Payment Timeline</h2>
-            <div className="flex items-center gap-0 overflow-x-auto pb-2">
-              {[
-                { label: "Project Started",   date: project.start_date,                   done: !!project.start_date },
-                { label: "Work Submitted",    date: null,                                  done: project.nc_paid > 0 },
-                { label: "Client Review",     date: null,                                  done: project.status === "under_review" || project.status === "completed" },
-                { label: "Payment Expected",  date: null,                                  done: project.status === "completed" },
-                { label: "Payment Received",  date: project.client_payment_received_at,   done: project.client_payment_received },
-              ].map((step, i, arr) => (
-                <div key={step.label} className="flex items-center">
-                  <div className="flex flex-col items-center gap-1.5 min-w-[90px]">
-                    <div className={`h-8 w-8 rounded-full border-2 flex items-center justify-center ${
-                      step.done ? "border-[var(--brand-500)] bg-[var(--brand-500)]" : "border-[var(--border-default)] bg-[var(--surface-subtle)]"
-                    }`}>
-                      {step.done
-                        ? <CheckCircle2 className="h-4 w-4 text-white" />
-                        : <div className="h-2 w-2 rounded-full bg-[var(--text-muted)]" />}
+            {/* Payment timeline */}
+            <section className="rounded-xl border border-[var(--border-default)] bg-[var(--surface-card)] p-6 space-y-4">
+              <h2 className="font-bold text-[var(--text-primary)]">Payment Timeline</h2>
+              <div className="flex items-center overflow-x-auto pb-2">
+                {[
+                  { label: "Project Started",  date: project.start_date,                 done: !!project.start_date },
+                  { label: "Work Submitted",   date: null,                               done: project.nc_paid > 0 },
+                  { label: "Client Review",    date: null,                               done: project.status === "under_review" || project.status === "completed" },
+                  { label: "Payment Expected", date: null,                               done: project.status === "completed" },
+                  { label: "Payment Received", date: project.client_payment_received_at, done: project.client_payment_received },
+                ].map((step, i, arr) => (
+                  <div key={step.label} className="flex items-center">
+                    <div className="flex flex-col items-center gap-1.5 min-w-[90px]">
+                      <div className={`h-8 w-8 rounded-full border-2 flex items-center justify-center ${
+                        step.done ? "border-[var(--brand-500)] bg-[var(--brand-500)]" : "border-[var(--border-default)] bg-[var(--surface-subtle)]"
+                      }`}>
+                        {step.done ? <CheckCircle2 className="h-4 w-4 text-white" /> : <div className="h-2 w-2 rounded-full bg-[var(--text-muted)]" />}
+                      </div>
+                      <p className="text-[10px] text-center text-[var(--text-muted)] leading-tight px-1">{step.label}</p>
+                      {step.date && <p className="text-[10px] text-[var(--brand-500)]">{fmt(step.date)}</p>}
                     </div>
-                    <p className="text-[10px] text-center text-[var(--text-muted)] leading-tight px-1">{step.label}</p>
-                    {step.date && <p className="text-[10px] text-[var(--brand-500)]">{fmt(step.date)}</p>}
+                    {i < arr.length - 1 && (
+                      <div className={`h-0.5 w-8 flex-shrink-0 ${step.done ? "bg-[var(--brand-500)]" : "bg-[var(--border-default)]"}`} />
+                    )}
                   </div>
-                  {i < arr.length - 1 && (
-                    <div className={`h-0.5 w-8 flex-shrink-0 ${step.done ? "bg-[var(--brand-500)]" : "bg-[var(--border-default)]"}`} />
-                  )}
-                </div>
-              ))}
-            </div>
-            {project.payment_timeline && (
-              <p className="text-sm text-[var(--text-secondary)] border-t border-[var(--border-default)] pt-3">
-                <span className="font-semibold text-[var(--text-primary)]">Agreed timeline:</span> {project.payment_timeline}
-              </p>
-            )}
-          </section>
-        </div>
-      )}
+                ))}
+              </div>
+              {project.payment_timeline && (
+                <p className="text-sm text-[var(--text-secondary)] border-t border-[var(--border-default)] pt-3">
+                  <span className="font-semibold text-[var(--text-primary)]">Agreed timeline:</span> {project.payment_timeline}
+                </p>
+              )}
+            </section>
+          </div>
+        );
+      })()}
     </div>
   );
 }

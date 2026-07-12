@@ -98,7 +98,8 @@ export default function EditTaskPage() {
   const [requirements, setRequirements] = useState("");
 
   // Pay & capacity
-  const [payPerTask, setPayPerTask] = useState("");
+  const [payInr, setPayInr]               = useState("");
+  const [nexcoinPerInr, setNexcoinPerInr] = useState(12.5);
   const [totalSlots, setTotalSlots] = useState("");
   const [deadline, setDeadline]     = useState("");
 
@@ -167,7 +168,13 @@ export default function EditTaskPage() {
     setQuizQuestions((prev) => prev.map((q, j) => j === i ? { ...q, [key]: val } : q));
   }
 
-  // ── Load ─────────────────────────────────────────────────────────────────────
+  // ── Load nexcoin rate ────────────────────────────────────────────────────────
+  useEffect(() => {
+    supabase.from("platform_settings").select("value").eq("key", "nexcoin_per_inr").single()
+      .then(({ data }) => { if (data?.value) setNexcoinPerInr(parseFloat(data.value as string)); });
+  }, []);
+
+  // ── Load task ─────────────────────────────────────────────────────────────────
   useEffect(() => {
     async function load() {
       const { data, error: fetchErr } = await supabase
@@ -183,7 +190,12 @@ export default function EditTaskPage() {
       setTaskStatus(data.status ?? "active");
       setDescription(data.description ?? "");
       setRequirements(data.requirements ?? "");
-      setPayPerTask(data.pay_per_task != null ? String(data.pay_per_task) : "");
+      // Prefer stored INR; fall back to back-converting from NC
+      setPayInr(data.pay_per_task_inr != null
+        ? String(data.pay_per_task_inr)
+        : data.pay_per_task != null
+          ? String(Math.round((data.pay_per_task as number) / nexcoinPerInr * 100) / 100)
+          : "");
       setTotalSlots(data.total_slots != null ? String(data.total_slots) : "");
       setDeadline(data.deadline ? data.deadline.split("T")[0] : "");
       setAssignmentReq(data.assignment_required ?? false);
@@ -247,7 +259,8 @@ export default function EditTaskPage() {
       status:                   taskStatus,
       description:              description.trim(),
       requirements:             requirements.trim() || null,
-      pay_per_task:             payPerTask ? parseFloat(payPerTask) : null,
+      pay_per_task:             payInr ? Math.round(parseFloat(payInr) * nexcoinPerInr) : null,
+      pay_per_task_inr:         payInr ? parseFloat(payInr) : null,
       total_slots:              totalSlots ? parseInt(totalSlots) : null,
       deadline:                 deadline || null,
       assignment_required:      assignmentReq,
@@ -339,9 +352,14 @@ export default function EditTaskPage() {
           <h2 className="font-bold text-[var(--text-primary)]">Pay & Capacity</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
             <div>
-              <label className={labelClass}>Coins Per Task</label>
-              <input type="number" value={payPerTask} onChange={(e) => setPayPerTask(e.target.value)}
-                min={1} placeholder="e.g. 50" className={inputClass} />
+              <label className={labelClass}>Pay per task (₹ INR)</label>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-[var(--text-muted)] pointer-events-none select-none">₹</span>
+                <input type="number" value={payInr} onChange={(e) => setPayInr(e.target.value)}
+                  min={1} step="0.01" placeholder="e.g. 100"
+                  className={`${inputClass} pl-7`} />
+              </div>
+              <p className="text-xs text-[var(--text-muted)] mt-1">Rate: 1 ₹ = {nexcoinPerInr} NC</p>
             </div>
             <div>
               <label className={labelClass}>Total Slots</label>
@@ -350,7 +368,7 @@ export default function EditTaskPage() {
             </div>
           </div>
 
-          <PayoutBreakdown gross={parseFloat(payPerTask) || 0} />
+          <PayoutBreakdown inrAmount={parseFloat(payInr) || 0} nexcoinPerInr={nexcoinPerInr} />
 
           <div>
             <label className={labelClass}>Deadline</label>

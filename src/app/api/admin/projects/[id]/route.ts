@@ -29,7 +29,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   // Task stats for this project
   const { data: tasks } = await ctx.admin
     .from("tasks")
-    .select("id, title, task_type, status, pay_per_task, total_slots, filled_slots, drive_sheet_id")
+    .select("id, title, task_type, status, pay_per_task, pay_per_task_inr, total_slots, filled_slots, drive_sheet_id")
     .eq("project_id", id)
     .is("deleted_at", null);
 
@@ -86,7 +86,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   const allowed = [
     "name", "client_name", "description", "project_type", "status",
     "start_date", "deadline", "payment_timeline", "total_budget_nc",
-    "client_payment_amount", "client_payment_received", "client_payment_received_at",
+    "client_payment_amount", "client_payment_inr",
+    "client_payment_received", "client_payment_received_at",
     "internal_notes",
   ];
   const updates: Record<string, unknown> = {};

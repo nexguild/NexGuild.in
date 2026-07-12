@@ -35,13 +35,14 @@ export async function POST(req: NextRequest) {
       terms, steps,
       assignment_instructions, assignment_questions, assignment_passing_score,
       required_level, xp_reward,
-      status, project_id,
+      status, project_id, pay_per_task_inr,
     } = body as {
       title: string;
       task_type: string;
       description: string;
       requirements?: string;
       pay_per_task?: number;
+      pay_per_task_inr?: number;
       total_slots?: number;
       deadline?: string;
       assignment_required?: boolean;
@@ -76,6 +77,7 @@ export async function POST(req: NextRequest) {
         description: description.trim(),
         requirements: requirements?.trim() || null,
         pay_per_task: pay_per_task ?? null,
+        pay_per_task_inr: pay_per_task_inr ?? null,
         total_slots: total_slots ?? null,
         deadline: deadline || null,
         assignment_required: assignment_required ?? false,

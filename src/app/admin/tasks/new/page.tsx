@@ -103,7 +103,8 @@ export default function PostNewTaskPage() {
   const [requirements, setRequirements] = useState("");
 
   // Pay & capacity
-  const [payPerTask, setPayPerTask]     = useState("");
+  const [payInr, setPayInr]             = useState("");
+  const [nexcoinPerInr, setNexcoinPerInr] = useState(12.5);
   const [totalSlots, setTotalSlots]     = useState("");
   const [deadline, setDeadline]         = useState("");
 
@@ -150,19 +151,21 @@ export default function PostNewTaskPage() {
     });
   }, []);
 
-  // Load SLA defaults from platform_settings
+  // Load platform settings (SLA defaults + nexcoin rate)
   useEffect(() => {
     supabase
       .from("platform_settings")
       .select("key, value")
-      .in("key", ["submission_review_sla", "payment_after_approval_sla"])
+      .in("key", ["submission_review_sla", "payment_after_approval_sla", "nexcoin_per_inr"])
       .then(({ data }) => {
         if (!data) return;
         const rows = data as { key: string; value: string }[];
         const reviewSLA  = rows.find((r) => r.key === "submission_review_sla")?.value;
         const paymentSLA = rows.find((r) => r.key === "payment_after_approval_sla")?.value;
+        const ncRate     = rows.find((r) => r.key === "nexcoin_per_inr")?.value;
         if (reviewSLA)  setValidationTime(reviewSLA);
         if (paymentSLA) setPaymentTime(paymentSLA);
+        if (ncRate)     setNexcoinPerInr(parseFloat(ncRate));
       });
   }, []);
 
@@ -238,7 +241,8 @@ export default function PostNewTaskPage() {
         task_type:                   taskType,
         description:                 description.trim(),
         requirements:                requirements.trim() || null,
-        pay_per_task:                payPerTask ? parseFloat(payPerTask) : null,
+        pay_per_task:                payInr ? Math.round(parseFloat(payInr) * nexcoinPerInr) : null,
+        pay_per_task_inr:            payInr ? parseFloat(payInr) : null,
         total_slots:                 totalSlots ? parseInt(totalSlots) : null,
         deadline:                    deadline || null,
         assignment_required:         assignmentReq,
@@ -337,9 +341,14 @@ export default function PostNewTaskPage() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
             <div>
-              <label className={labelClass}>Coins Per Task</label>
-              <input type="number" value={payPerTask} onChange={(e) => setPayPerTask(e.target.value)}
-                min={1} placeholder="e.g. 50" className={inputClass} />
+              <label className={labelClass}>Pay per task (₹ INR)</label>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-[var(--text-muted)] pointer-events-none select-none">₹</span>
+                <input type="number" value={payInr} onChange={(e) => setPayInr(e.target.value)}
+                  min={1} step="0.01" placeholder="e.g. 100"
+                  className={`${inputClass} pl-7`} />
+              </div>
+              <p className="text-xs text-[var(--text-muted)] mt-1">Rate: 1 ₹ = {nexcoinPerInr} NC</p>
             </div>
             <div>
               <label className={labelClass}>Total Slots</label>
@@ -348,7 +357,7 @@ export default function PostNewTaskPage() {
             </div>
           </div>
 
-          <PayoutBreakdown gross={parseFloat(payPerTask) || 0} />
+          <PayoutBreakdown inrAmount={parseFloat(payInr) || 0} nexcoinPerInr={nexcoinPerInr} />
 
           <div>
             <label className={labelClass}>Deadline</label>

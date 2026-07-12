@@ -1,51 +1,68 @@
+import { NexCoinIcon } from "@/components/ui/nexcoin-icon";
+
 interface PayoutBreakdownProps {
-  gross: number;
+  inrAmount: number;
+  nexcoinPerInr: number;
 }
 
-const INR_PER_NC = 1 / 12.5; // 12.5 NC = ₹1
+export function PayoutBreakdown({ inrAmount, nexcoinPerInr }: PayoutBreakdownProps) {
+  if (!inrAmount || inrAmount <= 0 || !nexcoinPerInr) return null;
 
-export function PayoutBreakdown({ gross }: PayoutBreakdownProps) {
-  if (!gross || gross <= 0) return null;
-
+  const gross       = Math.round(inrAmount * nexcoinPerInr);
   const contributor = Math.floor(gross * 0.66);
   const nexleader   = Math.floor(gross * 0.10);
   const platform    = gross - contributor - nexleader;
-  const inrValue    = Math.floor(contributor * INR_PER_NC);
 
   return (
-    <div className="rounded-lg p-3.5 space-y-2.5 text-xs" style={{
+    <div className="rounded-lg p-4 space-y-3 text-sm" style={{
       background: "var(--surface-subtle)",
       border: "1px solid var(--border-default)",
     }}>
-      <p className="font-bold text-[var(--text-primary)] flex items-center gap-1.5">
-        💰 Payout Breakdown
-      </p>
+      {/* Header */}
+      <div className="flex items-center gap-2 pb-2.5" style={{ borderBottom: "1px solid var(--border-default)" }}>
+        <span className="text-base">💰</span>
+        <span className="font-bold text-[var(--text-primary)]">
+          ₹{inrAmount.toLocaleString("en-IN")} = <span className="text-amber-400">{gross.toLocaleString()} NC</span>
+        </span>
+        <span className="text-xs text-[var(--text-muted)]">(gross)</span>
+      </div>
 
-      <div className="space-y-1.5">
+      {/* Breakdown rows */}
+      <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <span className="font-semibold" style={{ color: "#02b491" }}>Contributor receives</span>
-          <span className="font-bold" style={{ color: "#02b491" }}>{contributor} NC <span className="font-normal opacity-70">(66%)</span></span>
+          <span className="flex items-center gap-1.5 text-[var(--text-secondary)]">
+            <span>👤</span> Contributor receives
+          </span>
+          <span className="flex items-center gap-1 font-bold" style={{ color: "#02b491" }}>
+            <NexCoinIcon size={12} /> {contributor.toLocaleString()} NC
+            <span className="font-normal text-[var(--text-muted)] text-xs">(66%)</span>
+          </span>
         </div>
-        <div className="flex items-center justify-between text-[var(--text-secondary)]">
-          <span>NexLeader commission</span>
-          <span className="font-semibold text-[var(--text-primary)]">{nexleader} NC <span className="font-normal text-[var(--text-muted)]">(10%)</span></span>
+        <div className="flex items-center justify-between">
+          <span className="flex items-center gap-1.5 text-[var(--text-secondary)]">
+            <span>👑</span> NexLeader commission
+          </span>
+          <span className="flex items-center gap-1 font-semibold text-[var(--text-primary)]">
+            <NexCoinIcon size={12} /> {nexleader.toLocaleString()} NC
+            <span className="font-normal text-[var(--text-muted)] text-xs">(10%)</span>
+          </span>
         </div>
-        <div className="flex items-center justify-between text-[var(--text-secondary)]">
-          <span>Platform</span>
-          <span className="font-semibold text-[var(--text-primary)]">{platform} NC <span className="font-normal text-[var(--text-muted)]">(24%)</span></span>
-        </div>
-        <div className="border-t pt-2" style={{ borderColor: "var(--border-default)" }}>
-          <div className="flex items-center justify-between text-[var(--text-secondary)]">
-            <span>≈ ₹ value for contributor</span>
-            <span className="font-semibold text-[var(--text-primary)]">₹{inrValue}</span>
-          </div>
+        <div className="flex items-center justify-between">
+          <span className="flex items-center gap-1.5 text-[var(--text-secondary)]">
+            <span>🏛️</span> Platform cut
+          </span>
+          <span className="flex items-center gap-1 font-semibold text-[var(--text-primary)]">
+            <NexCoinIcon size={12} /> {platform.toLocaleString()} NC
+            <span className="font-normal text-[var(--text-muted)] text-xs">(24%)</span>
+          </span>
         </div>
       </div>
 
-      <p className="text-[var(--text-muted)] leading-relaxed pt-0.5" style={{ borderTop: "1px dashed var(--border-default)", paddingTop: "0.5rem" }}>
-        <span className="font-semibold text-[var(--text-secondary)]">Tip:</span> Want contributor to receive a specific amount?
-        Enter <span className="font-mono font-semibold text-[var(--text-primary)]">[target ÷ 0.66]</span> as the gross amount.
-        E.g. for 100 NC to contributor, enter <span className="font-mono font-semibold text-[var(--text-primary)]">152</span>.
+      <p className="text-xs text-[var(--text-muted)] pt-1" style={{ borderTop: "1px dashed var(--border-default)" }}>
+        <span className="font-semibold text-[var(--text-secondary)]">Stored in DB:</span>{" "}
+        <span className="font-mono">{gross.toLocaleString()} NC</span> as{" "}
+        <code className="text-xs bg-[var(--surface-card)] px-1 py-0.5 rounded">pay_per_task</code>.
+        Rate: 1 ₹ = {nexcoinPerInr} NC.
       </p>
     </div>
   );

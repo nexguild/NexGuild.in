@@ -14,6 +14,7 @@ interface Task {
   title: string;
   task_type: string | null;
   pay_per_task: number | null;
+  pay_per_task_inr: number | null;
   total_slots: number | null;
   filled_slots: number | null;
   status: string;
@@ -56,7 +57,7 @@ export default function AdminTasksPage() {
 
       const { data } = await supabase
         .from("tasks")
-        .select("id, title, task_type, pay_per_task, total_slots, filled_slots, status, created_at, drive_sheet_id")
+        .select("id, title, task_type, pay_per_task, pay_per_task_inr, total_slots, filled_slots, status, created_at, drive_sheet_id")
         .is("deleted_at", null)
         .order("created_at", { ascending: false });
       setTasks(data ?? []);
@@ -227,10 +228,14 @@ export default function AdminTasksPage() {
                       </td>
                       <td className="px-4 py-3 text-[var(--text-secondary)] whitespace-nowrap">{task.task_type ?? "—"}</td>
                       <td className="px-4 py-3 whitespace-nowrap">
-                        <span className="text-[var(--brand-500)] font-medium">{task.pay_per_task ?? "—"}</span>
+                        {task.pay_per_task_inr != null ? (
+                          <span className="font-semibold text-[var(--text-primary)]">₹{task.pay_per_task_inr.toLocaleString("en-IN")}</span>
+                        ) : (
+                          <span className="text-[var(--brand-500)] font-medium">{task.pay_per_task ?? "—"} NC</span>
+                        )}
                         {task.pay_per_task != null && (
                           <span className="block text-[10px] text-[var(--text-muted)] leading-tight mt-0.5">
-                            Contributor gets {Math.floor(task.pay_per_task * 0.66)} NC
+                            {Math.floor(task.pay_per_task * 0.66)} NC to contributor
                           </span>
                         )}
                       </td>

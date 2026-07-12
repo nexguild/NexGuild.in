@@ -27,32 +27,41 @@ export async function PATCH(
   const user  = await requireAdmin(token);
   if (!user) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
-  const { status } = await req.json() as { status: string };
-  if (!status) return NextResponse.json({ error: "status required" }, { status: 400 });
+  const body = await req.json() as {
+    status?: string; project_id?: string | null;
+    pay_per_task?: number | null; pay_per_task_inr?: number | null;
+  };
 
-  // Fetch current task to detect draft → active transition
-  const { data: task } = await admin
-    .from("tasks")
-    .select("id, title, task_type, pay_per_task, total_slots, status, is_private")
-    .eq("id", taskId)
-    .is("deleted_at", null)
-    .single();
+  const ALLOWED_KEYS = ["status", "project_id", "pay_per_task", "pay_per_task_inr"];
+  const updates: Record<string, unknown> = {};
+  for (const key of ALLOWED_KEYS) {
+    if (key in body) updates[key] = body[key as keyof typeof body];
+  }
+  if (Object.keys(updates).length === 0) {
+    return NextResponse.json({ error: "No valid fields to update." }, { status: 400 });
+  }
 
-  if (!task) return NextResponse.json({ error: "Task not found" }, { status: 404 });
+  type TaskRow = { id: string; title: string; task_type: string | null; pay_per_task: number | null; total_slots: number | null; status: string; is_private: boolean | null };
 
-  const prevStatus = (task as { status: string }).status;
-  const isPrivate  = (task as { is_private: boolean | null }).is_private ?? false;
+  // Need current task state only when status changes (for email blast logic)
+  let prevTask: TaskRow | null = null;
+  if ("status" in updates) {
+    const { data } = await admin
+      .from("tasks")
+      .select("id, title, task_type, pay_per_task, total_slots, status, is_private")
+      .eq("id", taskId)
+      .is("deleted_at", null)
+      .single();
+    prevTask = data as TaskRow | null;
+    if (!prevTask) return NextResponse.json({ error: "Task not found" }, { status: 404 });
+  }
 
-  const { error: updateErr } = await admin
-    .from("tasks")
-    .update({ status })
-    .eq("id", taskId);
-
+  const { error: updateErr } = await admin.from("tasks").update(updates).eq("id", taskId);
   if (updateErr) return NextResponse.json({ error: updateErr.message }, { status: 500 });
 
-  // Send contributor email blast only when publishing a draft (and not private)
-  if (prevStatus === "draft" && status === "active" && !isPrivate) {
-    sendNewTaskEmails(task as typeof task).catch((err) =>
+  // Email blast when publishing draft → active
+  if (prevTask && updates.status === "active" && prevTask.status === "draft" && !prevTask.is_private) {
+    sendNewTaskEmails(prevTask).catch((err) =>
       console.error("[tasks/[id]] publish email blast failed:", err)
     );
   }
