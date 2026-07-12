@@ -6,7 +6,7 @@ import Link from "next/link";
 import {
   ArrowLeft, Lock, CheckCircle2, ChevronDown,
   Upload, X, Loader2, Clock, Users, AlertCircle,
-  FileText, ExternalLink, Send, CreditCard,
+  FileText, ExternalLink, Send, CreditCard, ListChecks, Eye, Trophy,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { NexCoinIcon } from "@/components/ui/nexcoin-icon";
@@ -1009,33 +1009,6 @@ export default function TaskWorkPage() {
           </div>
         )}
 
-        {/* Progress card (steps tasks) */}
-        {hasSteps && (
-          <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
-            <div className="flex items-center justify-between mb-3">
-              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Progress</p>
-              <span className="text-xs font-bold text-indigo-600">{Math.round(progressPct)}%</span>
-            </div>
-            <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100 mb-2">
-              <div
-                className="h-full rounded-full transition-all duration-700"
-                style={{ width: `${progressPct}%`, background: "linear-gradient(90deg, #6366f1, #14b8a6)" }}
-              />
-            </div>
-            <p className="text-xs text-slate-500">{completedCount} of {steps.length} stages complete</p>
-            {allDone && (
-              <button
-                onClick={finalSubmit}
-                disabled={finalSubmitting}
-                className="mt-3 w-full flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold text-white transition-all hover:opacity-90 active:scale-95 disabled:opacity-50"
-                style={{ background: "linear-gradient(135deg, #6366f1 0%, #14b8a6 100%)" }}
-              >
-                {finalSubmitting ? <><Loader2 className="h-4 w-4 animate-spin" /> Submitting…</> : <><Send className="h-4 w-4" /> Submit Task</>}
-              </button>
-            )}
-          </div>
-        )}
-
         {/* Task details card */}
         <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
           <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-3">Task Details</p>
@@ -1098,6 +1071,34 @@ export default function TaskWorkPage() {
           </div>
         </div>
 
+        {/* How-to guide card */}
+        <div className="rounded-2xl border border-indigo-100 bg-gradient-to-b from-indigo-50/60 to-white p-4 shadow-sm">
+          <div className="flex items-center gap-2 mb-4">
+            <div className="flex h-6 w-6 items-center justify-center rounded-lg flex-shrink-0" style={{ background: "linear-gradient(135deg, #6366f1 0%, #14b8a6 100%)" }}>
+              <ListChecks className="h-3.5 w-3.5 text-white" />
+            </div>
+            <p className="text-xs font-bold text-slate-700 uppercase tracking-wide">How to Complete</p>
+          </div>
+          <ol className="space-y-3.5">
+            {[
+              { icon: <Eye className="h-3.5 w-3.5 text-indigo-500" />, bg: "bg-indigo-50", title: "Read the task", desc: "Review all instructions and requirements carefully before starting." },
+              { icon: <ListChecks className="h-3.5 w-3.5 text-teal-500" />, bg: "bg-teal-50", title: hasSteps ? "Complete each stage" : "Do the work", desc: hasSteps ? "Unlock stages one by one — complete each in order." : "Follow the instructions and submit your notes or files." },
+              { icon: <Send className="h-3.5 w-3.5 text-amber-500" />, bg: "bg-amber-50", title: "Submit your work", desc: hasSteps ? "Once all stages are done, hit Submit Task in the footer." : "Use the form below to upload your work for review." },
+              { icon: <Trophy className="h-3.5 w-3.5 text-emerald-500" />, bg: "bg-emerald-50", title: "Earn NexCoins", desc: "After admin approval your NexCoins are credited instantly." },
+            ].map((step, i) => (
+              <li key={i} className="flex items-start gap-2.5">
+                <div className={`flex h-6 w-6 items-center justify-center rounded-lg flex-shrink-0 mt-0.5 ${step.bg}`}>
+                  {step.icon}
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs font-semibold text-slate-700 leading-tight">{step.title}</p>
+                  <p className="text-[11px] text-slate-400 leading-snug mt-0.5">{step.desc}</p>
+                </div>
+              </li>
+            ))}
+          </ol>
+        </div>
+
       </div>{/* end right panel */}
       </div>{/* end outer flex wrapper */}
 
@@ -1106,7 +1107,7 @@ export default function TaskWorkPage() {
         <div className="fixed bottom-0 left-0 right-0 lg:left-[240px] z-30 bg-white/95 backdrop-blur-md shadow-[0_-1px_0_0_rgba(99,102,241,0.12),0_-4px_16px_0_rgba(0,0,0,0.06)]">
           {/* Gradient accent line at top */}
           <div className="h-[2px] w-full" style={{ background: "linear-gradient(90deg, #6366f1, #14b8a6)" }} />
-          <div className="px-4 sm:px-6 py-3">
+          <div className="px-4 sm:px-6 py-3 lg:pr-[280px] xl:pr-[312px]">
             {allDone ? (
               /* All stages complete — single row: reward pill + submit button */
               <div className="flex items-center gap-3">
