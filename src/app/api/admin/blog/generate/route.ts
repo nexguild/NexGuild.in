@@ -13,6 +13,37 @@ async function verifyAdmin(req: NextRequest) {
   return true;
 }
 
+// ── Groq helper ────────────────────────────────────────────────────────────────
+async function groqChat(
+  groqKey: string,
+  messages: { role: "system" | "user" | "assistant"; content: string }[],
+  opts: { max_tokens?: number; temperature?: number; json?: boolean } = {},
+): Promise<string> {
+  const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${groqKey}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model: "llama-3.3-70b-versatile",
+      messages,
+      temperature: opts.temperature ?? 0.7,
+      max_tokens: opts.max_tokens ?? 512,
+      ...(opts.json ? { response_format: { type: "json_object" } } : {}),
+    }),
+  });
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`Groq API error: ${err}`);
+  }
+  const data = await res.json() as { choices?: { message?: { content?: string } }[] };
+  return data.choices?.[0]?.message?.content?.trim() ?? "";
+}
+
+// Strip surrounding quotes the model sometimes adds
+function stripQuotes(s: string): string {
+  return s.replace(/^["'`]+|["'`]+$/g, "").trim();
+}
+
+// ── System prompt ──────────────────────────────────────────────────────────────
 const SYSTEM_PROMPT = `You are an expert SEO content writer for NexGuild (nexguild.in), a global digital workforce community where contributors earn NexCoins by completing surveys and tasks, redeemable for Amazon, Flipkart, Google Play, and Zomato gift vouchers.
 
 Write a comprehensive, Google-friendly blog post following ALL these rules:
@@ -63,6 +94,7 @@ ADSENSE COMPATIBILITY:
 OUTPUT FORMAT (return valid JSON only, no markdown wrapping, no code fences):
 {"title":"SEO optimized title here 50-60 chars","slug":"url-slug-here","description":"Meta description exactly 150-155 characters — count carefully","category":"Remote Work","date":"YYYY-MM-DD","content":"Full markdown content here minimum 1400 words with ## headings"}`;
 
+// ── POST handler ───────────────────────────────────────────────────────────────
 export async function POST(req: NextRequest) {
   const ok = await verifyAdmin(req);
   if (!ok) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -76,48 +108,27 @@ export async function POST(req: NextRequest) {
   if (!topic?.trim()) return NextResponse.json({ error: "topic is required." }, { status: 400 });
 
   const today = new Date().toISOString().split("T")[0];
-
   const userPrompt = [
     `Topic: ${topic.trim()}`,
     keyword?.trim() ? `Target keyword: ${keyword.trim()}` : "",
-    angle?.trim() ? `Post angle: ${angle.trim()}` : "",
+    angle?.trim()   ? `Post angle: ${angle.trim()}`        : "",
     audience?.trim() ? `Target audience: ${audience.trim()}` : "",
     `Today's date: ${today}`,
     "",
     "Write the full blog post now. REMEMBER: minimum 1,400 words of content, title 50-60 chars, description 150-155 chars. Return ONLY valid JSON with no code fences.",
   ].filter(Boolean).join("\n");
 
-  const groqRes = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      "Authorization": `Bearer ${groqKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model: "llama-3.3-70b-versatile",
-      messages: [
-        { role: "system", content: SYSTEM_PROMPT },
-        { role: "user", content: userPrompt },
-      ],
-      temperature: 0.7,
-      max_tokens: 8000,
-      response_format: { type: "json_object" },
-    }),
-  });
-
-  if (!groqRes.ok) {
-    const err = await groqRes.text();
-    console.error("[blog/generate] Groq error:", err);
+  // ── Step 1: generate ────────────────────────────────────────────────────────
+  let raw: string;
+  try {
+    raw = await groqChat(groqKey, [
+      { role: "system", content: SYSTEM_PROMPT },
+      { role: "user",   content: userPrompt },
+    ], { max_tokens: 8000, json: true });
+  } catch (e) {
+    console.error("[blog/generate] initial call failed:", e);
     return NextResponse.json({ error: "Groq API error. Check your GROQ_API_KEY." }, { status: 502 });
   }
-
-  const groqData = await groqRes.json() as {
-    choices?: { message?: { content?: string } }[];
-    error?: { message?: string };
-  };
-
-  const raw = groqData.choices?.[0]?.message?.content ?? "";
-  if (!raw) return NextResponse.json({ error: "Empty response from Groq." }, { status: 502 });
 
   let parsed: Record<string, string>;
   try {
@@ -132,8 +143,70 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: `Missing fields: ${missing.join(", ")}`, parsed }, { status: 502 });
   }
 
-  // Sanitise slug
-  parsed.slug = parsed.slug.toLowerCase().replace(/[^a-z0-9-]/g, "-").replace(/-+/g, "-").replace(/^-+|-+$/g, "").slice(0, 60);
+  let { title, slug, description, content } = parsed;
 
-  return NextResponse.json({ ok: true, post: parsed });
+  // ── Step 2: fix title if too short ─────────────────────────────────────────
+  if (title.length < 50) {
+    console.log(`[blog/generate] title too short (${title.length} chars) — fixing`);
+    try {
+      const fixed = await groqChat(groqKey, [{
+        role: "user",
+        content: `Expand this blog post title to be between 50-60 characters. Keep the same meaning and keywords. Return ONLY the title text, nothing else — no quotes, no explanation.\n\nCurrent title (${title.length} chars): "${title}"\nTarget: 50-60 characters exactly.`,
+      }], { max_tokens: 120, temperature: 0.5 });
+      const candidate = stripQuotes(fixed);
+      if (candidate.length >= 45) title = candidate.slice(0, 65);
+    } catch (e) {
+      console.warn("[blog/generate] title fix call failed:", e);
+    }
+  }
+
+  // ── Step 3: fix description if out of range ─────────────────────────────────
+  if (description.length < 150 || description.length > 155) {
+    console.log(`[blog/generate] description out of range (${description.length} chars) — fixing`);
+    try {
+      const fixed = await groqChat(groqKey, [{
+        role: "user",
+        content: `Rewrite this meta description to be EXACTLY between 150-155 characters. Include the main keyword naturally. Return ONLY the meta description text, nothing else — no quotes, no explanation.\n\nCurrent (${description.length} chars): "${description}"\nTarget: 150-155 characters exactly.`,
+      }], { max_tokens: 220, temperature: 0.5 });
+      const candidate = stripQuotes(fixed);
+      // Accept if it's closer to target than the original
+      if (Math.abs(candidate.length - 152) < Math.abs(description.length - 152)) {
+        description = candidate;
+      }
+    } catch (e) {
+      console.warn("[blog/generate] description fix call failed:", e);
+    }
+  }
+
+  // ── Step 4: expand content if under word count ──────────────────────────────
+  const wordCount = content.trim().split(/\s+/).filter(Boolean).length;
+  if (wordCount < 1200) {
+    console.log(`[blog/generate] content too short (${wordCount} words) — expanding`);
+    try {
+      const expanded = await groqChat(groqKey, [{
+        role: "user",
+        content: `This blog post is only ${wordCount} words — it needs to be at least 1,400 words. Expand it by adding more detail, practical examples, and depth to existing sections. Do NOT add new H2 headings — deepen what is already there. Keep all existing markdown headings and structure. Return the complete expanded markdown content only, no JSON wrapper, no explanation.\n\n${content}`,
+      }], { max_tokens: 4000, temperature: 0.6 });
+      const candidate = expanded.trim();
+      // Only replace if expansion is actually longer
+      if (candidate.split(/\s+/).length > wordCount) {
+        content = candidate;
+      }
+    } catch (e) {
+      console.warn("[blog/generate] content expansion call failed:", e);
+    }
+  }
+
+  // ── Sanitise slug ───────────────────────────────────────────────────────────
+  slug = slug.toLowerCase().replace(/[^a-z0-9-]/g, "-").replace(/-+/g, "-").replace(/^-+|-+$/g, "").slice(0, 60);
+
+  return NextResponse.json({
+    ok: true,
+    post: { ...parsed, title, slug, description, content },
+    _debug: {
+      titleLen:  title.length,
+      descLen:   description.length,
+      wordCount: content.trim().split(/\s+/).filter(Boolean).length,
+    },
+  });
 }
