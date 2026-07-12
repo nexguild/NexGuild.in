@@ -35,6 +35,8 @@ interface Task {
   validation_time: string | null;
   payment_time: string | null;
   steps: TaskStep[] | null;
+  required_task_ids: string[] | null;
+  excluded_task_ids: string[] | null;
 }
 
 interface ProfileData {
@@ -82,6 +84,7 @@ function getAccentColor(taskType: string | null): string {
 export default function OpportunitiesPage() {
   const router = useRouter();
   const [tasks, setTasks]                 = useState<Task[]>([]);
+  const [approvedTaskIds, setApprovedTaskIds] = useState<Set<string>>(new Set());
   const [submissionMap, setSubmissionMap] = useState<Record<string, string>>({});
   const [assignmentMap, setAssignmentMap] = useState<Record<string, string>>({});
   const [profile, setProfile]             = useState<ProfileData>({ languages: [], skills: [], level: 1 });
@@ -113,7 +116,7 @@ export default function OpportunitiesPage() {
       const [tasksRes, subsRes, assignRes, profileRes] = await Promise.all([
         supabase.from("tasks").select("*").eq("status", "active").or("is_private.eq.false,is_private.is.null").is("deleted_at", null).order("created_at", { ascending: false }),
         user
-          ? supabase.from("submissions").select("task_id, status").eq("contributor_id", user.id)
+          ? supabase.from("submissions").select("task_id, status").eq("contributor_id", user.id).neq("status", "rejected")
           : Promise.resolve({ data: [] }),
         user
           ? supabase.from("assignments").select("task_id, status").eq("contributor_id", user.id)
@@ -126,10 +129,13 @@ export default function OpportunitiesPage() {
       setTasks((tasksRes.data ?? []) as Task[]);
 
       const map: Record<string, string> = {};
+      const approvedSet = new Set<string>();
       for (const s of (subsRes.data ?? []) as { task_id: string; status: string }[]) {
         map[s.task_id] = s.status;
+        if (s.status === "approved") approvedSet.add(s.task_id);
       }
       setSubmissionMap(map);
+      setApprovedTaskIds(approvedSet);
 
       const amap: Record<string, string> = {};
       for (const a of (assignRes.data ?? []) as { task_id: string; status: string }[]) {
@@ -180,6 +186,14 @@ export default function OpportunitiesPage() {
       if (showOnlyQualified) {
         const needed = t.required_level ?? 1;
         if (userLevel < needed) return false;
+      }
+      // Eligibility: required tasks (all must be approved)
+      if (userId && t.required_task_ids && t.required_task_ids.length > 0) {
+        if (!t.required_task_ids.every((rid) => approvedTaskIds.has(rid))) return false;
+      }
+      // Eligibility: excluded tasks (none must be approved)
+      if (userId && t.excluded_task_ids && t.excluded_task_ids.length > 0) {
+        if (t.excluded_task_ids.some((eid) => approvedTaskIds.has(eid))) return false;
       }
       const pay = t.pay_per_task ?? 0;
       if (payoutFilter === "under10"  && pay >= 10) return false;

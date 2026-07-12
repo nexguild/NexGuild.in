@@ -7,6 +7,7 @@ import {
   ArrowLeft, Lock, CheckCircle2, ChevronDown,
   Upload, X, Loader2, Clock, Users, AlertCircle,
   FileText, ExternalLink, Send, CreditCard, ListChecks, Eye, Trophy,
+  Calendar, Music, Code,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { NexCoinIcon } from "@/components/ui/nexcoin-icon";
@@ -29,6 +30,7 @@ interface Task {
   task_type: string | null;
   requirements: string | null;
   pay_per_task: number | null;
+  pay_per_unit_nc: number | null;
   total_slots: number | null;
   filled_slots: number | null;
   deadline: string | null;
@@ -38,6 +40,23 @@ interface Task {
   validation_time: string | null;
   payment_time: string | null;
   steps: TaskStep[] | null;
+  required_task_ids: string[] | null;
+  excluded_task_ids: string[] | null;
+  external_tool_url: string | null;
+  external_tool_name: string | null;
+  external_tool_instructions: string | null;
+  external_proof_type: string | null;
+  project_id: string | null;
+}
+
+interface DailyWorkItem {
+  id: string;
+  file_url: string | null;
+  file_name: string | null;
+  status: string;
+  submission_content: string | null;
+  submitted_at: string | null;
+  coins_awarded: number | null;
 }
 
 interface StepSubmission {
@@ -105,6 +124,23 @@ export default function TaskWorkPage() {
   const [classicSubmitting, setClassicSubmitting] = useState(false);
   const [classicError, setClassicError]         = useState<string | null>(null);
 
+  // External tool proof state
+  const [extCode, setExtCode]           = useState("");
+  const [extFile, setExtFile]           = useState<File | null>(null);
+  const [extSubmitting, setExtSubmitting] = useState(false);
+  const [extError, setExtError]         = useState<string | null>(null);
+
+  // Daily work state
+  const [isDailyTarget, setIsDailyTarget]         = useState(false);
+  const [dailyQuota, setDailyQuota]               = useState(10);
+  const [dailyUnitName, setDailyUnitName]         = useState("item");
+  const [dailyItems, setDailyItems]               = useState<DailyWorkItem[]>([]);
+  const [dailyLoading, setDailyLoading]           = useState(false);
+  const [activeItemId, setActiveItemId]           = useState<string | null>(null);
+  const [itemContent, setItemContent]             = useState<Record<string, string>>({});
+  const [submittingItem, setSubmittingItem]       = useState<string | null>(null);
+  const [itemError, setItemError]                 = useState<Record<string, string>>({});
+
   const [done, setDone] = useState(false);
   const [stageSuccessModal, setStageSuccessModal] = useState(false);
   const [now, setNow]   = useState(() => new Date());
@@ -134,6 +170,64 @@ export default function TaskWorkPage() {
       if (!taskRes.data) { setPageError("Task not found."); setLoading(false); return; }
       const t = taskRes.data as Task;
       setTask(t);
+
+      // Eligibility gate
+      const hasRequired = (t.required_task_ids ?? []).length > 0;
+      const hasExcluded = (t.excluded_task_ids ?? []).length > 0;
+      if (hasRequired || hasExcluded) {
+        const allRuleIds = [...(t.required_task_ids ?? []), ...(t.excluded_task_ids ?? [])];
+        const { data: eligSubs } = await supabase
+          .from("submissions")
+          .select("task_id")
+          .eq("contributor_id", user.id)
+          .eq("status", "approved")
+          .in("task_id", allRuleIds);
+        const approvedSet = new Set((eligSubs ?? []).map((s: { task_id: string }) => s.task_id));
+        if (hasRequired) {
+          const missingRequired = (t.required_task_ids ?? []).filter((rid) => !approvedSet.has(rid));
+          if (missingRequired.length > 0) {
+            // Resolve task titles for the message
+            const { data: missingTasks } = await supabase
+              .from("tasks").select("id, title").in("id", missingRequired);
+            const names = (missingTasks ?? []) as { id: string; title: string }[];
+            const label = names.length > 0 ? names.map((n) => `"${n.title}"`).join(", ") : "a required task";
+            setPageError(`not_eligible:required:${label}`);
+            setLoading(false); return;
+          }
+        }
+        if (hasExcluded) {
+          const matchedExcluded = (t.excluded_task_ids ?? []).filter((eid) => approvedSet.has(eid));
+          if (matchedExcluded.length > 0) {
+            const { data: exclTasks } = await supabase
+              .from("tasks").select("id, title").in("id", matchedExcluded);
+            const names = (exclTasks ?? []) as { id: string; title: string }[];
+            const label = names.length > 0 ? names.map((n) => `"${n.title}"`).join(", ") : "a related task";
+            setPageError(`not_eligible:excluded:${label}`);
+            setLoading(false); return;
+          }
+        }
+      }
+
+      // Check if this is a daily target project
+      if (t.project_id) {
+        const { data: { session: sess } } = await supabase.auth.getSession();
+        const dwRes = await fetch(`/api/daily-work?taskId=${id}`, {
+          headers: { Authorization: `Bearer ${sess?.access_token ?? ""}` },
+        });
+        if (dwRes.ok) {
+          const dw = await dwRes.json() as {
+            isDailyTarget?: boolean; quota?: number; unitName?: string;
+            items?: DailyWorkItem[]; completedCount?: number;
+          };
+          if (dw.isDailyTarget) {
+            setIsDailyTarget(true);
+            setDailyQuota(dw.quota ?? 10);
+            setDailyUnitName(dw.unitName ?? "item");
+            setDailyItems(dw.items ?? []);
+            setDailyLoading(false);
+          }
+        }
+      }
 
       let sid: string | null    = subRes.data?.id ?? null;
       let sstatus: string | null = subRes.data?.status ?? null;
@@ -352,6 +446,82 @@ export default function TaskWorkPage() {
     });
   }
 
+  async function submitExternalTool(e: React.FormEvent) {
+    e.preventDefault();
+    if (!submissionId || !task) return;
+    const proofType = task.external_proof_type ?? "screenshot";
+    if ((proofType === "code" || proofType === "both") && !extCode.trim()) {
+      setExtError("Please enter your completion code."); return;
+    }
+    if ((proofType === "screenshot" || proofType === "both") && !extFile) {
+      setExtError("Please upload a screenshot of your completed work."); return;
+    }
+    setExtSubmitting(true);
+    setExtError(null);
+
+    const { data: { session: extSession } } = await supabase.auth.getSession();
+    let uploadedFile: FileItem | null = null;
+
+    if (extFile) {
+      const fd = new FormData();
+      fd.append("file", extFile);
+      const upRes = await fetch(`/api/tasks/${id}/upload-to-drive`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${extSession?.access_token ?? ""}` },
+        body: fd,
+      });
+      if (!upRes.ok) {
+        const errJson = await upRes.json().catch(() => ({})) as { error?: string };
+        setExtError(errJson.error ?? "Screenshot upload failed — please try again.");
+        setExtSubmitting(false); return;
+      }
+      const upJson = await upRes.json();
+      uploadedFile = { name: upJson.name ?? extFile.name, url: upJson.url, size: upJson.size ?? extFile.size };
+    }
+
+    const { error: updateErr } = await supabase.from("submissions").update({
+      notes: extCode.trim() || null,
+      files: uploadedFile ? [uploadedFile] : null,
+      status: "submitted",
+      submitted_at: new Date().toISOString(),
+    }).eq("id", submissionId);
+
+    if (updateErr) { setExtError(updateErr.message); setExtSubmitting(false); return; }
+    setDone(true);
+    setExtSubmitting(false);
+
+    if (extSession?.access_token) {
+      fetch("/api/submissions/notify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${extSession.access_token}` },
+        body: JSON.stringify({ taskId: id }),
+      }).catch(() => {});
+    }
+  }
+
+  async function submitDailyItem(itemId: string) {
+    const content = (itemContent[itemId] ?? "").trim();
+    if (!content) { setItemError((prev) => ({ ...prev, [itemId]: "Please enter your work output." })); return; }
+    setItemError((prev) => ({ ...prev, [itemId]: "" }));
+    setSubmittingItem(itemId);
+    const { data: { session } } = await supabase.auth.getSession();
+    const res = await fetch(`/api/daily-work/${itemId}/submit`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${session?.access_token ?? ""}` },
+      body: JSON.stringify({ content }),
+    });
+    if (res.ok) {
+      setDailyItems((prev) => prev.map((i) => i.id === itemId
+        ? { ...i, status: "submitted", submission_content: content, submitted_at: new Date().toISOString() }
+        : i));
+      setActiveItemId(null);
+    } else {
+      const d = await res.json().catch(() => ({})) as { error?: string };
+      setItemError((prev) => ({ ...prev, [itemId]: d.error ?? "Submission failed." }));
+    }
+    setSubmittingItem(null);
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-24">
@@ -361,6 +531,14 @@ export default function TaskWorkPage() {
   }
 
   if (pageError || !task) {
+    const isEligError = pageError?.startsWith("not_eligible:");
+    let eligTitle = "You are not eligible for this task.";
+    let eligBody  = "";
+    if (pageError?.startsWith("not_eligible:required:")) {
+      eligBody = `Required: Complete ${pageError.replace("not_eligible:required:", "")} first.`;
+    } else if (pageError?.startsWith("not_eligible:excluded:")) {
+      eligBody = `You already completed a related task that excludes you from this one: ${pageError.replace("not_eligible:excluded:", "")}.`;
+    }
     return (
       <div className="space-y-4 max-w-2xl">
         <Link
@@ -370,8 +548,26 @@ export default function TaskWorkPage() {
           <ArrowLeft className="h-4 w-4" /> Back
         </Link>
         <div className="rounded-2xl border border-slate-100 bg-white p-10 text-center shadow-sm">
-          <AlertCircle className="h-8 w-8 text-slate-400 mx-auto mb-3" />
-          <p className="font-semibold text-slate-700">{pageError ?? "Task not found"}</p>
+          {isEligError ? (
+            <>
+              <div className="h-14 w-14 rounded-full bg-amber-50 border border-amber-200 flex items-center justify-center mx-auto mb-4">
+                <Lock className="h-7 w-7 text-amber-500" />
+              </div>
+              <p className="text-lg font-bold text-slate-800 mb-2">{eligTitle}</p>
+              {eligBody && <p className="text-sm text-slate-500 max-w-xs mx-auto">{eligBody}</p>}
+              <Link
+                href="/dashboard/opportunities"
+                className="mt-6 inline-flex items-center gap-1.5 text-sm font-semibold text-teal-600 hover:text-teal-700 transition-colors"
+              >
+                Browse other tasks →
+              </Link>
+            </>
+          ) : (
+            <>
+              <AlertCircle className="h-8 w-8 text-slate-400 mx-auto mb-3" />
+              <p className="font-semibold text-slate-700">{pageError ?? "Task not found"}</p>
+            </>
+          )}
         </div>
       </div>
     );
@@ -415,10 +611,15 @@ export default function TaskWorkPage() {
     );
   }
 
-  const steps          = task.steps ?? [];
-  const hasSteps       = steps.length > 0;
-  const doneSet        = new Set(stepSubs.map((s) => s.step_index));
-  const completedCount = doneSet.size;
+  const steps            = task.steps ?? [];
+  const hasSteps         = steps.length > 0;
+  const isExternalTool   = task.task_type === "External Tool Task";
+
+  const dailyCompletedCount = dailyItems.filter((i) => ["submitted", "approved"].includes(i.status)).length;
+  const quotaReached        = isDailyTarget && dailyCompletedCount >= dailyQuota;
+  const dailyProgressPct    = isDailyTarget && dailyQuota > 0 ? Math.min(100, Math.round((dailyCompletedCount / dailyQuota) * 100)) : 0;
+  const doneSet             = new Set(stepSubs.map((s) => s.step_index));
+  const completedCount      = doneSet.size;
   const allDone        = hasSteps && completedCount >= steps.length;
   const progressPct    = hasSteps ? (completedCount / steps.length) * 100 : 0;
   const countdown      = formatCountdown(task.deadline, now);
@@ -670,8 +871,280 @@ export default function TaskWorkPage() {
           </div>
         )}
 
+        {/* ── EXTERNAL TOOL MODE ───────────────────────────────────── */}
+        {!hasSteps && isExternalTool && (
+          <div className="space-y-4">
+            {/* Info + open tool card */}
+            <div className="rounded-2xl border border-amber-200/60 bg-white p-5 shadow-sm space-y-4">
+              <div className="flex items-center gap-2">
+                <div className="h-8 w-8 rounded-lg bg-amber-100 flex items-center justify-center flex-shrink-0">
+                  <ExternalLink className="h-4 w-4 text-amber-600" />
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-slate-800">External Tool Task</p>
+                  <p className="text-xs text-slate-500">
+                    Complete the work in{task.external_tool_name ? ` ${task.external_tool_name}` : " the external tool"}, then submit proof below.
+                  </p>
+                </div>
+              </div>
+
+              {task.description && (
+                <p className="text-sm text-slate-600 leading-relaxed">{task.description}</p>
+              )}
+
+              {task.external_tool_instructions && (
+                <div className="rounded-xl bg-amber-50 border border-amber-100 p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <ListChecks className="h-4 w-4 text-amber-600" />
+                    <span className="text-sm font-bold text-slate-700">How to access the tool</span>
+                  </div>
+                  <p className="text-sm text-slate-600 whitespace-pre-wrap leading-relaxed">
+                    {task.external_tool_instructions}
+                  </p>
+                </div>
+              )}
+
+              {task.requirements && (
+                <div className="rounded-xl bg-indigo-50 border border-indigo-100 p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <FileText className="h-4 w-4 text-indigo-500" />
+                    <span className="text-sm font-bold text-slate-700">Additional Instructions</span>
+                  </div>
+                  <p className="text-sm text-slate-600 whitespace-pre-wrap leading-relaxed">{task.requirements}</p>
+                </div>
+              )}
+
+              {task.external_tool_url && (
+                <a
+                  href={task.external_tool_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-center gap-2 w-full py-3 rounded-xl font-bold text-sm transition-colors text-white"
+                  style={{ background: "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)" }}
+                >
+                  <ExternalLink className="h-4 w-4" />
+                  Open {task.external_tool_name || "External Tool"} →
+                </a>
+              )}
+            </div>
+
+            {/* Proof submission card */}
+            <div className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
+              <h2 className="font-bold text-slate-800 mb-1">Submit Proof of Completion</h2>
+              <p className="text-sm text-slate-400 mb-4">
+                {task.external_proof_type === "code"       ? "Enter the completion code you received from the tool." :
+                 task.external_proof_type === "both"       ? "Upload a screenshot AND enter your completion code." :
+                                                             "Upload a screenshot showing your completed work."}
+              </p>
+              <form onSubmit={submitExternalTool} className="space-y-4">
+                {/* Screenshot upload */}
+                {(task.external_proof_type === "screenshot" || task.external_proof_type === "both" || !task.external_proof_type) && (
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-1.5">
+                      Screenshot{task.external_proof_type === "both" ? " (required)" : ""}
+                    </label>
+                    {extFile ? (
+                      <div className="flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <Eye className="h-4 w-4 text-slate-400 flex-shrink-0" />
+                          <span className="text-sm text-slate-700 truncate">{extFile.name}</span>
+                          <span className="text-xs text-slate-400 flex-shrink-0">({(extFile.size / 1024).toFixed(0)} KB)</span>
+                        </div>
+                        <button type="button" onClick={() => setExtFile(null)} className="text-slate-400 hover:text-red-400 transition-colors flex-shrink-0">
+                          <X className="h-4 w-4" />
+                        </button>
+                      </div>
+                    ) : (
+                      <label
+                        htmlFor="ext-screenshot"
+                        className="flex flex-col items-center gap-2 border-2 border-dashed border-slate-200 rounded-xl p-6 cursor-pointer hover:border-amber-400 transition-colors text-center"
+                      >
+                        <Upload className="h-6 w-6 text-slate-400" />
+                        <span className="text-sm text-slate-500">Click to upload screenshot</span>
+                        <span className="text-xs text-slate-400">PNG, JPG, WebP — max 10 MB</span>
+                        <input
+                          id="ext-screenshot"
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => { const f = e.target.files?.[0]; if (f) setExtFile(f); e.target.value = ""; }}
+                        />
+                      </label>
+                    )}
+                  </div>
+                )}
+
+                {/* Completion code */}
+                {(task.external_proof_type === "code" || task.external_proof_type === "both") && (
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-1.5">
+                      Completion Code{task.external_proof_type === "both" ? " (required)" : ""}
+                    </label>
+                    <input
+                      type="text"
+                      value={extCode}
+                      onChange={(e) => setExtCode(e.target.value)}
+                      placeholder="Paste your completion code here…"
+                      className="w-full h-10 px-3 rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-300 focus:border-amber-300 transition-colors font-mono"
+                    />
+                  </div>
+                )}
+
+                {extError && (
+                  <p className="text-sm text-red-500 bg-red-50 border border-red-100 px-3 py-2 rounded-lg">{extError}</p>
+                )}
+
+                <div className="flex gap-3 flex-wrap">
+                  <Button type="submit" disabled={extSubmitting}
+                    style={{ background: extSubmitting ? undefined : "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)" }}>
+                    {extSubmitting ? <><Loader2 className="h-4 w-4 animate-spin" /> Submitting…</> : "Submit Proof →"}
+                  </Button>
+                  <Button type="button" variant="ghost" asChild>
+                    <Link href="/dashboard/tasks">Cancel</Link>
+                  </Button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* ── DAILY TARGET MODE ────────────────────────────────────── */}
+        {isDailyTarget && (
+          <div className="space-y-4">
+            {/* Progress card */}
+            <div className="rounded-2xl border border-slate-100 bg-white px-5 py-4 shadow-sm">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4 text-indigo-500" />
+                  <span className="text-sm font-bold text-slate-700">Today&apos;s Work</span>
+                </div>
+                <span className="text-sm font-bold text-indigo-600">{dailyCompletedCount}/{dailyQuota} {dailyUnitName}s</span>
+              </div>
+              <div className="h-3 w-full rounded-full bg-slate-100 overflow-hidden">
+                <div className="h-full rounded-full transition-all duration-700"
+                  style={{ width: `${dailyProgressPct}%`, background: "linear-gradient(90deg, #6366f1, #14b8a6)" }} />
+              </div>
+              {quotaReached && (
+                <div className="mt-3 flex items-center gap-2 text-sm font-semibold text-teal-600">
+                  <CheckCircle2 className="h-4 w-4" /> You&apos;ve completed today&apos;s quota! Come back tomorrow for more work.
+                </div>
+              )}
+            </div>
+
+            {/* No items yet */}
+            {dailyItems.length === 0 && !dailyLoading && (
+              <div className="rounded-2xl border border-slate-100 bg-white py-12 text-center shadow-sm">
+                <Clock className="h-8 w-8 text-slate-300 mx-auto mb-3" />
+                <p className="text-sm font-semibold text-slate-700 mb-1">No files assigned yet for today</p>
+                <p className="text-xs text-slate-400">Check back later — admin uploads files daily.</p>
+              </div>
+            )}
+
+            {/* Work items */}
+            {dailyItems.map((item, idx) => {
+              const isSubmitted = ["submitted", "approved"].includes(item.status);
+              const isActive    = activeItemId === item.id;
+              const isAudio     = !!(item.file_url && /\.(mp3|wav|ogg|m4a|flac|aac)$/i.test(item.file_url));
+
+              return (
+                <div key={item.id} className={`rounded-2xl border bg-white shadow-sm overflow-hidden ${
+                  isSubmitted ? "border-green-200/60" : "border-slate-100"
+                }`}>
+                  {/* Item header */}
+                  <div className={`flex items-center gap-3 px-5 py-3 ${isSubmitted ? "bg-green-50" : "bg-slate-50"}`}>
+                    <div className={`h-7 w-7 rounded-full flex items-center justify-center text-xs font-bold ${
+                      isSubmitted ? "bg-green-100 text-green-600" : "bg-slate-200 text-slate-600"
+                    }`}>{idx + 1}</div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-slate-700 truncate">
+                        {item.file_name ?? `${dailyUnitName} ${idx + 1}`}
+                      </p>
+                      {isSubmitted && (
+                        <p className="text-xs text-green-600 font-medium">
+                          {item.status === "approved" ? "✓ Approved" : "✓ Submitted for review"}
+                        </p>
+                      )}
+                    </div>
+                    {item.status === "approved" && item.coins_awarded != null && (
+                      <span className="flex items-center gap-1 text-xs font-bold text-amber-500">
+                        <NexCoinIcon size={11} /> +{item.coins_awarded}
+                      </span>
+                    )}
+                    {!isSubmitted && (
+                      <button
+                        onClick={() => setActiveItemId(isActive ? null : item.id)}
+                        className="text-xs font-semibold text-indigo-600 hover:text-indigo-700"
+                      >
+                        {isActive ? "Collapse ▲" : "Work on this ▼"}
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Expanded work area */}
+                  {isActive && !isSubmitted && (
+                    <div className="px-5 py-4 space-y-3 border-t border-slate-100">
+                      {/* File viewer */}
+                      {item.file_url && (
+                        <div className="rounded-xl border border-slate-100 bg-slate-50 p-3">
+                          {isAudio ? (
+                            <div className="space-y-2">
+                              <div className="flex items-center gap-2 text-xs font-medium text-slate-500">
+                                <Music className="h-3.5 w-3.5" /> Audio file
+                              </div>
+                              {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
+                              <audio controls className="w-full h-10" src={item.file_url}>
+                                Your browser does not support audio playback.
+                              </audio>
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-2">
+                              <FileText className="h-3.5 w-3.5 text-slate-400" />
+                              <a href={item.file_url} target="_blank" rel="noopener noreferrer"
+                                className="text-xs text-indigo-600 hover:underline truncate flex-1">
+                                {item.file_name ?? item.file_url}
+                              </a>
+                              <ExternalLink className="h-3 w-3 text-slate-400 flex-shrink-0" />
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Submission text area */}
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-600 mb-1">
+                          Your work output <span className="text-red-400">*</span>
+                        </label>
+                        <textarea
+                          rows={4}
+                          value={itemContent[item.id] ?? ""}
+                          onChange={(e) => setItemContent((prev) => ({ ...prev, [item.id]: e.target.value }))}
+                          placeholder={`Enter your ${dailyUnitName} output here…`}
+                          className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-200 resize-y"
+                        />
+                        {itemError[item.id] && (
+                          <p className="text-xs text-red-500 mt-1">{itemError[item.id]}</p>
+                        )}
+                      </div>
+
+                      <Button
+                        disabled={submittingItem === item.id}
+                        onClick={() => submitDailyItem(item.id)}
+                        className="w-full"
+                      >
+                        {submittingItem === item.id
+                          ? <Loader2 className="h-4 w-4 animate-spin" />
+                          : <><Send className="h-3.5 w-3.5" /> Submit this {dailyUnitName}</>}
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+
         {/* ── CLASSIC MODE ─────────────────────────────────────────── */}
-        {!hasSteps && (
+        {!hasSteps && !isExternalTool && !isDailyTarget && (
           <div className="space-y-4">
             {(task.description || task.requirements) && (
               <div className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm space-y-4">

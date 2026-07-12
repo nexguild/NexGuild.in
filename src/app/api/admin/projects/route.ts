@@ -19,7 +19,7 @@ export async function GET(req: NextRequest) {
 
   const { data: projects, error } = await ctx.admin
     .from("projects")
-    .select("id, name, client_name, description, project_type, status, start_date, deadline, total_budget_nc, client_payment_amount, client_payment_received, created_at, updated_at")
+    .select("id, name, client_name, description, project_type, status, start_date, deadline, total_budget_nc, client_payment_amount, client_payment_received, is_daily_target, created_at, updated_at")
     .order("created_at", { ascending: false });
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });

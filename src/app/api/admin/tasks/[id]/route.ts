@@ -30,9 +30,10 @@ export async function PATCH(
   const body = await req.json() as {
     status?: string; project_id?: string | null;
     pay_per_task?: number | null; pay_per_task_inr?: number | null;
+    required_task_ids?: string[]; excluded_task_ids?: string[];
   };
 
-  const ALLOWED_KEYS = ["status", "project_id", "pay_per_task", "pay_per_task_inr"];
+  const ALLOWED_KEYS = ["status", "project_id", "pay_per_task", "pay_per_task_inr", "required_task_ids", "excluded_task_ids", "external_tool_url", "external_tool_name", "external_tool_instructions", "external_proof_type", "allows_partial_payment", "unit_name", "total_units", "pay_per_unit_inr", "pay_per_unit_nc"];
   const updates: Record<string, unknown> = {};
   for (const key of ALLOWED_KEYS) {
     if (key in body) updates[key] = body[key as keyof typeof body];

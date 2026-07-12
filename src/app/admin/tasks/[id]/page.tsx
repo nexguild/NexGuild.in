@@ -29,6 +29,12 @@ interface Task {
   drive_folder_id: string | null;
   drive_sheet_id: string | null;
   steps: { title: string; submitType: string }[] | null;
+  required_task_ids: string[] | null;
+  excluded_task_ids: string[] | null;
+  allows_partial_payment: boolean | null;
+  unit_name: string | null;
+  total_units: number | null;
+  pay_per_unit_nc: number | null;
 }
 
 interface FileItem {
@@ -46,6 +52,8 @@ interface Submission {
   coins_awarded: number | null;
   feedback: string | null;
   submitted_at: string;
+  valid_units: number | null;
+  partial_payment_nc: number | null;
   profiles: { full_name: string | null; email: string | null } | null;
 }
 
@@ -69,7 +77,9 @@ export default function AdminTaskDetailPage() {
   const [feedbacks, setFeedbacks]     = useState<Record<string, string>>({});
   const [reviewing, setReviewing]     = useState<string | null>(null);
   const [coinsMap, setCoinsMap]       = useState<Record<string, string>>({});
-  const [copiedLink, setCopiedLink]   = useState(false);
+  const [copiedLink, setCopiedLink]     = useState(false);
+  const [eligNames, setEligNames]       = useState<Record<string, string>>({});
+  const [validUnitsMap, setValidUnitsMap] = useState<Record<string, string>>({});
 
   useEffect(() => {
     async function load() {
@@ -80,13 +90,25 @@ export default function AdminTaskDetailPage() {
       const [{ data: taskData }, { data: subData }] = await Promise.all([
         supabase.from("tasks").select("*").eq("id", id).single(),
         supabase.from("submissions")
-          .select("id, contributor_id, status, notes, files, coins_awarded, feedback, submitted_at, profiles(full_name, email)")
+          .select("id, contributor_id, status, notes, files, coins_awarded, feedback, submitted_at, valid_units, partial_payment_nc, profiles(full_name, email)")
           .eq("task_id", id)
           .order("submitted_at", { ascending: false }),
       ]);
 
-      setTask(taskData as Task);
+      const t = taskData as Task;
+      setTask(t);
       setSubmissions((subData as unknown as Submission[]) ?? []);
+
+      // Resolve eligibility task names
+      const allEligIds = [...(t.required_task_ids ?? []), ...(t.excluded_task_ids ?? [])];
+      if (allEligIds.length > 0) {
+        const { data: eligTasks } = await supabase
+          .from("tasks").select("id, title").in("id", allEligIds);
+        const nm: Record<string, string> = {};
+        for (const et of (eligTasks ?? []) as { id: string; title: string }[]) nm[et.id] = et.title;
+        setEligNames(nm);
+      }
+
       setLoading(false);
     }
     load();
@@ -98,12 +120,16 @@ export default function AdminTaskDetailPage() {
 
     const feedback = feedbacks[submissionId]?.trim() || undefined;
     const coinsStr = coinsMap[submissionId];
-    const coinsOverride = coinsStr ? parseInt(coinsStr, 10) : undefined;
+    const coinsOverride = (task?.allows_partial_payment ? undefined : (coinsStr ? parseInt(coinsStr, 10) : undefined));
+    const validUnitsStr = validUnitsMap[submissionId];
+    const validUnits = (task?.allows_partial_payment && action === "approve" && validUnitsStr)
+      ? parseInt(validUnitsStr, 10)
+      : undefined;
 
     const res = await fetch("/api/admin/review-submission", {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ submissionId, action, feedback, coinsOverride }),
+      body: JSON.stringify({ submissionId, action, feedback, coinsOverride, validUnits }),
     });
 
     if (res.ok) {
@@ -200,6 +226,32 @@ export default function AdminTaskDetailPage() {
               <span className="text-sm font-semibold text-[var(--text-primary)]">Requirements</span>
             </div>
             <p className="text-sm text-[var(--text-secondary)] whitespace-pre-wrap">{task.requirements}</p>
+          </div>
+        )}
+
+        {task.allows_partial_payment && (
+          <div className="rounded-lg bg-[var(--surface-subtle)] border border-[var(--border-default)] p-4 space-y-1">
+            <p className="text-sm font-semibold text-[var(--text-primary)]">⚡ Partial Payment Task</p>
+            <p className="text-xs text-[var(--text-muted)]">
+              {task.total_units} {task.unit_name ?? "units"} per submission ·
+              {task.pay_per_unit_nc} NC per {task.unit_name ?? "unit"}
+            </p>
+          </div>
+        )}
+
+        {((task.required_task_ids ?? []).length > 0 || (task.excluded_task_ids ?? []).length > 0) && (
+          <div className="rounded-lg bg-[var(--surface-subtle)] border border-[var(--border-default)] p-4 space-y-2">
+            <p className="text-sm font-semibold text-[var(--text-primary)]">Eligibility Rules</p>
+            {(task.required_task_ids ?? []).map((rid) => (
+              <p key={rid} className="text-sm text-emerald-400">
+                ✅ Required: {eligNames[rid] ?? rid}
+              </p>
+            ))}
+            {(task.excluded_task_ids ?? []).map((eid) => (
+              <p key={eid} className="text-sm text-red-400">
+                🚫 Excludes users who completed: {eligNames[eid] ?? eid}
+              </p>
+            ))}
           </div>
         )}
       </div>
@@ -333,38 +385,83 @@ export default function AdminTaskDetailPage() {
                 {sub.status === "approved" && (
                   <div className="flex items-center gap-2 text-sm text-green-400">
                     <CheckCircle2 className="h-4 w-4" />
-                    {sub.coins_awarded} NexCoins credited
+                    {sub.valid_units != null && task.total_units != null
+                      ? `Partially approved — ${sub.valid_units}/${task.total_units} ${task.unit_name ?? "units"} • ${sub.coins_awarded} NexCoins credited`
+                      : `${sub.coins_awarded} NexCoins credited`}
                   </div>
                 )}
 
                 {/* Review controls (only for submitted status) */}
                 {sub.status === "submitted" && (
                   <div className="border-t border-[var(--border-default)] pt-4 space-y-3">
-                    <div className="flex gap-2">
-                      <div className="flex-1">
+                    {task.allows_partial_payment ? (
+                      /* Partial payment controls */
+                      (() => {
+                        const vu        = parseInt(validUnitsMap[sub.id] || "0") || 0;
+                        const unitNc    = task.pay_per_unit_nc ?? 0;
+                        const gross     = vu * unitNc;
+                        const contribs  = Math.floor(gross * 0.66);
+                        return (
+                          <div className="rounded-lg border border-[var(--border-default)] bg-[var(--surface-subtle)] p-4 space-y-3">
+                            <p className="text-xs font-semibold text-[var(--text-secondary)]">Partial Payment Review</p>
+                            <div className="flex items-center gap-3">
+                              <label className="text-sm text-[var(--text-primary)] flex-shrink-0">Valid {task.unit_name ?? "units"}:</label>
+                              <input
+                                type="number"
+                                min={0}
+                                max={task.total_units ?? undefined}
+                                value={validUnitsMap[sub.id] ?? ""}
+                                onChange={(e) => setValidUnitsMap((prev) => ({ ...prev, [sub.id]: e.target.value }))}
+                                placeholder={`0–${task.total_units ?? "?"}`}
+                                className="w-24 h-9 px-3 rounded-md border border-[var(--border-default)] bg-[var(--surface-card)] text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--border-focus)]"
+                              />
+                              <span className="text-sm text-[var(--text-muted)]">/ {task.total_units ?? "?"} {task.unit_name ?? "units"}</span>
+                            </div>
+                            {vu > 0 && (
+                              <p className="text-xs text-[var(--brand-500)]">
+                                {vu} valid {task.unit_name ?? "unit"}{vu !== 1 ? "s" : ""} × {unitNc} NC = <strong>{gross} NC gross</strong> → <strong>{contribs} NC to contributor</strong>
+                              </p>
+                            )}
+                            <input
+                              type="text"
+                              value={feedbacks[sub.id] ?? ""}
+                              onChange={(e) => setFeedbacks((prev) => ({ ...prev, [sub.id]: e.target.value }))}
+                              placeholder="Feedback for contributor (optional)…"
+                              className="w-full h-9 px-3 rounded-md border border-[var(--border-default)] bg-[var(--surface-card)] text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--border-focus)]"
+                            />
+                          </div>
+                        );
+                      })()
+                    ) : (
+                      /* Standard controls */
+                      <div className="flex gap-2">
+                        <div className="flex-1">
+                          <input
+                            type="text"
+                            value={feedbacks[sub.id] ?? ""}
+                            onChange={(e) => setFeedbacks((prev) => ({ ...prev, [sub.id]: e.target.value }))}
+                            placeholder="Feedback for contributor (optional on approve, recommended on reject)…"
+                            className="w-full h-9 px-3 rounded-md border border-[var(--border-default)] bg-[var(--surface-subtle)] text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--border-focus)]"
+                          />
+                        </div>
                         <input
-                          type="text"
-                          value={feedbacks[sub.id] ?? ""}
-                          onChange={(e) => setFeedbacks((prev) => ({ ...prev, [sub.id]: e.target.value }))}
-                          placeholder="Feedback for contributor (optional on approve, recommended on reject)…"
-                          className="w-full h-9 px-3 rounded-md border border-[var(--border-default)] bg-[var(--surface-subtle)] text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--border-focus)]"
+                          type="number"
+                          value={coinsMap[sub.id] ?? task.pay_per_task ?? ""}
+                          onChange={(e) => setCoinsMap((prev) => ({ ...prev, [sub.id]: e.target.value }))}
+                          placeholder="Coins"
+                          className="w-24 h-9 px-3 rounded-md border border-[var(--border-default)] bg-[var(--surface-subtle)] text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--border-focus)]"
                         />
                       </div>
-                      <input
-                        type="number"
-                        value={coinsMap[sub.id] ?? task.pay_per_task ?? ""}
-                        onChange={(e) => setCoinsMap((prev) => ({ ...prev, [sub.id]: e.target.value }))}
-                        placeholder="Coins"
-                        className="w-24 h-9 px-3 rounded-md border border-[var(--border-default)] bg-[var(--surface-subtle)] text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--border-focus)]"
-                      />
-                    </div>
+                    )}
                     <div className="flex gap-2">
                       <Button
                         size="sm"
                         disabled={reviewing === sub.id}
                         onClick={() => review(sub.id, "approve")}
                       >
-                        {reviewing === sub.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <><CheckCircle2 className="h-4 w-4" /> Approve</>}
+                        {reviewing === sub.id
+                          ? <Loader2 className="h-4 w-4 animate-spin" />
+                          : <><CheckCircle2 className="h-4 w-4" /> {task.allows_partial_payment ? "Approve Partial Payment" : "Approve"}</>}
                       </Button>
                       <Button
                         variant="destructive"

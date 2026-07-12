@@ -6,7 +6,8 @@ import Link from "next/link";
 import {
   ArrowLeft, Loader2, FolderOpen, CheckCircle2, Clock, CreditCard,
   ClipboardList, BarChart2, Plus, Trash2, ExternalLink, Download,
-  Eye, Pencil, AlertCircle, Save,
+  Eye, Pencil, AlertCircle, Save, Upload, X, FileText, Calendar,
+  ChevronLeft, ChevronRight, Layers,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
@@ -24,6 +25,27 @@ interface Project {
   internal_notes: string | null; created_at: string; updated_at: string | null;
   task_count: number; nc_paid: number; nexleader_commission: number;
   platform_cut: number; net_contributor_payout: number;
+  // Daily target fields
+  is_daily_target: boolean | null;
+  daily_quota: number | null;
+  daily_unit_name: string | null;
+  file_delivery_method: string | null;
+}
+
+interface DailyWorkItem {
+  id: string;
+  contributor_id: string | null;
+  assigned_date: string;
+  file_url: string | null;
+  file_name: string | null;
+  status: string;
+  submission_content: string | null;
+  submitted_at: string | null;
+  reviewed_at: string | null;
+  coins_awarded: number | null;
+  feedback: string | null;
+  profiles: { full_name: string | null; email: string | null } | null;
+  tasks: { title: string; pay_per_unit_nc: number | null } | null;
 }
 
 interface ProjectTask {
@@ -41,6 +63,17 @@ interface Submission {
 }
 
 interface AvailableTask { id: string; title: string; task_type: string | null; status: string; }
+
+interface ImportPreviewRow {
+  rowNum: number;
+  submissionId: string;
+  contributor: string | null;
+  task: string | null;
+  currentStatus: string | null;
+  clientStatus: "valid" | "invalid" | "unrecognized";
+  reason: string | null;
+  found: boolean;
+}
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 const STATUS_META: Record<string, { label: string; cls: string }> = {
@@ -99,8 +132,8 @@ export default function ProjectDetailPage() {
   const allowed      = usePageGuard(ADMIN_ROLES.REVIEW);
 
   const tokenRef = useRef<string | null>(null);
-  const [tab, setTab]               = useState<"overview" | "tasks" | "submissions" | "financials">(
-    (searchParams.get("tab") as "overview" | "tasks" | "submissions" | "financials") ?? "overview"
+  const [tab, setTab]               = useState<"overview" | "tasks" | "submissions" | "financials" | "daily">(
+    (searchParams.get("tab") as "overview" | "tasks" | "submissions" | "financials" | "daily") ?? "overview"
   );
   const [project, setProject]       = useState<Project | null>(null);
   const [tasks, setTasks]           = useState<ProjectTask[]>([]);
@@ -135,6 +168,45 @@ export default function ProjectDetailPage() {
   const [subStatusFilter, setSubStatusFilter] = useState("all");
   const [subTaskFilter, setSubTaskFilter]   = useState("all");
 
+  // Import Client Validation modal
+  const [importOpen, setImportOpen]               = useState(false);
+  const [importStep, setImportStep]               = useState<"upload" | "map" | "preview" | "done">("upload");
+  const [importCsvText, setImportCsvText]         = useState("");
+  const [importHeaders, setImportHeaders]         = useState<string[]>([]);
+  const [importIdCol, setImportIdCol]             = useState("");
+  const [importStatusCol, setImportStatusCol]     = useState("");
+  const [importReasonCol, setImportReasonCol]     = useState("");
+  const [importValidVal, setImportValidVal]       = useState("valid");
+  const [importInvalidVal, setImportInvalidVal]   = useState("invalid");
+  const [importPreview, setImportPreview]         = useState<{
+    rows: ImportPreviewRow[]; valid: number; invalid: number; notFound: number; unrecognized: number;
+  } | null>(null);
+  const [importLoading, setImportLoading]         = useState(false);
+  const [importError, setImportError]             = useState<string | null>(null);
+  const [importResult, setImportResult]           = useState<{
+    approved: number; rejected: number; skipped: number; errors: number;
+  } | null>(null);
+
+  // Daily target project settings
+  const [editIsDailyTarget, setEditIsDailyTarget]   = useState(false);
+  const [editDailyQuota, setEditDailyQuota]         = useState("");
+  const [editDailyUnitName, setEditDailyUnitName]   = useState("");
+  const [editFileDelivery, setEditFileDelivery]     = useState<"admin_upload" | "pool">("admin_upload");
+
+  // Daily Work tab
+  const [dailyDate, setDailyDate]         = useState(() => new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" }));
+  const [dailyItems, setDailyItems]       = useState<DailyWorkItem[]>([]);
+  const [dailyLoading, setDailyLoading]   = useState(false);
+  const [dailyError, setDailyError]       = useState<string | null>(null);
+  const [uploadFilesOpen, setUploadFilesOpen] = useState(false);
+  const [uploadRawUrls, setUploadRawUrls]   = useState("");
+  const [uploadTaskId, setUploadTaskId]     = useState("");
+  const [uploadLoading, setUploadLoading]   = useState(false);
+  const [uploadError, setUploadError]       = useState<string | null>(null);
+  const [reviewItemId, setReviewItemId]     = useState<string | null>(null);
+  const [reviewFeedback, setReviewFeedback] = useState("");
+  const [reviewing, setReviewing]           = useState(false);
+
   const load = useCallback(async () => {
     const { data: { session } } = await supabase.auth.getSession();
     tokenRef.current = session?.access_token ?? null;
@@ -159,6 +231,10 @@ export default function ProjectDetailPage() {
     setEditClientPayment(p.client_payment_amount ?? "");
     setEditClientPaymentInr(p.client_payment_inr != null ? String(p.client_payment_inr) : "");
     setEditInternalNotes(p.internal_notes ?? "");
+    setEditIsDailyTarget(p.is_daily_target ?? false);
+    setEditDailyQuota(p.daily_quota != null ? String(p.daily_quota) : "");
+    setEditDailyUnitName(p.daily_unit_name ?? "");
+    setEditFileDelivery((p.file_delivery_method ?? "admin_upload") as "admin_upload" | "pool");
     setLoading(false);
   }, [id]);
 
@@ -184,6 +260,10 @@ export default function ProjectDetailPage() {
         client_payment_amount: editClientPayment || null,
         client_payment_inr: editClientPaymentInr ? parseFloat(editClientPaymentInr) : null,
         internal_notes: editInternalNotes || null,
+        is_daily_target: editIsDailyTarget,
+        daily_quota: editIsDailyTarget && editDailyQuota ? parseInt(editDailyQuota) : null,
+        daily_unit_name: editIsDailyTarget ? (editDailyUnitName || null) : null,
+        file_delivery_method: editIsDailyTarget ? editFileDelivery : null,
       }),
     });
     if (res.ok) {
@@ -285,8 +365,173 @@ export default function ProjectDetailPage() {
 
   useEffect(() => {
     if (tab === "submissions") loadSubmissions();
+    if (tab === "daily") loadDailyItems();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tab, subStatusFilter, subTaskFilter]);
+
+  // ── Import CSV helpers ──────────────────────────────────────────────────────
+  function parseCSVHeaders(text: string): string[] {
+    const firstLine = text.replace(/\r\n/g, "\n").replace(/\r/g, "\n").split("\n")[0] ?? "";
+    if (!firstLine.trim()) return [];
+    const headers: string[] = [];
+    let inQuotes = false, field = "";
+    for (let i = 0; i < firstLine.length; i++) {
+      const ch = firstLine[i];
+      if (ch === '"') {
+        if (inQuotes && firstLine[i + 1] === '"') { field += '"'; i++; }
+        else { inQuotes = !inQuotes; }
+      } else if (ch === "," && !inQuotes) { headers.push(field.trim()); field = ""; }
+      else { field += ch; }
+    }
+    headers.push(field.trim());
+    return headers;
+  }
+
+  function resetImport() {
+    setImportStep("upload"); setImportCsvText(""); setImportHeaders([]);
+    setImportIdCol(""); setImportStatusCol(""); setImportReasonCol("");
+    setImportValidVal("valid"); setImportInvalidVal("invalid");
+    setImportPreview(null); setImportError(null); setImportResult(null); setImportLoading(false);
+  }
+
+  function openImport() { resetImport(); setImportOpen(true); }
+
+  function handleCSVLoad(text: string) {
+    setImportCsvText(text);
+    const hdrs = parseCSVHeaders(text);
+    if (hdrs.length === 0) { setImportError("Could not detect CSV headers. Make sure the file has a header row."); return; }
+    setImportHeaders(hdrs);
+    setImportIdCol(hdrs[0] ?? "");
+    setImportStatusCol(hdrs[1] ?? "");
+    setImportReasonCol("");
+    setImportError(null);
+    setImportStep("map");
+  }
+
+  async function runPreview() {
+    if (!importIdCol || !importStatusCol) { setImportError("Submission ID column and Status column are required."); return; }
+    setImportLoading(true); setImportError(null);
+    const res = await fetch(`/api/admin/projects/${id}/bulk-validate`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${tokenRef.current}` },
+      body: JSON.stringify({
+        action: "preview",
+        csvText: importCsvText,
+        submissionIdCol: importIdCol,
+        statusCol: importStatusCol,
+        reasonCol: importReasonCol || null,
+        validValue: importValidVal,
+        invalidValue: importInvalidVal,
+      }),
+    });
+    const data = await res.json() as { rows?: ImportPreviewRow[]; valid?: number; invalid?: number; notFound?: number; unrecognized?: number; error?: string };
+    if (!res.ok || data.error) { setImportError(data.error ?? "Preview failed."); setImportLoading(false); return; }
+    setImportPreview({ rows: data.rows ?? [], valid: data.valid ?? 0, invalid: data.invalid ?? 0, notFound: data.notFound ?? 0, unrecognized: data.unrecognized ?? 0 });
+    setImportStep("preview");
+    setImportLoading(false);
+  }
+
+  async function applyValidation() {
+    setImportLoading(true); setImportError(null);
+    const res = await fetch(`/api/admin/projects/${id}/bulk-validate`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${tokenRef.current}` },
+      body: JSON.stringify({
+        action: "apply",
+        csvText: importCsvText,
+        submissionIdCol: importIdCol,
+        statusCol: importStatusCol,
+        reasonCol: importReasonCol || null,
+        validValue: importValidVal,
+        invalidValue: importInvalidVal,
+      }),
+    });
+    const data = await res.json() as { approved?: number; rejected?: number; skipped?: number; errors?: number; error?: string };
+    if (!res.ok || data.error) { setImportError(data.error ?? "Apply failed."); setImportLoading(false); return; }
+    setImportResult({ approved: data.approved ?? 0, rejected: data.rejected ?? 0, skipped: data.skipped ?? 0, errors: data.errors ?? 0 });
+    setImportStep("done");
+    setImportLoading(false);
+    loadSubmissions();
+  }
+
+  // ── Daily Work helpers ──────────────────────────────────────────────────────
+  async function loadDailyItems(date?: string) {
+    setDailyLoading(true); setDailyError(null);
+    const d = date ?? dailyDate;
+    const res = await fetch(`/api/admin/projects/${id}/daily-items?date=${d}`, {
+      headers: { Authorization: `Bearer ${tokenRef.current}` },
+    });
+    const data = await res.json() as { items?: DailyWorkItem[]; error?: string };
+    if (!res.ok || data.error) { setDailyError(data.error ?? "Failed to load items."); setDailyLoading(false); return; }
+    setDailyItems(data.items ?? []);
+    setDailyLoading(false);
+  }
+
+  function shiftDate(delta: number) {
+    const d = new Date(dailyDate + "T00:00:00");
+    d.setDate(d.getDate() + delta);
+    const next = d.toLocaleDateString("en-CA");
+    setDailyDate(next);
+    loadDailyItems(next);
+  }
+
+  async function uploadFilesForDay() {
+    const lines = uploadRawUrls.split("\n").map((l) => l.trim()).filter(Boolean);
+    if (!lines.length) { setUploadError("Enter at least one file URL."); return; }
+    if (!uploadTaskId) { setUploadError("Select a task."); return; }
+    setUploadLoading(true); setUploadError(null);
+    const fileEntries = lines.map((l) => {
+      const parts = l.split("|");
+      return { url: (parts[0] ?? "").trim(), name: (parts[1] ?? parts[0] ?? "").trim() };
+    });
+    const res = await fetch(`/api/admin/projects/${id}/daily-items`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${tokenRef.current}` },
+      body: JSON.stringify({ date: dailyDate, taskId: uploadTaskId, fileEntries, deliveryMethod: project?.file_delivery_method ?? "admin_upload" }),
+    });
+    const data = await res.json() as { ok?: boolean; created?: number; error?: string };
+    if (!res.ok || data.error) { setUploadError(data.error ?? "Upload failed."); setUploadLoading(false); return; }
+    setUploadFilesOpen(false); setUploadRawUrls(""); setUploadLoading(false);
+    loadDailyItems();
+  }
+
+  async function reviewDailyItem(itemId: string, action: "approve" | "reject") {
+    setReviewing(true);
+    const res = await fetch(`/api/admin/daily-items/${itemId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${tokenRef.current}` },
+      body: JSON.stringify({ action, feedback: reviewFeedback || undefined }),
+    });
+    if (res.ok) { setReviewItemId(null); setReviewFeedback(""); loadDailyItems(); }
+    setReviewing(false);
+  }
+
+  async function bulkApproveAll() {
+    setDailyLoading(true);
+    const res = await fetch(`/api/admin/projects/${id}/daily-items/bulk-approve?date=${dailyDate}`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${tokenRef.current}` },
+    });
+    if (res.ok) loadDailyItems();
+    else setDailyLoading(false);
+  }
+
+  function exportDailyCSV() {
+    const header = ["Contributor", "Email", "File", "Status", "Submitted At", "Coins", "Submission"];
+    const rows = dailyItems.map((item) => [
+      item.profiles?.full_name ?? "Unknown",
+      item.profiles?.email ?? "—",
+      item.file_name ?? item.file_url ?? "—",
+      item.status,
+      item.submitted_at ? new Date(item.submitted_at).toLocaleString("en-IN") : "—",
+      item.coins_awarded ?? 0,
+      (item.submission_content ?? "").replace(/"/g, '""'),
+    ]);
+    const csv = [header, ...rows].map((r) => r.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const a = document.createElement("a"); a.href = URL.createObjectURL(blob);
+    a.download = `daily_work_${dailyDate}.csv`; a.click();
+  }
 
   if (!allowed) return null;
   if (loading) return (
@@ -308,11 +553,12 @@ export default function ProjectDetailPage() {
   const ncPct    = project.total_budget_nc > 0 ? Math.min(100, Math.round((project.nc_paid / project.total_budget_nc) * 100)) : 0;
 
   const TABS = [
-    { id: "overview",     label: "Overview",    icon: <FolderOpen className="h-4 w-4" /> },
-    { id: "tasks",        label: "Tasks",       icon: <ClipboardList className="h-4 w-4" /> },
-    { id: "submissions",  label: "Submissions", icon: <Eye className="h-4 w-4" /> },
-    { id: "financials",   label: "Financials",  icon: <BarChart2 className="h-4 w-4" /> },
-  ] as const;
+    { id: "overview",    label: "Overview",    icon: <FolderOpen className="h-4 w-4" /> },
+    { id: "tasks",       label: "Tasks",       icon: <ClipboardList className="h-4 w-4" /> },
+    { id: "submissions", label: "Submissions", icon: <Eye className="h-4 w-4" /> },
+    { id: "financials",  label: "Financials",  icon: <BarChart2 className="h-4 w-4" /> },
+    ...(project.is_daily_target ? [{ id: "daily", label: "Daily Work", icon: <Calendar className="h-4 w-4" /> }] : []),
+  ] as { id: string; label: string; icon: React.ReactNode }[];
 
   return (
     <div className="space-y-6">
@@ -349,7 +595,7 @@ export default function ProjectDetailPage() {
       {/* Tabs */}
       <div className="flex items-center gap-1 border-b border-[var(--border-default)] overflow-x-auto">
         {TABS.map((t) => (
-          <button key={t.id} onClick={() => setTab(t.id)}
+          <button key={t.id} onClick={() => setTab(t.id as "overview" | "tasks" | "submissions" | "financials" | "daily")}
             className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${
               tab === t.id
                 ? "border-[var(--brand-500)] text-[var(--brand-500)]"
@@ -480,6 +726,47 @@ export default function ProjectDetailPage() {
             </div>
           </section>
 
+          {/* Daily target project settings */}
+          <section className="rounded-xl border border-[var(--border-default)] bg-[var(--surface-card)] p-6 space-y-4">
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-2">
+                <Layers className="h-4 w-4 text-[var(--brand-500)]" />
+                <h2 className="font-bold text-[var(--text-primary)]">Daily Target Project</h2>
+              </div>
+              <Button size="sm" disabled={saving} onClick={saveOverview}>
+                {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <><Save className="h-3.5 w-3.5" /> Save</>}
+              </Button>
+            </div>
+            <label className="flex items-center gap-3 cursor-pointer">
+              <div
+                onClick={() => setEditIsDailyTarget((v) => !v)}
+                className={`relative h-6 w-11 rounded-full transition-colors ${editIsDailyTarget ? "bg-[var(--brand-500)]" : "bg-[var(--border-default)]"}`}
+              >
+                <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${editIsDailyTarget ? "translate-x-5" : "translate-x-0.5"}`} />
+              </div>
+              <span className="text-sm font-medium text-[var(--text-primary)]">Enable daily quota system</span>
+            </label>
+            {editIsDailyTarget && (
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-1">
+                <div>
+                  <label className={lc}>Daily quota per contributor</label>
+                  <input type="number" min="1" value={editDailyQuota} onChange={(e) => setEditDailyQuota(e.target.value)} className={ic} placeholder="10" />
+                </div>
+                <div>
+                  <label className={lc}>Unit name</label>
+                  <input type="text" value={editDailyUnitName} onChange={(e) => setEditDailyUnitName(e.target.value)} className={ic} placeholder="e.g. QC item, recording" />
+                </div>
+                <div>
+                  <label className={lc}>File delivery method</label>
+                  <select value={editFileDelivery} onChange={(e) => setEditFileDelivery(e.target.value as "admin_upload" | "pool")} className={ic}>
+                    <option value="admin_upload">Admin uploads files daily</option>
+                    <option value="pool">Contributor fetches from pool</option>
+                  </select>
+                </div>
+              </div>
+            )}
+          </section>
+
           {/* Internal notes */}
           <section className="rounded-xl border border-[var(--border-default)] bg-[var(--surface-card)] p-6 space-y-3">
             <div className="flex items-center justify-between gap-4">
@@ -608,6 +895,9 @@ export default function ProjectDetailPage() {
               {subTasks.map((t) => <option key={t.id} value={t.id}>{t.title}</option>)}
             </select>
             <div className="flex-1" />
+            <Button variant="secondary" size="sm" onClick={openImport}>
+              <Upload className="h-3.5 w-3.5" /> Import Client Validation
+            </Button>
             <Button variant="secondary" size="sm" onClick={() => exportCSV(submissions, project.name)}>
               <Download className="h-3.5 w-3.5" /> Export CSV
             </Button>
@@ -664,6 +954,207 @@ export default function ProjectDetailPage() {
                   ))}
                 </tbody>
               </table>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── TAB: Daily Work ────────────────────────────────────────────────── */}
+      {tab === "daily" && (
+        <div className="space-y-4">
+          {/* Toolbar */}
+          <div className="flex items-center gap-3 flex-wrap">
+            {/* Date nav */}
+            <div className="flex items-center gap-1 rounded-lg border border-[var(--border-default)] bg-[var(--surface-card)] px-1 py-0.5">
+              <button onClick={() => shiftDate(-1)} className="rounded p-1.5 text-[var(--text-secondary)] hover:bg-[var(--surface-subtle)] transition-colors">
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+              <input
+                type="date" value={dailyDate}
+                onChange={(e) => { setDailyDate(e.target.value); loadDailyItems(e.target.value); }}
+                className="bg-transparent text-sm font-medium text-[var(--text-primary)] focus:outline-none px-1"
+              />
+              <button onClick={() => shiftDate(1)} className="rounded p-1.5 text-[var(--text-secondary)] hover:bg-[var(--surface-subtle)] transition-colors">
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="flex-1" />
+            {project.file_delivery_method !== "pool" && (
+              <Button size="sm" onClick={() => { setUploadFilesOpen(true); setUploadError(null); setUploadRawUrls(""); }}>
+                <Upload className="h-3.5 w-3.5" /> Upload Today&apos;s Files
+              </Button>
+            )}
+            <Button variant="secondary" size="sm" onClick={bulkApproveAll}>
+              <CheckCircle2 className="h-3.5 w-3.5" /> Bulk Approve All
+            </Button>
+            <Button variant="secondary" size="sm" onClick={exportDailyCSV}>
+              <Download className="h-3.5 w-3.5" /> Export CSV
+            </Button>
+          </div>
+
+          {/* Stats pills */}
+          {dailyItems.length > 0 && (
+            <div className="flex gap-3 flex-wrap text-sm">
+              {[
+                { label: "Total", val: dailyItems.length, cls: "text-[var(--text-primary)]" },
+                { label: "Submitted", val: dailyItems.filter(i => i.status === "submitted").length, cls: "text-amber-400" },
+                { label: "Approved", val: dailyItems.filter(i => i.status === "approved").length, cls: "text-green-400" },
+                { label: "Pending", val: dailyItems.filter(i => i.status === "pending").length, cls: "text-[var(--text-muted)]" },
+                { label: "Rejected", val: dailyItems.filter(i => i.status === "rejected").length, cls: "text-red-400" },
+              ].map((s) => (
+                <span key={s.label} className={`font-semibold ${s.cls}`}>{s.val} {s.label}</span>
+              ))}
+            </div>
+          )}
+
+          {dailyError && (
+            <div className="flex items-center gap-2 rounded-lg border border-red-500/20 bg-red-500/5 px-4 py-3 text-sm text-red-400">
+              <AlertCircle className="h-4 w-4 flex-shrink-0" /> {dailyError}
+            </div>
+          )}
+
+          {dailyLoading ? (
+            <div className="flex justify-center py-12"><Loader2 className="h-5 w-5 animate-spin text-[var(--brand-500)]" /></div>
+          ) : dailyItems.length === 0 ? (
+            <div className="rounded-xl border border-[var(--border-default)] bg-[var(--surface-card)] py-14 text-center">
+              <Calendar className="h-8 w-8 text-[var(--text-muted)] mx-auto mb-3" />
+              <p className="text-sm text-[var(--text-secondary)]">No work items for {dailyDate}.</p>
+              {project.file_delivery_method !== "pool" && (
+                <Button size="sm" className="mt-4" onClick={() => setUploadFilesOpen(true)}>
+                  <Upload className="h-3.5 w-3.5" /> Upload Files
+                </Button>
+              )}
+            </div>
+          ) : (
+            <div className="rounded-xl border border-[var(--border-default)] bg-[var(--surface-card)] overflow-x-auto">
+              <table className="w-full text-sm min-w-[720px]">
+                <thead>
+                  <tr className="bg-[var(--surface-subtle)] border-b border-[var(--border-default)]">
+                    {["Contributor", "File", "Status", "Submission", "Coins", "Actions"].map((h) => (
+                      <th key={h} className="text-left px-4 py-3 font-medium text-[var(--text-secondary)] whitespace-nowrap">{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[var(--border-default)]">
+                  {dailyItems.map((item) => (
+                    <tr key={item.id} className="hover:bg-[var(--surface-subtle)] transition-colors">
+                      <td className="px-4 py-3">
+                        <p className="font-medium text-[var(--text-primary)]">{item.profiles?.full_name ?? "Unknown"}</p>
+                        <p className="text-xs text-[var(--text-muted)]">{item.profiles?.email ?? "—"}</p>
+                      </td>
+                      <td className="px-4 py-3 max-w-[160px]">
+                        {item.file_url
+                          ? <a href={item.file_url} target="_blank" rel="noopener noreferrer"
+                              className="text-[var(--brand-500)] hover:underline text-xs truncate block">
+                              {item.file_name ?? item.file_url}
+                            </a>
+                          : <span className="text-[var(--text-muted)] text-xs">{item.file_name ?? "—"}</span>}
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className={`text-xs font-medium px-2.5 py-1 rounded-full capitalize ${
+                          item.status === "approved" ? "bg-green-500/10 text-green-400"
+                          : item.status === "rejected" ? "bg-red-500/10 text-red-400"
+                          : item.status === "submitted" ? "bg-amber-500/10 text-amber-400"
+                          : "bg-[var(--surface-subtle)] text-[var(--text-muted)]"
+                        }`}>{item.status}</span>
+                      </td>
+                      <td className="px-4 py-3 max-w-[200px]">
+                        {item.submission_content
+                          ? <p className="text-xs text-[var(--text-secondary)] line-clamp-2 leading-relaxed">
+                              {item.submission_content.slice(0, 120)}{item.submission_content.length > 120 ? "…" : ""}
+                            </p>
+                          : <span className="text-[var(--text-muted)] text-xs italic">No submission yet</span>}
+                      </td>
+                      <td className="px-4 py-3">
+                        {item.coins_awarded != null
+                          ? <span className="flex items-center gap-1 text-amber-400 text-xs font-medium"><NexCoinIcon size={12} />{item.coins_awarded}</span>
+                          : <span className="text-[var(--text-muted)] text-xs">—</span>}
+                      </td>
+                      <td className="px-4 py-3">
+                        {item.status === "pending" || item.status === "submitted" ? (
+                          reviewItemId === item.id ? (
+                            <div className="flex flex-col gap-1.5 min-w-[160px]">
+                              <input
+                                type="text" value={reviewFeedback}
+                                onChange={(e) => setReviewFeedback(e.target.value)}
+                                placeholder="Feedback (optional)" className={`${ic} h-7 text-xs`}
+                              />
+                              <div className="flex gap-1">
+                                <button onClick={() => reviewDailyItem(item.id, "approve")} disabled={reviewing}
+                                  className="flex-1 rounded-md bg-green-500/10 border border-green-500/20 text-green-400 text-xs py-1 font-semibold hover:bg-green-500/20 transition-colors disabled:opacity-50">
+                                  {reviewing ? "…" : "Approve"}
+                                </button>
+                                <button onClick={() => reviewDailyItem(item.id, "reject")} disabled={reviewing}
+                                  className="flex-1 rounded-md bg-red-500/10 border border-red-500/20 text-red-400 text-xs py-1 font-semibold hover:bg-red-500/20 transition-colors disabled:opacity-50">
+                                  {reviewing ? "…" : "Reject"}
+                                </button>
+                                <button onClick={() => { setReviewItemId(null); setReviewFeedback(""); }}
+                                  className="rounded-md border border-[var(--border-default)] text-[var(--text-muted)] text-xs px-2 py-1 hover:bg-[var(--surface-subtle)]">
+                                  <X className="h-3 w-3" />
+                                </button>
+                              </div>
+                            </div>
+                          ) : (
+                            <Button variant="secondary" size="sm" onClick={() => { setReviewItemId(item.id); setReviewFeedback(""); }}>
+                              Review
+                            </Button>
+                          )
+                        ) : (
+                          <span className="text-xs text-[var(--text-muted)]">
+                            {item.reviewed_at ? fmt(item.reviewed_at) : "—"}
+                          </span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {/* Upload Files Modal */}
+          {uploadFilesOpen && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+              <div className="w-full max-w-lg rounded-2xl border border-[var(--border-default)] bg-[var(--surface-card)] shadow-2xl">
+                <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--border-default)]">
+                  <h3 className="font-bold text-[var(--text-primary)]">Upload Files for {dailyDate}</h3>
+                  <button onClick={() => setUploadFilesOpen(false)} className="rounded-lg p-1.5 text-[var(--text-muted)] hover:bg-[var(--surface-subtle)]">
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+                <div className="px-6 py-5 space-y-4">
+                  {uploadError && (
+                    <div className="flex items-center gap-2 rounded-lg bg-red-500/10 border border-red-500/20 px-3 py-2 text-sm text-red-400">
+                      <AlertCircle className="h-4 w-4 flex-shrink-0" /> {uploadError}
+                    </div>
+                  )}
+                  <div>
+                    <label className={lc}>Task</label>
+                    <select value={uploadTaskId} onChange={(e) => setUploadTaskId(e.target.value)} className={ic}>
+                      <option value="">Select task…</option>
+                      {tasks.map((t) => <option key={t.id} value={t.id}>{t.title}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className={lc}>File URLs <span className="font-normal text-[var(--text-muted)]">(one per line)</span></label>
+                    <textarea
+                      rows={6} value={uploadRawUrls}
+                      onChange={(e) => setUploadRawUrls(e.target.value)}
+                      placeholder={"https://example.com/file1.wav\nhttps://example.com/file2.wav\n\nOptional: add | display name after URL:\nhttps://example.com/file3.wav | recording-001.wav"}
+                      className={tc}
+                    />
+                    <p className="text-xs text-[var(--text-muted)] mt-1">
+                      Files will be assigned round-robin to active contributors. Format: <code>URL</code> or <code>URL | display name</code>
+                    </p>
+                  </div>
+                  <div className="flex gap-3">
+                    <Button variant="secondary" onClick={() => setUploadFilesOpen(false)}>Cancel</Button>
+                    <Button disabled={uploadLoading} onClick={uploadFilesForDay}>
+                      {uploadLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Upload className="h-3.5 w-3.5" /> Upload & Assign</>}
+                    </Button>
+                  </div>
+                </div>
+              </div>
             </div>
           )}
         </div>
@@ -829,6 +1320,256 @@ export default function ProjectDetailPage() {
           </div>
         );
       })()}
+
+      {/* ── Import Client Validation Modal ──────────────────────────────────── */}
+      {importOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="relative w-full max-w-2xl rounded-2xl border border-[var(--border-default)] bg-[var(--surface-card)] shadow-2xl max-h-[90vh] flex flex-col">
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--border-default)]">
+              <div className="flex items-center gap-2">
+                <FileText className="h-5 w-5 text-[var(--brand-500)]" />
+                <h2 className="font-bold text-[var(--text-primary)]">Import Client Validation</h2>
+              </div>
+              <button onClick={() => setImportOpen(false)} className="rounded-lg p-1.5 text-[var(--text-muted)] hover:bg-[var(--surface-subtle)] transition-colors">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            {/* Step indicator */}
+            <div className="flex items-center gap-1.5 px-6 pt-4 pb-2">
+              {(["upload", "map", "preview", "done"] as const).map((s, i) => {
+                const stepIdx = ["upload", "map", "preview", "done"].indexOf(importStep);
+                const thisIdx = i;
+                const done    = stepIdx > thisIdx;
+                const active  = stepIdx === thisIdx;
+                return (
+                  <div key={s} className="flex items-center">
+                    <div className={`h-6 w-6 rounded-full flex items-center justify-center text-[10px] font-bold border-2 ${
+                      active ? "border-[var(--brand-500)] bg-[var(--brand-500)] text-white"
+                      : done  ? "border-[var(--brand-500)] bg-[var(--brand-500)]/10 text-[var(--brand-500)]"
+                      :         "border-[var(--border-default)] text-[var(--text-muted)]"
+                    }`}>{i + 1}</div>
+                    {i < 3 && <div className={`h-0.5 w-8 ${done ? "bg-[var(--brand-500)]" : "bg-[var(--border-default)]"}`} />}
+                  </div>
+                );
+              })}
+              <div className="ml-3 flex gap-4 text-xs text-[var(--text-muted)]">
+                {(["Upload CSV", "Map Columns", "Preview", "Done"] as const).map((label, i) => (
+                  <span key={label} className={i === ["upload","map","preview","done"].indexOf(importStep) ? "text-[var(--brand-500)] font-semibold" : ""}>{label}</span>
+                ))}
+              </div>
+            </div>
+
+            {/* Body */}
+            <div className="overflow-y-auto flex-1 px-6 py-5 space-y-4">
+
+              {importError && (
+                <div className="flex items-center gap-2 rounded-lg bg-red-500/10 border border-red-500/20 px-3 py-2.5 text-sm text-red-400">
+                  <AlertCircle className="h-4 w-4 flex-shrink-0" /> {importError}
+                </div>
+              )}
+
+              {/* ── Step: Upload ─────────────────────────────────────────────── */}
+              {importStep === "upload" && (
+                <div className="space-y-4">
+                  <p className="text-sm text-[var(--text-secondary)]">
+                    Upload the client&apos;s CSV file. It must have a header row with at least a submission ID column and a valid/invalid status column.
+                  </p>
+                  <label className="flex flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-[var(--border-default)] bg-[var(--surface-subtle)] py-10 cursor-pointer hover:border-[var(--brand-500)] transition-colors">
+                    <Upload className="h-8 w-8 text-[var(--text-muted)]" />
+                    <span className="text-sm text-[var(--text-secondary)]">Click to upload CSV file</span>
+                    <span className="text-xs text-[var(--text-muted)]">.csv files only</span>
+                    <input
+                      type="file" accept=".csv,text/csv" className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        const reader = new FileReader();
+                        reader.onload = (ev) => handleCSVLoad(ev.target?.result as string ?? "");
+                        reader.readAsText(file, "utf-8");
+                      }}
+                    />
+                  </label>
+                  <div className="relative flex items-center">
+                    <div className="flex-1 h-px bg-[var(--border-default)]" />
+                    <span className="mx-3 text-xs text-[var(--text-muted)]">or paste CSV</span>
+                    <div className="flex-1 h-px bg-[var(--border-default)]" />
+                  </div>
+                  <div>
+                    <label className={lc}>Paste CSV text</label>
+                    <textarea
+                      rows={5} className={tc}
+                      placeholder={"submission_id,status,reason\nabc-123,valid,\ndef-456,invalid,Wrong recording"}
+                      value={importCsvText}
+                      onChange={(e) => setImportCsvText(e.target.value)}
+                    />
+                  </div>
+                  <Button onClick={() => {
+                    if (importCsvText.trim()) handleCSVLoad(importCsvText);
+                    else setImportError("Paste CSV text or upload a file.");
+                  }}>
+                    Parse Headers →
+                  </Button>
+                </div>
+              )}
+
+              {/* ── Step: Map ───────────────────────────────────────────────── */}
+              {importStep === "map" && (
+                <div className="space-y-4">
+                  <p className="text-sm text-[var(--text-secondary)]">Map the CSV columns to the fields NexGuild needs.</p>
+                  <div className="rounded-lg border border-[var(--border-default)] bg-[var(--surface-subtle)] px-3 py-2 text-xs text-[var(--text-muted)]">
+                    Detected {importHeaders.length} column{importHeaders.length !== 1 ? "s" : ""}: {importHeaders.join(", ")}
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className={lc}>Submission ID column <span className="text-red-400">*</span></label>
+                      <select value={importIdCol} onChange={(e) => setImportIdCol(e.target.value)} className={ic}>
+                        {importHeaders.map((h) => <option key={h} value={h}>{h}</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <label className={lc}>Status column <span className="text-red-400">*</span></label>
+                      <select value={importStatusCol} onChange={(e) => setImportStatusCol(e.target.value)} className={ic}>
+                        {importHeaders.map((h) => <option key={h} value={h}>{h}</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <label className={lc}>Reason column <span className="text-[var(--text-muted)] font-normal">(optional)</span></label>
+                      <select value={importReasonCol} onChange={(e) => setImportReasonCol(e.target.value)} className={ic}>
+                        <option value="">— none —</option>
+                        {importHeaders.map((h) => <option key={h} value={h}>{h}</option>)}
+                      </select>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className={lc}>Value meaning &ldquo;Valid&rdquo;</label>
+                      <input type="text" value={importValidVal} onChange={(e) => setImportValidVal(e.target.value)} className={ic} placeholder="valid" />
+                      <p className="text-xs text-[var(--text-muted)] mt-1">Case-insensitive match</p>
+                    </div>
+                    <div>
+                      <label className={lc}>Value meaning &ldquo;Invalid&rdquo;</label>
+                      <input type="text" value={importInvalidVal} onChange={(e) => setImportInvalidVal(e.target.value)} className={ic} placeholder="invalid" />
+                      <p className="text-xs text-[var(--text-muted)] mt-1">Case-insensitive match</p>
+                    </div>
+                  </div>
+                  <div className="flex gap-3">
+                    <Button variant="secondary" onClick={() => setImportStep("upload")}>← Back</Button>
+                    <Button disabled={importLoading} onClick={runPreview}>
+                      {importLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Preview →"}
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {/* ── Step: Preview ─────────────────────────────────────────────── */}
+              {importStep === "preview" && importPreview && (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-4 gap-3">
+                    {[
+                      { label: "Will approve", value: importPreview.valid,        cls: "text-green-400 border-green-500/20 bg-green-500/5" },
+                      { label: "Will reject",  value: importPreview.invalid,      cls: "text-red-400 border-red-500/20 bg-red-500/5" },
+                      { label: "Not found",    value: importPreview.notFound,     cls: "text-[var(--text-muted)] border-[var(--border-default)] bg-[var(--surface-subtle)]" },
+                      { label: "Unrecognized", value: importPreview.unrecognized, cls: "text-amber-400 border-amber-500/20 bg-amber-500/5" },
+                    ].map((s) => (
+                      <div key={s.label} className={`rounded-xl border px-3 py-2.5 text-center ${s.cls}`}>
+                        <p className="text-xl font-bold">{s.value}</p>
+                        <p className="text-[10px] font-medium leading-tight mt-0.5">{s.label}</p>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="rounded-xl border border-[var(--border-default)] overflow-x-auto max-h-60">
+                    <table className="w-full text-xs min-w-[560px]">
+                      <thead className="sticky top-0 bg-[var(--surface-subtle)] border-b border-[var(--border-default)]">
+                        <tr>
+                          {["Row", "Submission ID", "Contributor", "Task", "Current", "Action", "Reason"].map((h) => (
+                            <th key={h} className="text-left px-3 py-2 font-medium text-[var(--text-secondary)] whitespace-nowrap">{h}</th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-[var(--border-default)]">
+                        {importPreview.rows.map((row) => (
+                          <tr key={`${row.rowNum}-${row.submissionId}`} className={`${!row.found ? "opacity-50" : ""} hover:bg-[var(--surface-subtle)]`}>
+                            <td className="px-3 py-2 text-[var(--text-muted)]">{row.rowNum}</td>
+                            <td className="px-3 py-2 font-mono text-[10px] text-[var(--text-secondary)] max-w-[90px] truncate">{row.submissionId}</td>
+                            <td className="px-3 py-2 text-[var(--text-primary)]">{row.contributor ?? <span className="italic text-[var(--text-muted)]">not found</span>}</td>
+                            <td className="px-3 py-2 text-[var(--text-secondary)] max-w-[120px] truncate">{row.task ?? "—"}</td>
+                            <td className="px-3 py-2">
+                              <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium capitalize ${
+                                row.currentStatus === "approved" ? "bg-green-500/10 text-green-400"
+                                : row.currentStatus === "rejected" ? "bg-red-500/10 text-red-400"
+                                : "bg-amber-500/10 text-amber-400"
+                              }`}>{row.currentStatus ?? "—"}</span>
+                            </td>
+                            <td className="px-3 py-2">
+                              {!row.found
+                                ? <span className="text-[var(--text-muted)] italic">skip</span>
+                                : row.clientStatus === "valid"
+                                ? <span className="text-green-400 font-semibold">Approve</span>
+                                : row.clientStatus === "invalid"
+                                ? <span className="text-red-400 font-semibold">Reject</span>
+                                : <span className="text-amber-400 italic">skip</span>}
+                            </td>
+                            <td className="px-3 py-2 text-[var(--text-muted)] max-w-[120px] truncate">{row.reason ?? "—"}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  <div className="flex gap-3">
+                    <Button variant="secondary" onClick={() => setImportStep("map")}>← Back</Button>
+                    <Button
+                      disabled={importLoading || (importPreview.valid === 0 && importPreview.invalid === 0)}
+                      onClick={applyValidation}
+                      className="bg-[var(--brand-500)] hover:brightness-105 text-white">
+                      {importLoading
+                        ? <Loader2 className="h-4 w-4 animate-spin" />
+                        : `Apply Validation (${importPreview.valid + importPreview.invalid} submissions)`}
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {/* ── Step: Done ────────────────────────────────────────────────── */}
+              {importStep === "done" && importResult && (
+                <div className="space-y-4 text-center py-4">
+                  <div className="flex h-16 w-16 items-center justify-center rounded-full bg-green-500/10 border border-green-500/20 mx-auto">
+                    <CheckCircle2 className="h-8 w-8 text-green-400" />
+                  </div>
+                  <h3 className="font-bold text-[var(--text-primary)] text-lg">Validation Applied</h3>
+                  <div className="grid grid-cols-2 gap-3 max-w-xs mx-auto text-sm">
+                    <div className="rounded-lg border border-green-500/20 bg-green-500/5 px-4 py-3">
+                      <p className="text-2xl font-bold text-green-400">{importResult.approved}</p>
+                      <p className="text-xs text-[var(--text-muted)] mt-0.5">Approved + Credited</p>
+                    </div>
+                    <div className="rounded-lg border border-red-500/20 bg-red-500/5 px-4 py-3">
+                      <p className="text-2xl font-bold text-red-400">{importResult.rejected}</p>
+                      <p className="text-xs text-[var(--text-muted)] mt-0.5">Rejected</p>
+                    </div>
+                    {importResult.skipped > 0 && (
+                      <div className="rounded-lg border border-[var(--border-default)] bg-[var(--surface-subtle)] px-4 py-3 col-span-2">
+                        <p className="text-xl font-bold text-[var(--text-muted)]">{importResult.skipped}</p>
+                        <p className="text-xs text-[var(--text-muted)] mt-0.5">Skipped (not found / unrecognized)</p>
+                      </div>
+                    )}
+                    {importResult.errors > 0 && (
+                      <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 px-4 py-3 col-span-2">
+                        <p className="text-xl font-bold text-amber-400">{importResult.errors}</p>
+                        <p className="text-xs text-[var(--text-muted)] mt-0.5">Errors (check logs)</p>
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex justify-center gap-3 pt-2">
+                    <Button variant="secondary" onClick={resetImport}>Import Another File</Button>
+                    <Button onClick={() => setImportOpen(false)}>Close</Button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

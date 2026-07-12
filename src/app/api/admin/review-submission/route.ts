@@ -31,17 +31,18 @@ export async function POST(req: NextRequest) {
     }
 
     // ── Parse body ───────────────────────────────────────────────
-    const { submissionId, action, feedback, coinsOverride } = await req.json() as {
+    const { submissionId, action, feedback, coinsOverride, validUnits } = await req.json() as {
       submissionId: string;
       action: "approve" | "reject" | "request_resubmit";
       feedback?: string;
       coinsOverride?: number;
+      validUnits?: number;
     };
 
     // ── Fetch submission + task ──────────────────────────────────
     const { data: sub, error: subFetchErr } = await admin
       .from("submissions")
-      .select("id, contributor_id, tasks(id, pay_per_task, title, xp_reward, drive_sheet_id)")
+      .select("id, contributor_id, tasks(id, pay_per_task, title, xp_reward, drive_sheet_id, allows_partial_payment, unit_name, total_units, pay_per_unit_nc)")
       .eq("id", submissionId)
       .single();
 
@@ -51,12 +52,25 @@ export async function POST(req: NextRequest) {
     }
 
     const now = new Date().toISOString();
-    const taskMeta = sub.tasks as unknown as { id: string; pay_per_task: number | null; title: string; xp_reward: number | null; drive_sheet_id: string | null } | null;
+    const taskMeta = sub.tasks as unknown as {
+      id: string; pay_per_task: number | null; title: string; xp_reward: number | null;
+      drive_sheet_id: string | null; allows_partial_payment: boolean | null;
+      unit_name: string | null; total_units: number | null; pay_per_unit_nc: number | null;
+    } | null;
     const taskTitle = taskMeta?.title ?? "a task";
 
     // ── APPROVE ──────────────────────────────────────────────────
     if (action === "approve") {
-      const grossCoins: number = coinsOverride ?? taskMeta?.pay_per_task ?? 0;
+      // Partial payment: if validUnits is provided and task supports it, compute gross from units
+      const isPartial = taskMeta?.allows_partial_payment && validUnits != null && taskMeta.pay_per_unit_nc != null;
+      const partialGross = isPartial ? (validUnits! * taskMeta!.pay_per_unit_nc!) : null;
+      const grossCoins: number = coinsOverride ?? partialGross ?? taskMeta?.pay_per_task ?? 0;
+
+      // Build a descriptive label for notifications/transactions
+      const unitLabel = taskMeta?.unit_name ?? "units";
+      const txDescription = isPartial
+        ? `Partial approval — ${validUnits} of ${taskMeta!.total_units} ${unitLabel}s: ${taskMeta!.title}`
+        : `Task approved: ${taskTitle}`;
 
       // 1. Apply NexLeader commission split — contributor gets 66%, NexLeader gets 8%
       let contributorCoins = grossCoins;
@@ -66,7 +80,7 @@ export async function POST(req: NextRequest) {
           sub.contributor_id,
           grossCoins,
           "task",
-          `Task approved: ${taskTitle}`,
+          txDescription,
         );
         contributorCoins = result.contributorCredit;
       } catch (commErr) {
@@ -81,7 +95,7 @@ export async function POST(req: NextRequest) {
           amount:         grossCoins,
           type:           "earned",
           source:         "task",
-          description:    `Task approved: ${taskTitle}`,
+          description:    txDescription,
         });
         contributorCoins = grossCoins;
       }
@@ -90,11 +104,13 @@ export async function POST(req: NextRequest) {
       const { error: e1 } = await admin
         .from("submissions")
         .update({
-          status:        "approved",
-          coins_awarded: contributorCoins,
-          feedback:      feedback ?? null,
-          reviewed_by:   user.id,
-          reviewed_at:   now,
+          status:              "approved",
+          coins_awarded:       contributorCoins,
+          feedback:            feedback ?? null,
+          reviewed_by:         user.id,
+          reviewed_at:         now,
+          valid_units:         isPartial ? validUnits : null,
+          partial_payment_nc:  isPartial ? partialGross : null,
         })
         .eq("id", submissionId);
 
@@ -144,10 +160,14 @@ export async function POST(req: NextRequest) {
       if (sdErr) console.error("[review-submission] increment_streak_day:", sdErr.message);
 
       // 5. Notify contributor (in-app)
+      const notifTitle   = isPartial ? "Partial Payment Approved" : "Submission Approved!";
+      const notifMessage = isPartial
+        ? `${validUnits} of ${taskMeta!.total_units} ${unitLabel}s validated for "${taskTitle}". +${contributorCoins} NexCoins added.`
+        : `Your submission for "${taskTitle}" was approved. +${contributorCoins} NexCoins added.`;
       const { error: e4 } = await admin.from("notifications").insert({
         user_id: sub.contributor_id,
-        title:   "Submission Approved!",
-        message: `Your submission for "${taskTitle}" was approved. +${contributorCoins} NexCoins added.`,
+        title:   notifTitle,
+        message: notifMessage,
         type:    "submission_approved",
       });
       if (e4) console.error("[review-submission] notification insert:", e4.message);

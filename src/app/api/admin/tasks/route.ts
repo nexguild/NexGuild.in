@@ -36,6 +36,9 @@ export async function POST(req: NextRequest) {
       assignment_instructions, assignment_questions, assignment_passing_score,
       required_level, xp_reward,
       status, project_id, pay_per_task_inr,
+      required_task_ids, excluded_task_ids,
+      external_tool_url, external_tool_name, external_tool_instructions, external_proof_type,
+      allows_partial_payment, unit_name, total_units, pay_per_unit_inr, pay_per_unit_nc,
     } = body as {
       title: string;
       task_type: string;
@@ -62,6 +65,17 @@ export async function POST(req: NextRequest) {
       xp_reward?: number;
       status: "active" | "draft";
       project_id?: string;
+      required_task_ids?: string[];
+      excluded_task_ids?: string[];
+      external_tool_url?: string | null;
+      external_tool_name?: string | null;
+      external_tool_instructions?: string | null;
+      external_proof_type?: string | null;
+      allows_partial_payment?: boolean;
+      unit_name?: string | null;
+      total_units?: number | null;
+      pay_per_unit_inr?: number | null;
+      pay_per_unit_nc?: number | null;
     };
 
     if (!title?.trim() || !task_type || !description?.trim()) {
@@ -97,6 +111,17 @@ export async function POST(req: NextRequest) {
         xp_reward: xp_reward ?? 0,
         status,
         project_id: project_id || null,
+        required_task_ids: required_task_ids ?? [],
+        excluded_task_ids: excluded_task_ids ?? [],
+        external_tool_url: external_tool_url ?? null,
+        external_tool_name: external_tool_name ?? null,
+        external_tool_instructions: external_tool_instructions ?? null,
+        external_proof_type: external_proof_type ?? null,
+        allows_partial_payment: allows_partial_payment ?? false,
+        unit_name: unit_name ?? null,
+        total_units: total_units ?? null,
+        pay_per_unit_inr: pay_per_unit_inr ?? null,
+        pay_per_unit_nc: pay_per_unit_nc ?? null,
       })
       .select("id, title, task_type, pay_per_task, total_slots, is_private, steps")
       .single();

@@ -29,7 +29,7 @@ const STATUS_STYLES: Record<string, string> = {
   archived: "bg-[var(--surface-subtle)] text-[var(--text-muted)]",
 };
 
-const TASK_TYPES = ["All Types", "Audio Recording", "Transcription", "Data Annotation", "App Testing", "Survey", "Content Task", "Micro-task"];
+const TASK_TYPES = ["All Types", "Audio Recording", "Transcription", "Data Annotation", "App Testing", "Survey", "Content Task", "Micro-task", "External Tool Task"];
 const STATUSES   = ["All Status", "active", "paused", "draft", "archived"];
 
 export default function AdminTasksPage() {

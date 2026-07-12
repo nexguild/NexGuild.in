@@ -21,6 +21,7 @@ interface Project {
   total_budget_nc: number;
   client_payment_amount: string | null;
   client_payment_received: boolean;
+  is_daily_target: boolean | null;
   created_at: string;
   task_count: number;
   nc_paid: number;
@@ -186,7 +187,14 @@ export default function AdminProjectsPage() {
                   <tr key={p.id} className="hover:bg-[var(--surface-subtle)] transition-colors">
                     {/* Project name */}
                     <td className="px-4 py-3 max-w-[200px]">
-                      <p className="font-semibold text-[var(--text-primary)] truncate">{p.name}</p>
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        <p className="font-semibold text-[var(--text-primary)] truncate">{p.name}</p>
+                        {p.is_daily_target && (
+                          <span className="flex-shrink-0 rounded px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+                            Daily
+                          </span>
+                        )}
+                      </div>
                       {p.description && <p className="text-xs text-[var(--text-muted)] truncate mt-0.5">{p.description}</p>}
                     </td>
                     {/* Client */}

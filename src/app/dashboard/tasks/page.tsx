@@ -14,11 +14,15 @@ interface Submission {
   submitted_at: string;
   coins_awarded: number | null;
   feedback: string | null;
+  valid_units: number | null;
+  partial_payment_nc: number | null;
   tasks: {
     title: string;
     task_type: string | null;
     pay_per_task: number | null;
     validation_time: string | null;
+    total_units: number | null;
+    unit_name: string | null;
   } | null;
 }
 
@@ -34,6 +38,7 @@ const STATUS_STYLES: Record<string, string> = {
   resubmit_requested:  "bg-orange-100 text-orange-600",
   submitted:           "bg-amber-100 text-amber-600",
   approved:            "bg-green-100 text-green-600",
+  "Partially Approved": "bg-teal-100 text-teal-700",
   rejected:            "bg-red-100 text-red-600",
 };
 
@@ -55,7 +60,7 @@ export default function TasksPage() {
 
       const { data, error: fetchErr } = await supabase
         .from("submissions")
-        .select("id, task_id, status, submitted_at, coins_awarded, feedback, tasks(title, task_type, pay_per_task, validation_time)")
+        .select("id, task_id, status, submitted_at, coins_awarded, feedback, valid_units, partial_payment_nc, tasks(title, task_type, pay_per_task, validation_time, total_units, unit_name)")
         .eq("contributor_id", user.id)
         .order("submitted_at", { ascending: false });
 
@@ -193,15 +198,19 @@ export default function TasksPage() {
           {filtered.map((s) => {
             const isResubmit   = s.status === "resubmit_requested";
             const isRejected   = s.status === "rejected";
+            const isPartial    = s.status === "approved" && s.valid_units != null;
             const payout       = s.status === "approved" && s.coins_awarded != null
               ? s.coins_awarded
               : s.tasks?.pay_per_task != null ? Math.floor(s.tasks.pay_per_task * 0.66) : null;
             const displayLabel = isResubmit
               ? "Needs Resubmission"
+              : isPartial
+              ? "Partially Approved"
               : TABS.find((t) => t.status === s.status)?.label ?? s.status;
 
             const accentColor =
-              s.status === "approved"            ? "#22c55e"
+              isPartial                           ? "#14b8a6"
+              : s.status === "approved"            ? "#22c55e"
               : s.status === "resubmit_requested" ? "#f97316"
               : s.status === "rejected"           ? "#ef4444"
               : s.status === "submitted"          ? "#f59e0b"
@@ -234,6 +243,11 @@ export default function TasksPage() {
                     {s.status === "submitted" && s.tasks?.validation_time && (
                       <p className="mt-1 text-xs text-indigo-500">⏱ Review within {s.tasks.validation_time}</p>
                     )}
+                    {isPartial && s.tasks?.total_units != null && (
+                      <p className="mt-1 text-xs text-emerald-600">
+                        {s.valid_units}/{s.tasks.total_units} {s.tasks.unit_name ?? "units"} validated
+                      </p>
+                    )}
                   </div>
                   <div className="flex flex-shrink-0 items-center gap-2.5">
                     {payout != null && (
@@ -245,7 +259,7 @@ export default function TasksPage() {
                         {payout.toLocaleString()}
                       </span>
                     )}
-                    <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${STATUS_STYLES[s.status] ?? "bg-slate-100 text-slate-500"}`}>
+                    <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${isPartial ? STATUS_STYLES["Partially Approved"] : STATUS_STYLES[s.status] ?? "bg-slate-100 text-slate-500"}`}>
                       {displayLabel}
                     </span>
                   </div>

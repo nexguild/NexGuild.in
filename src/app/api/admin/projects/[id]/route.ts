@@ -89,6 +89,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     "client_payment_amount", "client_payment_inr",
     "client_payment_received", "client_payment_received_at",
     "internal_notes",
+    "is_daily_target", "daily_quota", "daily_unit_name", "file_delivery_method",
   ];
   const updates: Record<string, unknown> = {};
   for (const key of allowed) {

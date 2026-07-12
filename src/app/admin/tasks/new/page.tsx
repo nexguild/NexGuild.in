@@ -11,11 +11,12 @@ import { supabase } from "@/lib/supabase";
 import { usePageGuard } from "@/components/layout/admin-auth-guard";
 import { ADMIN_ROLES } from "@/lib/admin-permissions";
 import { PayoutBreakdown } from "@/components/admin/PayoutBreakdown";
+import { EligibilityRulesPicker } from "@/components/admin/EligibilityRulesPicker";
 
 const TASK_TYPES = [
   "Audio Recording", "Transcription", "Data Annotation", "App Testing",
   "Game Testing", "Survey", "Social Media Task", "Web Research",
-  "Data Collection", "Content Task", "Micro-task",
+  "Data Collection", "Content Task", "Micro-task", "External Tool Task",
 ];
 
 const LANGUAGES = [
@@ -136,6 +137,22 @@ export default function PostNewTaskPage() {
   // Steps builder
   const [steps, setSteps] = useState<TaskStep[]>([]);
 
+  // Partial payment
+  const [allowsPartial, setAllowsPartial]           = useState(false);
+  const [unitName, setUnitName]                     = useState("");
+  const [totalUnits, setTotalUnits]                 = useState("");
+  const [payPerUnitInr, setPayPerUnitInr]           = useState("");
+
+  // External tool config
+  const [extToolUrl, setExtToolUrl]                   = useState("");
+  const [extToolName, setExtToolName]                 = useState("");
+  const [extToolInstructions, setExtToolInstructions] = useState("");
+  const [extProofType, setExtProofType]               = useState<"screenshot" | "code" | "both">("screenshot");
+
+  // Eligibility rules
+  const [requiredTaskIds, setRequiredTaskIds] = useState<string[]>([]);
+  const [excludedTaskIds, setExcludedTaskIds] = useState<string[]>([]);
+
   const [saving, setSaving] = useState(false);
   const [error, setError]   = useState<string | null>(null);
 
@@ -208,6 +225,10 @@ export default function PostNewTaskPage() {
       setError("Title, type, and description are required.");
       return;
     }
+    if (taskType === "External Tool Task" && !extToolUrl.trim()) {
+      setError("External tool URL is required for this task type.");
+      return;
+    }
     setSaving(true);
     setError(null);
 
@@ -241,8 +262,19 @@ export default function PostNewTaskPage() {
         task_type:                   taskType,
         description:                 description.trim(),
         requirements:                requirements.trim() || null,
-        pay_per_task:                payInr ? Math.round(parseFloat(payInr) * nexcoinPerInr) : null,
-        pay_per_task_inr:            payInr ? parseFloat(payInr) : null,
+        pay_per_task:                (() => {
+          if (allowsPartial && totalUnits && payPerUnitInr) {
+            const unitNc = Math.round(parseFloat(payPerUnitInr) * nexcoinPerInr);
+            return parseInt(totalUnits) * unitNc;
+          }
+          return payInr ? Math.round(parseFloat(payInr) * nexcoinPerInr) : null;
+        })(),
+        pay_per_task_inr:            (() => {
+          if (allowsPartial && totalUnits && payPerUnitInr) {
+            return parseInt(totalUnits) * parseFloat(payPerUnitInr);
+          }
+          return payInr ? parseFloat(payInr) : null;
+        })(),
         total_slots:                 totalSlots ? parseInt(totalSlots) : null,
         deadline:                    deadline || null,
         assignment_required:         assignmentReq,
@@ -262,6 +294,17 @@ export default function PostNewTaskPage() {
         xp_reward:                   xpReward ? parseInt(xpReward) : 0,
         status,
         project_id:                  projectId || null,
+        allows_partial_payment:      allowsPartial,
+        unit_name:                   allowsPartial ? unitName.trim() || null : null,
+        total_units:                 allowsPartial && totalUnits ? parseInt(totalUnits) : null,
+        pay_per_unit_inr:            allowsPartial && payPerUnitInr ? parseFloat(payPerUnitInr) : null,
+        pay_per_unit_nc:             allowsPartial && payPerUnitInr ? Math.round(parseFloat(payPerUnitInr) * nexcoinPerInr) : null,
+        required_task_ids:           requiredTaskIds,
+        excluded_task_ids:           excludedTaskIds,
+        external_tool_url:           taskType === "External Tool Task" ? extToolUrl.trim() || null : null,
+        external_tool_name:          taskType === "External Tool Task" ? extToolName.trim() || null : null,
+        external_tool_instructions:  taskType === "External Tool Task" ? extToolInstructions.trim() || null : null,
+        external_proof_type:         taskType === "External Tool Task" ? extProofType : null,
       }),
     });
 
@@ -335,6 +378,61 @@ export default function PostNewTaskPage() {
           </div>
         </section>
 
+        {/* ── External Tool Config (conditional) ────────────────────────── */}
+        {taskType === "External Tool Task" && (
+          <section className="rounded-xl border border-amber-500/30 bg-[var(--surface-card)] p-6 space-y-5">
+            <div>
+              <h2 className="font-bold text-[var(--text-primary)]">External Tool Configuration</h2>
+              <p className="text-xs text-[var(--text-secondary)] mt-0.5">
+                The actual work happens in an external platform. NexGuild collects proof of completion.
+              </p>
+            </div>
+
+            <div>
+              <label className={labelClass}>Tool URL <span className="text-[var(--danger-text)]">*</span></label>
+              <input type="url" value={extToolUrl} onChange={(e) => setExtToolUrl(e.target.value)}
+                placeholder="https://client-platform.com/task/123" className={inputClass} />
+              <p className="text-xs text-[var(--text-muted)] mt-1">Contributors will be sent here to complete the work.</p>
+            </div>
+
+            <div>
+              <label className={labelClass}>Tool / Platform Name</label>
+              <input type="text" value={extToolName} onChange={(e) => setExtToolName(e.target.value)}
+                placeholder="e.g. Client Annotation Platform, Survey Tool" className={inputClass} />
+            </div>
+
+            <div>
+              <label className={labelClass}>Login / Access Instructions</label>
+              <textarea value={extToolInstructions} onChange={(e) => setExtToolInstructions(e.target.value)} rows={4}
+                placeholder={"e.g.\n1. Open the tool link below.\n2. Log in with your registered email.\n3. Complete all tasks in the queue.\n4. Download your completion certificate."}
+                className={textareaClass} />
+            </div>
+
+            <div>
+              <label className={labelClass}>Proof of Completion</label>
+              <p className="text-xs text-[var(--text-muted)] mb-3">What do contributors submit to prove they completed the work?</p>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {([
+                  { value: "screenshot", label: "Screenshot",       desc: "Upload a screenshot of the completed work" },
+                  { value: "code",       label: "Completion Code",   desc: "Enter a code from the external tool" },
+                  { value: "both",       label: "Both",              desc: "Screenshot AND completion code required" },
+                ] as const).map(({ value, label, desc }) => (
+                  <label key={value} className={`flex flex-col gap-1 p-3 rounded-lg border cursor-pointer transition-colors ${
+                    extProofType === value
+                      ? "border-amber-500 bg-amber-500/5"
+                      : "border-[var(--border-default)] hover:border-[var(--border-strong)]"
+                  }`}>
+                    <input type="radio" name="ext_proof_type" value={value}
+                      checked={extProofType === value} onChange={() => setExtProofType(value)} className="sr-only" />
+                    <span className={`text-sm font-semibold ${extProofType === value ? "text-amber-500" : "text-[var(--text-primary)]"}`}>{label}</span>
+                    <span className="text-xs text-[var(--text-muted)]">{desc}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
+
         {/* ── Pay & Capacity ─────────────────────────────────────────────── */}
         <section className="rounded-xl border border-[var(--border-default)] bg-[var(--surface-card)] p-6 space-y-5">
           <h2 className="font-bold text-[var(--text-primary)]">Pay & Capacity</h2>
@@ -357,11 +455,60 @@ export default function PostNewTaskPage() {
             </div>
           </div>
 
-          <PayoutBreakdown inrAmount={parseFloat(payInr) || 0} nexcoinPerInr={nexcoinPerInr} />
+          {!allowsPartial && <PayoutBreakdown inrAmount={parseFloat(payInr) || 0} nexcoinPerInr={nexcoinPerInr} />}
 
           <div>
             <label className={labelClass}>Deadline</label>
             <input type="date" value={deadline} onChange={(e) => setDeadline(e.target.value)} className={inputClass} />
+          </div>
+
+          {/* ── Partial Payment ──────────────────────────────────────── */}
+          <div className="border-t border-[var(--border-default)] pt-5 space-y-4">
+            <Toggle
+              value={allowsPartial}
+              onChange={setAllowsPartial}
+              label="Allow partial payment"
+              description="For tasks with multiple units (e.g. recordings). Admin sets how many units are valid at review time."
+            />
+            {allowsPartial && (() => {
+              const unitNc   = payPerUnitInr ? Math.round(parseFloat(payPerUnitInr) * nexcoinPerInr) : 0;
+              const totalNc  = unitNc * (parseInt(totalUnits) || 0);
+              const totalInr = parseFloat(payPerUnitInr || "0") * (parseInt(totalUnits) || 0);
+              return (
+                <div className="space-y-4 pl-4 border-l-2 border-[var(--brand-500)]/30">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div>
+                      <label className={labelClass}>Unit name</label>
+                      <input type="text" value={unitName} onChange={(e) => setUnitName(e.target.value)}
+                        placeholder="e.g. recording" className={inputClass} />
+                    </div>
+                    <div>
+                      <label className={labelClass}>Total units / submission</label>
+                      <input type="number" value={totalUnits} onChange={(e) => setTotalUnits(e.target.value)}
+                        min={1} placeholder="e.g. 60" className={inputClass} />
+                    </div>
+                    <div>
+                      <label className={labelClass}>Pay per unit (₹ INR)</label>
+                      <div className="relative">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-[var(--text-muted)] pointer-events-none">₹</span>
+                        <input type="number" value={payPerUnitInr} onChange={(e) => setPayPerUnitInr(e.target.value)}
+                          min={0} step="0.01" placeholder="e.g. 5" className={`${inputClass} pl-7`} />
+                      </div>
+                    </div>
+                  </div>
+                  {totalNc > 0 && (
+                    <div className="rounded-lg bg-[var(--surface-subtle)] border border-[var(--border-default)] px-4 py-3 text-sm">
+                      <p className="text-[var(--text-muted)] text-xs mb-1">Full completion payout (stored as pay_per_task)</p>
+                      <p className="font-semibold text-[var(--text-primary)]">
+                        {parseInt(totalUnits)} {unitName || "units"} × {unitNc} NC = <span className="text-[var(--brand-500)]">{totalNc} NC</span>
+                        <span className="text-[var(--text-muted)] font-normal ml-2">(≈ ₹{totalInr.toFixed(2)})</span>
+                      </p>
+                      <p className="text-xs text-[var(--text-muted)] mt-1">Contributor receives 66% = {Math.floor(totalNc * 0.66)} NC on full approval</p>
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
           </div>
         </section>
 
@@ -656,6 +803,22 @@ export default function PostNewTaskPage() {
           <p className="text-xs text-[var(--text-muted)]">
             These appear alongside NexGuild's default rules. Leave blank if no special conditions apply.
           </p>
+        </section>
+
+        {/* ── Eligibility Rules ─────────────────────────────────────────── */}
+        <section className="rounded-xl border border-[var(--border-default)] bg-[var(--surface-card)] p-6 space-y-5">
+          <div>
+            <h2 className="font-bold text-[var(--text-primary)]">Eligibility Rules</h2>
+            <p className="text-xs text-[var(--text-secondary)] mt-0.5">
+              Gate this task based on a contributor&apos;s history with other tasks.
+              Leave both lists empty to allow all contributors.
+            </p>
+          </div>
+          <EligibilityRulesPicker
+            required={requiredTaskIds}
+            excluded={excludedTaskIds}
+            onChange={(req, excl) => { setRequiredTaskIds(req); setExcludedTaskIds(excl); }}
+          />
         </section>
 
         {/* ── Steps Builder ──────────────────────────────────────────────── */}
