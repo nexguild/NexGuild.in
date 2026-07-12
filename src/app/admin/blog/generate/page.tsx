@@ -27,11 +27,12 @@ function countH2(md: string) {
 }
 
 function keywordDensity(content: string, keyword: string): number {
-  if (!keyword.trim()) return 0;
-  const words = content.toLowerCase().split(/\s+/).length;
-  const kw = keyword.toLowerCase().trim();
-  const matches = content.toLowerCase().split(kw).length - 1;
-  return words > 0 ? Math.round((matches / words) * 1000) / 10 : 0;
+  if (!keyword.trim() || !content.trim()) return 0;
+  const totalWords = content.trim().split(/\s+/).filter(Boolean).length;
+  if (totalWords === 0) return 0;
+  const escaped = keyword.trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const matches = (content.match(new RegExp(escaped, "gi")) ?? []).length;
+  return Math.round((matches / totalWords) * 1000) / 10;
 }
 
 // Light client-side markdown → HTML (handles ##, ###, **, *, bullets, numbered)
