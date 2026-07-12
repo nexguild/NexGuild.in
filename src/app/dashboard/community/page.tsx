@@ -92,24 +92,26 @@ export default function CommunityPage() {
           </span>
           Community Guidelines
         </h2>
-        <ul className="space-y-3">
+        <ul className="space-y-2.5">
           {[
             "Be respectful and help others when you can.",
             "No spam, self-promotion, or off-topic links.",
             "Do not share task answers or cheat — it affects everyone's coins.",
           ].map((rule) => (
             <li key={rule} className="flex items-start gap-3 text-sm text-slate-600">
-              <span className="mt-0.5 h-5 w-5 flex-shrink-0 flex items-center justify-center rounded-full bg-indigo-50 text-indigo-500 text-xs font-bold">→</span>
-              {rule}
+              <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-indigo-400" />
+              <span>{rule}</span>
             </li>
           ))}
           <li className="flex items-start gap-3 text-sm text-slate-600">
-            <span className="mt-0.5 h-5 w-5 flex-shrink-0 flex items-center justify-center rounded-full bg-indigo-50 text-indigo-500 text-xs font-bold">→</span>
-            For account issues, use{" "}
-            <Link href="/dashboard/support" className="text-indigo-500 hover:text-indigo-700 hover:underline font-medium">
-              Support Tickets
-            </Link>{" "}
-            instead of the community chat.
+            <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-indigo-400" />
+            <span>
+              For account issues, use{" "}
+              <Link href="/dashboard/support" className="text-indigo-500 hover:text-indigo-700 underline font-medium">
+                Support Tickets
+              </Link>
+              {" "}instead of the community chat.
+            </span>
           </li>
         </ul>
       </div>

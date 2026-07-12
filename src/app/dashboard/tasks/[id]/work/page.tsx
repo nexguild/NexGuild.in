@@ -6,7 +6,7 @@ import Link from "next/link";
 import {
   ArrowLeft, Lock, CheckCircle2, ChevronDown,
   Upload, X, Loader2, Clock, Users, AlertCircle,
-  FileText, ExternalLink, Send,
+  FileText, ExternalLink, Send, CreditCard,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { NexCoinIcon } from "@/components/ui/nexcoin-icon";
@@ -401,10 +401,10 @@ export default function TaskWorkPage() {
             </p>
           )}
           {task.validation_time && submissionStatus !== "approved" && (
-            <p className="text-xs text-slate-400 mt-1">⏱ Review: {task.validation_time}</p>
+            <p className="text-xs text-slate-400 mt-1 inline-flex items-center gap-1"><Clock className="h-3 w-3" /> Review: {task.validation_time}</p>
           )}
           {task.payment_time && submissionStatus !== "approved" && (
-            <p className="text-xs text-slate-400 mt-0.5">💰 Payment: within {task.payment_time} of approval</p>
+            <p className="text-xs text-slate-400 mt-0.5 inline-flex items-center gap-1"><CreditCard className="h-3 w-3" /> Payment: within {task.payment_time} of approval</p>
           )}
         </div>
         <div className="flex gap-3 justify-center">
@@ -444,9 +444,8 @@ export default function TaskWorkPage() {
             <ArrowLeft className="h-4 w-4" /> Back to Opportunities
           </Link>
 
-          {/* Task emoji + title */}
-          <div className="relative z-10 flex items-start gap-3 mb-4">
-            <span className="mt-0.5 flex-shrink-0 text-3xl">{taskEmoji}</span>
+          {/* Task title */}
+          <div className="relative z-10 mb-4">
             <h1 className="text-xl font-extrabold leading-tight text-white">{task.title}</h1>
           </div>
 
@@ -478,12 +477,12 @@ export default function TaskWorkPage() {
             )}
             {task.validation_time && (
               <span className="inline-flex items-center gap-1 rounded-full border border-blue-300/40 bg-blue-400/20 px-3 py-1 text-xs font-medium text-blue-100">
-                ⏱ Review: {task.validation_time}
+                <Clock className="h-3 w-3" /> Review: {task.validation_time}
               </span>
             )}
             {task.payment_time && (
               <span className="inline-flex items-center gap-1 rounded-full border border-orange-300/40 bg-orange-400/20 px-3 py-1 text-xs font-medium text-orange-100">
-                💰 Payment: {task.payment_time}
+                <CreditCard className="h-3 w-3" /> Payment: {task.payment_time}
               </span>
             )}
             {task.total_slots != null && (
@@ -937,31 +936,35 @@ export default function TaskWorkPage() {
                 </p>
               </div>
 
-              {/* Info card — 3-column grid */}
-              <div className="rounded-xl bg-indigo-50 border border-indigo-100 p-4">
-                <div className="grid grid-cols-3 divide-x divide-indigo-100">
-                  {contributorCoins != null && (
-                    <div className="flex flex-col items-center gap-1 px-2">
-                      <NexCoinIcon size={22} />
-                      <p className="text-xs text-slate-400">Reward</p>
-                      <p className="text-sm font-bold text-slate-700 text-center">{contributorCoins} NexCoins</p>
+              {/* Info grid */}
+              <div className="grid grid-cols-3 gap-3">
+                {contributorCoins != null && (
+                  <div className="flex flex-col items-center gap-1.5 rounded-xl bg-amber-50 border border-amber-100 p-3">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-100">
+                      <NexCoinIcon size={18} />
                     </div>
-                  )}
-                  {task.validation_time && (
-                    <div className="flex flex-col items-center gap-1 px-2">
-                      <span className="text-xl">⏱</span>
-                      <p className="text-xs text-slate-400">Review</p>
-                      <p className="text-sm font-bold text-slate-700 text-center">{task.validation_time}</p>
+                    <p className="text-[10px] font-medium text-slate-400 uppercase tracking-wide">Reward</p>
+                    <p className="text-xs font-bold text-slate-700 text-center leading-tight">{contributorCoins} NexCoins</p>
+                  </div>
+                )}
+                {task.validation_time && (
+                  <div className="flex flex-col items-center gap-1.5 rounded-xl bg-indigo-50 border border-indigo-100 p-3">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-100">
+                      <Clock className="h-4 w-4 text-indigo-500" />
                     </div>
-                  )}
-                  {task.payment_time && (
-                    <div className="flex flex-col items-center gap-1 px-2">
-                      <span className="text-xl">💳</span>
-                      <p className="text-xs text-slate-400">Payment</p>
-                      <p className="text-xs sm:text-sm font-bold text-slate-700 text-center">{task.payment_time}</p>
+                    <p className="text-[10px] font-medium text-slate-400 uppercase tracking-wide">Review</p>
+                    <p className="text-xs font-bold text-slate-700 text-center leading-tight">{task.validation_time}</p>
+                  </div>
+                )}
+                {task.payment_time && (
+                  <div className="flex flex-col items-center gap-1.5 rounded-xl bg-teal-50 border border-teal-100 p-3">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-teal-100">
+                      <CreditCard className="h-4 w-4 text-teal-500" />
                     </div>
-                  )}
-                </div>
+                    <p className="text-[10px] font-medium text-slate-400 uppercase tracking-wide">Payment</p>
+                    <p className="text-xs font-bold text-slate-700 text-center leading-tight">{task.payment_time}</p>
+                  </div>
+                )}
               </div>
 
               {/* Action buttons */}
@@ -987,24 +990,26 @@ export default function TaskWorkPage() {
 
       {/* ── FIXED BOTTOM BAR ─────────────────────────────────────────── */}
       {hasSteps && (
-        <div className="fixed bottom-0 left-0 right-0 lg:left-[240px] z-30 border-t border-indigo-100/60 bg-white/90 backdrop-blur-md shadow-lg">
+        <div className="fixed bottom-0 left-0 right-0 lg:left-[240px] z-30 bg-white/95 backdrop-blur-md shadow-[0_-1px_0_0_rgba(99,102,241,0.12),0_-4px_16px_0_rgba(0,0,0,0.06)]">
+          {/* Gradient accent line at top */}
+          <div className="h-[2px] w-full" style={{ background: "linear-gradient(90deg, #6366f1, #14b8a6)" }} />
           <div className="max-w-3xl mx-auto px-4 py-3">
             {allDone ? (
-              /* All stages done: stack vertically on mobile, row on sm+ */
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-4">
+              /* All stages complete — single row: reward pill + submit button */
+              <div className="flex items-center gap-3">
                 {contributorCoins != null && (
-                  <div className="flex flex-1 items-center gap-1.5">
-                    <NexCoinIcon size={16} />
-                    <span className="text-sm text-slate-500">
-                      Earn up to:{" "}
-                      <span className="font-bold text-amber-500">{contributorCoins} NexCoins</span>
-                    </span>
+                  <div className="flex flex-1 items-center gap-2 min-w-0">
+                    <div className="flex items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50 px-3 py-1.5 flex-shrink-0">
+                      <NexCoinIcon size={14} />
+                      <span className="text-xs font-bold text-amber-600 whitespace-nowrap">{contributorCoins} NexCoins</span>
+                    </div>
+                    <span className="hidden sm:block text-xs text-slate-400 truncate">Ready to submit all stages</span>
                   </div>
                 )}
                 <button
                   onClick={finalSubmit}
                   disabled={finalSubmitting}
-                  className="flex items-center justify-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold text-white transition-all hover:opacity-90 disabled:opacity-50"
+                  className="flex flex-shrink-0 items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold text-white transition-all hover:opacity-90 active:scale-95 disabled:opacity-50"
                   style={{ background: "linear-gradient(135deg, #6366f1 0%, #14b8a6 100%)" }}
                 >
                   {finalSubmitting
@@ -1013,30 +1018,27 @@ export default function TaskWorkPage() {
                 </button>
               </div>
             ) : (
-              /* In progress: coin amount + dots */
-              <div className="flex items-center gap-4">
+              /* In progress — reward pill + step progress */
+              <div className="flex items-center gap-3">
                 {contributorCoins != null && (
-                  <div className="flex min-w-0 flex-1 items-center gap-1.5">
-                    <NexCoinIcon size={16} className="flex-shrink-0" />
-                    <span className="whitespace-nowrap text-sm text-slate-500">
-                      Earn up to:{" "}
-                      <span className="font-bold text-amber-500">{contributorCoins} NexCoins</span>
-                    </span>
+                  <div className="flex items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50 px-3 py-1.5 flex-shrink-0">
+                    <NexCoinIcon size={14} />
+                    <span className="text-xs font-bold text-amber-600 whitespace-nowrap">{contributorCoins} NexCoins</span>
                   </div>
                 )}
-                <div className="flex flex-shrink-0 items-center gap-2">
+                <div className="flex flex-1 items-center justify-end gap-2.5">
                   <div className="flex items-center gap-1">
                     {steps.map((_, i) => (
                       <div
                         key={i}
                         className={`rounded-full transition-all duration-300 ${
-                          doneSet.has(i) ? "h-2 w-4 bg-indigo-500" : "h-2 w-2 bg-slate-200"
+                          doneSet.has(i) ? "h-2 w-5 bg-indigo-500" : "h-2 w-2 bg-slate-200"
                         }`}
                       />
                     ))}
                   </div>
-                  <span className="whitespace-nowrap text-xs text-slate-400">
-                    {completedCount}/{steps.length} done
+                  <span className="whitespace-nowrap text-xs font-medium text-slate-400">
+                    {completedCount}/{steps.length}
                   </span>
                 </div>
               </div>
