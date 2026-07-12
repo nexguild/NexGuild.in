@@ -35,8 +35,8 @@ export async function POST(req: NextRequest) {
   const ok = await verifyAdmin(req);
   if (!ok) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const ghPat = process.env.GH_PAT;
-  if (!ghPat) return NextResponse.json({ error: "GH_PAT not configured." }, { status: 500 });
+  const ghPat = process.env.GITHUB_BLOG_PAT;
+  if (!ghPat) return NextResponse.json({ error: "GITHUB_BLOG_PAT not configured." }, { status: 500 });
 
   const { title, slug, description, category, date, content, filename } = await req.json() as {
     title: string; slug: string; description: string; category: string;

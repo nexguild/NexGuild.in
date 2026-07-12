@@ -29,8 +29,8 @@ export async function GET(req: NextRequest) {
   const ok = await verifyAdmin(req);
   if (!ok) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const ghPat = process.env.GH_PAT;
-  if (!ghPat) return NextResponse.json({ error: "GH_PAT not configured." }, { status: 500 });
+  const ghPat = process.env.GITHUB_BLOG_PAT;
+  if (!ghPat) return NextResponse.json({ error: "GITHUB_BLOG_PAT not configured." }, { status: 500 });
 
   const listRes = await fetch(`https://api.github.com/repos/${REPO}/contents/${BLOG_PATH}`, {
     headers: {
@@ -96,8 +96,8 @@ export async function DELETE(req: NextRequest) {
   const ok = await verifyAdmin(req);
   if (!ok) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const ghPat = process.env.GH_PAT;
-  if (!ghPat) return NextResponse.json({ error: "GH_PAT not configured." }, { status: 500 });
+  const ghPat = process.env.GITHUB_BLOG_PAT;
+  if (!ghPat) return NextResponse.json({ error: "GITHUB_BLOG_PAT not configured." }, { status: 500 });
 
   const { filename, sha } = await req.json() as { filename: string; sha: string };
   if (!filename || !sha) return NextResponse.json({ error: "filename and sha required." }, { status: 400 });
