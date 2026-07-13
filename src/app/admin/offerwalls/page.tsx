@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { X, Settings2, Copy, Check, Eye, EyeOff, Plus, Trash2, Loader2 } from "lucide-react";
+import { X, Settings2, Copy, Check, Eye, EyeOff, Plus, Trash2, Loader2, Upload } from "lucide-react";
 import { usePageGuard } from "@/components/layout/admin-auth-guard";
 import { ADMIN_ROLES } from "@/lib/admin-permissions";
 import { supabase } from "@/lib/supabase";
@@ -44,6 +44,8 @@ interface ConfigForm {
   custom_config: string;
   is_active: boolean;
   display_order: string;
+  feature_tags: string;
+  available_countries: string;
 }
 
 interface AddForm {
@@ -99,20 +101,27 @@ function SecretField({ value, label }: { value: string; label: string }) {
   );
 }
 
+const EMPTY_FORM: ConfigForm = {
+  name: "", api_key: "", postback_secret: "", embed_url_template: "",
+  contributor_share_pct: "70", notes: "", integration_type: "iframe",
+  logo_url: "", description: "", hash_format: "",
+  postback_param_map: "", custom_config: "", is_active: true, display_order: "0",
+  feature_tags: "", available_countries: "",
+};
+
 export default function AdminOfferwallsPage() {
   const allowed = usePageGuard(ADMIN_ROLES.UPPER);
 
   const [providers, setProviders]   = useState<Provider[]>([]);
   const [loading, setLoading]       = useState(true);
   const [configuring, setConfiguring] = useState<Provider | null>(null);
-  const [form, setForm]             = useState<ConfigForm>({
-    name: "", api_key: "", postback_secret: "", embed_url_template: "",
-    contributor_share_pct: "70", notes: "", integration_type: "iframe",
-    logo_url: "", description: "", hash_format: "",
-    postback_param_map: "", custom_config: "", is_active: true, display_order: "0",
-  });
+  const [form, setForm]             = useState<ConfigForm>(EMPTY_FORM);
   const [saving, setSaving]         = useState(false);
   const [saveError, setSaveError]   = useState<string | null>(null);
+
+  // Logo upload state
+  const [logoUploading, setLogoUploading] = useState(false);
+  const [logoUploadError, setLogoUploadError] = useState<string | null>(null);
 
   // Add provider modal
   const [showAdd, setShowAdd]       = useState(false);
@@ -150,6 +159,20 @@ export default function AdminOfferwallsPage() {
   function openConfigure(p: Provider) {
     setConfiguring(p);
     setSaveError(null);
+    setLogoUploadError(null);
+
+    const cc = p.custom_config ?? {};
+    const featureTags = Array.isArray(cc.feature_tags)
+      ? (cc.feature_tags as string[]).join(", ")
+      : typeof cc.feature_tags === "string" ? cc.feature_tags : "";
+    const availableCountries = Array.isArray(cc.available_countries)
+      ? (cc.available_countries as string[]).join(", ")
+      : typeof cc.available_countries === "string" ? cc.available_countries : "";
+
+    // Strip the dedicated fields from the raw JSON textarea
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { feature_tags: _ft, available_countries: _ac, ...restConfig } = cc;
+
     setForm({
       name:                  p.name,
       api_key:               p.api_key ?? "",
@@ -162,12 +185,48 @@ export default function AdminOfferwallsPage() {
       description:           p.description ?? "",
       hash_format:           p.hash_format ?? "",
       postback_param_map:    p.postback_param_map ? JSON.stringify(p.postback_param_map, null, 2) : "",
-      custom_config:         p.custom_config && Object.keys(p.custom_config).length > 0
-                               ? JSON.stringify(p.custom_config, null, 2)
-                               : "",
+      custom_config:         Object.keys(restConfig).length > 0 ? JSON.stringify(restConfig, null, 2) : "",
       is_active:             p.is_active ?? true,
       display_order:         String(p.display_order ?? 0),
+      feature_tags:          featureTags,
+      available_countries:   availableCountries,
     });
+  }
+
+  async function handleLogoFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file || !configuring) return;
+
+    const allowed = ["image/png", "image/jpeg", "image/svg+xml"];
+    if (!allowed.includes(file.type)) {
+      setLogoUploadError("Only PNG, JPG, or SVG files accepted.");
+      return;
+    }
+    if (file.size > 500 * 1024) {
+      setLogoUploadError("File must be under 500 KB.");
+      return;
+    }
+
+    setLogoUploadError(null);
+    setLogoUploading(true);
+
+    const ext = file.type === "image/svg+xml" ? "svg" : file.type === "image/png" ? "png" : "jpg";
+    const fileName = `${configuring.slug}.${ext}`;
+
+    const { error: uploadErr } = await supabase.storage
+      .from("offerwall-logos")
+      .upload(fileName, file, { contentType: file.type, upsert: true });
+
+    if (uploadErr) {
+      setLogoUploadError(uploadErr.message);
+      setLogoUploading(false);
+      return;
+    }
+
+    const { data: urlData } = supabase.storage.from("offerwall-logos").getPublicUrl(fileName);
+    setForm((f) => ({ ...f, logo_url: urlData.publicUrl }));
+    setLogoUploading(false);
+    e.target.value = "";
   }
 
   async function saveConfig(e: React.FormEvent) {
@@ -177,7 +236,7 @@ export default function AdminOfferwallsPage() {
     setSaveError(null);
 
     let paramMap: Record<string, string> | undefined;
-    let customCfg: Record<string, unknown> | undefined;
+    let customCfg: Record<string, unknown> = {};
     if (form.postback_param_map.trim()) {
       try { paramMap = JSON.parse(form.postback_param_map); }
       catch { setSaveError("Postback Param Map is not valid JSON."); setSaving(false); return; }
@@ -186,6 +245,12 @@ export default function AdminOfferwallsPage() {
       try { customCfg = JSON.parse(form.custom_config); }
       catch { setSaveError("Custom Config is not valid JSON."); setSaving(false); return; }
     }
+
+    // Merge feature_tags and available_countries back into custom_config
+    const tags      = form.feature_tags.split(",").map((t) => t.trim()).filter(Boolean);
+    const countries = form.available_countries.split(",").map((c) => c.trim()).filter(Boolean);
+    if (tags.length > 0)      customCfg.feature_tags       = tags;
+    if (countries.length > 0) customCfg.available_countries = countries;
 
     const token = await getToken();
     const res = await fetch("/api/admin/offerwalls", {
@@ -204,7 +269,7 @@ export default function AdminOfferwallsPage() {
         description:           form.description,
         hash_format:           form.hash_format,
         postback_param_map:    paramMap ?? {},
-        custom_config:         customCfg ?? {},
+        custom_config:         customCfg,
         is_active:             form.is_active,
         display_order:         form.display_order,
       }),
@@ -331,6 +396,8 @@ export default function AdminOfferwallsPage() {
     );
   }
 
+  const tagPills = form.feature_tags.split(",").map((t) => t.trim()).filter(Boolean);
+
   return (
     <div className="space-y-6">
       <div className="flex items-start justify-between gap-4 flex-wrap">
@@ -418,7 +485,7 @@ export default function AdminOfferwallsPage() {
                 <input type="text" value={form.hash_format} onChange={(e) => setForm((f) => ({ ...f, hash_format: e.target.value }))}
                   placeholder="e.g. {trans_id}-{secret} or {user_id}-{secret}"
                   className="w-full h-10 px-3 rounded-md border border-[var(--border-strong)] bg-[var(--surface-subtle)] text-sm text-[var(--text-primary)] font-mono focus:outline-none focus:ring-2 focus:ring-[var(--border-focus)] placeholder:font-sans placeholder:text-[var(--text-muted)]" />
-                <p className="text-xs text-[var(--text-muted)] mt-1">Template used to compute md5 hash for postback validation. Leave blank for simple secret comparison.</p>
+                <p className="text-xs text-[var(--text-muted)] mt-1">Template for md5 hash validation. Leave blank for simple secret comparison.</p>
               </div>
 
               {/* Embed URL Template */}
@@ -447,7 +514,7 @@ export default function AdminOfferwallsPage() {
                   onChange={(e) => setForm((f) => ({ ...f, postback_param_map: e.target.value }))}
                   placeholder={'{\n  "user_id": "uid",\n  "trans_id": "transaction_id",\n  "amount": "reward"\n}'}
                   className="w-full px-3 py-2 rounded-md border border-[var(--border-strong)] bg-[var(--surface-subtle)] text-xs text-[var(--text-primary)] font-mono focus:outline-none focus:ring-2 focus:ring-[var(--border-focus)] resize-none placeholder:font-sans placeholder:text-[var(--text-muted)]" />
-                <p className="text-xs text-[var(--text-muted)] mt-1">Maps internal field names → provider&apos;s actual param names. Used by the generic postback handler.</p>
+                <p className="text-xs text-[var(--text-muted)] mt-1">Maps internal field names → provider&apos;s actual param names.</p>
               </div>
 
               {/* Custom Config */}
@@ -459,20 +526,98 @@ export default function AdminOfferwallsPage() {
                   className="w-full px-3 py-2 rounded-md border border-[var(--border-strong)] bg-[var(--surface-subtle)] text-xs text-[var(--text-primary)] font-mono focus:outline-none focus:ring-2 focus:ring-[var(--border-focus)] resize-y placeholder:font-sans placeholder:text-[var(--text-muted)]" />
               </div>
 
-              {/* Logo + Description */}
-              <div className="grid grid-cols-1 gap-3">
-                <div>
-                  <label className="block text-sm font-medium text-[var(--text-primary)] mb-1.5">Logo URL</label>
-                  <input type="text" value={form.logo_url} onChange={(e) => setForm((f) => ({ ...f, logo_url: e.target.value }))}
-                    placeholder="https://..."
-                    className="w-full h-10 px-3 rounded-md border border-[var(--border-strong)] bg-[var(--surface-subtle)] text-sm text-[var(--text-primary)] font-mono focus:outline-none focus:ring-2 focus:ring-[var(--border-focus)] placeholder:font-sans placeholder:text-[var(--text-muted)]" />
+              {/* ── Logo Upload ─────────────────────────────────────── */}
+              <div>
+                <label className="block text-sm font-medium text-[var(--text-primary)] mb-1.5">Provider Logo</label>
+                <div className="flex items-start gap-3">
+                  {/* 40×40 preview */}
+                  <div className="h-10 w-10 rounded-lg border border-[var(--border-default)] bg-[var(--surface-subtle)] flex items-center justify-center flex-shrink-0 overflow-hidden">
+                    {form.logo_url ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={form.logo_url} alt="" className="h-full w-full object-cover" />
+                    ) : (
+                      <span className="text-sm font-bold text-[var(--text-muted)]">
+                        {configuring.name?.[0]?.toUpperCase() ?? "?"}
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex-1 space-y-2">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <label className="cursor-pointer">
+                        <span className="inline-flex items-center gap-1.5 h-8 px-3 rounded-md text-xs font-medium bg-[var(--surface-subtle)] border border-[var(--border-default)] text-[var(--text-secondary)] hover:bg-[var(--surface-page)] transition-colors">
+                          {logoUploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
+                          {logoUploading ? "Uploading…" : "Upload file"}
+                        </span>
+                        <input
+                          type="file"
+                          accept=".png,.jpg,.jpeg,.svg,image/png,image/jpeg,image/svg+xml"
+                          className="sr-only"
+                          disabled={logoUploading}
+                          onChange={handleLogoFileSelect}
+                        />
+                      </label>
+                      {form.logo_url && (
+                        <button
+                          type="button"
+                          onClick={() => setForm((f) => ({ ...f, logo_url: "" }))}
+                          className="text-xs text-[var(--text-muted)] hover:text-red-400 transition-colors"
+                        >
+                          Clear
+                        </button>
+                      )}
+                    </div>
+                    <input
+                      type="text"
+                      value={form.logo_url}
+                      onChange={(e) => setForm((f) => ({ ...f, logo_url: e.target.value }))}
+                      placeholder="Or paste URL…"
+                      className="w-full h-8 px-3 rounded-md border border-[var(--border-strong)] bg-[var(--surface-subtle)] text-xs text-[var(--text-primary)] font-mono focus:outline-none focus:ring-2 focus:ring-[var(--border-focus)] placeholder:font-sans placeholder:text-[var(--text-muted)]"
+                    />
+                    {logoUploadError && <p className="text-xs text-red-400">{logoUploadError}</p>}
+                    <p className="text-xs text-[var(--text-muted)]">PNG, JPG, or SVG — max 500 KB. Uploaded to Supabase Storage.</p>
+                  </div>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-[var(--text-primary)] mb-1.5">Description (shown to contributors)</label>
-                  <input type="text" value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
-                    placeholder="Complete surveys and earn NexCoins"
-                    className="w-full h-10 px-3 rounded-md border border-[var(--border-strong)] bg-[var(--surface-subtle)] text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--border-focus)] placeholder:text-[var(--text-muted)]" />
-                </div>
+              </div>
+
+              {/* Description */}
+              <div>
+                <label className="block text-sm font-medium text-[var(--text-primary)] mb-1.5">Short Description</label>
+                <input type="text" value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+                  placeholder="Complete surveys and earn NexCoins"
+                  className="w-full h-10 px-3 rounded-md border border-[var(--border-strong)] bg-[var(--surface-subtle)] text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--border-focus)] placeholder:text-[var(--text-muted)]" />
+              </div>
+
+              {/* Feature Tags */}
+              <div>
+                <label className="block text-sm font-medium text-[var(--text-primary)] mb-1.5">Feature Tags</label>
+                <input
+                  type="text"
+                  value={form.feature_tags}
+                  onChange={(e) => setForm((f) => ({ ...f, feature_tags: e.target.value }))}
+                  placeholder="Surveys, High Rewards, Daily Bonus"
+                  className="w-full h-10 px-3 rounded-md border border-[var(--border-strong)] bg-[var(--surface-subtle)] text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--border-focus)] placeholder:text-[var(--text-muted)]"
+                />
+                {tagPills.length > 0 && (
+                  <div className="flex flex-wrap gap-1 mt-2">
+                    {tagPills.map((tag, i) => (
+                      <span key={i} className="px-2 py-0.5 text-xs rounded-full bg-indigo-100 text-indigo-700 border border-indigo-200">{tag}</span>
+                    ))}
+                  </div>
+                )}
+                <p className="text-xs text-[var(--text-muted)] mt-1">Comma-separated. Displayed as pills on provider cards.</p>
+              </div>
+
+              {/* Available Countries */}
+              <div>
+                <label className="block text-sm font-medium text-[var(--text-primary)] mb-1.5">Available Countries</label>
+                <input
+                  type="text"
+                  value={form.available_countries}
+                  onChange={(e) => setForm((f) => ({ ...f, available_countries: e.target.value }))}
+                  placeholder="IN, US, UK, CA, AU"
+                  className="w-full h-10 px-3 rounded-md border border-[var(--border-strong)] bg-[var(--surface-subtle)] text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--border-focus)] placeholder:text-[var(--text-muted)]"
+                />
+                <p className="text-xs text-[var(--text-muted)] mt-1">Comma-separated country codes. Shown on provider cards.</p>
               </div>
 
               {/* Display Order + Notes */}
