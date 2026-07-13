@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Users, Search, Eye, Ban, Coins, Loader2, X, CheckCircle2, Minus, Copy, CheckCheck } from "lucide-react";
+import { Users, Search, Eye, Ban, Coins, Loader2, X, CheckCircle2, Minus, Copy, CheckCheck, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
 import { usePageGuard } from "@/components/layout/admin-auth-guard";
@@ -62,6 +62,12 @@ export default function ContributorsPage() {
   const [sendErr, setSendErr]         = useState<string | null>(null);
   const [sendOk, setSendOk]           = useState(false);
   const [sentAmount, setSentAmount]   = useState(0);
+
+  // Delete modal
+  const [deleteTarget, setDeleteTarget] = useState<Contributor | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState("");
+  const [deleting, setDeleting]         = useState(false);
+  const [deleteErr, setDeleteErr]       = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchContributors() {
@@ -131,6 +137,34 @@ export default function ContributorsPage() {
       );
     }
     setReactivating(null);
+  }
+
+  function openDelete(c: Contributor) {
+    setDeleteTarget(c);
+    setDeleteConfirm("");
+    setDeleteErr(null);
+  }
+
+  async function handleDelete(e: React.FormEvent) {
+    e.preventDefault();
+    if (!deleteTarget) return;
+    if (deleteConfirm !== "DELETE") { setDeleteErr('Type DELETE to confirm.'); return; }
+    setDeleting(true);
+    setDeleteErr(null);
+
+    const res = await fetch(`/api/admin/contributors?id=${deleteTarget.id}`, {
+      method:  "DELETE",
+      headers: { Authorization: `Bearer ${tokenRef.current}` },
+    });
+
+    if (res.ok) {
+      setContributors((prev) => prev.filter((c) => c.id !== deleteTarget!.id));
+      setDeleteTarget(null);
+    } else {
+      const data = await res.json();
+      setDeleteErr(data.error ?? "Failed to delete user.");
+    }
+    setDeleting(false);
   }
 
   function openSendCoins(c: Contributor, mode: "send" | "deduct" = "send") {
@@ -320,6 +354,15 @@ export default function ContributorsPage() {
                           }
                         </Button>
                       )}
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => openDelete(c)}
+                        className="text-red-500 border-red-700/30 hover:bg-red-500/10"
+                        title="Permanently delete user"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
                     </div>
                   </td>
                 </tr>
@@ -382,6 +425,59 @@ export default function ContributorsPage() {
                   {banning
                     ? <Loader2 className="h-4 w-4 animate-spin" />
                     : banTarget.status === "banned" ? "Unban" : "Ban User"}
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ── Delete User Modal ────────────────────────────────────────── */}
+      {deleteTarget && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/60">
+          <div className="w-full max-w-sm bg-[var(--surface-card)] rounded-xl border border-red-700/40 p-6 shadow-xl">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <Trash2 className="h-5 w-5 text-red-400" />
+                <h2 className="text-lg font-semibold text-[var(--text-primary)]">Delete User Permanently</h2>
+              </div>
+              <button onClick={() => setDeleteTarget(null)} className="text-[var(--text-muted)] hover:text-[var(--text-primary)]">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="rounded-lg bg-red-500/10 border border-red-500/20 px-4 py-3 mb-4 text-sm text-red-300 leading-relaxed">
+              This will permanently delete <strong className="text-red-200">{deleteTarget.full_name ?? deleteTarget.email}</strong> and all their data — earnings, submissions, transactions, and notifications. <strong className="text-red-200">This cannot be undone.</strong>
+            </div>
+
+            <form onSubmit={handleDelete} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-[var(--text-primary)] mb-1.5">
+                  Type <span className="font-mono text-red-400">DELETE</span> to confirm
+                </label>
+                <input
+                  type="text"
+                  value={deleteConfirm}
+                  onChange={(e) => setDeleteConfirm(e.target.value)}
+                  placeholder="DELETE"
+                  className="w-full h-10 px-3 rounded-md border border-red-700/40 bg-[var(--surface-subtle)] text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-red-500/40"
+                />
+              </div>
+
+              {deleteErr && <p className="text-sm text-red-400 bg-red-500/10 px-3 py-2 rounded-md">{deleteErr}</p>}
+
+              <div className="flex gap-3">
+                <Button type="button" variant="ghost" className="flex-1" onClick={() => setDeleteTarget(null)}>
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={deleting || deleteConfirm !== "DELETE"}
+                  className="flex-1 bg-red-600 hover:bg-red-500 border-0 text-white disabled:opacity-40"
+                >
+                  {deleting
+                    ? <Loader2 className="h-4 w-4 animate-spin" />
+                    : <><Trash2 className="h-4 w-4 mr-1" />Delete Forever</>}
                 </Button>
               </div>
             </form>

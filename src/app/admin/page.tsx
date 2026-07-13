@@ -117,23 +117,16 @@ export default function AdminOverview() {
       setLoading(false);
 
       // ── Realtime: re-fetch counts whenever any watched table changes ──
-      const WATCHED: { table: string; events: ("INSERT" | "UPDATE" | "DELETE")[] }[] = [
-        { table: "profiles",        events: ["INSERT", "UPDATE"] },
-        { table: "tasks",           events: ["INSERT", "UPDATE", "DELETE"] },
-        { table: "submissions",     events: ["INSERT", "UPDATE"] },
-        { table: "assignments",     events: ["INSERT", "UPDATE"] },
-        { table: "voucher_requests",events: ["INSERT", "UPDATE"] },
-      ];
+      const WATCHED_TABLES = ["profiles", "tasks", "submissions", "assignments", "voucher_requests"];
 
-      for (const { table, events } of WATCHED) {
-        const ch = supabase.channel(`admin-stats-${table}`);
-        for (const event of events) {
-          ch.on("postgres_changes", { event, schema: "public", table }, () => {
+      for (const table of WATCHED_TABLES) {
+        const ch = supabase
+          .channel(`admin-stats-${table}`)
+          .on("postgres_changes", { event: "*", schema: "public", table }, () => {
             fetchStats();
             if (table === "submissions" || table === "assignments") fetchActivity();
-          });
-        }
-        ch.subscribe();
+          })
+          .subscribe();
         channels.push(ch);
       }
     }

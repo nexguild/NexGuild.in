@@ -12,7 +12,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
       <AdminSidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       <AdminHeader onMenuToggle={() => setSidebarOpen((v) => !v)} />
       <main className="pt-16 lg:pl-sidebar-admin">
-        <div className="p-6 max-w-content">{children}</div>
+        <div className="p-6">{children}</div>
       </main>
     </>
   );

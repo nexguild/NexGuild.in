@@ -538,7 +538,34 @@ ${btn("Open NexLeader Dashboard →", "https://nexguild.in/dashboard/nexleader")
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 12. Announcement
+// 12. Account Deactivated
+// ─────────────────────────────────────────────────────────────────────────────
+export function accountDeactivatedHtml(name: string, adminEmail: string): string {
+  const n = esc(name), a = esc(adminEmail);
+  return layout(`
+<h1 style="margin:0 0 6px;font-size:22px;font-weight:800;color:#fff;">Your Account Has Been Deactivated</h1>
+<p style="margin:0 0 24px;font-size:14px;color:rgba(255,255,255,0.38);">We've received your deactivation request</p>
+
+<p style="margin:0 0 20px;font-size:15px;color:rgba(255,255,255,0.7);line-height:1.7;">
+  Hi <strong style="color:#fff;">${n}</strong>,<br><br>
+  Your NexGuild account has been deactivated. Your data — including your earnings, submissions, and profile — will be permanently deleted from our servers within <strong style="color:#fff;">10 days</strong>.
+</p>
+
+<div style="background:#1a1200;border:1px solid rgba(245,158,11,0.25);border-left:3px solid #f59e0b;border-radius:0 8px 8px 0;padding:16px 20px;margin:0 0 24px;">
+  <p style="margin:0 0 8px;font-size:12px;font-weight:700;color:#f59e0b;text-transform:uppercase;letter-spacing:1px;">Was this a mistake?</p>
+  <p style="margin:0 0 10px;font-size:14px;color:rgba(255,255,255,0.7);line-height:1.7;">
+    If you deactivated your account by mistake, please contact our support team immediately before the 10-day window closes.
+  </p>
+  <p style="margin:0;font-size:14px;color:#F59E0B;font-weight:600;">${a}</p>
+</div>
+
+<p style="margin:0;font-size:13px;color:rgba(255,255,255,0.38);line-height:1.6;">
+  Once deletion is complete this action cannot be undone. Thank you for being part of NexGuild.
+</p>`);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 13. Announcement
 // ─────────────────────────────────────────────────────────────────────────────
 export function announcementHtml(
   name: string,

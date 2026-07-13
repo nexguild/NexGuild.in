@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase-server";
 import { FROM_NOREPLY, getResend, accountBannedHtml } from "@/lib/email";
 
+const SOMEN_ID = "6c95c54a-33e6-489b-9175-3626c774635e";
+
 const VIEW_ROLES   = ["owner", "admin", "reviewer", "support", "moderator"];
 const ACTION_ROLES = ["owner", "admin"];
 
@@ -100,6 +102,57 @@ export async function PATCH(req: NextRequest) {
         html:    accountBannedHtml(t.full_name ?? "Contributor", reason!.trim()),
       }).catch((e: unknown) => console.error("[ban] email error:", e));
     }
+  }
+
+  return NextResponse.json({ ok: true });
+}
+
+export async function DELETE(req: NextRequest) {
+  const ctx = await verifyContributorAccess(req, true);
+  if (!ctx) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const { searchParams } = new URL(req.url);
+  const contributorId = searchParams.get("id");
+  if (!contributorId) return NextResponse.json({ error: "id is required." }, { status: 400 });
+
+  // Protect owner account
+  const { data: target } = await ctx.admin
+    .from("profiles")
+    .select("role, full_name")
+    .eq("id", contributorId)
+    .single();
+
+  const t = target as { role: string; full_name: string | null } | null;
+  if (t?.role === "owner") {
+    return NextResponse.json({ error: "Cannot delete the owner account." }, { status: 403 });
+  }
+
+  // Reassign any guild members this user leads back to Somen
+  await ctx.admin.from("profiles")
+    .update({ nexleader_id: SOMEN_ID })
+    .eq("nexleader_id", contributorId);
+
+  // Delete all user-related data
+  await Promise.all([
+    ctx.admin.from("coin_transactions").delete().eq("contributor_id", contributorId),
+    ctx.admin.from("submissions").delete().eq("contributor_id", contributorId),
+    ctx.admin.from("assignments").delete().eq("contributor_id", contributorId),
+    ctx.admin.from("offerwall_transactions").delete().eq("contributor_id", contributorId),
+    ctx.admin.from("nexleader_commissions").delete().or(`nexleader_id.eq.${contributorId},member_id.eq.${contributorId}`),
+    ctx.admin.from("notifications").delete().eq("user_id", contributorId),
+    ctx.admin.from("nexleader_applications").delete().eq("contributor_id", contributorId),
+    ctx.admin.from("voucher_requests").delete().eq("contributor_id", contributorId),
+    ctx.admin.from("postback_logs").delete().eq("user_id", contributorId),
+  ]);
+
+  // Delete profile row
+  await ctx.admin.from("profiles").delete().eq("id", contributorId);
+
+  // Delete auth user (removes login ability permanently)
+  const { error: authErr } = await ctx.admin.auth.admin.deleteUser(contributorId);
+  if (authErr) {
+    console.error("[contributors/delete] auth delete error:", authErr.message);
+    return NextResponse.json({ error: "Data deleted but auth user removal failed: " + authErr.message }, { status: 500 });
   }
 
   return NextResponse.json({ ok: true });
