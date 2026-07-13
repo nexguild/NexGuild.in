@@ -18,7 +18,7 @@ function computeHash(secret: string, urlStr: string): string {
   return raw.replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "");
 }
 
-function verifyHash(req: NextRequest, incomingHash: string): boolean {
+function verifyUrlHash(req: NextRequest, incomingHash: string): boolean {
   const secret = process.env.THEOREMREACH_SECRET_KEY;
   if (!secret) return true; // not configured — skip in dev
 
@@ -45,56 +45,122 @@ async function logPostback(
   }
 }
 
-async function handlePostback(req: NextRequest): Promise<Response> {
-  const url       = new URL(req.url);
-  const q         = url.searchParams;
-  const rawParams = Object.fromEntries(q.entries());
+/**
+ * Merge URL query params with POST body params.
+ * TheoremReach survey completions use GET/URL-params;
+ * offer/offerwall completions often use POST with a JSON or form-encoded body.
+ */
+async function extractParams(req: NextRequest): Promise<Record<string, string>> {
+  const url    = new URL(req.url);
+  const merged: Record<string, string> = Object.fromEntries(url.searchParams.entries());
 
-  // Completely empty — no params at all, nothing to log
+  // If this is a POST and the URL has no params (or is missing critical fields),
+  // also try to parse the body so offer postbacks aren't silently dropped.
+  if (req.method === "POST") {
+    try {
+      const contentType = req.headers.get("content-type") ?? "";
+      let bodyParams: Record<string, string> = {};
+
+      if (contentType.includes("application/json")) {
+        const body = await req.json() as Record<string, unknown>;
+        if (body && typeof body === "object") {
+          bodyParams = Object.fromEntries(
+            Object.entries(body).map(([k, v]) => [k, String(v)])
+          );
+        }
+      } else {
+        // form-encoded or plain text — try URLSearchParams
+        const text = await req.text();
+        if (text.trim()) {
+          try {
+            bodyParams = Object.fromEntries(new URLSearchParams(text).entries());
+          } catch {
+            // last resort: try JSON in text/plain
+            try {
+              const parsed = JSON.parse(text) as Record<string, unknown>;
+              if (parsed && typeof parsed === "object") {
+                bodyParams = Object.fromEntries(
+                  Object.entries(parsed).map(([k, v]) => [k, String(v)])
+                );
+              }
+            } catch { /* ignore */ }
+          }
+        }
+      }
+
+      // Body params fill in; URL params take precedence on conflict
+      Object.assign(merged, bodyParams, merged);
+    } catch (err) {
+      console.error("[postback/theoremreach] failed to parse POST body:", err);
+    }
+  }
+
+  return merged;
+}
+
+/**
+ * TheoremReach uses different field names across their survey vs offer products.
+ * Resolve the canonical value by checking all known aliases.
+ */
+function resolveField(params: Record<string, string>, ...keys: string[]): string {
+  for (const k of keys) {
+    if (params[k] !== undefined && params[k] !== "") return params[k];
+  }
+  return "";
+}
+
+async function handlePostback(req: NextRequest): Promise<Response> {
+  const rawParams = await extractParams(req);
+
+  // Completely empty — log a minimal entry so we at least have a trace
   if (Object.keys(rawParams).length === 0) {
+    console.warn("[postback/theoremreach] received empty params (method:", req.method, ")");
+    await logPostback({}, null, "error", `empty params (${req.method})`);
     return new Response("Bad Request", { status: 400 });
   }
 
   const admin = createServerClient();
 
-  // TheoremReach debug/test callbacks — log and return 200, no credit
-  if (q.get("debug") === "true" || q.get("debug") === "1") {
-    console.log("[postback/theoremreach] debug callback — ignoring");
+  // Debug/test callbacks — log and return 200, no credit
+  if (rawParams.debug === "true" || rawParams.debug === "1") {
+    console.log("[postback/theoremreach] debug callback — ignoring", rawParams);
     await logPostback(rawParams, null, "debug_ignored");
     return new Response("OK", { status: 200 });
   }
 
-  const hash      = q.get("hash") ?? "";
-  const hashValid = hash ? verifyHash(req, hash) : null; // null = hash not provided
-
-  if (hashValid === false) {
-    // Log the suspicious callback but always return 200 — TheoremReach won't retry on 200
-    console.warn("[postback/theoremreach] hash validation failed");
-    await logPostback(rawParams, false, "hash_invalid");
-    return new Response("OK", { status: 200 });
+  // Hash verification — only for URL-based hashes (survey postbacks).
+  // Offer postbacks via POST body typically don't include a URL hash.
+  const hash      = rawParams.hash ?? "";
+  let   hashValid: boolean | null = null;
+  if (hash) {
+    hashValid = verifyUrlHash(req, hash);
+    if (!hashValid) {
+      console.warn("[postback/theoremreach] hash validation failed", rawParams);
+      await logPostback(rawParams, false, "hash_invalid");
+      return new Response("OK", { status: 200 });
+    }
   }
 
-  const userId     = q.get("user_id")  ?? "";
-  const reward     = parseInt(q.get("reward") ?? "0", 10);
-  const txId       = q.get("tx_id")    ?? "";
-  const isReversal = q.get("reversal") === "true" || q.get("reversal") === "1";
-  const screenout  = q.get("screenout") === "1";
+  // Resolve field names — TheoremReach uses different names for surveys vs offers
+  const userId     = resolveField(rawParams, "user_id", "uid", "publisher_user_id");
+  const txId       = resolveField(rawParams, "tx_id", "trans_id", "transaction_id", "tid", "offer_transaction_id");
+  const rewardStr  = resolveField(rawParams, "reward", "payout", "amount", "coins");
+  const reward     = parseInt(rewardStr || "0", 10);
+  const isReversal = rawParams.reversal === "true" || rawParams.reversal === "1";
+  const screenout  = rawParams.screenout === "1";
 
   if (!userId || !txId) {
-    console.warn("[postback/theoremreach] missing user_id or tx_id");
-    await logPostback(rawParams, hashValid, "error", "missing user_id or tx_id");
+    console.warn("[postback/theoremreach] missing user_id/tx_id — params:", JSON.stringify(rawParams));
+    await logPostback(rawParams, hashValid, "error", `missing user_id or tx_id (resolved: uid='${userId}' txid='${txId}')`);
     return new Response("OK", { status: 200 });
   }
 
-  // Confirm hash validation outcome — visible in Vercel logs for every real postback
   console.log("[postback/theoremreach]", {
     userId, txId, reward, isReversal, screenout,
-    hash_valid: hashValid,         // true = validated, null = no hash param sent
-    hash_prefix: hash.slice(0, 8) + "...",
+    hash_valid: hashValid,
+    method: req.method,
+    paramKeys: Object.keys(rawParams).join(","),
   });
-
-  // Screenout logic: TheoremReach sends reward > 0 for partial screenouts → credit it.
-  // Zero-reward screenouts are caught by the reward <= 0 check below and not credited.
 
   // ─── Reversal ─────────────────────────────────────────────────────────────
   if (isReversal) {
@@ -142,7 +208,7 @@ async function handlePostback(req: NextRequest): Promise<Response> {
   // ─── Completion ──────────────────────────────────────────────────────────
   if (reward <= 0) {
     console.log(`[postback/theoremreach] zero reward — ignoring (tx=${txId}, screenout=${screenout})`);
-    await logPostback(rawParams, hashValid, "error", "zero reward");
+    await logPostback(rawParams, hashValid, "error", `zero reward (resolved reward='${rewardStr}')`);
     return new Response("OK", { status: 200 });
   }
 
@@ -188,7 +254,7 @@ async function handlePostback(req: NextRequest): Promise<Response> {
 
   // Apply NexLeader commission split (credits contributor 66%, NexLeader 8%)
   const { contributorCredit } = await creditWithCommission(
-    admin,
+    admin as unknown as AdminClient,
     userId,
     reward,
     "offerwall",
@@ -198,7 +264,7 @@ async function handlePostback(req: NextRequest): Promise<Response> {
     return { contributorCredit: contributorPreview };
   });
 
-  // Increment daily streak counter (debug=true and reversals already returned early above)
+  // Increment daily streak counter
   {
     const todayIST = new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" });
     const { data: strTarget } = await admin.from("platform_settings").select("value").eq("key", "streak_tasks_required_per_day").single();
