@@ -135,9 +135,25 @@ export async function DELETE(req: NextRequest) {
     .update({ nexleader_id: SOMEN_ID })
     .eq("nexleader_id", contributorId);
 
-  // Delete all child-table rows that FK to profiles — order doesn't matter here
-  // since we're not deleting profiles yet (deleteUser cascades that)
+  // Null out reviewer references (don't delete rows authored by other people)
   await Promise.all([
+    ctx.admin.from("nexleader_applications").update({ reviewed_by: null }).eq("reviewed_by", contributorId),
+    ctx.admin.from("daily_work_items").update({ reviewer_id: null }).eq("reviewer_id", contributorId),
+    ctx.admin.from("projects").update({ created_by: null }).eq("created_by", contributorId),
+  ]);
+
+  // Delete all rows owned by this user across every FK table
+  await Promise.all([
+    ctx.admin.from("ticket_messages").delete().eq("sender_id", contributorId),
+    ctx.admin.from("support_tickets").delete().eq("contributor_id", contributorId),
+    ctx.admin.from("task_step_submissions").delete().eq("contributor_id", contributorId),
+    ctx.admin.from("proof_code_submissions").delete().eq("contributor_id", contributorId),
+    ctx.admin.from("streak_days").delete().eq("contributor_id", contributorId),
+    ctx.admin.from("daily_work_items").delete().eq("contributor_id", contributorId),
+    ctx.admin.from("earnings").delete().eq("contributor_id", contributorId),
+    ctx.admin.from("withdrawals").delete().eq("contributor_id", contributorId),
+    ctx.admin.from("referral_events").delete().or(`referrer_id.eq.${contributorId},referred_id.eq.${contributorId}`),
+    ctx.admin.from("offerwall_transactions").delete().eq("contributor_id", contributorId),
     ctx.admin.from("coin_transactions").delete().eq("contributor_id", contributorId),
     ctx.admin.from("submissions").delete().eq("contributor_id", contributorId),
     ctx.admin.from("assignments").delete().eq("contributor_id", contributorId),
@@ -146,7 +162,6 @@ export async function DELETE(req: NextRequest) {
     ctx.admin.from("nexleader_applications").delete().eq("contributor_id", contributorId),
     ctx.admin.from("voucher_requests").delete().eq("contributor_id", contributorId),
     ctx.admin.from("postback_logs").delete().eq("user_id", contributorId),
-    ctx.admin.from("support_tickets").delete().eq("contributor_id", contributorId),
   ]);
 
   // Delete the auth user — Supabase CASCADE removes the profiles row automatically
