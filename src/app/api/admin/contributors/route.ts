@@ -86,10 +86,10 @@ export async function PATCH(req: NextRequest) {
     if (t?.nexleader_id) {
       if (is_active === false && t.is_active !== false) {
         // Deactivating an active member → decrement
-        await ctx.admin.rpc("increment_guild_members", { p_nexleader_id: t.nexleader_id, p_amount: -1 }).catch(() => {});
+        try { await ctx.admin.rpc("increment_guild_members", { p_nexleader_id: t.nexleader_id, p_amount: -1 }); } catch { /* non-fatal */ }
       } else if (is_active === true && t.is_active === false) {
         // Reactivating a deactivated member → increment
-        await ctx.admin.rpc("increment_guild_members", { p_nexleader_id: t.nexleader_id, p_amount: 1 }).catch(() => {});
+        try { await ctx.admin.rpc("increment_guild_members", { p_nexleader_id: t.nexleader_id, p_amount: 1 }); } catch { /* non-fatal */ }
       }
     }
     return NextResponse.json({ ok: true });
@@ -111,7 +111,7 @@ export async function PATCH(req: NextRequest) {
     await ctx.admin.auth.admin.signOut(contributorId, "others").catch(() => {});
     // Decrement member count (only if not already banned)
     if (t?.status !== "banned" && t?.nexleader_id) {
-      await ctx.admin.rpc("increment_guild_members", { p_nexleader_id: t.nexleader_id, p_amount: -1 }).catch(() => {});
+      try { await ctx.admin.rpc("increment_guild_members", { p_nexleader_id: t.nexleader_id, p_amount: -1 }); } catch { /* non-fatal */ }
     }
     const resend = getResend();
     if (resend && t?.email) {
@@ -127,7 +127,7 @@ export async function PATCH(req: NextRequest) {
   // Deactivation path — decrement member count
   if (status === "active" && t?.status === "banned" && t.nexleader_id) {
     // Unban: restore count
-    await ctx.admin.rpc("increment_guild_members", { p_nexleader_id: t.nexleader_id, p_amount: 1 }).catch(() => {});
+    try { await ctx.admin.rpc("increment_guild_members", { p_nexleader_id: t.nexleader_id, p_amount: 1 }); } catch { /* non-fatal */ }
   }
 
   return NextResponse.json({ ok: true });
@@ -156,7 +156,7 @@ export async function DELETE(req: NextRequest) {
   // Decrement the NexLeader's member count before profile is deleted
   // (only if not already banned/deactivated — those already decremented)
   if (t?.nexleader_id && t.status !== "banned" && t.is_active !== false) {
-    await ctx.admin.rpc("increment_guild_members", { p_nexleader_id: t.nexleader_id, p_amount: -1 }).catch(() => {});
+    try { await ctx.admin.rpc("increment_guild_members", { p_nexleader_id: t.nexleader_id, p_amount: -1 }); } catch { /* non-fatal */ }
   }
 
   // Revoke all sessions first — active sessions block auth.users deletion
