@@ -6,6 +6,7 @@ import Link from "next/link";
 import {
   ArrowLeft, CheckCircle2, XCircle, Loader2, FileText,
   ExternalLink, Users, Coins, Clock, Edit, Sheet, Copy, Lock,
+  Upload, X, AlertCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar } from "@/components/ui/avatar";
@@ -35,6 +36,17 @@ interface Task {
   unit_name: string | null;
   total_units: number | null;
   pay_per_unit_nc: number | null;
+}
+
+interface ImportPreviewRow {
+  rowNum: number;
+  submissionId: string;
+  contributor: string | null;
+  task: string | null;
+  currentStatus: string | null;
+  clientStatus: "valid" | "invalid" | "unrecognized";
+  reason: string | null;
+  found: boolean;
 }
 
 interface FileItem {
@@ -80,6 +92,25 @@ export default function AdminTaskDetailPage() {
   const [copiedLink, setCopiedLink]     = useState(false);
   const [eligNames, setEligNames]       = useState<Record<string, string>>({});
   const [validUnitsMap, setValidUnitsMap] = useState<Record<string, string>>({});
+
+  // Import Client Validation modal
+  const [importOpen, setImportOpen]             = useState(false);
+  const [importStep, setImportStep]             = useState<"upload" | "map" | "preview" | "done">("upload");
+  const [importCsvText, setImportCsvText]       = useState("");
+  const [importHeaders, setImportHeaders]       = useState<string[]>([]);
+  const [importIdCol, setImportIdCol]           = useState("");
+  const [importStatusCol, setImportStatusCol]   = useState("");
+  const [importReasonCol, setImportReasonCol]   = useState("");
+  const [importValidVal, setImportValidVal]     = useState("valid");
+  const [importInvalidVal, setImportInvalidVal] = useState("invalid");
+  const [importPreview, setImportPreview]       = useState<{
+    rows: ImportPreviewRow[]; valid: number; invalid: number; notFound: number; unrecognized: number;
+  } | null>(null);
+  const [importLoading, setImportLoading]       = useState(false);
+  const [importError, setImportError]           = useState<string | null>(null);
+  const [importResult, setImportResult]         = useState<{
+    approved: number; rejected: number; skipped: number; errors: number;
+  } | null>(null);
 
   useEffect(() => {
     async function load() {
@@ -142,6 +173,94 @@ export default function AdminTaskDetailPage() {
       );
     }
     setReviewing(null);
+  }
+
+  function parseCSVHeaders(text: string): string[] {
+    const firstLine = text.replace(/\r\n/g, "\n").replace(/\r/g, "\n").split("\n")[0] ?? "";
+    if (!firstLine.trim()) return [];
+    const headers: string[] = [];
+    let inQuotes = false, field = "";
+    for (let i = 0; i < firstLine.length; i++) {
+      const ch = firstLine[i];
+      if (ch === '"') {
+        if (inQuotes && firstLine[i + 1] === '"') { field += '"'; i++; }
+        else { inQuotes = !inQuotes; }
+      } else if (ch === "," && !inQuotes) { headers.push(field.trim()); field = ""; }
+      else { field += ch; }
+    }
+    headers.push(field.trim());
+    return headers;
+  }
+
+  function resetImport() {
+    setImportStep("upload"); setImportCsvText(""); setImportHeaders([]);
+    setImportIdCol(""); setImportStatusCol(""); setImportReasonCol("");
+    setImportValidVal("valid"); setImportInvalidVal("invalid");
+    setImportPreview(null); setImportError(null); setImportResult(null); setImportLoading(false);
+  }
+
+  function handleCSVLoad(text: string) {
+    setImportCsvText(text);
+    const hdrs = parseCSVHeaders(text);
+    if (hdrs.length === 0) { setImportError("Could not detect CSV headers."); return; }
+    setImportHeaders(hdrs);
+    setImportIdCol(hdrs[0] ?? "");
+    setImportStatusCol(hdrs[1] ?? "");
+    setImportReasonCol("");
+    setImportError(null);
+    setImportStep("map");
+  }
+
+  async function runPreview() {
+    if (!importIdCol || !importStatusCol) { setImportError("Submission ID column and Status column are required."); return; }
+    setImportLoading(true); setImportError(null);
+    const res = await fetch(`/api/admin/tasks/${id}/bulk-validate`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify({
+        action: "preview",
+        csvText: importCsvText,
+        submissionIdCol: importIdCol,
+        statusCol: importStatusCol,
+        reasonCol: importReasonCol || null,
+        validValue: importValidVal,
+        invalidValue: importInvalidVal,
+      }),
+    });
+    const data = await res.json() as { rows?: ImportPreviewRow[]; valid?: number; invalid?: number; notFound?: number; unrecognized?: number; error?: string };
+    if (!res.ok || data.error) { setImportError(data.error ?? "Preview failed."); setImportLoading(false); return; }
+    setImportPreview({ rows: data.rows ?? [], valid: data.valid ?? 0, invalid: data.invalid ?? 0, notFound: data.notFound ?? 0, unrecognized: data.unrecognized ?? 0 });
+    setImportStep("preview");
+    setImportLoading(false);
+  }
+
+  async function applyValidation() {
+    setImportLoading(true); setImportError(null);
+    const res = await fetch(`/api/admin/tasks/${id}/bulk-validate`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify({
+        action: "apply",
+        csvText: importCsvText,
+        submissionIdCol: importIdCol,
+        statusCol: importStatusCol,
+        reasonCol: importReasonCol || null,
+        validValue: importValidVal,
+        invalidValue: importInvalidVal,
+      }),
+    });
+    const data = await res.json() as { approved?: number; rejected?: number; skipped?: number; errors?: number; error?: string };
+    if (!res.ok || data.error) { setImportError(data.error ?? "Apply failed."); setImportLoading(false); return; }
+    setImportResult({ approved: data.approved ?? 0, rejected: data.rejected ?? 0, skipped: data.skipped ?? 0, errors: data.errors ?? 0 });
+    setImportStep("done");
+    setImportLoading(false);
+    // Reload submissions
+    const { data: subData } = await supabase
+      .from("submissions")
+      .select("id, contributor_id, status, notes, files, coins_awarded, feedback, submitted_at, valid_units, partial_payment_nc, profiles(full_name, email)")
+      .eq("task_id", id)
+      .order("submitted_at", { ascending: false });
+    setSubmissions((subData as unknown as Submission[]) ?? []);
   }
 
   function copyPrivateLink() {
@@ -304,15 +423,20 @@ export default function AdminTaskDetailPage() {
 
       {/* Submissions */}
       <div>
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
           <h2 className="font-semibold text-[var(--text-primary)]">
             Submissions ({submissions.length})
           </h2>
-          {pending > 0 && (
-            <span className="text-xs font-bold px-3 py-1 rounded-full bg-yellow-500/10 text-yellow-400">
-              {pending} pending review
-            </span>
-          )}
+          <div className="flex items-center gap-2">
+            {pending > 0 && (
+              <span className="text-xs font-bold px-3 py-1 rounded-full bg-yellow-500/10 text-yellow-400">
+                {pending} pending review
+              </span>
+            )}
+            <Button variant="secondary" size="sm" onClick={() => { resetImport(); setImportOpen(true); }}>
+              <Upload className="h-3.5 w-3.5" /> Import Client Validation
+            </Button>
+          </div>
         </div>
 
         {submissions.length === 0 ? (
@@ -479,6 +603,184 @@ export default function AdminTaskDetailPage() {
           </div>
         )}
       </div>
+
+      {/* ── Import Client Validation Modal ─────────────────────────────── */}
+      {importOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="w-full max-w-2xl rounded-2xl border border-[var(--border-default)] bg-[var(--surface-card)] shadow-2xl max-h-[90vh] flex flex-col">
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--border-default)] flex-shrink-0">
+              <div>
+                <h3 className="font-bold text-[var(--text-primary)]">Import Client Validation</h3>
+                <p className="text-xs text-[var(--text-muted)] mt-0.5">
+                  {importStep === "upload" && "Upload the CSV downloaded from the Google Sheet"}
+                  {importStep === "map"    && "Map CSV columns to submission fields"}
+                  {importStep === "preview" && "Review matches before applying"}
+                  {importStep === "done"  && "Validation applied"}
+                </p>
+              </div>
+              <button onClick={() => setImportOpen(false)} className="rounded-lg p-1.5 text-[var(--text-muted)] hover:bg-[var(--surface-subtle)]">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="px-6 py-5 space-y-4 overflow-y-auto">
+              {importError && (
+                <div className="flex items-center gap-2 rounded-lg bg-red-500/10 border border-red-500/20 px-3 py-2 text-sm text-red-400">
+                  <AlertCircle className="h-4 w-4 flex-shrink-0" /> {importError}
+                </div>
+              )}
+
+              {/* Step: upload */}
+              {importStep === "upload" && (
+                <div className="space-y-3">
+                  <p className="text-sm text-[var(--text-secondary)]">
+                    Open the task&apos;s Google Sheet, add a <strong>Client Status</strong> column with <code className="text-xs bg-[var(--surface-subtle)] px-1 py-0.5 rounded">valid</code> / <code className="text-xs bg-[var(--surface-subtle)] px-1 py-0.5 rounded">invalid</code> values, then download as CSV and paste or upload below.
+                  </p>
+                  <label className="block text-sm font-semibold text-[var(--text-primary)] mb-1.5">Paste CSV content</label>
+                  <textarea
+                    rows={8}
+                    value={importCsvText}
+                    onChange={(e) => setImportCsvText(e.target.value)}
+                    placeholder={"Submission ID,Contributor Name,...,Client Status\nabc-123,...,valid\ndef-456,...,invalid"}
+                    className="w-full px-3 py-2.5 rounded-lg border border-[var(--border-default)] bg-[var(--surface-subtle)] text-[var(--text-primary)] text-sm font-mono placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--border-focus)] resize-y"
+                  />
+                  <p className="text-xs text-[var(--text-muted)]">Or upload a file:</p>
+                  <input
+                    type="file" accept=".csv"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      const reader = new FileReader();
+                      reader.onload = (ev) => handleCSVLoad((ev.target?.result as string) ?? "");
+                      reader.readAsText(file);
+                    }}
+                    className="text-sm text-[var(--text-secondary)]"
+                  />
+                  <div className="flex gap-3 pt-1">
+                    <Button variant="secondary" onClick={() => setImportOpen(false)}>Cancel</Button>
+                    <Button disabled={!importCsvText.trim()} onClick={() => handleCSVLoad(importCsvText)}>
+                      Next: Map Columns
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {/* Step: map */}
+              {importStep === "map" && (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-semibold text-[var(--text-primary)] mb-1.5">Submission ID column *</label>
+                      <select value={importIdCol} onChange={(e) => setImportIdCol(e.target.value)}
+                        className="w-full h-10 px-3 rounded-lg border border-[var(--border-default)] bg-[var(--surface-subtle)] text-[var(--text-primary)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--border-focus)]">
+                        {importHeaders.map((h) => <option key={h} value={h}>{h}</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-[var(--text-primary)] mb-1.5">Status column *</label>
+                      <select value={importStatusCol} onChange={(e) => setImportStatusCol(e.target.value)}
+                        className="w-full h-10 px-3 rounded-lg border border-[var(--border-default)] bg-[var(--surface-subtle)] text-[var(--text-primary)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--border-focus)]">
+                        {importHeaders.map((h) => <option key={h} value={h}>{h}</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-[var(--text-primary)] mb-1.5">Reason column (optional)</label>
+                      <select value={importReasonCol} onChange={(e) => setImportReasonCol(e.target.value)}
+                        className="w-full h-10 px-3 rounded-lg border border-[var(--border-default)] bg-[var(--surface-subtle)] text-[var(--text-primary)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--border-focus)]">
+                        <option value="">— none —</option>
+                        {importHeaders.map((h) => <option key={h} value={h}>{h}</option>)}
+                      </select>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="block text-sm font-semibold text-[var(--text-primary)] mb-1.5">Valid value</label>
+                        <input type="text" value={importValidVal} onChange={(e) => setImportValidVal(e.target.value)}
+                          className="w-full h-10 px-3 rounded-lg border border-[var(--border-default)] bg-[var(--surface-subtle)] text-[var(--text-primary)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--border-focus)]" />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-[var(--text-primary)] mb-1.5">Invalid value</label>
+                        <input type="text" value={importInvalidVal} onChange={(e) => setImportInvalidVal(e.target.value)}
+                          className="w-full h-10 px-3 rounded-lg border border-[var(--border-default)] bg-[var(--surface-subtle)] text-[var(--text-primary)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--border-focus)]" />
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex gap-3">
+                    <Button variant="secondary" onClick={() => setImportStep("upload")}>Back</Button>
+                    <Button disabled={importLoading} onClick={runPreview}>
+                      {importLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Preview Matches"}
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {/* Step: preview */}
+              {importStep === "preview" && importPreview && (
+                <div className="space-y-4">
+                  <div className="flex gap-4 text-sm font-semibold flex-wrap">
+                    <span className="text-green-400">{importPreview.valid} valid</span>
+                    <span className="text-red-400">{importPreview.invalid} invalid</span>
+                    <span className="text-[var(--text-muted)]">{importPreview.notFound} not found</span>
+                    {importPreview.unrecognized > 0 && <span className="text-amber-400">{importPreview.unrecognized} unrecognized</span>}
+                  </div>
+                  <div className="rounded-lg border border-[var(--border-default)] overflow-x-auto max-h-60">
+                    <table className="w-full text-xs min-w-[500px]">
+                      <thead>
+                        <tr className="bg-[var(--surface-subtle)] border-b border-[var(--border-default)]">
+                          {["#", "Submission ID", "Contributor", "Current", "Client"].map((h) => (
+                            <th key={h} className="text-left px-3 py-2 font-medium text-[var(--text-secondary)] whitespace-nowrap">{h}</th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-[var(--border-default)]">
+                        {importPreview.rows.slice(0, 100).map((r) => (
+                          <tr key={r.rowNum} className={!r.found ? "opacity-40" : ""}>
+                            <td className="px-3 py-2 text-[var(--text-muted)]">{r.rowNum}</td>
+                            <td className="px-3 py-2 font-mono text-[var(--text-muted)] truncate max-w-[120px]">{r.submissionId.slice(0, 8)}…</td>
+                            <td className="px-3 py-2 text-[var(--text-primary)]">{r.contributor ?? "not found"}</td>
+                            <td className="px-3 py-2 text-[var(--text-muted)] capitalize">{r.currentStatus ?? "—"}</td>
+                            <td className="px-3 py-2">
+                              <span className={`font-semibold ${r.clientStatus === "valid" ? "text-green-400" : r.clientStatus === "invalid" ? "text-red-400" : "text-amber-400"}`}>
+                                {r.clientStatus}
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  {importPreview.rows.length > 100 && (
+                    <p className="text-xs text-[var(--text-muted)]">Showing first 100 of {importPreview.rows.length} rows.</p>
+                  )}
+                  <div className="flex gap-3">
+                    <Button variant="secondary" onClick={() => setImportStep("map")}>Back</Button>
+                    <Button disabled={importLoading || (importPreview.valid + importPreview.invalid) === 0} onClick={applyValidation}
+                      className="bg-[var(--brand-500)] hover:brightness-105 text-white">
+                      {importLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : `Apply — ${importPreview.valid} approve, ${importPreview.invalid} reject`}
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {/* Step: done */}
+              {importStep === "done" && importResult && (
+                <div className="space-y-4">
+                  <div className="rounded-xl border border-green-500/20 bg-green-500/5 p-5 space-y-2">
+                    <p className="font-semibold text-green-400">Validation applied successfully</p>
+                    <div className="text-sm text-[var(--text-secondary)] space-y-1">
+                      <p>{importResult.approved} submissions approved (+coins credited)</p>
+                      <p>{importResult.rejected} submissions rejected</p>
+                      {importResult.skipped > 0 && <p className="text-[var(--text-muted)]">{importResult.skipped} skipped (not found or unrecognized status)</p>}
+                      {importResult.errors > 0 && <p className="text-red-400">{importResult.errors} errors — check server logs</p>}
+                    </div>
+                  </div>
+                  <Button onClick={() => setImportOpen(false)}>Done</Button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

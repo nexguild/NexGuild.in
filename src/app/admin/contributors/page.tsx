@@ -18,6 +18,8 @@ interface Contributor {
   is_active: boolean | null;
   device_fingerprint: string | null;
   last_seen_ip: string | null;
+  ip_vpn_detected: boolean | null;
+  ip_fraud_score: number | null;
 }
 
 const STATUS_STYLES: Record<string, string> = {
@@ -228,13 +230,16 @@ export default function ContributorsPage() {
   const sharedFp = new Map([...fpMap].filter(([, v]) => v.length >= 2));
   const sharedIp = new Map([...ipMap].filter(([, v]) => v.length >= 3));
 
-  function getFlags(c: Contributor): { type: "device" | "ip"; accounts: Contributor[] }[] {
-    const flags: { type: "device" | "ip"; accounts: Contributor[] }[] = [];
+  function getFlags(c: Contributor): { type: "device" | "ip" | "vpn"; accounts: Contributor[]; score?: number }[] {
+    const flags: { type: "device" | "ip" | "vpn"; accounts: Contributor[]; score?: number }[] = [];
     if (c.device_fingerprint && sharedFp.has(c.device_fingerprint)) {
       flags.push({ type: "device", accounts: sharedFp.get(c.device_fingerprint)!.filter((x) => x.id !== c.id) });
     }
     if (c.last_seen_ip && sharedIp.has(c.last_seen_ip)) {
       flags.push({ type: "ip", accounts: sharedIp.get(c.last_seen_ip)!.filter((x) => x.id !== c.id) });
+    }
+    if (c.ip_vpn_detected) {
+      flags.push({ type: "vpn", accounts: [], score: c.ip_fraud_score ?? undefined });
     }
     return flags;
   }
@@ -252,7 +257,7 @@ export default function ContributorsPage() {
       statusFilter === "All"
         ? true
         : statusFilter === "Flagged"
-        ? getFlags(c).length > 0
+        ? getFlags(c).length > 0 || !!c.ip_vpn_detected
         : statusFilter === "Deactivated"
         ? c.is_active === false
         : c.status === statusFilter.toLowerCase();
@@ -363,33 +368,56 @@ export default function ContributorsPage() {
                       if (flags.length === 0) return <span className="text-xs text-[var(--text-muted)]">—</span>;
                       return (
                         <div className="flex flex-col gap-1">
-                          {flags.map((f) => (
-                            <div key={f.type} className="relative group">
-                              <button
-                                onClick={() => setFlagTooltip(flagTooltip === `${c.id}-${f.type}` ? null : `${c.id}-${f.type}`)}
-                                className="flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/25 hover:bg-amber-500/25 transition-colors"
-                              >
-                                <AlertTriangle className="h-3 w-3" />
-                                {f.type === "device" ? `Same device (${f.accounts.length + 1})` : `Same IP (${f.accounts.length + 1})`}
-                              </button>
-                              {flagTooltip === `${c.id}-${f.type}` && (
-                                <div className="absolute left-0 top-full mt-1 z-50 w-64 bg-[var(--surface-card)] border border-amber-500/30 rounded-lg shadow-xl p-3">
-                                  <p className="text-xs font-semibold text-amber-400 mb-2">
-                                    {f.type === "device" ? "Same device fingerprint" : "Same login IP"} — shared with:
-                                  </p>
-                                  <ul className="space-y-1">
-                                    {f.accounts.map((a) => (
-                                      <li key={a.id} className="text-xs text-[var(--text-secondary)] flex items-center gap-2">
-                                        <span className="h-1.5 w-1.5 rounded-full bg-amber-400 flex-shrink-0" />
-                                        <span className="truncate">{a.full_name ?? "—"} · {a.email ?? "—"}</span>
-                                      </li>
-                                    ))}
-                                  </ul>
-                                  <button onClick={() => setFlagTooltip(null)} className="mt-2 text-[10px] text-[var(--text-muted)] hover:text-[var(--text-primary)]">Close</button>
-                                </div>
-                              )}
-                            </div>
-                          ))}
+                          {flags.map((f) => {
+                            const isVpn = f.type === "vpn";
+                            const key   = `${c.id}-${f.type}`;
+                            return (
+                              <div key={f.type} className="relative">
+                                <button
+                                  onClick={() => setFlagTooltip(flagTooltip === key ? null : key)}
+                                  className={`flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full border transition-colors ${
+                                    isVpn
+                                      ? "bg-red-500/15 text-red-400 border-red-500/25 hover:bg-red-500/25"
+                                      : "bg-amber-500/15 text-amber-400 border-amber-500/25 hover:bg-amber-500/25"
+                                  }`}
+                                >
+                                  <AlertTriangle className="h-3 w-3" />
+                                  {isVpn
+                                    ? `VPN/Proxy${f.score !== undefined ? ` (${f.score})` : ""}`
+                                    : f.type === "device"
+                                    ? `Same device (${f.accounts.length + 1})`
+                                    : `Same IP (${f.accounts.length + 1})`}
+                                </button>
+                                {flagTooltip === key && (
+                                  <div className={`absolute left-0 top-full mt-1 z-50 w-64 bg-[var(--surface-card)] rounded-lg shadow-xl p-3 border ${isVpn ? "border-red-500/30" : "border-amber-500/30"}`}>
+                                    <p className={`text-xs font-semibold mb-2 ${isVpn ? "text-red-400" : "text-amber-400"}`}>
+                                      {isVpn
+                                        ? `VPN / Proxy / Datacenter detected — fraud score: ${f.score ?? "?"}/100`
+                                        : f.type === "device"
+                                        ? "Same device fingerprint — shared with:"
+                                        : "Same login IP — shared with:"}
+                                    </p>
+                                    {!isVpn && (
+                                      <ul className="space-y-1">
+                                        {f.accounts.map((a) => (
+                                          <li key={a.id} className="text-xs text-[var(--text-secondary)] flex items-center gap-2">
+                                            <span className="h-1.5 w-1.5 rounded-full bg-amber-400 flex-shrink-0" />
+                                            <span className="truncate">{a.full_name ?? "—"} · {a.email ?? "—"}</span>
+                                          </li>
+                                        ))}
+                                      </ul>
+                                    )}
+                                    {isVpn && (
+                                      <p className="text-xs text-[var(--text-muted)]">
+                                        Detected via IPQualityScore on last login. User may be using a VPN, proxy, or hosted server to mask their real IP.
+                                      </p>
+                                    )}
+                                    <button onClick={() => setFlagTooltip(null)} className="mt-2 text-[10px] text-[var(--text-muted)] hover:text-[var(--text-primary)]">Close</button>
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
                         </div>
                       );
                     })()}

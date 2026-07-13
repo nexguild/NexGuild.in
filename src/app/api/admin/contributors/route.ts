@@ -26,11 +26,19 @@ export async function GET(req: NextRequest) {
 
   let result = await ctx.admin
     .from("profiles")
-    .select("id, full_name, email, country, status, nexcoins, joined_at, is_active, device_fingerprint, last_seen_ip")
+    .select("id, full_name, email, country, status, nexcoins, joined_at, is_active, device_fingerprint, last_seen_ip, ip_vpn_detected, ip_fraud_score")
     .or("role.eq.contributor,role.is.null")
     .order("joined_at", { ascending: false });
 
-  // is_active / fingerprint columns may not exist yet — fall back
+  // Fall back if new columns don't exist yet
+  if (result.error) {
+    result = await ctx.admin
+      .from("profiles")
+      .select("id, full_name, email, country, status, nexcoins, joined_at, is_active, device_fingerprint, last_seen_ip")
+      .or("role.eq.contributor,role.is.null")
+      .order("joined_at", { ascending: false }) as typeof result;
+  }
+
   if (result.error) {
     result = await ctx.admin
       .from("profiles")

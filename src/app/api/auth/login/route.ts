@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { createServerClient } from "@/lib/supabase-server";
 import { clientIp, isRateLimited, recordFailure, resetRateLimit } from "@/lib/rate-limit";
+import { getIpReputation } from "@/lib/ip-reputation";
 
 const MAX      = 10;
 const WINDOW   = 15 * 60 * 1000; // 15 minutes
@@ -63,10 +64,19 @@ export async function POST(req: NextRequest) {
 
   resetRateLimit(key);
 
-  // Store login IP silently (fire-and-forget)
-  void admin.from("profiles")
-    .update({ last_seen_ip: ip })
-    .eq("id", data.user!.id);
+  // Update login IP and run VPN/proxy check (fire-and-forget, cached per IP)
+  void (async () => {
+    const userId = data.user!.id;
+    const update: Record<string, unknown> = { last_seen_ip: ip };
+    if (ip) {
+      const rep = await getIpReputation(ip);
+      if (rep !== null) {
+        update.ip_vpn_detected = rep.vpnDetected;
+        update.ip_fraud_score  = rep.fraudScore;
+      }
+    }
+    await admin.from("profiles").update(update).eq("id", userId);
+  })();
 
   return NextResponse.json({
     session: {

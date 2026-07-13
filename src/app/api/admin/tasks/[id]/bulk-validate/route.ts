@@ -3,7 +3,6 @@ import { createServerClient } from "@/lib/supabase-server";
 import { creditWithCommission } from "@/lib/nexleader-commission";
 import { getResend, FROM_NOREPLY, taskRejectedHtml } from "@/lib/email";
 
-// ── Auth helper ───────────────────────────────────────────────────────────────
 async function verifyAdmin(req: NextRequest) {
   const token = req.headers.get("authorization")?.replace("Bearer ", "");
   if (!token) return null;
@@ -16,7 +15,6 @@ async function verifyAdmin(req: NextRequest) {
   return { admin, user };
 }
 
-// ── CSV parser ────────────────────────────────────────────────────────────────
 function parseCSV(text: string): string[][] {
   const rows: string[][] = [];
   const lines = text.replace(/\r\n/g, "\n").replace(/\r/g, "\n").split("\n");
@@ -43,7 +41,6 @@ function parseCSV(text: string): string[][] {
   return rows;
 }
 
-// ── Types ──────────────────────────────────────────────────────────────────────
 type DbSub = {
   id: string;
   contributor_id: string;
@@ -59,7 +56,6 @@ type CsvRow = {
   reason: string | null;
 };
 
-// ── POST /api/admin/projects/[id]/bulk-validate ────────────────────────────────
 export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
@@ -67,7 +63,7 @@ export async function POST(
   const ctx = await verifyAdmin(req);
   if (!ctx) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { id: projectId } = await params;
+  const { id: taskId } = await params;
   const { admin } = ctx;
 
   const body = await req.json() as {
@@ -84,7 +80,6 @@ export async function POST(
 
   if (!csvText?.trim()) return NextResponse.json({ error: "No CSV data provided" }, { status: 400 });
 
-  // ── Parse CSV ───────────────────────────────────────────────────────────────
   const rows = parseCSV(csvText.trim());
   if (rows.length < 2) return NextResponse.json({ error: "CSV needs a header row and at least one data row" }, { status: 400 });
 
@@ -113,30 +108,22 @@ export async function POST(
 
   if (csvRows.length === 0) return NextResponse.json({ error: "No submission IDs found in CSV column" }, { status: 400 });
 
-  // ── Verify project tasks ────────────────────────────────────────────────────
-  const { data: projectTasks } = await admin
-    .from("tasks")
-    .select("id")
-    .eq("project_id", projectId)
-    .is("deleted_at", null);
+  // Verify the task exists
+  const { data: task } = await admin.from("tasks").select("id, title").eq("id", taskId).single();
+  if (!task) return NextResponse.json({ error: "Task not found" }, { status: 404 });
 
-  const taskIds = (projectTasks ?? []).map((t: { id: string }) => t.id);
-  if (taskIds.length === 0) return NextResponse.json({ error: "No tasks found for this project" }, { status: 400 });
-
-  // ── Fetch matching submissions from DB ─────────────────────────────────────
   const submissionIds = [...new Set(csvRows.map((r) => r.submissionId))];
   const { data: dbSubs } = await admin
     .from("submissions")
     .select("id, contributor_id, status, task_id, tasks(title, pay_per_task), profiles(full_name, email)")
     .in("id", submissionIds)
-    .in("task_id", taskIds);
+    .eq("task_id", taskId);
 
   const dbSubMap = new Map<string, DbSub>();
   for (const s of (dbSubs ?? []) as unknown as DbSub[]) {
     dbSubMap.set(s.id, s);
   }
 
-  // ── Build preview rows ──────────────────────────────────────────────────────
   const previewRows = csvRows.map((row, i) => {
     const db = dbSubMap.get(row.submissionId);
     return {
@@ -162,7 +149,7 @@ export async function POST(
     });
   }
 
-  // ── APPLY ───────────────────────────────────────────────────────────────────
+  // APPLY
   const now = new Date().toISOString();
   let approved = 0, rejected = 0, skipped = 0, errors = 0;
 
@@ -198,13 +185,13 @@ export async function POST(
         }
 
         await admin.from("submissions").update({
-          status:                    "approved",
-          coins_awarded:             contributorCoins,
-          feedback:                  row.reason ?? null,
-          reviewed_at:               now,
-          client_validation_status:  "valid",
-          client_validation_reason:  row.reason ?? null,
-          client_validated_at:       now,
+          status:                   "approved",
+          coins_awarded:            contributorCoins,
+          feedback:                 row.reason ?? null,
+          reviewed_at:              now,
+          client_validation_status: "valid",
+          client_validation_reason: row.reason ?? null,
+          client_validated_at:      now,
         }).eq("id", row.submissionId);
 
         await admin.from("notifications").insert({
@@ -215,17 +202,16 @@ export async function POST(
         });
 
         approved++;
-
       } else {
         const reason = row.reason ?? "Rejected during client validation.";
 
         await admin.from("submissions").update({
-          status:                    "rejected",
-          feedback:                  reason,
-          reviewed_at:               now,
-          client_validation_status:  "invalid",
-          client_validation_reason:  reason,
-          client_validated_at:       now,
+          status:                   "rejected",
+          feedback:                 reason,
+          reviewed_at:              now,
+          client_validation_status: "invalid",
+          client_validation_reason: reason,
+          client_validated_at:      now,
         }).eq("id", row.submissionId);
 
         await admin.from("notifications").insert({
@@ -246,14 +232,14 @@ export async function POST(
               to:      contributorEmail,
               subject: `Submission feedback — ${taskTitle}`,
               html:    taskRejectedHtml(contributorName, taskTitle, reason),
-            }).catch((e: unknown) => console.error("[bulk-validate] email error:", e));
+            }).catch((e: unknown) => console.error("[task-bulk-validate] email error:", e));
           }
         }
 
         rejected++;
       }
     } catch (err) {
-      console.error(`[bulk-validate] error for ${row.submissionId}:`, err);
+      console.error(`[task-bulk-validate] error for ${row.submissionId}:`, err);
       errors++;
     }
   }
