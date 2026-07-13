@@ -63,6 +63,11 @@ export async function POST(req: NextRequest) {
 
   resetRateLimit(key);
 
+  // Store login IP silently (fire-and-forget)
+  void admin.from("profiles")
+    .update({ last_seen_ip: ip })
+    .eq("id", data.user!.id);
+
   return NextResponse.json({
     session: {
       access_token:  data.session.access_token,

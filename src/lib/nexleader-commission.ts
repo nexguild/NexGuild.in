@@ -3,6 +3,7 @@ import { SupabaseClient } from "@supabase/supabase-js";
 const SOMEN_ID = "6c95c54a-33e6-489b-9175-3626c774635e";
 const CONTRIBUTOR_PCT = 0.66;
 const NEXLEADER_PCT   = 0.10;
+const DAILY_CAP = 15000; // max NexCoins a contributor can earn per day
 
 export interface CommissionResult {
   contributorCredit: number;
@@ -27,7 +28,25 @@ export async function creditWithCommission(
   source:        "offerwall" | "task",
   description:   string,
 ): Promise<CommissionResult> {
-  const contributorCredit = Math.floor(grossAmount * CONTRIBUTOR_PCT);
+  // Check daily cap — sum today's earned coin_transactions for this contributor
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+  const { data: todayTxns } = await supabaseAdmin
+    .from("coin_transactions")
+    .select("amount")
+    .eq("contributor_id", contributorId)
+    .eq("type", "earned")
+    .gte("created_at", todayStart.toISOString());
+  const earnedToday = (todayTxns ?? []).reduce((s, t) => s + ((t as { amount: number }).amount ?? 0), 0);
+
+  if (earnedToday >= DAILY_CAP) {
+    console.log(`[nexleader-commission] daily cap hit for ${contributorId} (earned today: ${earnedToday})`);
+    return { contributorCredit: 0, nexleaderCredit: 0, platformCut: grossAmount };
+  }
+
+  // Clamp contributor credit to remaining allowance
+  const rawContributorCredit = Math.floor(grossAmount * CONTRIBUTOR_PCT);
+  const contributorCredit = Math.min(rawContributorCredit, DAILY_CAP - earnedToday);
   const nexleaderCredit   = Math.floor(grossAmount * NEXLEADER_PCT);
   const platformCut       = grossAmount - contributorCredit - nexleaderCredit;
 

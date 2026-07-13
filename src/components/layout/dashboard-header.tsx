@@ -89,6 +89,26 @@ export function DashboardHeader({ onMenuToggle }: DashboardHeaderProps) {
 
       userIdRef.current = user.id;
 
+      // Silently capture device fingerprint once per session
+      const fpKey = `fp_sent_${user.id}`;
+      if (!sessionStorage.getItem(fpKey)) {
+        import("@fingerprintjs/fingerprintjs").then(async (FingerprintJS) => {
+          try {
+            const fp = await FingerprintJS.load();
+            const result = await fp.get();
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session?.access_token) {
+              await fetch("/api/profile/fingerprint", {
+                method:  "POST",
+                headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}` },
+                body:    JSON.stringify({ fingerprint: result.visitorId }),
+              });
+              sessionStorage.setItem(fpKey, "1");
+            }
+          } catch { /* silent */ }
+        }).catch(() => {});
+      }
+
       // Fetch profile name, avatar, and notifications in parallel
       const [{ data: profileData }, { data, error }] = await Promise.all([
         supabase.from("profiles").select("full_name, avatar_url").eq("id", user.id).single(),

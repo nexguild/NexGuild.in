@@ -43,6 +43,28 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Cart is empty." }, { status: 400 });
   }
 
+  // 48-hour account age gate for first withdrawal
+  const { data: ageProfile } = await admin
+    .from("profiles")
+    .select("joined_at")
+    .eq("id", user.id)
+    .single();
+  const joinedAt = new Date((ageProfile as { joined_at: string | null } | null)?.joined_at ?? 0);
+  const hoursSinceJoin = (Date.now() - joinedAt.getTime()) / (1000 * 60 * 60);
+  if (hoursSinceJoin < 48) {
+    const { count: prevDelivered } = await admin
+      .from("voucher_requests")
+      .select("*", { count: "exact", head: true })
+      .eq("contributor_id", user.id)
+      .eq("status", "delivered");
+    if ((prevDelivered ?? 0) === 0) {
+      const hoursLeft = Math.ceil(48 - hoursSinceJoin);
+      return NextResponse.json({
+        error: `Your account must be at least 48 hours old before your first withdrawal. Please wait ${hoursLeft} more hour${hoursLeft === 1 ? "" : "s"}.`,
+      }, { status: 400 });
+    }
+  }
+
   const totalCoins = items.reduce((s, i) => s + i.coins, 0);
 
   // Validate coupon if provided

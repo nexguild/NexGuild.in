@@ -26,11 +26,11 @@ export async function GET(req: NextRequest) {
 
   let result = await ctx.admin
     .from("profiles")
-    .select("id, full_name, email, country, status, nexcoins, joined_at, is_active")
+    .select("id, full_name, email, country, status, nexcoins, joined_at, is_active, device_fingerprint, last_seen_ip")
     .or("role.eq.contributor,role.is.null")
     .order("joined_at", { ascending: false });
 
-  // is_active column may not exist yet — fall back to query without it
+  // is_active / fingerprint columns may not exist yet — fall back
   if (result.error) {
     result = await ctx.admin
       .from("profiles")
@@ -127,32 +127,33 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ error: "Cannot delete the owner account." }, { status: 403 });
   }
 
+  // Revoke all sessions first — active sessions block auth.users deletion
+  await ctx.admin.auth.admin.signOut(contributorId, "global").catch(() => {});
+
   // Reassign any guild members this user leads back to Somen
   await ctx.admin.from("profiles")
     .update({ nexleader_id: SOMEN_ID })
     .eq("nexleader_id", contributorId);
 
-  // Delete all user-related data
+  // Delete all child-table rows that FK to profiles — order doesn't matter here
+  // since we're not deleting profiles yet (deleteUser cascades that)
   await Promise.all([
     ctx.admin.from("coin_transactions").delete().eq("contributor_id", contributorId),
     ctx.admin.from("submissions").delete().eq("contributor_id", contributorId),
     ctx.admin.from("assignments").delete().eq("contributor_id", contributorId),
-    ctx.admin.from("offerwall_transactions").delete().eq("contributor_id", contributorId),
     ctx.admin.from("nexleader_commissions").delete().or(`nexleader_id.eq.${contributorId},member_id.eq.${contributorId}`),
     ctx.admin.from("notifications").delete().eq("user_id", contributorId),
     ctx.admin.from("nexleader_applications").delete().eq("contributor_id", contributorId),
     ctx.admin.from("voucher_requests").delete().eq("contributor_id", contributorId),
     ctx.admin.from("postback_logs").delete().eq("user_id", contributorId),
+    ctx.admin.from("support_tickets").delete().eq("contributor_id", contributorId),
   ]);
 
-  // Delete profile row
-  await ctx.admin.from("profiles").delete().eq("id", contributorId);
-
-  // Delete auth user (removes login ability permanently)
+  // Delete the auth user — Supabase CASCADE removes the profiles row automatically
   const { error: authErr } = await ctx.admin.auth.admin.deleteUser(contributorId);
   if (authErr) {
     console.error("[contributors/delete] auth delete error:", authErr.message);
-    return NextResponse.json({ error: "Data deleted but auth user removal failed: " + authErr.message }, { status: 500 });
+    return NextResponse.json({ error: "Failed to delete user: " + authErr.message }, { status: 500 });
   }
 
   return NextResponse.json({ ok: true });
