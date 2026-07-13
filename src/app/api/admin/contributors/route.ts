@@ -70,19 +70,28 @@ export async function PATCH(req: NextRequest) {
   // Protect owner account
   const { data: target } = await ctx.admin
     .from("profiles")
-    .select("role, full_name, email")
+    .select("role, full_name, email, nexleader_id, status, is_active")
     .eq("id", contributorId)
     .single();
 
-  const t = target as { role: string; full_name: string | null; email: string | null } | null;
+  const t = target as { role: string; full_name: string | null; email: string | null; nexleader_id: string | null; status: string | null; is_active: boolean | null } | null;
   if (t?.role === "owner") {
     return NextResponse.json({ error: "Cannot modify the owner account." }, { status: 403 });
   }
 
-  // Reactivation path — set is_active = true
-  if (is_active === true) {
-    const { error } = await ctx.admin.from("profiles").update({ is_active: true }).eq("id", contributorId);
+  // Deactivation / reactivation path
+  if (is_active !== undefined) {
+    const { error } = await ctx.admin.from("profiles").update({ is_active }).eq("id", contributorId);
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    if (t?.nexleader_id) {
+      if (is_active === false && t.is_active !== false) {
+        // Deactivating an active member → decrement
+        await ctx.admin.rpc("increment_guild_members", { p_nexleader_id: t.nexleader_id, p_amount: -1 }).catch(() => {});
+      } else if (is_active === true && t.is_active === false) {
+        // Reactivating a deactivated member → increment
+        await ctx.admin.rpc("increment_guild_members", { p_nexleader_id: t.nexleader_id, p_amount: 1 }).catch(() => {});
+      }
+    }
     return NextResponse.json({ ok: true });
   }
 
@@ -100,7 +109,10 @@ export async function PATCH(req: NextRequest) {
 
   if (status === "banned") {
     await ctx.admin.auth.admin.signOut(contributorId, "others").catch(() => {});
-
+    // Decrement member count (only if not already banned)
+    if (t?.status !== "banned" && t?.nexleader_id) {
+      await ctx.admin.rpc("increment_guild_members", { p_nexleader_id: t.nexleader_id, p_amount: -1 }).catch(() => {});
+    }
     const resend = getResend();
     if (resend && t?.email) {
       resend.emails.send({
@@ -110,6 +122,12 @@ export async function PATCH(req: NextRequest) {
         html:    accountBannedHtml(t.full_name ?? "Contributor", reason!.trim()),
       }).catch((e: unknown) => console.error("[ban] email error:", e));
     }
+  }
+
+  // Deactivation path — decrement member count
+  if (status === "active" && t?.status === "banned" && t.nexleader_id) {
+    // Unban: restore count
+    await ctx.admin.rpc("increment_guild_members", { p_nexleader_id: t.nexleader_id, p_amount: 1 }).catch(() => {});
   }
 
   return NextResponse.json({ ok: true });
@@ -123,16 +141,22 @@ export async function DELETE(req: NextRequest) {
   const contributorId = searchParams.get("id");
   if (!contributorId) return NextResponse.json({ error: "id is required." }, { status: 400 });
 
-  // Protect owner account
+  // Protect owner account — also fetch nexleader_id + status to update counts
   const { data: target } = await ctx.admin
     .from("profiles")
-    .select("role, full_name")
+    .select("role, full_name, nexleader_id, status, is_active")
     .eq("id", contributorId)
     .single();
 
-  const t = target as { role: string; full_name: string | null } | null;
+  const t = target as { role: string; full_name: string | null; nexleader_id: string | null; status: string | null; is_active: boolean | null } | null;
   if (t?.role === "owner") {
     return NextResponse.json({ error: "Cannot delete the owner account." }, { status: 403 });
+  }
+
+  // Decrement the NexLeader's member count before profile is deleted
+  // (only if not already banned/deactivated — those already decremented)
+  if (t?.nexleader_id && t.status !== "banned" && t.is_active !== false) {
+    await ctx.admin.rpc("increment_guild_members", { p_nexleader_id: t.nexleader_id, p_amount: -1 }).catch(() => {});
   }
 
   // Revoke all sessions first — active sessions block auth.users deletion
