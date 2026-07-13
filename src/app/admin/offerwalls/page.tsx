@@ -65,7 +65,9 @@ const INTEGRATION_TYPES = [
 ];
 
 function isLive(p: Provider) {
-  return !!(p.api_key && p.api_key.trim().length > 0) && p.is_active;
+  const hasCredentials = !!(p.api_key && p.api_key.trim().length > 0);
+  const hasEmbedUrl    = !!(p.embed_url_template && p.embed_url_template.trim().length > 0);
+  return (hasCredentials || hasEmbedUrl) && p.is_active;
 }
 
 function PostbackUrlCell({ slug }: { slug: string }) {
@@ -435,8 +437,8 @@ export default function AdminOfferwallsPage() {
               {/* Status indicator */}
               <div className="flex items-center gap-3 text-sm flex-wrap">
                 <span className="text-[var(--text-secondary)]">Status after save:</span>
-                <Badge variant={form.api_key.trim() && form.is_active ? "success" : "neutral"}>
-                  {form.api_key.trim() && form.is_active ? "🟢 Live" : "🔜 Coming Soon"}
+                <Badge variant={(form.api_key.trim() || form.embed_url_template.trim()) && form.is_active ? "success" : "neutral"}>
+                  {(form.api_key.trim() || form.embed_url_template.trim()) && form.is_active ? "🟢 Live" : "🔜 Coming Soon"}
                 </Badge>
                 <label className="flex items-center gap-1.5 cursor-pointer ml-auto">
                   <input type="checkbox" checked={form.is_active}

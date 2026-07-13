@@ -36,7 +36,7 @@ export async function GET(req: NextRequest) {
     logo_url:           p.logo_url,
     feature_tags:       Array.isArray(p.custom_config?.feature_tags) ? p.custom_config?.feature_tags as string[] : [],
     available_countries: Array.isArray(p.custom_config?.available_countries) ? p.custom_config?.available_countries as string[] : [],
-    isLive:             !!(p.api_key && p.api_key.trim().length > 0),
+    isLive:             !!(p.api_key && p.api_key.trim().length > 0) || !!(p.embed_url_template && p.embed_url_template.trim().length > 0),
   }));
 
   return NextResponse.json({ providers: safeProviders });
