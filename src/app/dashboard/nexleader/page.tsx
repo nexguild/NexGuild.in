@@ -31,7 +31,7 @@ interface StatusData {
     created_at: string;
     rejection_reason: string | null;
   } | null;
-  members: { id: string; full_name: string | null; created_at: string }[];
+  members: { id: string; full_name: string | null; created_at: string; lifetime_commission: number }[];
   commissions: {
     id: string;
     member_id: string;
@@ -153,43 +153,48 @@ function NexLeaderDashboard({ data, copyLink, copied }: {
         <ArrowRight className="h-4 w-4 text-amber-600 flex-shrink-0" />
       </a>
 
-      {/* Members */}
+      {/* Guild Members */}
       {members.length > 0 && (
         <div className="rounded-xl overflow-hidden bg-white shadow-sm" style={{ border: "1px solid #E5E7EB" }}>
-          <div className="px-5 py-4 border-b border-[var(--border-default)]">
-            <h2 className="text-sm font-bold text-[var(--text-primary)]">
-              Guild Members <span className="text-[var(--text-muted)] font-normal">({members.length})</span>
-            </h2>
+          <div className="px-5 py-4 border-b border-[var(--border-default)] flex items-center justify-between">
+            <div>
+              <h2 className="text-sm font-bold text-[var(--text-primary)]">Guild Members</h2>
+              <p className="text-xs text-[var(--text-muted)] mt-0.5">{members.length} member{members.length !== 1 ? "s" : ""} · sorted by lifetime commission</p>
+            </div>
+            <div className="flex items-center gap-1 text-xs font-semibold text-amber-600">
+              <NexCoinIcon size={12} />
+              {members.reduce((s, m) => s + m.lifetime_commission, 0)} NC total
+            </div>
           </div>
           <div className="overflow-x-auto">
-            <table className="w-full text-sm min-w-[360px]">
+            <table className="w-full text-sm min-w-[480px]">
               <thead>
                 <tr className="bg-slate-50 border-b border-[var(--border-default)]">
-                  <th className="text-left px-5 py-2.5 text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wide">Member</th>
+                  <th className="text-left px-5 py-2.5 text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wide">#</th>
+                  <th className="text-left px-5 py-2.5 text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wide">Name</th>
                   <th className="text-left px-5 py-2.5 text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wide">UID</th>
                   <th className="text-left px-5 py-2.5 text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wide">Joined</th>
-                  <th className="text-right px-5 py-2.5 text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wide">Your Commission</th>
+                  <th className="text-right px-5 py-2.5 text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wide">Lifetime Commission</th>
                 </tr>
               </thead>
               <tbody>
-                {members.map((m) => {
-                  const memberComm = commissions
-                    .filter((c) => c.member_id === m.id)
-                    .reduce((s, c) => s + c.nexleader_credit, 0);
-                  return (
-                    <tr key={m.id} className="border-b border-[var(--border-default)] hover:bg-slate-50 transition-colors">
-                      <td className="px-5 py-3 font-medium text-[var(--text-primary)]">{mask(m.full_name)}</td>
-                      <td className="px-5 py-3 font-mono text-xs text-[var(--text-muted)]">{m.id.slice(0, 8)}…</td>
-                      <td className="px-5 py-3 text-xs text-[var(--text-muted)]">{daysAgo(m.created_at)}d ago</td>
-                      <td className="px-5 py-3 text-right">
+                {members.map((m, i) => (
+                  <tr key={m.id} className="border-b border-[var(--border-default)] hover:bg-slate-50 transition-colors">
+                    <td className="px-5 py-3 text-xs text-[var(--text-muted)] font-mono">{i + 1}</td>
+                    <td className="px-5 py-3 font-medium text-[var(--text-primary)]">{m.full_name ?? "—"}</td>
+                    <td className="px-5 py-3 font-mono text-xs text-[var(--text-muted)]" title={m.id}>{m.id.slice(0, 12)}…</td>
+                    <td className="px-5 py-3 text-xs text-[var(--text-muted)]">{daysAgo(m.created_at)}d ago</td>
+                    <td className="px-5 py-3 text-right">
+                      {m.lifetime_commission > 0 ? (
                         <span className="inline-flex items-center gap-1 text-xs font-semibold text-amber-600">
-                          <NexCoinIcon size={11} />
-                          {memberComm > 0 ? `+${memberComm}` : "—"} NC
+                          <NexCoinIcon size={11} />+{m.lifetime_commission} NC
                         </span>
-                      </td>
-                    </tr>
-                  );
-                })}
+                      ) : (
+                        <span className="text-xs text-[var(--text-muted)]">—</span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>

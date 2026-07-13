@@ -68,20 +68,28 @@ export async function GET(req: NextRequest) {
   let activeThisWeek = 0;
 
   if (p?.is_nexleader) {
-    const [membersRes, commissionsRes, activeRes] = await Promise.all([
+    const [membersRes, allTotalsRes, recentCommRes, activeRes] = await Promise.all([
+      // All guild members
       admin
         .from("profiles")
         .select("id, full_name, created_at")
         .eq("nexleader_id", user.id)
         .neq("id", user.id)
         .order("created_at", { ascending: false })
-        .limit(200),
+        .limit(500),
+      // All-time per-member totals (lightweight — only 2 cols, no limit)
+      admin
+        .from("nexleader_commissions")
+        .select("member_id, nexleader_credit")
+        .eq("nexleader_id", user.id),
+      // Recent commission history (for the activity feed)
       admin
         .from("nexleader_commissions")
         .select("id, member_id, event_type, nexleader_credit, created_at")
         .eq("nexleader_id", user.id)
         .order("created_at", { ascending: false })
-        .limit(200),
+        .limit(100),
+      // Active this week
       admin
         .from("nexleader_commissions")
         .select("member_id")
@@ -89,14 +97,24 @@ export async function GET(req: NextRequest) {
         .gte("created_at", new Date(Date.now() - 7 * 86400000).toISOString()),
     ]);
 
-    // Build member name map for enriching commission rows
+    // Aggregate lifetime commission per member from ALL rows
+    const lifetimeTotals = new Map<string, number>();
+    for (const r of (allTotalsRes.data ?? []) as { member_id: string; nexleader_credit: number }[]) {
+      lifetimeTotals.set(r.member_id, (lifetimeTotals.get(r.member_id) ?? 0) + r.nexleader_credit);
+    }
+
+    // Build member name map for enriching commission history
     const memberMap = new Map<string, string>(
       ((membersRes.data ?? []) as { id: string; full_name: string | null }[])
         .map((m) => [m.id, m.full_name ?? "Member"])
     );
 
-    members = membersRes.data ?? [];
-    commissions = ((commissionsRes.data ?? []) as {
+    // Attach lifetime_commission to each member row, sort by top earner
+    members = ((membersRes.data ?? []) as { id: string; full_name: string | null; created_at: string }[])
+      .map((m) => ({ ...m, lifetime_commission: lifetimeTotals.get(m.id) ?? 0 }))
+      .sort((a, b) => (b as { lifetime_commission: number }).lifetime_commission - (a as { lifetime_commission: number }).lifetime_commission);
+
+    commissions = ((recentCommRes.data ?? []) as {
       id: string; member_id: string; event_type: string; nexleader_credit: number; created_at: string;
     }[]).map((c) => ({
       ...c,
