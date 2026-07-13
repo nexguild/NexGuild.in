@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState, useCallback } from "react";
-import { Loader2, AlertTriangle, RefreshCw, Activity, ChevronDown, ChevronUp } from "lucide-react";
+import { Loader2, AlertTriangle, RefreshCw, Activity, ChevronDown, ChevronUp, Trash2 } from "lucide-react";
 import { usePageGuard } from "@/components/layout/admin-auth-guard";
 import { ADMIN_ROLES } from "@/lib/admin-permissions";
 import { supabase } from "@/lib/supabase";
@@ -25,7 +25,7 @@ const ACTION_STYLES: Record<string, string> = {
   error:         "bg-red-500/15   text-red-400   border-red-500/20",
 };
 
-const PROVIDERS  = ["theoremreach", "cpx_research"];
+const PROVIDERS  = ["theoremreach", "cpx_research", "mylead"];
 const ACTIONS    = ["credited", "duplicate", "reversed", "debug_ignored", "hash_invalid", "error"];
 
 export default function PostbackLogsPage() {
@@ -36,6 +36,8 @@ export default function PostbackLogsPage() {
   const [filterProvider, setFilterProvider]   = useState("all");
   const [filterAction,   setFilterAction]     = useState("all");
   const [expandedId, setExpandedId]           = useState<string | null>(null);
+  const [deletingId, setDeletingId]           = useState<string | null>(null);
+  const [clearingTest, setClearingTest]       = useState(false);
 
   const fetchLogs = useCallback(async () => {
     setLoading(true);
@@ -57,6 +59,36 @@ export default function PostbackLogsPage() {
   useEffect(() => {
     if (allowed) fetchLogs();
   }, [allowed, fetchLogs]);
+
+  async function getToken() {
+    const { data: { session } } = await supabase.auth.getSession();
+    return session?.access_token ?? "";
+  }
+
+  async function deleteLog(id: string, e: React.MouseEvent) {
+    e.stopPropagation();
+    setDeletingId(id);
+    const token = await getToken();
+    await fetch("/api/admin/postback-logs", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ ids: [id] }),
+    });
+    setLogs((prev) => prev.filter((l) => l.id !== id));
+    setDeletingId(null);
+  }
+
+  async function clearTestLogs() {
+    setClearingTest(true);
+    const token = await getToken();
+    await fetch("/api/admin/postback-logs", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ action: "clear_test" }),
+    });
+    await fetchLogs();
+    setClearingTest(false);
+  }
 
   if (!allowed) return null;
 
@@ -80,14 +112,24 @@ export default function PostbackLogsPage() {
             Audit trail of every offerwall postback received — last 200 entries
           </p>
         </div>
-        <button
-          onClick={fetchLogs}
-          disabled={loading}
-          className="flex items-center gap-2 px-3 py-2 rounded-lg border border-[var(--border-default)] bg-[var(--surface-card)] text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-[var(--brand-500)] transition-colors disabled:opacity-50"
-        >
-          <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
-          Refresh
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={clearTestLogs}
+            disabled={clearingTest || loading}
+            className="flex items-center gap-2 px-3 py-2 rounded-lg border border-red-500/30 bg-red-500/10 text-sm text-red-400 hover:bg-red-500/20 transition-colors disabled:opacity-50"
+          >
+            {clearingTest ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+            Clear test entries
+          </button>
+          <button
+            onClick={fetchLogs}
+            disabled={loading}
+            className="flex items-center gap-2 px-3 py-2 rounded-lg border border-[var(--border-default)] bg-[var(--surface-card)] text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-[var(--brand-500)] transition-colors disabled:opacity-50"
+          >
+            <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+            Refresh
+          </button>
+        </div>
       </div>
 
       {/* Alert banner for hash_invalid entries */}
@@ -217,17 +259,29 @@ export default function PostbackLogsPage() {
                           {log.error_message ?? ""}
                         </td>
 
-                        {/* Expand toggle */}
-                        <td className="px-4 py-3 text-[var(--text-muted)]">
-                          {expanded
-                            ? <ChevronUp className="h-4 w-4" />
-                            : <ChevronDown className="h-4 w-4" />}
+                        {/* Actions */}
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={(e) => deleteLog(log.id, e)}
+                              disabled={deletingId === log.id}
+                              className="text-[var(--text-muted)] hover:text-red-400 transition-colors p-1"
+                              title="Delete"
+                            >
+                              {deletingId === log.id
+                                ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                : <Trash2 className="h-3.5 w-3.5" />}
+                            </button>
+                            {expanded
+                              ? <ChevronUp className="h-4 w-4 text-[var(--text-muted)]" />
+                              : <ChevronDown className="h-4 w-4 text-[var(--text-muted)]" />}
+                          </div>
                         </td>
                       </tr>
 
                       {expanded && (
                         <tr className="border-b border-[var(--border-default)]">
-                          <td colSpan={7} className="px-4 py-4 bg-[var(--surface-subtle)]">
+                          <td colSpan={8} className="px-4 py-4 bg-[var(--surface-subtle)]">
                             {log.error_message && (
                               <p className="text-xs text-red-400 font-semibold mb-3">
                                 Error: {log.error_message}
