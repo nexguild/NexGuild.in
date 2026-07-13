@@ -75,13 +75,13 @@ export async function GET(req: NextRequest) {
         .eq("nexleader_id", user.id)
         .neq("id", user.id)
         .order("created_at", { ascending: false })
-        .limit(50),
+        .limit(200),
       admin
         .from("nexleader_commissions")
         .select("id, member_id, event_type, nexleader_credit, created_at")
         .eq("nexleader_id", user.id)
         .order("created_at", { ascending: false })
-        .limit(30),
+        .limit(200),
       admin
         .from("nexleader_commissions")
         .select("member_id")
@@ -89,8 +89,20 @@ export async function GET(req: NextRequest) {
         .gte("created_at", new Date(Date.now() - 7 * 86400000).toISOString()),
     ]);
 
+    // Build member name map for enriching commission rows
+    const memberMap = new Map<string, string>(
+      ((membersRes.data ?? []) as { id: string; full_name: string | null }[])
+        .map((m) => [m.id, m.full_name ?? "Member"])
+    );
+
     members = membersRes.data ?? [];
-    commissions = commissionsRes.data ?? [];
+    commissions = ((commissionsRes.data ?? []) as {
+      id: string; member_id: string; event_type: string; nexleader_credit: number; created_at: string;
+    }[]).map((c) => ({
+      ...c,
+      member_name: memberMap.get(c.member_id) ?? "Member",
+    }));
+
     const uniqueActive = new Set(
       ((activeRes.data ?? []) as { member_id: string }[]).map((r) => r.member_id)
     );

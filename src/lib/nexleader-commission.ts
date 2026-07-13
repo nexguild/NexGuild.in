@@ -31,15 +31,16 @@ export async function creditWithCommission(
   const nexleaderCredit   = Math.floor(grossAmount * NEXLEADER_PCT);
   const platformCut       = grossAmount - contributorCredit - nexleaderCredit;
 
-  // Resolve the contributor's NexLeader
+  // Resolve the contributor's NexLeader + name for commission description
   const { data: profile } = await supabaseAdmin
     .from("profiles")
-    .select("nexleader_id")
+    .select("nexleader_id, full_name")
     .eq("id", contributorId)
     .single();
 
-  const nexleaderId =
-    (profile as { nexleader_id: string | null } | null)?.nexleader_id ?? SOMEN_ID;
+  const memberProfile = profile as { nexleader_id: string | null; full_name: string | null } | null;
+  const nexleaderId   = memberProfile?.nexleader_id ?? SOMEN_ID;
+  const memberName    = memberProfile?.full_name?.trim() || "Member";
 
   // ── Credit contributor ───────────────────────────────────────────────────
   const { error: contribRpcErr } = await supabaseAdmin.rpc("increment_nexcoins", {
@@ -89,7 +90,7 @@ export async function creditWithCommission(
       amount:         nexleaderCredit,
       type:           "earned",
       source:         "nexleader_commission",
-      description:    "Commission from member earning",
+      description:    `Commission: ${memberName} (${contributorId.slice(0, 8)}) · ${description}`,
     });
 
     // Audit row

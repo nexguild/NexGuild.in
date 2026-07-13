@@ -35,6 +35,7 @@ interface StatusData {
   commissions: {
     id: string;
     member_id: string;
+    member_name: string;
     event_type: string;
     nexleader_credit: number;
     created_at: string;
@@ -156,24 +157,42 @@ function NexLeaderDashboard({ data, copyLink, copied }: {
       {members.length > 0 && (
         <div className="rounded-xl overflow-hidden bg-white shadow-sm" style={{ border: "1px solid #E5E7EB" }}>
           <div className="px-5 py-4 border-b border-[var(--border-default)]">
-            <h2 className="text-sm font-bold text-[var(--text-primary)]">Guild Members</h2>
+            <h2 className="text-sm font-bold text-[var(--text-primary)]">
+              Guild Members <span className="text-[var(--text-muted)] font-normal">({members.length})</span>
+            </h2>
           </div>
-          {members.map((m) => {
-            const memberComm = commissions
-              .filter((c) => c.member_id === m.id)
-              .reduce((s, c) => s + c.nexleader_credit, 0);
-            return (
-              <div key={m.id} className="flex items-center justify-between px-5 py-3 border-b border-[var(--border-default)]">
-                <div>
-                  <p className="text-sm font-medium text-[var(--text-primary)]">{mask(m.full_name)}</p>
-                  <p className="text-xs text-[var(--text-muted)]">Joined {daysAgo(m.created_at)}d ago</p>
-                </div>
-                <div className="flex items-center gap-1 text-xs font-semibold text-amber-600">
-                  <NexCoinIcon size={12} /> +{memberComm} NC
-                </div>
-              </div>
-            );
-          })}
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm min-w-[360px]">
+              <thead>
+                <tr className="bg-slate-50 border-b border-[var(--border-default)]">
+                  <th className="text-left px-5 py-2.5 text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wide">Member</th>
+                  <th className="text-left px-5 py-2.5 text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wide">UID</th>
+                  <th className="text-left px-5 py-2.5 text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wide">Joined</th>
+                  <th className="text-right px-5 py-2.5 text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wide">Your Commission</th>
+                </tr>
+              </thead>
+              <tbody>
+                {members.map((m) => {
+                  const memberComm = commissions
+                    .filter((c) => c.member_id === m.id)
+                    .reduce((s, c) => s + c.nexleader_credit, 0);
+                  return (
+                    <tr key={m.id} className="border-b border-[var(--border-default)] hover:bg-slate-50 transition-colors">
+                      <td className="px-5 py-3 font-medium text-[var(--text-primary)]">{mask(m.full_name)}</td>
+                      <td className="px-5 py-3 font-mono text-xs text-[var(--text-muted)]">{m.id.slice(0, 8)}…</td>
+                      <td className="px-5 py-3 text-xs text-[var(--text-muted)]">{daysAgo(m.created_at)}d ago</td>
+                      <td className="px-5 py-3 text-right">
+                        <span className="inline-flex items-center gap-1 text-xs font-semibold text-amber-600">
+                          <NexCoinIcon size={11} />
+                          {memberComm > 0 ? `+${memberComm}` : "—"} NC
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 
@@ -186,10 +205,14 @@ function NexLeaderDashboard({ data, copyLink, copied }: {
           {commissions.map((c) => (
             <div key={c.id} className="flex items-center justify-between px-5 py-3 border-b border-[var(--border-default)]">
               <div>
-                <p className="text-sm text-[var(--text-secondary)]">{c.event_type.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())}</p>
-                <p className="text-xs text-[var(--text-muted)]">{new Date(c.created_at).toLocaleDateString()}</p>
+                <p className="text-sm font-medium text-[var(--text-primary)]">{mask(c.member_name)}</p>
+                <p className="text-xs text-[var(--text-muted)] font-mono">UID: {c.member_id.slice(0, 8)}…</p>
+                <p className="text-xs text-[var(--text-muted)] mt-0.5">
+                  {c.event_type === "offerwall" ? "Offerwall" : c.event_type === "task" ? "Task" : c.event_type.replace(/_/g, " ")}
+                  {" · "}{new Date(c.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+                </p>
               </div>
-              <span className="text-sm font-semibold text-amber-600">+{c.nexleader_credit} NC</span>
+              <span className="text-sm font-semibold text-amber-600 flex-shrink-0">+{c.nexleader_credit} NC</span>
             </div>
           ))}
         </div>
