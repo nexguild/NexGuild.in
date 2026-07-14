@@ -22,10 +22,10 @@ const FLOATING_PILLS = [
 ];
 
 const STATS = [
-  { value: "100+",  label: "Contributors"    },
-  { value: "12",    label: "Service Types"   },
-  { value: "100%",  label: "Quality Checked" },
-  { value: "Global", label: "Reach"          },
+  { value: "100+",   label: "Contributors"    },
+  { value: "12",     label: "Service Types"   },
+  { value: "100%",   label: "Quality Checked" },
+  { value: "Global", label: "Reach"           },
 ];
 
 const SERVICES_FEATURED = [
@@ -66,13 +66,51 @@ const STEPS = [
 ];
 
 const WHY = [
-  { accent: "#F59E0B", icon: "✅", title: "Fully Managed",    desc: "We recruit, brief, and monitor contributors — you just define the work." },
-  { accent: "#10B981", icon: "🔍", title: "Quality Reviewed", desc: "Every submission reviewed before delivery. No raw unverified data." },
-  { accent: "#8B5CF6", icon: "⚡", title: "Fast Turnaround",  desc: "Quick project delivery with real-time progress updates." },
-  { accent: "#F59E0B", icon: "💰", title: "Affordable",       desc: "Competitive pricing with no hidden fees or surprises." },
-  { accent: "#0D9488", icon: "📈", title: "Scalable",         desc: "From 10 samples to 10,000+ — we scale with your needs." },
-  { accent: "#EC4899", icon: "📊", title: "Transparent",      desc: "Regular progress reports and always-open communication." },
+  { key: "managed",     accent: "#F59E0B", title: "Fully Managed",    desc: "We recruit, brief, and monitor contributors — you just define the work." },
+  { key: "quality",     accent: "#10B981", title: "Quality Reviewed",  desc: "Every submission reviewed before delivery. No raw unverified data." },
+  { key: "speed",       accent: "#8B5CF6", title: "Fast Turnaround",   desc: "Quick project delivery with real-time progress updates." },
+  { key: "affordable",  accent: "#F59E0B", title: "Affordable",        desc: "Competitive pricing with no hidden fees or surprises." },
+  { key: "scalable",    accent: "#0D9488", title: "Scalable",          desc: "From 10 samples to 10,000+ — we scale with your needs." },
+  { key: "transparent", accent: "#EC4899", title: "Transparent",       desc: "Regular progress reports and always-open communication." },
 ];
+
+const WHY_ICONS: Record<string, React.ReactNode> = {
+  managed: (
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M10 2L3 5v4.5C3 13.6 6.1 17.3 10 18.5c3.9-1.2 7-4.9 7-9V5L10 2z"/>
+      <path d="M7 10l2 2 4-4"/>
+    </svg>
+  ),
+  quality: (
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="8.5" cy="8.5" r="5.5"/>
+      <path d="M17 17l-3.8-3.8"/>
+    </svg>
+  ),
+  speed: (
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+      <path d="M11.3 2.5L3.5 11h6.5l-2 6.5 9-9.5H11l.3-5.5z"/>
+    </svg>
+  ),
+  affordable: (
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 3h6.5L17 10.5l-6.5 6.5L3 9.5V3z"/>
+      <circle cx="7" cy="7" r="1.2" fill="currentColor" stroke="none"/>
+    </svg>
+  ),
+  scalable: (
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M2 14.5l5-5 4 4 7-7"/>
+      <path d="M14 6.5h3.5V10"/>
+    </svg>
+  ),
+  transparent: (
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M2 10s3.3-6 8-6 8 6 8 6-3.3 6-8 6-8-6-8-6z"/>
+      <circle cx="10" cy="10" r="2.5"/>
+    </svg>
+  ),
+};
 
 const INDUSTRIES = [
   "🤖 AI & Machine Learning",
@@ -83,6 +121,33 @@ const INDUSTRIES = [
   "🏢 Enterprise & Fintech",
   "🏥 Healthcare AI",
   "🌐 E-commerce",
+];
+
+const FAQ_ITEMS = [
+  {
+    q: "How long does a typical project take?",
+    a: "Depends on volume. Small projects (100–500 samples) usually deliver in 3–7 business days. Larger datasets take longer — we give a firm timeline during scoping, before you commit.",
+  },
+  {
+    q: "What if the quality isn't what I expected?",
+    a: "Every submission is reviewed against your brief before delivery. If something doesn't pass, it gets reworked at no extra cost. We don't ship unverified output.",
+  },
+  {
+    q: "What's the minimum project size?",
+    a: "There's no minimum. We work on projects of all sizes, from a few hundred samples to tens of thousands. Tell us what you need and we'll scope accordingly.",
+  },
+  {
+    q: "Do you sign NDAs?",
+    a: "Yes — we're happy to sign an NDA before you share any project details or data. Confidentiality is taken seriously on every project.",
+  },
+  {
+    q: "How does pricing work?",
+    a: "We quote a single fixed price per project after understanding your requirements. You pay NexGuild directly — no per-contributor billing, no platform fees, no surprises.",
+  },
+  {
+    q: "What formats do you deliver in?",
+    a: "We match whatever format you need — CSV, JSON, JSONL, Excel, PDF, MP3, WAV, and more. Specify it at the start and we'll deliver accordingly.",
+  },
 ];
 
 const pageStyle = `
@@ -101,6 +166,14 @@ const pageStyle = `
   .h-a3 { animation: heroEntry 0.65s cubic-bezier(0.16,1,0.3,1) 0.32s both; }
   .h-a4 { animation: heroEntry 0.65s cubic-bezier(0.16,1,0.3,1) 0.46s both; }
   .h-a5 { animation: heroEntry 0.65s cubic-bezier(0.16,1,0.3,1) 0.60s both; }
+
+  /* FAQ accordion */
+  details > summary { list-style: none; cursor: pointer; }
+  details > summary::-webkit-details-marker { display: none; }
+  details > summary::marker { display: none; }
+  .faq-chevron { transition: transform 0.25s cubic-bezier(0.16,1,0.3,1); }
+  details[open] .faq-chevron { transform: rotate(180deg); }
+  details[open] { background: rgba(255,255,255,0.95) !important; }
 `;
 
 /* ─────────────────────── Page ─────────────────────────────────── */
@@ -149,7 +222,7 @@ export default function ClientPage() {
           </div>
         ))}
 
-        {/* Hero content — CSS animations for above-fold (reliable on SSR pages) */}
+        {/* Hero content */}
         <div className="relative z-10 mx-auto max-w-3xl px-6 text-center pt-24 pb-14">
           <div className="h-a1">
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full mb-6"
@@ -215,11 +288,10 @@ export default function ClientPage() {
         <div className="mx-auto max-w-container py-8 px-6">
           <FadeIn>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-6 sm:gap-16 text-center">
-              {STATS.map((s, i) => (
+              {STATS.map((s) => (
                 <div key={s.label}>
                   <div className="text-3xl sm:text-4xl font-black" style={{ color: "#F59E0B", fontFamily: "Instrument Serif, serif" }}>{s.value}</div>
                   <div className="text-[10px] font-bold uppercase tracking-widest mt-1.5" style={{ color: "rgba(255,255,255,0.4)" }}>{s.label}</div>
-                  {i < STATS.length - 1 && <div className="hidden sm:block" />}
                 </div>
               ))}
             </div>
@@ -364,7 +436,7 @@ export default function ClientPage() {
       </section>
 
       {/* ══════════════════════════════════
-          WHY NEXGUILD
+          WHY NEXGUILD — SVG icons
       ══════════════════════════════════ */}
       <section className="py-14 px-6">
         <div className="mx-auto max-w-container">
@@ -378,12 +450,12 @@ export default function ClientPage() {
           </FadeIn>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {WHY.map((w, i) => (
-              <FadeIn key={w.title} delay={i * 60} className="h-full">
-                <div className="group flex gap-5 p-5 rounded-2xl h-full transition-all duration-300 hover:translate-y-[-2px] hover:bg-white hover:shadow-lg"
+              <FadeIn key={w.key} delay={i * 60} className="h-full">
+                <div className="group flex gap-4 p-5 rounded-2xl h-full transition-all duration-300 hover:translate-y-[-2px] hover:bg-white hover:shadow-lg"
                   style={{ background: "rgba(255,255,255,0.5)", border: "1.5px solid rgba(217,119,6,0.1)", backdropFilter: "blur(12px)", borderLeft: `3px solid ${w.accent}` }}>
-                  <div className="flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center text-xl"
-                    style={{ background: `${w.accent}14`, border: `1.5px solid ${w.accent}30` }}>
-                    {w.icon}
+                  <div className="flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center"
+                    style={{ background: `${w.accent}14`, border: `1.5px solid ${w.accent}28`, color: w.accent }}>
+                    {WHY_ICONS[w.key]}
                   </div>
                   <div>
                     <h3 className="font-bold text-sm mb-1.5" style={{ color: "#1C1917", fontFamily: "Instrument Serif, serif" }}>{w.title}</h3>
@@ -422,6 +494,53 @@ export default function ClientPage() {
                 <p className="text-sm font-semibold italic" style={{ color: "#92400E" }}>— Somen, Founder</p>
               </div>
             </div>
+          </FadeIn>
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════
+          FAQ
+      ══════════════════════════════════ */}
+      <section className="py-14 px-6" style={{ background: "rgba(255,255,255,0.3)", backdropFilter: "blur(8px)", borderTop: "1px solid rgba(217,119,6,0.07)", borderBottom: "1px solid rgba(217,119,6,0.07)" }}>
+        <div className="mx-auto max-w-container">
+          <FadeIn>
+            <div className="text-center mb-10">
+              <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: "#D97706" }}>Common Questions</p>
+              <h2 className="text-3xl sm:text-4xl font-black tracking-tight" style={{ fontFamily: "Instrument Serif, serif", color: "#1C1917" }}>
+                Before You Reach Out
+              </h2>
+            </div>
+          </FadeIn>
+
+          <div className="max-w-3xl mx-auto space-y-3">
+            {FAQ_ITEMS.map((item, i) => (
+              <FadeIn key={item.q} delay={i * 50}>
+                <details
+                  className="group rounded-xl overflow-hidden transition-all duration-200"
+                  style={{ background: "rgba(255,255,255,0.65)", border: "1.5px solid rgba(217,119,6,0.12)" }}>
+                  <summary className="flex items-center justify-between gap-4 px-5 py-4 select-none">
+                    <span className="font-semibold text-sm" style={{ color: "#1C1917" }}>{item.q}</span>
+                    <span className="faq-chevron flex-shrink-0" style={{ color: "#D97706" }}>
+                      <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M4.5 6.75L9 11.25l4.5-4.5"/>
+                      </svg>
+                    </span>
+                  </summary>
+                  <div className="px-5 pb-4 pt-1">
+                    <p className="text-sm leading-relaxed" style={{ color: "#57534E" }}>{item.a}</p>
+                  </div>
+                </details>
+              </FadeIn>
+            ))}
+          </div>
+
+          <FadeIn delay={320}>
+            <p className="text-center mt-8 text-xs" style={{ color: "#78716C" }}>
+              Have a different question?{" "}
+              <Link href="/client/contact" className="font-semibold underline underline-offset-2 hover:text-[#D97706] transition-colors" style={{ color: "#92400E" }}>
+                Ask us directly →
+              </Link>
+            </p>
           </FadeIn>
         </div>
       </section>
