@@ -54,6 +54,11 @@ interface ApplyForm {
   phone: string;
   applicant_role: string;
   experience_years: string;
+  linkedin_url: string;
+  resume_url: string;
+  notice_period: string;
+  current_ctc: string;
+  expected_ctc: string;
   message: string;
 }
 
@@ -100,7 +105,8 @@ export default function JobsPage() {
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [applyOpen, setApplyOpen] = useState(false);
   const [applyForm, setApplyForm] = useState<ApplyForm>({
-    full_name: "", email: "", phone: "", applicant_role: "", experience_years: "", message: "",
+    full_name: "", email: "", phone: "", applicant_role: "", experience_years: "",
+    linkedin_url: "", resume_url: "", notice_period: "", current_ctc: "", expected_ctc: "", message: "",
   });
   const [applyLoading, setApplyLoading] = useState(false);
   const [applySuccess, setApplySuccess] = useState(false);
@@ -157,7 +163,8 @@ export default function JobsPage() {
     setApplyOpen(true);
     setApplySuccess(false);
     setApplyError(null);
-    setApplyForm({ full_name: "", email: "", phone: "", applicant_role: "", experience_years: "", message: "" });
+    setApplyForm({ full_name: "", email: "", phone: "", applicant_role: "", experience_years: "",
+      linkedin_url: "", resume_url: "", notice_period: "", current_ctc: "", expected_ctc: "", message: "" });
   }
 
   const wt = selectedJob ? WORK_TYPE_LABELS[selectedJob.work_type] : null;
@@ -431,91 +438,128 @@ export default function JobsPage() {
                 </button>
               </div>
             ) : (
-              <form onSubmit={handleApply} className="px-6 py-5 space-y-4 max-h-[70vh] overflow-y-auto">
+              <form onSubmit={handleApply} className="px-6 py-5 space-y-4 max-h-[75vh] overflow-y-auto">
+
+                {/* Personal Info */}
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Personal Details</p>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="block text-xs font-medium text-slate-700 mb-1">Full Name *</label>
-                    <input
-                      required
-                      value={applyForm.full_name}
+                    <input required value={applyForm.full_name}
                       onChange={(e) => setApplyForm(f => ({ ...f, full_name: e.target.value }))}
-                      className="w-full h-9 px-3 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0D9488]/30 focus:border-[#0D9488]"
-                    />
+                      className="w-full h-9 px-3 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0D9488]/30 focus:border-[#0D9488]" />
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-slate-700 mb-1">Email *</label>
-                    <input
-                      required
-                      type="email"
-                      value={applyForm.email}
+                    <input required type="email" value={applyForm.email}
                       onChange={(e) => setApplyForm(f => ({ ...f, email: e.target.value }))}
-                      className="w-full h-9 px-3 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0D9488]/30 focus:border-[#0D9488]"
-                    />
+                      className="w-full h-9 px-3 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0D9488]/30 focus:border-[#0D9488]" />
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs font-medium text-slate-700 mb-1">Phone</label>
-                    <input
-                      type="tel"
-                      value={applyForm.phone}
+                    <label className="block text-xs font-medium text-slate-700 mb-1">Phone *</label>
+                    <input required type="tel" value={applyForm.phone}
                       onChange={(e) => setApplyForm(f => ({ ...f, phone: e.target.value }))}
-                      className="w-full h-9 px-3 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0D9488]/30 focus:border-[#0D9488]"
-                    />
+                      placeholder="+91 XXXXX XXXXX"
+                      className="w-full h-9 px-3 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0D9488]/30 focus:border-[#0D9488]" />
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-slate-700 mb-1">Current Role</label>
-                    <input
-                      value={applyForm.applicant_role}
+                    <input value={applyForm.applicant_role}
                       onChange={(e) => setApplyForm(f => ({ ...f, applicant_role: e.target.value }))}
-                      placeholder="e.g. CSA, Fresher"
-                      className="w-full h-9 px-3 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0D9488]/30 focus:border-[#0D9488]"
-                    />
+                      placeholder="e.g. CSA, Team Lead, Fresher"
+                      className="w-full h-9 px-3 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0D9488]/30 focus:border-[#0D9488]" />
                   </div>
                 </div>
-                <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1">Years of Experience</label>
-                  <select
-                    value={applyForm.experience_years}
-                    onChange={(e) => setApplyForm(f => ({ ...f, experience_years: e.target.value }))}
-                    className="w-full h-9 px-3 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0D9488]/30 focus:border-[#0D9488]"
-                  >
-                    <option value="">Select</option>
-                    <option>Fresher</option>
-                    <option>Less than 1 year</option>
-                    <option>1–2 years</option>
-                    <option>3–5 years</option>
-                    <option>5+ years</option>
-                  </select>
+
+                {/* Experience */}
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider pt-1">Experience & Availability</p>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-medium text-slate-700 mb-1">Total Experience *</label>
+                    <select required value={applyForm.experience_years}
+                      onChange={(e) => setApplyForm(f => ({ ...f, experience_years: e.target.value }))}
+                      className="w-full h-9 px-3 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0D9488]/30 focus:border-[#0D9488]">
+                      <option value="">Select</option>
+                      <option>Fresher</option>
+                      <option>Less than 1 year</option>
+                      <option>1–2 years</option>
+                      <option>3–5 years</option>
+                      <option>5–8 years</option>
+                      <option>8+ years</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-slate-700 mb-1">Notice Period</label>
+                    <select value={applyForm.notice_period}
+                      onChange={(e) => setApplyForm(f => ({ ...f, notice_period: e.target.value }))}
+                      className="w-full h-9 px-3 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0D9488]/30 focus:border-[#0D9488]">
+                      <option value="">Select</option>
+                      <option>Immediate</option>
+                      <option>15 days</option>
+                      <option>30 days</option>
+                      <option>60 days</option>
+                      <option>90 days</option>
+                    </select>
+                  </div>
                 </div>
-                <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1">Message (optional)</label>
-                  <textarea
-                    rows={3}
-                    value={applyForm.message}
-                    onChange={(e) => setApplyForm(f => ({ ...f, message: e.target.value }))}
-                    placeholder="Anything you'd like us to know…"
-                    className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-[#0D9488]/30 focus:border-[#0D9488]"
-                  />
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-medium text-slate-700 mb-1">Current CTC</label>
+                    <input value={applyForm.current_ctc}
+                      onChange={(e) => setApplyForm(f => ({ ...f, current_ctc: e.target.value }))}
+                      placeholder="e.g. ₹3 LPA or ₹25,000/mo"
+                      className="w-full h-9 px-3 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0D9488]/30 focus:border-[#0D9488]" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-slate-700 mb-1">Expected CTC</label>
+                    <input value={applyForm.expected_ctc}
+                      onChange={(e) => setApplyForm(f => ({ ...f, expected_ctc: e.target.value }))}
+                      placeholder="e.g. ₹4 LPA or ₹35,000/mo"
+                      className="w-full h-9 px-3 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0D9488]/30 focus:border-[#0D9488]" />
+                  </div>
                 </div>
 
-                {applyError && (
-                  <p className="text-xs text-red-500">{applyError}</p>
-                )}
+                {/* CV & Links */}
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider pt-1">CV & Profile</p>
+                <div>
+                  <label className="block text-xs font-medium text-slate-700 mb-1">
+                    Resume / CV Link *
+                    <span className="ml-1 font-normal text-slate-400">(Google Drive, Dropbox, or any link)</span>
+                  </label>
+                  <input required value={applyForm.resume_url}
+                    onChange={(e) => setApplyForm(f => ({ ...f, resume_url: e.target.value }))}
+                    placeholder="https://drive.google.com/…"
+                    className="w-full h-9 px-3 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0D9488]/30 focus:border-[#0D9488]" />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-700 mb-1">LinkedIn Profile</label>
+                  <input value={applyForm.linkedin_url}
+                    onChange={(e) => setApplyForm(f => ({ ...f, linkedin_url: e.target.value }))}
+                    placeholder="https://linkedin.com/in/your-name"
+                    className="w-full h-9 px-3 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0D9488]/30 focus:border-[#0D9488]" />
+                </div>
+
+                {/* Cover note */}
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider pt-1">Cover Note</p>
+                <div>
+                  <label className="block text-xs font-medium text-slate-700 mb-1">Why are you a good fit? (optional)</label>
+                  <textarea rows={3} value={applyForm.message}
+                    onChange={(e) => setApplyForm(f => ({ ...f, message: e.target.value }))}
+                    placeholder="Briefly tell us why you're interested and what makes you a strong candidate…"
+                    className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-[#0D9488]/30 focus:border-[#0D9488]" />
+                </div>
+
+                {applyError && <p className="text-xs text-red-500">{applyError}</p>}
 
                 <div className="flex gap-3 pt-1">
-                  <button
-                    type="button"
-                    onClick={() => setApplyOpen(false)}
-                    className="flex-1 py-2.5 rounded-lg text-sm font-medium border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors"
-                  >
+                  <button type="button" onClick={() => setApplyOpen(false)}
+                    className="flex-1 py-2.5 rounded-lg text-sm font-medium border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors">
                     Cancel
                   </button>
-                  <button
-                    type="submit"
-                    disabled={applyLoading}
-                    className="flex-1 py-2.5 rounded-lg text-sm font-bold bg-[#0D9488] text-white hover:bg-[#0F7069] disabled:opacity-60 transition-colors"
-                  >
+                  <button type="submit" disabled={applyLoading}
+                    className="flex-1 py-2.5 rounded-lg text-sm font-bold bg-[#0D9488] text-white hover:bg-[#0F7069] disabled:opacity-60 transition-colors">
                     {applyLoading ? "Submitting…" : "Submit Application"}
                   </button>
                 </div>

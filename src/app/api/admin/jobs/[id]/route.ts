@@ -29,7 +29,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
   const { data: applications } = await ctx.admin
     .from("job_applications")
-    .select("id, full_name, email, phone, applicant_role, experience_years, message, created_at")
+    .select("id, full_name, email, phone, applicant_role, experience_years, linkedin_url, resume_url, notice_period, current_ctc, expected_ctc, message, created_at")
     .eq("job_id", id)
     .order("created_at", { ascending: false });
 

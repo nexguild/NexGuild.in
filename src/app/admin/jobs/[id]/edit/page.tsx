@@ -35,6 +35,11 @@ interface Application {
   phone: string | null;
   applicant_role: string | null;
   experience_years: string | null;
+  linkedin_url: string | null;
+  resume_url: string | null;
+  notice_period: string | null;
+  current_ctc: string | null;
+  expected_ctc: string | null;
   message: string | null;
   created_at: string;
 }
@@ -211,7 +216,23 @@ export default function AdminJobsEditPage() {
                 <p className="text-xs text-[var(--text-muted)]">{new Date(a.created_at).toLocaleDateString("en-IN")}</p>
               </div>
               <p className="text-xs text-[var(--text-muted)]">{a.email}{a.phone ? ` · ${a.phone}` : ""}</p>
-              {a.applicant_role && <p className="text-xs text-[var(--text-muted)]">{a.applicant_role} · {a.experience_years ?? "—"}</p>}
+              {(a.applicant_role || a.experience_years) && (
+                <p className="text-xs text-[var(--text-muted)]">
+                  {[a.applicant_role, a.experience_years].filter(Boolean).join(" · ")}
+                  {a.notice_period ? ` · Notice: ${a.notice_period}` : ""}
+                </p>
+              )}
+              {(a.current_ctc || a.expected_ctc) && (
+                <p className="text-xs text-[var(--text-muted)]">
+                  {a.current_ctc ? `Current: ${a.current_ctc}` : ""}
+                  {a.current_ctc && a.expected_ctc ? " → " : ""}
+                  {a.expected_ctc ? `Expected: ${a.expected_ctc}` : ""}
+                </p>
+              )}
+              <div className="flex gap-3 mt-1">
+                {a.resume_url && <a href={a.resume_url} target="_blank" rel="noopener noreferrer" className="text-xs font-semibold text-[var(--brand-500)] hover:underline">📄 Resume</a>}
+                {a.linkedin_url && <a href={a.linkedin_url} target="_blank" rel="noopener noreferrer" className="text-xs font-semibold text-blue-400 hover:underline">LinkedIn ↗</a>}
+              </div>
               {a.message && <p className="text-xs text-[var(--text-muted)] mt-1 italic">&ldquo;{a.message}&rdquo;</p>}
             </div>
           ))}

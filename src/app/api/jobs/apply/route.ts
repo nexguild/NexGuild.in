@@ -4,7 +4,12 @@ import { FROM_NOREPLY, getResend, jobApplicationAdminHtml, jobApplicationConfirm
 
 export async function POST(req: NextRequest) {
   const body = await req.json();
-  const { job_id, full_name, email, phone, applicant_role, experience_years, message } = body;
+  const {
+    job_id, full_name, email, phone,
+    applicant_role, experience_years,
+    linkedin_url, resume_url, notice_period,
+    current_ctc, expected_ctc, message,
+  } = body;
 
   if (!job_id || !full_name || !email) {
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
@@ -27,10 +32,15 @@ export async function POST(req: NextRequest) {
     job_id,
     full_name,
     email,
-    phone: phone || null,
-    applicant_role: applicant_role || null,
+    phone:            phone || null,
+    applicant_role:   applicant_role || null,
     experience_years: experience_years || null,
-    message: message || null,
+    linkedin_url:     linkedin_url || null,
+    resume_url:       resume_url || null,
+    notice_period:    notice_period || null,
+    current_ctc:      current_ctc || null,
+    expected_ctc:     expected_ctc || null,
+    message:          message || null,
   });
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
@@ -46,12 +56,16 @@ export async function POST(req: NextRequest) {
       to:      "admin@nexguild.in",
       subject: `[NexGuild Jobs] New application: ${job.title}`,
       html:    jobApplicationAdminHtml(job.title, job.company, {
-        full_name: full_name,
-        email,
-        phone: phone || null,
-        applicant_role: applicant_role || null,
+        full_name, email,
+        phone:            phone || null,
+        applicant_role:   applicant_role || null,
         experience_years: experience_years || null,
-        message: message || null,
+        linkedin_url:     linkedin_url || null,
+        resume_url:       resume_url || null,
+        notice_period:    notice_period || null,
+        current_ctc:      current_ctc || null,
+        expected_ctc:     expected_ctc || null,
+        message:          message || null,
       }, adminUrl),
     }).catch((e: unknown) => console.error("[jobs/apply] admin email error:", e));
 

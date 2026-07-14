@@ -576,6 +576,11 @@ export function jobApplicationAdminHtml(
     phone?: string | null;
     applicant_role?: string | null;
     experience_years?: string | null;
+    linkedin_url?: string | null;
+    resume_url?: string | null;
+    notice_period?: string | null;
+    current_ctc?: string | null;
+    expected_ctc?: string | null;
     message?: string | null;
   },
   adminUrl: string,
@@ -585,6 +590,11 @@ export function jobApplicationAdminHtml(
   const ph = applicant.phone ? esc(applicant.phone) : null;
   const ar = applicant.applicant_role ? esc(applicant.applicant_role) : null;
   const ex = applicant.experience_years ? esc(applicant.experience_years) : null;
+  const li = applicant.linkedin_url ? esc(applicant.linkedin_url) : null;
+  const rv = applicant.resume_url ? esc(applicant.resume_url) : null;
+  const np = applicant.notice_period ? esc(applicant.notice_period) : null;
+  const cc = applicant.current_ctc ? esc(applicant.current_ctc) : null;
+  const ec = applicant.expected_ctc ? esc(applicant.expected_ctc) : null;
   const mg = applicant.message ? esc(applicant.message) : null;
   return `<!DOCTYPE html>
 <html lang="en"><head><meta charset="utf-8"></head>
@@ -620,12 +630,28 @@ export function jobApplicationAdminHtml(
         <span style="font-size:11px;color:#555;">Current Role</span><br>
         <span style="font-size:14px;color:#e5e5e5;">${ar}</span>
       </td></tr>` : ""}
-      ${ex ? `<tr><td style="padding:12px 18px;${mg ? "border-bottom:1px solid #1f1f1f;" : ""}">
+      ${ex ? `<tr><td style="padding:12px 18px;border-bottom:1px solid #1f1f1f;">
         <span style="font-size:11px;color:#555;">Experience</span><br>
         <span style="font-size:14px;color:#e5e5e5;">${ex}</span>
       </td></tr>` : ""}
+      ${np ? `<tr><td style="padding:12px 18px;border-bottom:1px solid #1f1f1f;">
+        <span style="font-size:11px;color:#555;">Notice Period</span><br>
+        <span style="font-size:14px;color:#e5e5e5;">${np}</span>
+      </td></tr>` : ""}
+      ${(cc || ec) ? `<tr><td style="padding:12px 18px;border-bottom:1px solid #1f1f1f;">
+        <span style="font-size:11px;color:#555;">CTC</span><br>
+        <span style="font-size:14px;color:#e5e5e5;">${cc ? `Current: ${cc}` : ""}${cc && ec ? " → " : ""}${ec ? `Expected: ${ec}` : ""}</span>
+      </td></tr>` : ""}
+      ${rv ? `<tr><td style="padding:12px 18px;border-bottom:1px solid #1f1f1f;">
+        <span style="font-size:11px;color:#555;">Resume / CV</span><br>
+        <a href="${rv}" style="font-size:14px;color:#02b491;text-decoration:none;">View Resume ↗</a>
+      </td></tr>` : ""}
+      ${li ? `<tr><td style="padding:12px 18px;border-bottom:1px solid #1f1f1f;">
+        <span style="font-size:11px;color:#555;">LinkedIn</span><br>
+        <a href="${li}" style="font-size:14px;color:#0077b5;text-decoration:none;">View Profile ↗</a>
+      </td></tr>` : ""}
       ${mg ? `<tr><td style="padding:12px 18px;">
-        <span style="font-size:11px;color:#555;">Message</span><br>
+        <span style="font-size:11px;color:#555;">Cover Note</span><br>
         <span style="font-size:14px;color:#e5e5e5;white-space:pre-wrap;">${mg}</span>
       </td></tr>` : ""}
     </table>
