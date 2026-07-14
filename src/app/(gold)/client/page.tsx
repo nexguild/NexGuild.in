@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import { FadeIn } from "@/components/ui/fade-in";
+import { AnimatedStatsBand } from "@/components/ui/animated-counter";
 
 export const metadata: Metadata = {
   title: "NexGuild for Organizations — Human-Powered Work at Scale",
@@ -22,10 +23,10 @@ const FLOATING_PILLS = [
 ];
 
 const STATS = [
-  { value: "100+",   label: "Contributors"    },
-  { value: "12",     label: "Service Types"   },
-  { value: "100%",   label: "Quality Checked" },
-  { value: "Global", label: "Reach"           },
+  { target: 100,  suffix: "+", label: "Contributors"    },
+  { target: 12,   suffix: "",  label: "Service Types"   },
+  { target: 100,  suffix: "%", label: "Quality Checked" },
+  { target: null, display: "Global", label: "Reach"     },
 ];
 
 const SERVICES_FEATURED = [
@@ -286,16 +287,11 @@ export default function ClientPage() {
       ══════════════════════════════════ */}
       <section style={{ background: "#1C1917", borderTop: "1px solid rgba(245,158,11,0.15)", borderBottom: "1px solid rgba(245,158,11,0.15)" }}>
         <div className="mx-auto max-w-container py-8 px-6">
-          <FadeIn>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-6 sm:gap-16 text-center">
-              {STATS.map((s) => (
-                <div key={s.label}>
-                  <div className="text-3xl sm:text-4xl font-black" style={{ color: "#F59E0B", fontFamily: "Instrument Serif, serif" }}>{s.value}</div>
-                  <div className="text-[10px] font-bold uppercase tracking-widest mt-1.5" style={{ color: "rgba(255,255,255,0.4)" }}>{s.label}</div>
-                </div>
-              ))}
-            </div>
-          </FadeIn>
+          <AnimatedStatsBand
+            stats={STATS}
+            accentColor="#F59E0B"
+            labelColor="rgba(255,255,255,0.4)"
+          />
         </div>
       </section>
 
