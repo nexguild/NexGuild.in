@@ -33,7 +33,7 @@ interface Application {
   full_name: string;
   email: string;
   phone: string | null;
-  current_role: string | null;
+  applicant_role: string | null;
   experience_years: string | null;
   message: string | null;
   created_at: string;
@@ -207,7 +207,7 @@ export default function AdminJobsEditPage() {
                 <p className="text-xs text-[var(--text-muted)]">{new Date(a.created_at).toLocaleDateString("en-IN")}</p>
               </div>
               <p className="text-xs text-[var(--text-muted)]">{a.email}{a.phone ? ` · ${a.phone}` : ""}</p>
-              {a.current_role && <p className="text-xs text-[var(--text-muted)]">{a.current_role} · {a.experience_years ?? "—"}</p>}
+              {a.applicant_role && <p className="text-xs text-[var(--text-muted)]">{a.applicant_role} · {a.experience_years ?? "—"}</p>}
               {a.message && <p className="text-xs text-[var(--text-muted)] mt-1 italic">&ldquo;{a.message}&rdquo;</p>}
             </div>
           ))}

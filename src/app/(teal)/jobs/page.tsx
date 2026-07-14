@@ -52,7 +52,7 @@ interface ApplyForm {
   full_name: string;
   email: string;
   phone: string;
-  current_role: string;
+  applicant_role: string;
   experience_years: string;
   message: string;
 }
@@ -80,7 +80,7 @@ export default function JobsPage() {
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [applyOpen, setApplyOpen] = useState(false);
   const [applyForm, setApplyForm] = useState<ApplyForm>({
-    full_name: "", email: "", phone: "", current_role: "", experience_years: "", message: "",
+    full_name: "", email: "", phone: "", applicant_role: "", experience_years: "", message: "",
   });
   const [applyLoading, setApplyLoading] = useState(false);
   const [applySuccess, setApplySuccess] = useState(false);
@@ -137,7 +137,7 @@ export default function JobsPage() {
     setApplyOpen(true);
     setApplySuccess(false);
     setApplyError(null);
-    setApplyForm({ full_name: "", email: "", phone: "", current_role: "", experience_years: "", message: "" });
+    setApplyForm({ full_name: "", email: "", phone: "", applicant_role: "", experience_years: "", message: "" });
   }
 
   const wt = selectedJob ? WORK_TYPE_LABELS[selectedJob.work_type] : null;
@@ -386,6 +386,15 @@ export default function JobsPage() {
         </div>
       </section>
 
+      {/* ── Disclaimer ────────────────────────────────────────────── */}
+      <div className="px-6 pb-10">
+        <div className="mx-auto max-w-5xl rounded-xl border border-amber-200 bg-amber-50 px-5 py-4">
+          <p className="text-xs text-amber-800 leading-relaxed">
+            <span className="font-bold">Disclaimer:</span> NexGuild is a job listing and aggregator platform. Job postings are sourced from third-party companies and HR partners. NexGuild does not verify the accuracy of any listing, guarantee employment, or participate in any hiring decision. We are not responsible for any loss or inconvenience arising from applying to or accepting any listed position. Apply at your own discretion.
+          </p>
+        </div>
+      </div>
+
       {/* ── Apply Modal ────────────────────────────────────────────── */}
       {applyOpen && selectedJob && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
@@ -448,8 +457,8 @@ export default function JobsPage() {
                   <div>
                     <label className="block text-xs font-medium text-slate-700 mb-1">Current Role</label>
                     <input
-                      value={applyForm.current_role}
-                      onChange={(e) => setApplyForm(f => ({ ...f, current_role: e.target.value }))}
+                      value={applyForm.applicant_role}
+                      onChange={(e) => setApplyForm(f => ({ ...f, applicant_role: e.target.value }))}
                       placeholder="e.g. CSA, Fresher"
                       className="w-full h-9 px-3 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0D9488]/30 focus:border-[#0D9488]"
                     />

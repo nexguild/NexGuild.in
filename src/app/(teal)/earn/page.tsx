@@ -231,6 +231,46 @@ export default function EarnPage() {
         </div>
       </section>
 
+      {/* ── Jobs Banner ───────────────────────────────────────────── */}
+      <section className="py-10 px-6">
+        <div className="mx-auto max-w-container">
+          <Link
+            href="/jobs"
+            className="group flex flex-col sm:flex-row items-center justify-between gap-6 rounded-2xl px-8 py-7 transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5"
+            style={{
+              background: "linear-gradient(135deg, rgba(15,61,54,0.06) 0%, rgba(13,148,136,0.08) 100%)",
+              border: "1.5px solid rgba(13,148,136,0.2)",
+            }}
+          >
+            <div className="flex items-center gap-5">
+              <span className="text-5xl flex-shrink-0">💼</span>
+              <div>
+                <p className="text-xs font-bold uppercase tracking-wider text-[#0D9488] mb-1">New on NexGuild</p>
+                <h3
+                  className="text-xl sm:text-2xl font-extrabold text-[#0F3D36] mb-1"
+                  style={{ fontFamily: "'Instrument Serif', serif" }}
+                >
+                  Remote &amp; WFH Job Listings
+                </h3>
+                <p className="text-sm text-stone-600">
+                  Browse curated remote jobs from Telus, Appen, Lionbridge &amp; more — plus exclusive WFH leads from our HR network.
+                </p>
+              </div>
+            </div>
+            <span
+              className="flex-shrink-0 h-11 px-7 inline-flex items-center rounded-full font-bold text-sm transition-all duration-200 group-hover:shadow-md"
+              style={{
+                background: "rgba(13,148,136,0.1)",
+                border: "1.5px solid rgba(13,148,136,0.25)",
+                color: "#0F3D36",
+              }}
+            >
+              Browse Jobs →
+            </span>
+          </Link>
+        </div>
+      </section>
+
       {/* Ad Slot */}
       <section className="py-8 px-6">
         <div className="mx-auto max-w-container flex justify-center">
