@@ -39,7 +39,7 @@ const EARNING_GRID = [
   { icon: "📊", name: "Survey Tasks",          desc: "Complete targeted surveys and questionnaires." },
   { icon: "▶️", name: "Social Media Tasks",    desc: "Organic engagement and awareness campaigns." },
   { icon: "🔍", name: "Web Research",          desc: "Research, fact-checking, and data gathering." },
-  { icon: "🌿", name: "Field Data Collection", desc: "On-ground data collection across Indian cities." },
+  { icon: "🌿", name: "Field Data Collection", desc: "On-ground data collection across cities worldwide." },
   { icon: "💸", name: "Referral Earnings",     desc: "Earn NexCoins for every active contributor you refer.", href: "/earn/refer" },
 ];
 
@@ -227,7 +227,7 @@ export default function EarnPage() {
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full mb-6"
               style={{ background: "rgba(255,255,255,0.6)", backdropFilter: "blur(12px)", border: "1.5px solid rgba(13,148,136,0.2)" }}>
               <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#0D9488", display: "inline-block" }} />
-              <span className="text-xs font-bold text-[#115E59] uppercase tracking-wider">For Contributors · India & Beyond</span>
+              <span className="text-xs font-bold text-[#115E59] uppercase tracking-wider">For Contributors · Worldwide</span>
             </div>
           </FadeIn>
 
@@ -257,7 +257,7 @@ export default function EarnPage() {
               {[
                 { icon: "🔒", label: "Secure Payments" },
                 { icon: "📱", label: "Mobile Friendly" },
-                { icon: "🇮🇳", label: "India Based" },
+                { icon: "🌍", label: "Global Platform" },
                 { icon: "⚡", label: "Instant Vouchers" },
               ].map((b) => (
                 <span key={b.label} className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold"

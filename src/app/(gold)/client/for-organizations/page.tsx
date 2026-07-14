@@ -62,24 +62,28 @@ export default function ForOrganizationsPage() {
           />
         </div>
         <div className="mx-auto max-w-container relative z-10">
-          <FadeIn>
+          <div className="fo-a1">
             <div
               className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wider mb-6"
               style={{ background: "rgba(255,255,255,0.8)", border: "1px solid rgba(217,119,6,0.2)", color: "#92400E" }}
             >
               For Organizations
             </div>
+          </div>
+          <div className="fo-a2">
             <h1
-              className="text-4xl sm:text-5xl font-bold mb-4 max-w-2xl text-balance"
+              className="text-3xl sm:text-4xl font-bold mb-4 max-w-2xl text-balance"
               style={{ fontFamily: "Instrument Serif, serif", color: "#1C1917", lineHeight: 1.1 }}
             >
               Human-Powered Work at Scale —{" "}
               <span style={{ color: "#92400E", fontStyle: "italic" }}>Fully Managed.</span>
             </h1>
+          </div>
+          <div className="fo-a3">
             <p className="text-lg text-[#44403C] max-w-xl leading-relaxed">
               NexGuild manages the entire workflow. You define the work. We recruit, distribute, review, and deliver.
             </p>
-          </FadeIn>
+          </div>
         </div>
       </section>
 
@@ -257,6 +261,13 @@ export default function ForOrganizationsPage() {
           0% { transform: translate(0px, 0px) scale(1); }
           100% { transform: translate(-6%, 8%) scale(1.15); }
         }
+        @keyframes foHeroEntry {
+          from { opacity: 0; transform: translateY(18px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        .fo-a1 { animation: foHeroEntry 0.65s cubic-bezier(0.16,1,0.3,1) 0.05s both; }
+        .fo-a2 { animation: foHeroEntry 0.65s cubic-bezier(0.16,1,0.3,1) 0.20s both; }
+        .fo-a3 { animation: foHeroEntry 0.65s cubic-bezier(0.16,1,0.3,1) 0.36s both; }
       `}</style>
     </div>
   );

@@ -37,26 +37,36 @@ const PILLARS = [
 export default function AboutPage() {
   return (
     <div style={{ background: "#FAF6EF", color: "#1C1917", minHeight: "100vh" }}>
+      <style>{`
+        @keyframes aboutHeroEntry {
+          from { opacity: 0; transform: translateY(18px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        .ah-a1 { animation: aboutHeroEntry 0.65s cubic-bezier(0.16,1,0.3,1) 0.05s both; }
+        .ah-a2 { animation: aboutHeroEntry 0.65s cubic-bezier(0.16,1,0.3,1) 0.20s both; }
+        .ah-a3 { animation: aboutHeroEntry 0.65s cubic-bezier(0.16,1,0.3,1) 0.36s both; }
+      `}</style>
+
       {/* ── Hero Section ────────────────────────────────────────────────── */}
       <section className="relative overflow-hidden py-14 px-6">
         <div className="mx-auto max-w-container relative z-10">
-          <FadeIn>
+          <div className="ah-a1">
             <p className="text-[#D97706] text-xs font-bold uppercase tracking-widest mb-3">About Us</p>
-           <h1
-  className="text-4xl sm:text-[44px] font-bold text-[#1C1917] tracking-tight max-w-2xl text-balance"
-  style={{
-    fontFamily: "Instrument Serif, serif",
-    lineHeight: "1.15",
-    letterSpacing: "-0.02em"
-  }}
->
-  We Do the Heavy Lifting.<br />
-  You Get the Data.
-</h1>
+          </div>
+          <div className="ah-a2">
+            <h1
+              className="text-3xl sm:text-4xl font-bold text-[#1C1917] tracking-tight max-w-2xl text-balance"
+              style={{ fontFamily: "Instrument Serif, serif", lineHeight: "1.15", letterSpacing: "-0.02em" }}
+            >
+              We Do the Heavy Lifting.<br />
+              You Get the Data.
+            </h1>
+          </div>
+          <div className="ah-a3">
             <p className="text-base sm:text-lg text-[#44403C] max-w-2xl leading-relaxed">
               NexGuild is a managed contributor platform. Organisations brief us with data requirements, and we handle everything else — end to end.
             </p>
-          </FadeIn>
+          </div>
         </div>
       </section>
 

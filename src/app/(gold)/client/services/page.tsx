@@ -62,6 +62,17 @@ export default function ServicesPage() {
   return (
     <div style={{ background: "#FAF6EF", color: "#1C1917", minHeight: "100vh" }}>
 
+      <style>{`
+        @keyframes svcHeroEntry {
+          from { opacity: 0; transform: translateY(18px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        .sv-a1 { animation: svcHeroEntry 0.65s cubic-bezier(0.16,1,0.3,1) 0.05s both; }
+        .sv-a2 { animation: svcHeroEntry 0.65s cubic-bezier(0.16,1,0.3,1) 0.20s both; }
+        .sv-a3 { animation: svcHeroEntry 0.65s cubic-bezier(0.16,1,0.3,1) 0.36s both; }
+        .sv-a4 { animation: svcHeroEntry 0.65s cubic-bezier(0.16,1,0.3,1) 0.50s both; }
+      `}</style>
+
       {/* ── Hero Segment with Floating Orbs & Grid ────────────────────── */}
       <section
         className="relative overflow-hidden py-14 px-6"
@@ -87,23 +98,29 @@ export default function ServicesPage() {
         </div>
 
         <div className="mx-auto max-w-container relative z-10">
-          <FadeIn>
+          <div className="sv-a1">
             <div
               className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wider mb-6"
               style={{ background: "rgba(255,255,255,0.8)", border: "1px solid rgba(217,119,6,0.2)", color: "#92400E" }}
             >
               For Organizations
             </div>
+          </div>
+          <div className="sv-a2">
             <h1
-              className="text-4xl sm:text-5xl font-bold mb-4 max-w-2xl text-balance"
+              className="text-3xl sm:text-4xl font-bold mb-4 max-w-2xl text-balance"
               style={{ fontFamily: "Instrument Serif, serif", color: "#1C1917", lineHeight: 1.1 }}
             >
               Human-Powered Work at Scale —{" "}
               <span style={{ color: "#92400E", fontStyle: "italic" }}>Fully Managed.</span>
             </h1>
+          </div>
+          <div className="sv-a3">
             <p className="text-lg text-[#44403C] max-w-xl leading-relaxed mb-8">
               NexGuild manages the entire workflow. You define the work. We recruit, distribute, review, and deliver.
             </p>
+          </div>
+          <div className="sv-a4">
         <Link
   href="/client/contact"
   style={{
@@ -125,7 +142,7 @@ export default function ServicesPage() {
 >
   Get a Quote <ArrowRight className="h-4 w-4" />
 </Link>
-          </FadeIn>
+          </div>
         </div>
       </section>
 

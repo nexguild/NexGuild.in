@@ -91,6 +91,16 @@ const pageStyle = `
     50%       { transform: translateY(-8px); }
   }
   .pill-float { animation: float-pill 5s ease-in-out infinite; }
+
+  @keyframes heroEntry {
+    from { opacity: 0; transform: translateY(18px); }
+    to   { opacity: 1; transform: translateY(0);    }
+  }
+  .h-a1 { animation: heroEntry 0.65s cubic-bezier(0.16,1,0.3,1) 0.05s both; }
+  .h-a2 { animation: heroEntry 0.65s cubic-bezier(0.16,1,0.3,1) 0.18s both; }
+  .h-a3 { animation: heroEntry 0.65s cubic-bezier(0.16,1,0.3,1) 0.32s both; }
+  .h-a4 { animation: heroEntry 0.65s cubic-bezier(0.16,1,0.3,1) 0.46s both; }
+  .h-a5 { animation: heroEntry 0.65s cubic-bezier(0.16,1,0.3,1) 0.60s both; }
 `;
 
 /* ─────────────────────── Page ─────────────────────────────────── */
@@ -139,33 +149,33 @@ export default function ClientPage() {
           </div>
         ))}
 
-        {/* Hero content */}
+        {/* Hero content — CSS animations for above-fold (reliable on SSR pages) */}
         <div className="relative z-10 mx-auto max-w-3xl px-6 text-center pt-24 pb-14">
-          <FadeIn>
+          <div className="h-a1">
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full mb-6"
               style={{ background: "rgba(255,255,255,0.7)", backdropFilter: "blur(12px)", border: "1.5px solid rgba(217,119,6,0.22)" }}>
               <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#F59E0B", display: "inline-block" }} />
               <span className="text-xs font-bold text-[#92400E] uppercase tracking-wider">Trusted Data Workforce Partner</span>
             </div>
-          </FadeIn>
+          </div>
 
-          <FadeIn delay={80}>
+          <div className="h-a2">
             <h1 className="mb-4 tracking-tight"
-              style={{ fontFamily: "Instrument Serif, serif", fontWeight: 700, fontSize: "clamp(2.4rem, 5vw, 4.5rem)", lineHeight: 1.06, color: "#1C1917", letterSpacing: "-0.03em" }}>
+              style={{ fontFamily: "Instrument Serif, serif", fontWeight: 700, fontSize: "clamp(1.8rem, 3.5vw, 3.25rem)", lineHeight: 1.06, color: "#1C1917", letterSpacing: "-0.03em" }}>
               Human-Powered Work.<br />
               <span style={{ color: "#92400E", fontStyle: "italic" }}>Delivered at Scale.</span>
             </h1>
-          </FadeIn>
+          </div>
 
-          <FadeIn delay={160}>
+          <div className="h-a3">
             <p className="mx-auto mb-7 text-sm sm:text-base leading-relaxed text-balance"
               style={{ maxWidth: "40rem", color: "#57534E" }}>
               We manage everything — from recruiting contributors to delivering your final dataset.
               You define the work. We handle the rest.
             </p>
-          </FadeIn>
+          </div>
 
-          <FadeIn delay={240}>
+          <div className="h-a4">
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
               <Link href="/client/contact"
                 className="w-full sm:w-auto inline-flex items-center justify-center rounded-full font-bold text-sm transition-all duration-300 hover:translate-y-[-2px] hover:shadow-[0_10px_28px_rgba(217,119,6,0.35)]"
@@ -178,9 +188,9 @@ export default function ClientPage() {
                 See Our Services ↓
               </a>
             </div>
-          </FadeIn>
+          </div>
 
-          <FadeIn delay={320}>
+          <div className="h-a5">
             <div className="flex flex-wrap items-center justify-center gap-2.5 mt-7">
               {[
                 { icon: "✅", label: "100% Quality Checked" },
@@ -194,7 +204,7 @@ export default function ClientPage() {
                 </span>
               ))}
             </div>
-          </FadeIn>
+          </div>
         </div>
       </section>
 
