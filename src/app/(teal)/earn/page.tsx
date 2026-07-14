@@ -528,37 +528,41 @@ export default function EarnPage() {
       </section>
 
       {/* ══════════════════════════════════
-          CTA (dark)
+          CTA (dark card)
       ══════════════════════════════════ */}
-      <section className="relative overflow-hidden" style={{ background: "#0F3D36" }}>
-        <div aria-hidden style={{ position: "absolute", inset: 0, background: "radial-gradient(ellipse 70% 60% at 20% 50%, rgba(45,212,191,0.12) 0%, transparent 60%), radial-gradient(ellipse 50% 70% at 80% 50%, rgba(13,148,136,0.1) 0%, transparent 60%)" }} />
-        <div aria-hidden style={{ position: "absolute", inset: 0, backgroundImage: "radial-gradient(circle, rgba(45,212,191,0.08) 1px, transparent 1px)", backgroundSize: "28px 28px" }} />
-
-        <div className="relative z-10 mx-auto max-w-container px-6 py-14 text-center">
+      <section style={{ background: "#EBFBFA", padding: "3rem 1.5rem" }}>
+        <div className="mx-auto max-w-container">
           <FadeIn>
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full mb-6"
-              style={{ background: "rgba(45,212,191,0.1)", border: "1px solid rgba(45,212,191,0.2)" }}>
-              <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#2DD4BF", display: "inline-block" }} />
-              <span className="text-xs font-bold text-[#2DD4BF] uppercase tracking-wider">Join Today — It&apos;s Free</span>
-            </div>
-            <h2 className="text-3xl sm:text-5xl font-black text-white mb-4 tracking-tight"
-              style={{ fontFamily: "'Instrument Serif', serif", textWrap: "balance" }}>
-              Ready to Start Earning?
-            </h2>
-            <p className="text-white/55 text-sm sm:text-base mb-8 max-w-lg mx-auto">
-              Join contributors across India. New tasks added every week. Redeem for your favourite brands.
-            </p>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-              <Link href="/signup"
-                className="h-12 px-10 inline-flex items-center rounded-full font-bold text-sm transition-all duration-300 hover:translate-y-[-2px] hover:shadow-[0_10px_30px_rgba(13,148,136,0.4)]"
-                style={{ background: "linear-gradient(135deg, #0D9488 0%, #2DD4BF 100%)", color: "#0A2520", boxShadow: "0 5px 20px rgba(13,148,136,0.35)" }}>
-                Create Free Account →
-              </Link>
-              <Link href="/earn/tasks"
-                className="h-12 px-8 inline-flex items-center rounded-full font-semibold text-sm transition-all duration-200"
-                style={{ background: "rgba(255,255,255,0.06)", border: "1.5px solid rgba(255,255,255,0.12)", color: "rgba(255,255,255,0.7)" }}>
-                Browse Tasks First
-              </Link>
+            <div className="relative overflow-hidden rounded-3xl px-8 py-14 text-center"
+              style={{ background: "#0F3D36" }}>
+              <div aria-hidden style={{ position: "absolute", inset: 0, background: "radial-gradient(ellipse 70% 60% at 20% 50%, rgba(45,212,191,0.12) 0%, transparent 60%), radial-gradient(ellipse 50% 70% at 80% 50%, rgba(13,148,136,0.1) 0%, transparent 60%)" }} />
+              <div aria-hidden style={{ position: "absolute", inset: 0, backgroundImage: "radial-gradient(circle, rgba(45,212,191,0.08) 1px, transparent 1px)", backgroundSize: "28px 28px" }} />
+              <div className="relative z-10">
+                <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full mb-6"
+                  style={{ background: "rgba(45,212,191,0.1)", border: "1px solid rgba(45,212,191,0.2)" }}>
+                  <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#2DD4BF", display: "inline-block" }} />
+                  <span className="text-xs font-bold text-[#2DD4BF] uppercase tracking-wider">Join Today — It&apos;s Free</span>
+                </div>
+                <h2 className="text-3xl sm:text-5xl font-black text-white mb-4 tracking-tight"
+                  style={{ fontFamily: "'Instrument Serif', serif", textWrap: "balance" }}>
+                  Ready to Start Earning?
+                </h2>
+                <p className="text-white/55 text-sm sm:text-base mb-8 max-w-lg mx-auto">
+                  Join contributors worldwide. New tasks added every week. Redeem for your favourite brands.
+                </p>
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+                  <Link href="/signup"
+                    className="h-12 px-10 inline-flex items-center rounded-full font-bold text-sm transition-all duration-300 hover:translate-y-[-2px] hover:shadow-[0_10px_30px_rgba(13,148,136,0.4)]"
+                    style={{ background: "linear-gradient(135deg, #0D9488 0%, #2DD4BF 100%)", color: "#0A2520", boxShadow: "0 5px 20px rgba(13,148,136,0.35)" }}>
+                    Create Free Account →
+                  </Link>
+                  <Link href="/earn/tasks"
+                    className="h-12 px-8 inline-flex items-center rounded-full font-semibold text-sm transition-all duration-200"
+                    style={{ background: "rgba(255,255,255,0.06)", border: "1.5px solid rgba(255,255,255,0.12)", color: "rgba(255,255,255,0.7)" }}>
+                    Browse Tasks First
+                  </Link>
+                </div>
+              </div>
             </div>
           </FadeIn>
         </div>
