@@ -77,7 +77,7 @@ export async function POST(req: NextRequest) {
     tags: tags ?? [],
     source: source || "manual",
     is_active: is_active ?? true,
-    is_featured: is_featured ?? false,
+    is_featured: is_featured ?? (source === "hr_lead" ? true : false),
     hr_name: hr_name || null,
     hr_contact: hr_contact || null,
     commission_note: commission_note || null,

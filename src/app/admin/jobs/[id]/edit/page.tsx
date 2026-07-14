@@ -98,7 +98,11 @@ export default function AdminJobsEditPage() {
   });
 
   function set(key: string, value: string | boolean) {
-    setForm((f) => ({ ...f, [key]: value }));
+    setForm((f) => ({
+      ...f,
+      [key]: value,
+      ...(key === "source" && value === "hr_lead" ? { is_featured: true } : {}),
+    }));
   }
 
   useEffect(() => {

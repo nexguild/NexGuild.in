@@ -106,7 +106,12 @@ export default function AdminJobsNewPage() {
   const [error, setError]   = useState<string | null>(null);
 
   function set(key: keyof FormData, value: string | boolean) {
-    setForm((f) => ({ ...f, [key]: value }));
+    setForm((f) => ({
+      ...f,
+      [key]: value,
+      // auto-feature HR lead jobs
+      ...(key === "source" && value === "hr_lead" ? { is_featured: true } : {}),
+    }));
   }
 
   async function handleSubmit(e: React.FormEvent) {

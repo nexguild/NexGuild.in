@@ -43,7 +43,7 @@ export async function POST(req: NextRequest) {
     // Email admin
     resend.emails.send({
       from:    FROM_NOREPLY,
-      to:      "careergrowthremotely@gmail.com",
+      to:      "admin@nexguild.in",
       subject: `[NexGuild Jobs] New application: ${job.title}`,
       html:    jobApplicationAdminHtml(job.title, job.company, {
         full_name: full_name,
