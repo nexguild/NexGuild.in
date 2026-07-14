@@ -36,9 +36,9 @@ const PILLARS = [
 
 export default function AboutPage() {
   return (
-    <div style={{ background: "#faefef", color: "#1C1917", minHeight: "100vh" }}>
+    <div style={{ background: "#FAF6EF", color: "#1C1917", minHeight: "100vh" }}>
       {/* ── Hero Section ────────────────────────────────────────────────── */}
-      <section className="relative overflow-hidden py-24 px-6">
+      <section className="relative overflow-hidden py-14 px-6">
         <div className="mx-auto max-w-container relative z-10">
           <FadeIn>
             <p className="text-[#D97706] text-xs font-bold uppercase tracking-widest mb-3">About Us</p>
@@ -61,7 +61,7 @@ export default function AboutPage() {
       </section>
 
       {/* ── What we do ─────────────────────────────────────────────── */}
-      <section className="py-20 px-6" style={{ background: "rgba(255,255,255,0.35)", backdropFilter: "blur(12px)", borderTop: "1px solid rgba(217,119,6,0.06)", borderBottom: "1px solid rgba(217,119,6,0.06)" }}>
+      <section className="py-12 px-6" style={{ background: "rgba(255,255,255,0.35)", backdropFilter: "blur(12px)", borderTop: "1px solid rgba(217,119,6,0.06)", borderBottom: "1px solid rgba(217,119,6,0.06)" }}>
         <div className="mx-auto max-w-container">
           <div className="max-w-3xl">
             <FadeIn>
@@ -74,7 +74,7 @@ export default function AboutPage() {
                   Unlike freelance platforms, you don't post jobs or manage people. You describe what you need, we scope the project, assemble the right contributors, run quality control, and deliver clean output.
                 </p>
                 <p>
-                  We are India-based, working with AI companies, research teams, and digital agencies that need reliable human data without the overhead of managing a distributed workforce themselves.
+                  We work with AI companies, research teams, and digital agencies worldwide that need reliable human data without the overhead of managing a distributed workforce themselves.
                 </p>
               </div>
             </FadeIn>
@@ -83,7 +83,7 @@ export default function AboutPage() {
       </section>
 
       {/* ── Pillars ──────────────────────────────────────────────────── */}
-      <section className="py-24 px-6">
+      <section className="py-14 px-6">
         <div className="mx-auto max-w-container">
           <FadeIn>
             <h2 style={{ fontFamily: "Instrument Serif, serif" }} className="text-3xl font-bold text-[#1C1917] mb-12">How We Work</h2>
@@ -110,7 +110,7 @@ export default function AboutPage() {
       </section>
 
       {/* ── CTA ──────────────────────────────────────────────────────── */}
-      <section className="py-20 px-6" style={{ background: "rgba(255,255,255,0.3)", backdropFilter: "blur(12px)", borderTop: "1px solid rgba(217,119,6,0.06)" }}>
+      <section className="py-12 px-6" style={{ background: "rgba(255,255,255,0.3)", backdropFilter: "blur(12px)", borderTop: "1px solid rgba(217,119,6,0.06)" }}>
         <div className="mx-auto max-w-container">
           <FadeIn>
             <div className="max-w-2xl">

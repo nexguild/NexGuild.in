@@ -35,7 +35,7 @@ const CATEGORIES: Category[] = [
   },
   {
     icon: "📝", name: "Transcription",
-    desc: "Convert audio files to accurate text across multiple Indian and global languages.",
+    desc: "Convert audio files to accurate text across multiple languages worldwide.",
     detail: "Type what you hear. Speed and accuracy both matter.",
     payout: "₹10–₹80 / task", device: "📱 / 💻", level: "Beginner", status: "active",
     headerBg: "linear-gradient(135deg, rgba(99,102,241,0.16) 0%, rgba(129,140,248,0.1) 100%)",
@@ -67,7 +67,7 @@ const CATEGORIES: Category[] = [
   },
   {
     icon: "📊", name: "Survey Tasks",
-    desc: "Complete targeted surveys for researchers and consumer brands across India.",
+    desc: "Complete targeted surveys for researchers and consumer brands worldwide.",
     detail: "Honest answers only. Screeners ensure you match the target profile.",
     payout: "₹5–₹40 / task", device: "📱 Mobile", level: "Beginner", status: "active",
     headerBg: "linear-gradient(135deg, rgba(16,185,129,0.16) 0%, rgba(52,211,153,0.1) 100%)",
@@ -91,7 +91,7 @@ const CATEGORIES: Category[] = [
   },
   {
     icon: "🌿", name: "Field Data Collection",
-    desc: "On-ground data collection tasks across Indian cities. Visit locations, capture data.",
+    desc: "On-ground data collection tasks across cities worldwide. Visit locations, capture data.",
     detail: "Location-based tasks. Requires smartphone with GPS and camera.",
     payout: "₹50–₹500 / task", device: "📱 Mobile + GPS", level: "Any", status: "active",
     headerBg: "linear-gradient(135deg, rgba(34,197,94,0.16) 0%, rgba(74,222,128,0.1) 100%)",
@@ -187,7 +187,7 @@ export default function TasksPage() {
     <div style={{ background: "#EBFBFA", color: "#1E293B", minHeight: "100vh" }}>
 
       {/* Hero */}
-      <section className="relative overflow-hidden pt-28 pb-10 px-6 text-center">
+      <section className="relative overflow-hidden pt-20 pb-10 px-6 text-center">
         <div aria-hidden className="absolute pointer-events-none inset-0"
           style={{ background: "radial-gradient(ellipse 80% 60% at 50% 0%, rgba(45,212,191,0.14) 0%, transparent 70%)" }} />
 

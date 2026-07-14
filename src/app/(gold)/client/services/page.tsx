@@ -64,7 +64,7 @@ export default function ServicesPage() {
 
       {/* ── Hero Segment with Floating Orbs & Grid ────────────────────── */}
       <section
-        className="relative overflow-hidden py-20 px-6"
+        className="relative overflow-hidden py-14 px-6"
         style={{ background: "linear-gradient(160deg, #FEF9F0 0%, #FAF3E4 100%)" }}
       >
         {/* Background Visual Enhancements */}
@@ -130,7 +130,7 @@ export default function ServicesPage() {
       </section>
 
       {/* ── Services Cards Segment ─────────────────────────────────────── */}
-      <section style={{ background: "#FAF6EF", padding: "4rem 1.5rem" }}>
+      <section style={{ background: "#FAF6EF", padding: "2.5rem 1.5rem" }}>
         <div className="mx-auto max-w-container space-y-14">
           {SERVICE_GROUPS.map((group, gi) => (
             <FadeIn key={group.title} delay={gi * 80}>
@@ -158,7 +158,7 @@ export default function ServicesPage() {
       </section>
 
       {/* ── How Engagement Works Segment ─────────────────────────────── */}
-<section style={{ background: "rgba(255,255,255,0.3)", backdropFilter: "blur(12px)", padding: "4rem 1.5rem", borderTop: "1px solid rgba(217,119,6,0.06)", borderBottom: "1px solid rgba(217,119,6,0.06)" }}>
+<section style={{ background: "rgba(255,255,255,0.3)", backdropFilter: "blur(12px)", padding: "2.5rem 1.5rem", borderTop: "1px solid rgba(217,119,6,0.06)", borderBottom: "1px solid rgba(217,119,6,0.06)" }}>
   <div className="mx-auto max-w-container">
     <FadeIn>
       <h2 style={{ fontFamily: "Instrument Serif, serif", color: "#1C1917" }} className="text-3xl font-bold mb-12 text-center">How Engagement Works</h2>
@@ -188,7 +188,7 @@ export default function ServicesPage() {
 </section>
 
     {/* ── CTA Segment ─────────────────────────────────────────────── */}
-<section style={{ background: "#FAF6EF", padding: "4rem 1.5rem" }}>
+<section style={{ background: "#FAF6EF", padding: "2.5rem 1.5rem" }}>
   <div className="mx-auto max-w-container">
     <FadeIn>
       <div
