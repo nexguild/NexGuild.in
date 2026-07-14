@@ -8,12 +8,12 @@ export const metadata: Metadata = {
   title: "Blog — Earning Guides, Remote Work Tips & NexGuild Updates",
   description:
     "Practical guides on remote work, online earning, micro-tasks, and making the most of NexGuild. Written for Indian contributors and digital workers.",
-  alternates: { canonical: "https://nexguild.in/blog" },
+  alternates: { canonical: "https://www.nexguild.in/blog" },
   openGraph: {
     title: "NexGuild Blog — Earning Guides & Remote Work Tips",
     description:
       "Practical guides on online earning, micro-tasks, offerwalls, and remote work for Indian contributors.",
-    url:  "https://nexguild.in/blog",
+    url:  "https://www.nexguild.in/blog",
     type: "website",
   },
   twitter: {

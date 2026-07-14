@@ -5,7 +5,7 @@ import { ScrollReset } from "@/components/ui/scroll-reset";
 import { ScrollToTop } from "@/components/ui/scroll-to-top";
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://nexguild.in"),
+  metadataBase: new URL("https://www.nexguild.in"),
   title: {
     template: "%s | NexGuild",
     default: "NexGuild — Earn by Contributing. Grow by Participating.",
@@ -33,7 +33,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "en_IN",
-    url: "https://nexguild.in",
+    url: "https://www.nexguild.in",
     siteName: "NexGuild",
     title: "NexGuild — Earn by Contributing. Grow by Participating.",
     description:

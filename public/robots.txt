@@ -8,4 +8,4 @@ Disallow: /auth/
 Disallow: /deactivated/
 Disallow: /maintenance/
 
-Sitemap: https://nexguild.in/sitemap.xml
+Sitemap: https://www.nexguild.in/sitemap.xml

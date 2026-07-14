@@ -7,7 +7,7 @@ import { TableOfContents } from "@/components/blog/TableOfContents";
 import { ShareButtons } from "@/components/blog/ShareButtons";
 import { ReadingProgress } from "@/components/blog/ReadingProgress";
 
-const SITE_URL = "https://nexguild.in";
+const SITE_URL = "https://www.nexguild.in";
 
 interface Props {
   params: Promise<{ slug: string }>;

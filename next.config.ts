@@ -5,11 +5,11 @@ const nextConfig: NextConfig = {
 
   async redirects() {
     return [
-      // Canonical: www → non-www (permanent 301)
+      // Canonical: non-www → www (permanent 301)
       {
         source:      "/:path*",
-        has:         [{ type: "host", value: "www.nexguild.in" }],
-        destination: "https://nexguild.in/:path*",
+        has:         [{ type: "host", value: "nexguild.in" }],
+        destination: "https://www.nexguild.in/:path*",
         permanent:   true,
       },
     ];

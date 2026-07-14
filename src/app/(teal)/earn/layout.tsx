@@ -13,12 +13,12 @@ export const metadata: Metadata = {
     "micro tasks India",
     "NexGuild earn",
   ],
-  alternates: { canonical: "https://nexguild.in/earn" },
+  alternates: { canonical: "https://www.nexguild.in/earn" },
   openGraph: {
     title: "Earn Money Online in India — NexGuild",
     description:
       "Complete micro-tasks, surveys, and offerwalls. Earn NexCoins and redeem for Amazon, Flipkart & Google Play gift vouchers.",
-    url: "https://nexguild.in/earn",
+    url: "https://www.nexguild.in/earn",
     type: "website",
   },
   twitter: {
