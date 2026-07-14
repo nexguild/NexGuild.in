@@ -1,5 +1,5 @@
 import { permanentRedirect } from "next/navigation";
 
 export default function Page() {
-  permanentRedirect("/client/for-organizations");
+  permanentRedirect("/earn/privacy");
 }

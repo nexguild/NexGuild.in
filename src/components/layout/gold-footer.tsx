@@ -3,10 +3,10 @@ import Image from "next/image";
 
 const COMPANY_LINKS = [
   { label: "For Organizations", href: "/client" },
-  { label: "Services",           href: "/services" },
+  { label: "Services",           href: "/client/services" },
   { label: "How It Works",      href: "/client/how-it-works" },
-  { label: "About Us",          href: "/about" },
-  { label: "Contact",           href: "/contact" },
+  { label: "About Us",          href: "/client/about" },
+  { label: "Contact",           href: "/client/contact" },
 ];
 
 const LEGAL_LINKS = [
@@ -140,7 +140,7 @@ export function GoldFooter() {
             </h4>
             <ul className="space-y-3">
               <li>
-                <Link href="/contact" className="text-sm text-stone-400 hover:text-[#F59E0B] transition-colors">
+                <Link href="/client/contact" className="text-sm text-stone-400 hover:text-[#F59E0B] transition-colors">
                   Send a Message
                 </Link>
               </li>
