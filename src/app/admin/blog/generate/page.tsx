@@ -80,7 +80,7 @@ export default function BlogGeneratePage() {
   const [topic, setTopic]       = useState("");
   const [keyword, setKeyword]   = useState("");
   const [angle, setAngle]       = useState("");
-  const [audience, setAudience] = useState("India");
+  const [audience, setAudience] = useState("Global");
   const [existingSlugs, setExistingSlugs] = useState<string[]>([]);
   const [slugsLoading, setSlugsLoading]   = useState(false);
   const [genError, setGenError]           = useState<string | null>(null);
@@ -296,11 +296,14 @@ export default function BlogGeneratePage() {
               <div>
                 <label className={lc}>Target Audience</label>
                 <select value={audience} onChange={(e) => setAudience(e.target.value)} className={ic}>
+                  <option value="Global">Global (recommended)</option>
                   <option value="India">India</option>
-                  <option value="Global">Global</option>
+                  <option value="US & Canada">US &amp; Canada</option>
+                  <option value="UK & Europe">UK &amp; Europe</option>
+                  <option value="Southeast Asia">Southeast Asia</option>
                   <option value="Students">Students</option>
                   <option value="Freelancers">Freelancers</option>
-                  <option value="General">General</option>
+                  <option value="Remote Workers">Remote Workers</option>
                 </select>
               </div>
             </div>

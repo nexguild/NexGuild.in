@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Earn Money Online in India — Tasks, Surveys & Offerwalls | NexGuild",
+  title: "Earn Money Online in India — Tasks, Remote Jobs & Surveys | NexGuild",
   description:
-    "Earn real money online from home in India. Complete micro-tasks, paid surveys, data annotation, and offerwalls on NexGuild. Redeem for Amazon, Flipkart, and Google Play gift vouchers.",
+    "Earn real money online from home in India. Complete micro-tasks, paid surveys, data annotation, and offerwalls — or browse remote & WFH job listings. Redeem for Amazon, Flipkart, and Google Play gift vouchers.",
   keywords: [
     "earn money online India",
     "work from home tasks",
@@ -11,13 +11,16 @@ export const metadata: Metadata = {
     "online earning app India",
     "earn gift vouchers India",
     "micro tasks India",
+    "remote jobs India",
+    "WFH jobs India",
+    "work from home jobs India",
     "NexGuild earn",
   ],
   alternates: { canonical: "https://www.nexguild.in/earn" },
   openGraph: {
     title: "Earn Money Online in India — NexGuild",
     description:
-      "Complete micro-tasks, surveys, and offerwalls. Earn NexCoins and redeem for Amazon, Flipkart & Google Play gift vouchers.",
+      "Complete micro-tasks, surveys, and offerwalls — or browse remote & WFH jobs. Earn NexCoins and redeem for Amazon, Flipkart & Google Play gift vouchers.",
     url: "https://www.nexguild.in/earn",
     type: "website",
   },
@@ -25,7 +28,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Earn Money Online in India — NexGuild",
     description:
-      "Complete micro-tasks, surveys, and offerwalls. Earn NexCoins and redeem for gift vouchers.",
+      "Complete micro-tasks, surveys, and browse remote & WFH jobs. Earn NexCoins and redeem for gift vouchers.",
   },
 };
 

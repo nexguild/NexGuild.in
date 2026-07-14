@@ -10,7 +10,7 @@ export default function TermsPage() {
     <div style={{ background: "#EBFBFA", color: "#1E293B", minHeight: "100vh" }} className="py-20 px-6">
       <div className="mx-auto max-w-3xl">
         <p className="text-[#0D9488] text-xs font-bold uppercase tracking-widest mb-3 italic">
-          Last updated: June 2025
+          Last updated: July 2026
         </p>
         
         <h1 

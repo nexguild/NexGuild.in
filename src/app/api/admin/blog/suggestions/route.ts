@@ -21,24 +21,25 @@ export async function POST(req: NextRequest) {
 
   const { existingSlugs = [] } = await req.json() as { existingSlugs?: string[] };
 
-  const today = new Date().toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+  const today = new Date().toLocaleDateString("en-US", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
 
   const avoidList = existingSlugs.slice(0, 30).join(", ");
 
   const prompt = `Today is ${today}.
 
-Generate exactly 6 fresh blog topic ideas for NexGuild (nexguild.in) — a platform where people in India:
-1. Earn money online by completing micro-tasks, surveys, data annotation, app testing, and offerwalls (redeem as Amazon, Flipkart, Google Play gift vouchers)
-2. Browse curated remote & WFH job listings from companies like Telus International, Appen, Lionbridge, and HR-sourced work-from-home roles
+Generate exactly 8 fresh blog topic ideas for NexGuild (nexguild.in) — a global platform where people worldwide:
+1. Earn money online by completing micro-tasks, surveys, data annotation, app testing, and offerwalls (redeem as Amazon, Flipkart, Google Play, PayPal gift vouchers)
+2. Browse curated remote & WFH job listings from global companies like Telus International, Appen, Lionbridge, and similar
 
 Rules:
-- Topics must be relevant to Indian audience — students, freshers, homemakers, gig workers, job seekers
-- Mix of: how-to guides, listicles, company-specific job guides (e.g. "How to get a job at Telus India"), WFH tips, earning tips, platform reviews, remote work advice
-- Include at least 2 topics related to remote/WFH jobs or specific companies hiring in India
-- Must be SEO-friendly and searchable (people actively Google these)
+- Topics must appeal to a GLOBAL audience — US, UK, Canada, Australia, India, Southeast Asia, Africa, Latin America
+- Mix of: how-to guides, listicles, remote job guides for specific global companies, WFH tips, earning tips, platform reviews, remote work advice, international freelancing
+- Include at least 2 topics about remote/WFH jobs open to global applicants or specific global companies hiring remotely
+- Include at least 1 topic with a regional angle (e.g. India, Philippines, Nigeria, or another active market)
+- Must be SEO-friendly and searchable internationally (people actively Google these)
 - Timely / trending angle for today's date where possible
 - Do NOT suggest topics already covered: ${avoidList || "none yet"}
-- Return ONLY a JSON object: { "suggestions": ["topic 1", "topic 2", "topic 3", "topic 4", "topic 5", "topic 6"] }
+- Return ONLY a JSON object: { "suggestions": ["topic 1", "topic 2", "topic 3", "topic 4", "topic 5", "topic 6", "topic 7", "topic 8"] }
 - Each topic: 8–15 words, specific and compelling`;
 
   const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
@@ -60,7 +61,7 @@ Rules:
 
   try {
     const parsed = JSON.parse(raw) as { suggestions?: string[] };
-    const suggestions = (parsed.suggestions ?? []).filter((s) => typeof s === "string").slice(0, 6);
+    const suggestions = (parsed.suggestions ?? []).filter((s) => typeof s === "string").slice(0, 8);
     return NextResponse.json({ suggestions });
   } catch {
     return NextResponse.json({ suggestions: [] });

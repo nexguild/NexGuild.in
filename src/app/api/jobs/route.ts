@@ -27,9 +27,19 @@ const CATEGORY_MAP: Record<string, string> = {
   "Translation": "writing",
 };
 
+// Keep only jobs open to India: worldwide/unrestricted or explicitly Asia/India
+function isIndiaFriendly(location: string): boolean {
+  if (!location) return true;
+  const l = location.toLowerCase();
+  // Reject geo-locked regions that exclude India
+  const blocked = ["usa", "us only", "united states", "canada", "europe", "uk only", "united kingdom", "latin america", "latam", "south america", "americas", "brazil", "australia", "new zealand", "emea"];
+  if (blocked.some((b) => l.includes(b))) return false;
+  return true;
+}
+
 async function fetchRemotiveJobs(category?: string): Promise<RemotiveJob[]> {
   try {
-    const params = new URLSearchParams({ limit: "50" });
+    const params = new URLSearchParams({ limit: "100" });
     if (category && CATEGORY_MAP[category]) {
       params.set("category", CATEGORY_MAP[category]);
     }
@@ -38,7 +48,8 @@ async function fetchRemotiveJobs(category?: string): Promise<RemotiveJob[]> {
     });
     if (!res.ok) return [];
     const data = await res.json();
-    return data.jobs ?? [];
+    const jobs: RemotiveJob[] = data.jobs ?? [];
+    return jobs.filter((j) => isIndiaFriendly(j.candidate_required_location));
   } catch {
     return [];
   }
@@ -72,7 +83,7 @@ export async function GET(req: NextRequest) {
     const raw = await fetchRemotiveJobs(category);
     remotiveJobs = raw
       .filter((j) => !search || j.title.toLowerCase().includes(search.toLowerCase()) || j.company_name.toLowerCase().includes(search.toLowerCase()))
-      .slice(0, 30)
+      .slice(0, 40)
       .map(normalizeRemotive);
   }
 

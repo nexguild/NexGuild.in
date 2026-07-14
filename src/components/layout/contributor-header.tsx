@@ -8,11 +8,12 @@ import { cn } from "@/lib/utils";
 import { NexGuildLogo } from "@/components/ui/nexguild-logo";
 const NAV_LINKS = [
   { label: "Home",          href: "/earn" },
-  { label: "Opportunities", href: "/opportunities" },
-  { label: "Jobs",          href: "/jobs" },
-  { label: "How It Works",  href: "/how-it-works" },
-  { label: "Blog",          href: "/blog" },
-  { label: "FAQ",           href: "/faq" },
+  { label: "Opportunities", href: "/earn/tasks" },
+  { label: "Jobs",          href: "/earn/jobs" },
+  { label: "How It Works",  href: "/earn/how-it-works" },
+  { label: "Refer & Earn",  href: "/earn/refer" },
+  { label: "Blog",          href: "/earn/blog" },
+  { label: "FAQ",           href: "/earn/faq" },
   { label: "Contact",       href: "/earn/contact" },
 ];
 
@@ -50,13 +51,13 @@ export function ContributorHeader() {
           </div>
 
           {/* Desktop Nav */}
-          <nav className="hidden lg:flex items-center gap-1">
+          <nav className="hidden lg:flex items-center gap-0">
             {NAV_LINKS.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
                 className={cn(
-                  "px-3 py-2 rounded-md text-sm transition-colors duration-150",
+                  "px-2.5 py-2 rounded-md text-[13px] whitespace-nowrap transition-colors duration-150",
                   pathname === link.href
                     ? "text-[#14b8a6] font-medium"
                     : "text-white/60 hover:text-white hover:bg-white/5"
@@ -68,22 +69,22 @@ export function ContributorHeader() {
           </nav>
 
           {/* Desktop Auth */}
-          <div className="hidden lg:flex items-center gap-4">
+          <div className="hidden lg:flex items-center gap-2 flex-shrink-0">
             <Link
               href="/client"
-              className="text-xs text-white/40 hover:text-white/70 transition-colors"
+              className="text-xs text-white/40 hover:text-white/70 transition-colors whitespace-nowrap"
             >
-              For organizations →
+              For orgs →
             </Link>
             <Link
               href="/login"
-              className="text-sm text-white/60 hover:text-white transition-colors px-3 py-2"
+              className="text-[13px] text-white/60 hover:text-white transition-colors px-2.5 py-2 whitespace-nowrap"
             >
               Log In
             </Link>
             <Link
               href="/signup"
-              className="h-9 px-5 inline-flex items-center rounded-lg bg-[#14b8a6] text-[#DAF6F4] text-sm font-semibold hover:bg-[#5eead4] transition-colors"
+              className="h-9 px-4 inline-flex items-center rounded-lg bg-[#14b8a6] text-[#DAF6F4] text-[13px] font-semibold hover:bg-[#5eead4] transition-colors whitespace-nowrap"
             >
               Sign Up Free →
             </Link>

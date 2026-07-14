@@ -10,7 +10,7 @@ export default function ClientTermsPage() {
     <div style={{ background: "#faefef", color: "#1C1917", minHeight: "100vh" }} className="py-20 px-6">
       <div className="mx-auto max-w-3xl">
         <p className="text-[#D97706] text-xs font-bold uppercase tracking-widest mb-3 italic">
-          Corporate Edition • Last updated: June 2026
+          Corporate Edition • Last updated: July 2026
         </p>
         
         <h1 

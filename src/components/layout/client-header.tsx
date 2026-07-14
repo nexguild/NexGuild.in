@@ -8,10 +8,10 @@ import { cn } from "@/lib/utils";
 import { NexGuildLogo } from "@/components/ui/nexguild-logo";
 const NAV_LINKS = [
   { label: "Home",         href: "/client" },
-  { label: "Services",     href: "/services" },
+  { label: "Services",     href: "/client/services" },
   { label: "How It Works", href: "/client/how-it-works" },
-  { label: "About",        href: "/about" },
-  { label: "Contact",      href: "/contact" },
+  { label: "About",        href: "/client/about" },
+  { label: "Contact",      href: "/client/contact" },
 ];
 
 export function ClientHeader() {
@@ -74,7 +74,7 @@ export function ClientHeader() {
               Looking to earn? →
             </Link>
             <Link
-              href="/contact"
+              href="/client/contact"
               className="h-9 px-5 inline-flex items-center rounded-lg bg-[#F59E0B] text-[#0D0D0D] text-sm font-semibold hover:bg-[#FCD34D] transition-colors"
             >
               Contact Us
@@ -144,7 +144,7 @@ export function ClientHeader() {
             Looking to earn? →
           </Link>
           <Link
-            href="/contact"
+            href="/client/contact"
             className="flex items-center justify-center h-11 px-3 rounded-md text-base font-semibold mt-2 bg-[#F59E0B] text-[#0D0D0D] hover:bg-[#FCD34D] transition-colors"
           >
             Contact Us
