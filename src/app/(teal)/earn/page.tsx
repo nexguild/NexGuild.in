@@ -280,7 +280,7 @@ export default function EarnPage() {
               <div className="flex flex-col sm:flex-row items-center justify-center gap-6 sm:gap-16 text-center">
                 <div>
                   <div className="text-3xl sm:text-4xl font-black tabular-nums" style={{ color: "#2DD4BF", fontFamily: "'Instrument Serif', serif" }}>
-                    <AnimatedCounter target={stats.members} suffix="+" />
+                    <AnimatedCounter target={Math.max(100, stats.members)} suffix="+" />
                   </div>
                   <div className="text-[10px] font-bold text-white/40 uppercase tracking-widest mt-1.5">Active Members</div>
                 </div>
