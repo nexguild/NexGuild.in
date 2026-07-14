@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
-export const metadata: Metadata = { title: "Under Maintenance — NexGuild" };
+export const metadata: Metadata = {
+  title: "Under Maintenance — NexGuild",
+  robots: { index: false, follow: false },
+};
 
 export default function MaintenancePage() {
   return (

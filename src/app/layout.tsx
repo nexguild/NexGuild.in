@@ -1,5 +1,5 @@
 import { GoogleAnalytics } from '@next/third-parties/google';
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { ScrollReset } from "@/components/ui/scroll-reset";
 import { ScrollToTop } from "@/components/ui/scroll-to-top";
@@ -38,21 +38,12 @@ export const metadata: Metadata = {
     title: "NexGuild — Earn by Contributing. Grow by Participating.",
     description:
       "Join NexGuild to earn NexCoins by completing micro-tasks, surveys, and content work. Redeem for Amazon, Flipkart, Paytm vouchers and more.",
-    images: [
-      {
-        url: "/og-image.png",
-        width: 1200,
-        height: 630,
-        alt: "NexGuild — Digital Workforce Community",
-      },
-    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "NexGuild — Earn by Contributing. Grow by Participating.",
     description:
       "Join NexGuild to earn NexCoins by completing micro-tasks, surveys, and content work.",
-    images: ["/og-image.png"],
   },
   icons: {
     icon: "/favicon.svg",
@@ -61,10 +52,15 @@ export const metadata: Metadata = {
   },
   manifest: "/site.webmanifest",
   
-  // এখানে তোমার গুগল সার্চ কনসোলের ভেরিফিকেশন কোড যুক্ত করা হলো ভাই
   verification: {
     google: "BcVWlhBG4yrlq_qFBwW7a4omi4HRxjRZ-n28-MeHZLo",
   },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#02b491",
+  width: "device-width",
+  initialScale: 1,
 };
 
 export default function RootLayout({

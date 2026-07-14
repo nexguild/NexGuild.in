@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import {
   ArrowLeft, Loader2, Sparkles, RefreshCw, CheckCircle2,
-  AlertCircle, ExternalLink, Eye, Edit3, ChevronDown, ChevronUp,
+  AlertCircle, ExternalLink, Eye, Edit3, ChevronDown, ChevronUp, Lightbulb,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
@@ -102,6 +102,10 @@ export default function BlogGeneratePage() {
   const [published, setPublished]     = useState<{ slug: string; url: string } | null>(null);
   const [pubError, setPubError]       = useState<string | null>(null);
 
+  // Topic suggestions
+  const [suggestions, setSuggestions]         = useState<string[]>([]);
+  const [suggestionsLoading, setSuggestionsLoading] = useState(false);
+
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       tokenRef.current = session?.access_token ?? null;
@@ -118,9 +122,26 @@ export default function BlogGeneratePage() {
     });
     if (res.ok) {
       const { posts } = await res.json() as { posts: { slug: string }[] };
-      setExistingSlugs((posts ?? []).map((p) => p.slug));
+      const slugs = (posts ?? []).map((p) => p.slug);
+      setExistingSlugs(slugs);
+      loadSuggestions(slugs, token);
     }
     setSlugsLoading(false);
+  }
+
+  async function loadSuggestions(slugs?: string[], overrideToken?: string | null) {
+    setSuggestionsLoading(true);
+    const token = overrideToken ?? tokenRef.current;
+    const res = await fetch("/api/admin/blog/suggestions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ existingSlugs: slugs ?? existingSlugs }),
+    });
+    if (res.ok) {
+      const { suggestions: s } = await res.json() as { suggestions: string[] };
+      setSuggestions(s ?? []);
+    }
+    setSuggestionsLoading(false);
   }
 
   async function generate() {
@@ -199,6 +220,51 @@ export default function BlogGeneratePage() {
       {/* ── FORM PHASE ────────────────────────────────────────────────────── */}
       {phase === "form" && (
         <div className="space-y-5 max-w-2xl">
+
+          {/* ── Today's Topic Ideas ─────────────────────────────────────────── */}
+          <section className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-5 space-y-3">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <Lightbulb className="h-4 w-4 text-amber-400 flex-shrink-0" />
+                <h2 className="font-bold text-[var(--text-primary)] text-sm">
+                  Today&apos;s Topic Ideas
+                </h2>
+                <span className="text-xs text-amber-400/80 font-medium">
+                  {new Date().toLocaleDateString("en-IN", { day: "numeric", month: "short" })}
+                </span>
+              </div>
+              <button
+                onClick={() => loadSuggestions()}
+                disabled={suggestionsLoading}
+                className="flex items-center gap-1 text-xs text-amber-400 hover:text-amber-300 transition-colors disabled:opacity-50"
+              >
+                <RefreshCw className={`h-3 w-3 ${suggestionsLoading ? "animate-spin" : ""}`} />
+                Refresh
+              </button>
+            </div>
+
+            {suggestionsLoading ? (
+              <div className="flex items-center gap-2 text-xs text-[var(--text-muted)]">
+                <Loader2 className="h-3.5 w-3.5 animate-spin" /> Generating ideas…
+              </div>
+            ) : suggestions.length === 0 ? (
+              <p className="text-xs text-[var(--text-muted)]">No suggestions yet — click Refresh to generate.</p>
+            ) : (
+              <div className="flex flex-wrap gap-2">
+                {suggestions.map((s, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setTopic(s)}
+                    className="text-left text-xs px-3 py-1.5 rounded-full border border-amber-500/30 bg-amber-500/10 text-amber-300 hover:bg-amber-500/20 hover:border-amber-500/50 transition-all leading-snug"
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
+            )}
+            <p className="text-[10px] text-[var(--text-muted)]">Click any idea to use it as your topic.</p>
+          </section>
+
           <section className="rounded-xl border border-[var(--border-default)] bg-[var(--surface-card)] p-6 space-y-5">
             <h2 className="font-bold text-[var(--text-primary)]">Content Brief</h2>
 

@@ -5,9 +5,22 @@ import { AdSlot } from "@/components/ui/ad-slot";
 import { BlogFilter } from "@/components/blog/BlogFilter";
 
 export const metadata: Metadata = {
-  title: "Blog",
+  title: "Blog — Earning Guides, Remote Work Tips & NexGuild Updates",
   description:
-    "Practical guides on remote work, online earning, micro-tasks, and making the most of NexGuild.",
+    "Practical guides on remote work, online earning, micro-tasks, and making the most of NexGuild. Written for Indian contributors and digital workers.",
+  alternates: { canonical: "https://nexguild.in/blog" },
+  openGraph: {
+    title: "NexGuild Blog — Earning Guides & Remote Work Tips",
+    description:
+      "Practical guides on online earning, micro-tasks, offerwalls, and remote work for Indian contributors.",
+    url:  "https://nexguild.in/blog",
+    type: "website",
+  },
+  twitter: {
+    card:        "summary_large_image",
+    title:       "NexGuild Blog — Earning Guides & Remote Work Tips",
+    description: "Practical guides on online earning, micro-tasks, and remote work for Indian contributors.",
+  },
 };
 
 export default function BlogIndexPage() {
