@@ -27,11 +27,14 @@ export async function POST(req: NextRequest) {
 
   const prompt = `Today is ${today}.
 
-Generate exactly 6 fresh blog topic ideas for NexGuild (nexguild.in) — a platform where people in India earn money online by completing micro-tasks, surveys, data annotation, app testing, and offerwalls. They can redeem earnings as Amazon, Flipkart, Google Play, and Zomato gift vouchers.
+Generate exactly 6 fresh blog topic ideas for NexGuild (nexguild.in) — a platform where people in India:
+1. Earn money online by completing micro-tasks, surveys, data annotation, app testing, and offerwalls (redeem as Amazon, Flipkart, Google Play gift vouchers)
+2. Browse curated remote & WFH job listings from companies like Telus International, Appen, Lionbridge, and HR-sourced work-from-home roles
 
 Rules:
-- Topics must be relevant to Indian audience — students, freshers, homemakers, gig workers
-- Mix of: how-to guides, listicles, comparisons, earning tips, platform reviews
+- Topics must be relevant to Indian audience — students, freshers, homemakers, gig workers, job seekers
+- Mix of: how-to guides, listicles, company-specific job guides (e.g. "How to get a job at Telus India"), WFH tips, earning tips, platform reviews, remote work advice
+- Include at least 2 topics related to remote/WFH jobs or specific companies hiring in India
 - Must be SEO-friendly and searchable (people actively Google these)
 - Timely / trending angle for today's date where possible
 - Do NOT suggest topics already covered: ${avoidList || "none yet"}
