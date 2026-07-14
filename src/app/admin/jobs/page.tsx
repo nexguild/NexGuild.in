@@ -251,7 +251,7 @@ export default function AdminJobsPage() {
               &ldquo;{deleteTarget.title}&rdquo; at {deleteTarget.company} will be permanently deleted.
             </p>
             <div className="flex gap-3">
-              <Button variant="outline" className="flex-1" onClick={() => setDeleteTarget(null)}>Cancel</Button>
+              <Button variant="secondary" className="flex-1" onClick={() => setDeleteTarget(null)}>Cancel</Button>
               <Button
                 variant="destructive"
                 className="flex-1"

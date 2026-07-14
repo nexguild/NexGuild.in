@@ -318,7 +318,7 @@ export default function AdminJobsEditPage() {
 
         <div className="flex gap-3">
           <Link href="/admin/jobs" className="flex-1">
-            <Button type="button" variant="outline" className="w-full">Cancel</Button>
+            <Button type="button" variant="secondary" className="w-full">Cancel</Button>
           </Link>
           <Button type="submit" disabled={saving} className="flex-1">
             {saving ? <><Loader2 className="h-4 w-4 animate-spin mr-1.5" /> Saving…</> : "Save Changes"}
