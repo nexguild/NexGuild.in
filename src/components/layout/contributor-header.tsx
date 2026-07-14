@@ -9,6 +9,7 @@ import { NexGuildLogo } from "@/components/ui/nexguild-logo";
 const NAV_LINKS = [
   { label: "Home",          href: "/earn" },
   { label: "Opportunities", href: "/opportunities" },
+  { label: "Jobs",          href: "/jobs" },
   { label: "How It Works",  href: "/how-it-works" },
   { label: "Blog",          href: "/blog" },
   { label: "FAQ",           href: "/faq" },

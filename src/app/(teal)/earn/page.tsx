@@ -25,6 +25,7 @@ const EARNING_WAYS = [
   { icon: "🔍", name: "Web Research",          desc: "Research, fact-checking, and structured data gathering" },
   { icon: "🌿", name: "Field Data Collection", desc: "On-ground data collection tasks across Indian cities" },
   { icon: "💸", name: "Referral Earnings",     desc: "Earn for every active contributor you bring to NexGuild" },
+  { icon: "💼", name: "Remote & WFH Jobs",     desc: "Browse curated remote and work-from-home job listings from top companies", href: "/jobs" },
 ];
 
 const STEPS = [
@@ -207,26 +208,35 @@ export default function EarnPage() {
           </FadeIn>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-            {EARNING_WAYS.map((way, i) => (
-              <FadeIn key={way.name} delay={i * 40} className="h-full">
-                <div 
-                  className="group rounded-2xl p-6 flex flex-col gap-4 cursor-pointer transition-all duration-300 hover:translate-y-[-4px] hover:bg-white hover:shadow-md border"
+            {EARNING_WAYS.map((way, i) => {
+              const card = (
+                <div
+                  className="group rounded-2xl p-6 flex flex-col gap-4 cursor-pointer transition-all duration-300 hover:translate-y-[-4px] hover:bg-white hover:shadow-md border h-full"
                   style={{
-                    background: "rgba(255,255,255,0.45)",
-                    border: "1.5px solid rgba(13,148,136,0.12)",
+                    background: way.href ? "rgba(13,148,136,0.06)" : "rgba(255,255,255,0.45)",
+                    border: way.href ? "1.5px solid rgba(13,148,136,0.25)" : "1.5px solid rgba(13,148,136,0.12)",
                     backdropFilter: "blur(12px)",
                   }}
                 >
                   <span className="text-4xl leading-none transition-transform duration-300 group-hover:scale-110">{way.icon}</span>
-                  <h3 className="font-bold text-lg text-[#0F3D36] group-hover:text-[#0D9488] transition-colors">
-                    {way.name}
-                  </h3>
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-bold text-lg text-[#0F3D36] group-hover:text-[#0D9488] transition-colors">
+                      {way.name}
+                    </h3>
+                    {way.href && <span className="text-xs font-bold px-1.5 py-0.5 rounded-full bg-[#0D9488] text-white">New</span>}
+                  </div>
                   <p className="text-xs sm:text-sm text-stone-600 leading-relaxed">
                     {way.desc}
                   </p>
+                  {way.href && <span className="text-xs font-semibold text-[#0D9488] mt-auto">Browse Jobs →</span>}
                 </div>
-              </FadeIn>
-            ))}
+              );
+              return (
+                <FadeIn key={way.name} delay={i * 40} className="h-full">
+                  {way.href ? <Link href={way.href} className="h-full block">{card}</Link> : card}
+                </FadeIn>
+              );
+            })}
           </div>
         </div>
       </section>
