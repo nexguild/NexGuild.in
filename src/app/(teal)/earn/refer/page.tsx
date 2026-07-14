@@ -4,321 +4,152 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { FadeIn } from "@/components/ui/fade-in";
 import { supabase } from "@/lib/supabase";
-import { Copy, Check, MessageCircle } from "lucide-react";
+import { Crown, Users, TrendingUp, ArrowRight, Zap } from "lucide-react";
 
-const CHAIN_NODES = [
-  { icon: "👤", label: "You",            sub: "Share your link",       bg: "linear-gradient(135deg, #0D9488 0%, #0F766E 100%)", shadow: "rgba(13,148,136,0.35)" },
-  { icon: "📲", label: "Friend Sees It", sub: "WhatsApp, Instagram…",  bg: "linear-gradient(135deg, #0284C7 0%, #0369A1 100%)", shadow: "rgba(2,132,199,0.3)"   },
-  { icon: "✅", label: "Friend Joins",   sub: "Signs up & completes",  bg: "linear-gradient(135deg, #10B981 0%, #059669 100%)", shadow: "rgba(16,185,129,0.3)"  },
-  { icon: "🪙", label: "Both Earn",      sub: "Coins credited auto",   bg: "linear-gradient(135deg, #F59E0B 0%, #D97706 100%)", shadow: "rgba(245,158,11,0.35)"  },
+const HOW_STEPS = [
+  { num: "01", icon: "👑", accent: "#0D9488", title: "Apply to Become a NexLeader", desc: "Submit your application once you've earned 500 NexCoins and your account is 7+ days old." },
+  { num: "02", icon: "📲", accent: "#0284C7", title: "Build Your Guild",             desc: "Share your referral link. Every person who joins through you becomes part of your guild." },
+  { num: "03", icon: "💼", accent: "#7C3AED", title: "Your Guild Earns",             desc: "Guild members complete tasks and offerwall offers — earning NexCoins on every activity." },
+  { num: "04", icon: "🪙", accent: "#F59E0B", title: "You Earn 10% Forever",         desc: "You automatically receive 10% of every NexCoin your guild members earn — with no cap, no expiry." },
 ];
 
-const TERMS = [
-  "Referred friend must sign up using your link and complete at least one approved task within 30 days.",
-  "NexCoins are credited automatically once the qualifying task is approved.",
-  "Self-referrals, duplicate accounts, or fraudulent referrals are not eligible.",
-  "NexGuild reserves the right to modify referral rewards with prior notice.",
+const BENEFITS = [
+  { icon: <TrendingUp className="h-5 w-5" />, accent: "#0D9488", title: "Passive Income",     desc: "Earn while your guild works. You don't need to complete extra tasks — your guild earns for you." },
+  { icon: <Zap className="h-5 w-5" />,        accent: "#F59E0B", title: "No Cap, No Expiry",  desc: "There's no limit on guild size or commission earnings. The bigger your guild, the more you earn." },
+  { icon: <Users className="h-5 w-5" />,      accent: "#7C3AED", title: "Guild Dashboard",    desc: "Track your guild members, their activity, and your commission history in real time." },
+  { icon: <Crown className="h-5 w-5" />,      accent: "#0284C7", title: "NexLeader Status",   desc: "Approved NexLeaders get a badge, priority support, and early access to new earning features." },
 ];
 
-function ReferralWidget() {
-  const [loading,  setLoading]  = useState(true);
+const REQUIREMENTS = [
+  { icon: "📅", label: "Account Age",       value: "7+ days" },
+  { icon: "🪙", label: "NexCoins Earned",   value: "500 minimum" },
+  { icon: "👥", label: "Community",         value: "Any network you can recruit from" },
+  { icon: "✅", label: "Account Status",    value: "Active & in good standing" },
+];
+
+export default function NexLeaderPage() {
   const [loggedIn, setLoggedIn] = useState(false);
-  const [link,     setLink]     = useState("");
-  const [copied,   setCopied]   = useState(false);
+  const [isNexLeader, setIsNexLeader] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data }) => {
-      if (!data.session) { setLoading(false); return; }
+      if (!data.session) return;
       setLoggedIn(true);
-      const uid = data.session.user.id;
       const { data: profile } = await supabase
         .from("profiles")
-        .select("referral_code")
-        .eq("id", uid)
+        .select("is_nexleader")
+        .eq("id", data.session.user.id)
         .single();
-      const code = (profile as { referral_code?: string } | null)?.referral_code;
-      if (code) setLink(`https://www.nexguild.in/signup?ref=${code}`);
-      setLoading(false);
+      setIsNexLeader(!!(profile as { is_nexleader?: boolean } | null)?.is_nexleader);
     });
   }, []);
 
-  const copy = async () => {
-    if (!link) return;
-    await navigator.clipboard.writeText(link);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-
-  const whatsapp = () => {
-    const text = encodeURIComponent(
-      `Hey! I'm using NexGuild to earn real gift vouchers by completing tasks from my phone. Join me here: ${link}`
-    );
-    window.open(`https://wa.me/?text=${text}`, "_blank");
-  };
-
-  if (loading) {
-    return (
-      <div className="rounded-3xl p-10 text-center animate-pulse"
-        style={{ background: "rgba(255,255,255,0.6)", border: "1.5px solid rgba(13,148,136,0.14)" }}>
-        <div className="h-4 bg-stone-200 rounded w-3/4 mx-auto" />
-      </div>
-    );
-  }
-
-  if (!loggedIn) {
-    return (
-      <div
-        className="rounded-3xl overflow-hidden"
-        style={{ background: "rgba(255,255,255,0.72)", border: "1.5px solid rgba(13,148,136,0.2)", backdropFilter: "blur(16px)" }}
-      >
-        {/* Header bar */}
-        <div className="px-7 py-4 flex items-center gap-3"
-          style={{ background: "linear-gradient(90deg, rgba(13,148,136,0.08), rgba(45,212,191,0.04))", borderBottom: "1px solid rgba(13,148,136,0.1)" }}>
-          <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#94A3B8", display: "inline-block" }} />
-          <span className="text-xs font-bold text-stone-400 uppercase tracking-wider">Your Referral Link</span>
-          <span className="ml-auto text-xs text-stone-400">Locked</span>
-        </div>
-
-        <div className="px-7 py-8 text-center">
-          <div
-            className="w-16 h-16 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-4"
-            style={{ background: "rgba(13,148,136,0.07)", border: "1.5px solid rgba(13,148,136,0.15)" }}
-          >
-            🔒
-          </div>
-          <h3 className="font-black text-xl text-[#0F3D36] mb-2" style={{ fontFamily: "'Instrument Serif', serif" }}>
-            Sign up to get your link
-          </h3>
-          <p className="text-sm text-stone-500 mb-7 max-w-xs mx-auto leading-relaxed">
-            Create a free NexGuild account. Your personal referral link is generated instantly on sign-up.
-          </p>
-          <Link
-            href="/signup"
-            className="h-12 px-8 inline-flex items-center rounded-full font-bold text-sm transition-all duration-300 hover:shadow-[0_10px_28px_rgba(13,148,136,0.28)] hover:translate-y-[-2px]"
-            style={{ background: "linear-gradient(135deg, #0D9488, #0F766E)", color: "#ECFDF5" }}
-          >
-            Sign Up Free →
-          </Link>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div
-      className="rounded-3xl overflow-hidden"
-      style={{ background: "rgba(255,255,255,0.82)", border: "1.5px solid rgba(13,148,136,0.2)", backdropFilter: "blur(16px)" }}
-    >
-      {/* Header bar */}
-      <div className="px-7 py-4 flex items-center gap-3"
-        style={{ background: "linear-gradient(90deg, rgba(13,148,136,0.08), rgba(45,212,191,0.04))", borderBottom: "1px solid rgba(13,148,136,0.1)" }}>
-        <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#22C55E", display: "inline-block" }} />
-        <span className="text-xs font-bold text-[#0D9488] uppercase tracking-wider">Your Referral Link</span>
-        <span className="ml-auto text-xs text-[#0D9488] font-semibold">Active</span>
-      </div>
-
-      <div className="p-7">
-        {link ? (
-          <>
-            {/* Link box */}
-            <div className="flex gap-3 mb-5">
-              <div
-                className="flex-1 px-5 py-3.5 rounded-2xl text-sm font-mono truncate"
-                style={{ background: "rgba(13,148,136,0.06)", border: "1.5px solid rgba(13,148,136,0.18)", color: "#0D9488" }}
-              >
-                {link}
-              </div>
-              <button
-                onClick={copy}
-                className="h-[52px] w-[52px] flex-shrink-0 rounded-2xl flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95"
-                style={{ background: copied ? "linear-gradient(135deg,#22C55E,#16A34A)" : "linear-gradient(135deg,#0D9488,#0F766E)", color: "#fff", boxShadow: "0 4px 16px rgba(13,148,136,0.25)" }}
-                title="Copy link"
-              >
-                {copied ? <Check className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
-              </button>
-            </div>
-
-            {/* Share row */}
-            <div className="flex gap-3">
-              <button
-                onClick={whatsapp}
-                className="flex-1 h-12 rounded-2xl flex items-center justify-center gap-2.5 font-bold text-sm transition-all duration-200 hover:shadow-md hover:translate-y-[-1px] active:translate-y-0"
-                style={{ background: "rgba(34,197,94,0.1)", color: "#15803D", border: "1.5px solid rgba(34,197,94,0.2)" }}
-              >
-                <MessageCircle className="w-4 h-4" />
-                Share on WhatsApp
-              </button>
-              <button
-                onClick={copy}
-                className="flex-1 h-12 rounded-2xl flex items-center justify-center gap-2.5 font-bold text-sm transition-all duration-200 hover:shadow-md hover:translate-y-[-1px] active:translate-y-0"
-                style={{ background: "rgba(13,148,136,0.08)", color: "#0D9488", border: "1.5px solid rgba(13,148,136,0.18)" }}
-              >
-                <Copy className="w-4 h-4" />
-                {copied ? "Copied!" : "Copy Link"}
-              </button>
-            </div>
-          </>
-        ) : (
-          <p className="text-sm text-stone-500 text-center py-4">
-            Referral link not set up yet. Complete your profile in the{" "}
-            <Link href="/dashboard/profile" className="text-[#0D9488] underline font-semibold">dashboard</Link>.
-          </p>
-        )}
-      </div>
-    </div>
-  );
-}
-
-export default function ReferPage() {
   return (
     <div style={{ background: "#EBFBFA", color: "#1E293B", minHeight: "100vh" }}>
 
       {/* ── Hero ── */}
-      <section className="relative overflow-hidden pt-28 pb-10 px-6 text-center">
+      <section className="relative overflow-hidden pt-28 pb-14 px-6 text-center">
         <div aria-hidden className="absolute inset-0 pointer-events-none"
-          style={{ background: "radial-gradient(ellipse 80% 70% at 50% 0%, rgba(16,185,129,0.11) 0%, rgba(13,148,136,0.1) 40%, transparent 80%)" }} />
+          style={{ background: "radial-gradient(ellipse 80% 70% at 50% 0%, rgba(13,148,136,0.13) 0%, rgba(245,158,11,0.06) 50%, transparent 80%)" }} />
 
-        <div className="relative z-10 max-w-2xl mx-auto">
+        <div className="relative z-10 max-w-3xl mx-auto">
           <FadeIn>
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full mb-6"
-              style={{ background: "rgba(255,255,255,0.55)", border: "1.5px solid rgba(13,148,136,0.2)", backdropFilter: "blur(12px)" }}>
-              <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#10B981", display: "inline-block" }} />
-              <span className="text-xs font-bold text-[#0D9488] uppercase tracking-wider">Referral Program · No Cap</span>
+              style={{ background: "rgba(255,255,255,0.6)", border: "1.5px solid rgba(245,158,11,0.25)", backdropFilter: "blur(12px)" }}>
+              <Crown className="h-3.5 w-3.5 text-amber-500" />
+              <span className="text-xs font-bold text-amber-700 uppercase tracking-wider">NexLeader Program</span>
             </div>
           </FadeIn>
           <FadeIn delay={80}>
-            <h1 style={{ fontFamily: "'Instrument Serif', serif", fontSize: "clamp(36px,5.5vw,60px)", fontWeight: 900, color: "#0F3D36", lineHeight: 1.08, marginBottom: 14 }}>
-              Invite Friends.<br /> Earn Together.
+            <h1 style={{ fontFamily: "'Instrument Serif', serif", fontSize: "clamp(36px,5.5vw,64px)", fontWeight: 900, color: "#0F3D36", lineHeight: 1.08, marginBottom: 16 }}>
+              Lead a Guild.<br />
+              <span style={{ color: "#0D9488" }}>Earn While They Do.</span>
             </h1>
           </FadeIn>
           <FadeIn delay={160}>
-            <p className="text-base sm:text-lg leading-relaxed text-stone-600 max-w-lg mx-auto">
-              Share your unique link. Earn NexCoins for every friend who joins and completes a task. No limit. No expiry.
+            <p className="text-base sm:text-lg leading-relaxed text-stone-500 max-w-xl mx-auto mb-8">
+              NexLeaders build and lead a guild of contributors. Every time a guild member earns NexCoins, you automatically receive <strong className="text-[#0F3D36]">10% commission</strong> — permanently, with no cap.
             </p>
           </FadeIn>
-        </div>
-      </section>
-
-      {/* ── Visual Chain ── */}
-      <section className="pb-16 px-6">
-        <div className="mx-auto max-w-3xl">
-          <FadeIn>
-            {/* Desktop: horizontal chain */}
-            <div className="hidden sm:flex items-end justify-center gap-0">
-              {CHAIN_NODES.map((node, i) => (
-                <div key={node.label} className="flex items-end">
-                  {/* Node */}
-                  <div className="flex flex-col items-center" style={{ minWidth: 120 }}>
-                    <div
-                      className="w-[72px] h-[72px] rounded-full flex items-center justify-center text-3xl transition-transform duration-300 hover:scale-110 cursor-default"
-                      style={{ background: node.bg, boxShadow: `0 8px 28px ${node.shadow}` }}
-                    >
-                      {node.icon}
-                    </div>
-                    <div className="mt-3 text-center">
-                      <div className="font-black text-sm text-[#0F3D36]">{node.label}</div>
-                      <div className="text-xs text-stone-400 mt-0.5">{node.sub}</div>
-                    </div>
-                  </div>
-
-                  {/* Arrow between nodes */}
-                  {i < CHAIN_NODES.length - 1 && (
-                    <div className="flex-1 flex flex-col items-center" style={{ paddingBottom: 36, minWidth: 32 }}>
-                      <div style={{
-                        height: 2,
-                        width: "100%",
-                        background: "repeating-linear-gradient(90deg, rgba(13,148,136,0.45) 0, rgba(13,148,136,0.45) 8px, transparent 8px, transparent 14px)",
-                      }} />
-                      <span className="text-[#0D9488] text-base" style={{ marginTop: -10, fontSize: 18 }}>›</span>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-
-            {/* Mobile: 2x2 grid */}
-            <div className="sm:hidden grid grid-cols-2 gap-6">
-              {CHAIN_NODES.map((node) => (
-                <div key={node.label} className="flex flex-col items-center text-center">
-                  <div
-                    className="w-16 h-16 rounded-full flex items-center justify-center text-2xl"
-                    style={{ background: node.bg, boxShadow: `0 6px 20px ${node.shadow}` }}
-                  >
-                    {node.icon}
-                  </div>
-                  <div className="font-black text-sm text-[#0F3D36] mt-2">{node.label}</div>
-                  <div className="text-xs text-stone-400 mt-0.5">{node.sub}</div>
-                </div>
-              ))}
+          <FadeIn delay={240}>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+              {isNexLeader ? (
+                <Link href="/dashboard/nexleader"
+                  className="h-12 px-10 inline-flex items-center gap-2 rounded-full font-bold text-sm transition-all duration-300 hover:translate-y-[-2px] hover:shadow-[0_10px_30px_rgba(13,148,136,0.35)]"
+                  style={{ background: "linear-gradient(135deg, #0D9488, #0F766E)", color: "#ECFDF5" }}>
+                  <Crown className="h-4 w-4" /> Go to My Guild
+                </Link>
+              ) : loggedIn ? (
+                <Link href="/dashboard/nexleader"
+                  className="h-12 px-10 inline-flex items-center gap-2 rounded-full font-bold text-sm transition-all duration-300 hover:translate-y-[-2px] hover:shadow-[0_10px_30px_rgba(13,148,136,0.35)]"
+                  style={{ background: "linear-gradient(135deg, #0D9488, #0F766E)", color: "#ECFDF5" }}>
+                  Apply for NexLeader <ArrowRight className="h-4 w-4" />
+                </Link>
+              ) : (
+                <>
+                  <Link href="/signup"
+                    className="h-12 px-10 inline-flex items-center gap-2 rounded-full font-bold text-sm transition-all duration-300 hover:translate-y-[-2px] hover:shadow-[0_10px_30px_rgba(13,148,136,0.35)]"
+                    style={{ background: "linear-gradient(135deg, #0D9488, #0F766E)", color: "#ECFDF5" }}>
+                    Start Earning Free <ArrowRight className="h-4 w-4" />
+                  </Link>
+                  <Link href="/login"
+                    className="h-12 px-8 inline-flex items-center rounded-full font-semibold text-sm transition-all duration-200"
+                    style={{ background: "rgba(255,255,255,0.55)", backdropFilter: "blur(12px)", border: "1.5px solid rgba(13,148,136,0.2)", color: "#0F3D36" }}>
+                    Already a member? Log in
+                  </Link>
+                </>
+              )}
             </div>
           </FadeIn>
         </div>
       </section>
 
-      {/* ── Widget (Hero of the page) ── */}
-      <section className="py-10 px-6">
-        <div className="mx-auto max-w-lg">
+      {/* ── Commission highlight band ── */}
+      <section style={{ background: "#0F3D36", borderTop: "1px solid rgba(45,212,191,0.12)", borderBottom: "1px solid rgba(45,212,191,0.12)" }}>
+        <div className="mx-auto max-w-container py-8 px-6">
           <FadeIn>
-            <div className="text-center mb-5">
-              <p className="text-xs font-bold text-[#0D9488] uppercase tracking-widest">Your Personal Link</p>
-            </div>
-            <ReferralWidget />
-          </FadeIn>
-
-          {/* Social proof */}
-          <FadeIn delay={120}>
-            <div className="flex flex-wrap items-center justify-center gap-4 mt-6">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-6 sm:gap-16 text-center">
               {[
-                { icon: "♾️", text: "No cap on invites" },
-                { icon: "⚡", text: "Auto coin credit" },
-                { icon: "📱", text: "Share anywhere" },
-              ].map((b) => (
-                <span key={b.text} className="flex items-center gap-2 text-xs text-stone-500 font-medium">
-                  <span>{b.icon}</span>{b.text}
-                </span>
+                { value: "10%",       label: "Commission on every earn" },
+                { value: "No Cap",    label: "On guild size or earnings" },
+                { value: "Forever",   label: "Ongoing — not just first task" },
+                { value: "Auto",      label: "Credited instantly, no claims" },
+              ].map((s) => (
+                <div key={s.label}>
+                  <div className="text-3xl sm:text-4xl font-black" style={{ color: "#2DD4BF", fontFamily: "'Instrument Serif', serif" }}>{s.value}</div>
+                  <div className="text-[10px] font-bold text-white/40 uppercase tracking-widest mt-1.5">{s.label}</div>
+                </div>
               ))}
             </div>
           </FadeIn>
         </div>
       </section>
 
-      {/* ── How It Works steps ── */}
-      <section className="py-16 px-6" style={{ background: "rgba(255,255,255,0.22)", borderTop: "1px solid rgba(13,148,136,0.08)", borderBottom: "1px solid rgba(13,148,136,0.08)" }}>
+      {/* ── How It Works ── */}
+      <section className="py-16 px-6">
         <div className="mx-auto max-w-container">
           <FadeIn>
             <div className="text-center mb-10">
               <p className="text-xs font-bold uppercase tracking-widest text-[#0D9488] mb-2">Step by Step</p>
-              <h2 className="text-3xl font-black text-[#0F3D36]" style={{ fontFamily: "'Instrument Serif', serif" }}>
-                How Referrals Work
+              <h2 className="text-3xl sm:text-4xl font-black text-[#0F3D36] tracking-tight"
+                style={{ fontFamily: "'Instrument Serif', serif" }}>
+                How NexLeader Works
               </h2>
             </div>
           </FadeIn>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-            {[
-              { num: "01", icon: "🔗", title: "Get Your Link",   desc: "Sign up and find your personal referral link here or in your dashboard." },
-              { num: "02", icon: "📲", title: "Share It",         desc: "Send it via WhatsApp, Instagram, or college groups. No limit on who you invite." },
-              { num: "03", icon: "✅", title: "They Join & Earn", desc: "Your friend signs up and completes their first approved task within 30 days." },
-              { num: "04", icon: "🪙", title: "You Both Earn",    desc: "You receive NexCoins automatically. Your friend earns a welcome bonus too." },
-            ].map((step, i) => (
-              <FadeIn key={step.num} delay={i * 60}>
-                <div
-                  className="rounded-2xl p-6 h-full flex flex-col gap-4 transition-all duration-300 hover:translate-y-[-4px] hover:shadow-[0_12px_32px_rgba(13,148,136,0.1)]"
-                  style={{ background: "rgba(255,255,255,0.72)", border: "1.5px solid rgba(13,148,136,0.13)", backdropFilter: "blur(12px)" }}
-                >
-                  <div className="flex items-center justify-between">
-                    <div
-                      className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl"
-                      style={{ background: "linear-gradient(135deg, rgba(13,148,136,0.1), rgba(45,212,191,0.06))", border: "1px solid rgba(13,148,136,0.15)" }}
-                    >
-                      {step.icon}
-                    </div>
-                    <span className="font-black text-3xl" style={{ color: "rgba(13,148,136,0.12)", fontFamily: "'Instrument Serif', serif" }}>
-                      {step.num}
-                    </span>
+            {HOW_STEPS.map((step, i) => (
+              <FadeIn key={step.num} delay={i * 70}>
+                <div className="relative rounded-2xl p-6 h-full flex flex-col gap-4 transition-all duration-300 hover:translate-y-[-4px] hover:shadow-[0_12px_32px_rgba(13,148,136,0.1)]"
+                  style={{ background: "rgba(255,255,255,0.72)", border: "1.5px solid rgba(13,148,136,0.13)", backdropFilter: "blur(12px)", borderTop: `3px solid ${step.accent}` }}>
+                  <div aria-hidden className="absolute right-4 top-4 font-black text-5xl leading-none select-none"
+                    style={{ color: `${step.accent}14`, fontFamily: "'Instrument Serif', serif" }}>
+                    {step.num}
                   </div>
+                  <div className="text-3xl">{step.icon}</div>
                   <div>
-                    <h3 className="font-bold text-[#0F3D36] mb-1.5">{step.title}</h3>
+                    <h3 className="font-bold text-[#0F3D36] text-sm mb-1.5">{step.title}</h3>
                     <p className="text-xs text-stone-500 leading-relaxed">{step.desc}</p>
                   </div>
                 </div>
@@ -328,46 +159,131 @@ export default function ReferPage() {
         </div>
       </section>
 
-      {/* ── Why Refer ── */}
-      <section className="py-16 px-6">
-        <div className="mx-auto max-w-container">
+      {/* ── Real example ── */}
+      <section className="py-12 px-6" style={{ background: "rgba(255,255,255,0.28)", borderTop: "1px solid rgba(13,148,136,0.08)", borderBottom: "1px solid rgba(13,148,136,0.08)" }}>
+        <div className="mx-auto max-w-2xl">
           <FadeIn>
-            <div className="rounded-3xl overflow-hidden"
-              style={{ background: "linear-gradient(135deg, rgba(13,148,136,0.07) 0%, rgba(16,185,129,0.05) 100%)", border: "1.5px solid rgba(13,148,136,0.18)" }}>
-              <div className="p-8 sm:p-12">
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 text-center">
-                  {[
-                    { icon: "♾️", stat: "No cap",    label: "Invite as many friends as you want — every conversion earns coins." },
-                    { icon: "⚡", stat: "Instant",   label: "Coins credited the moment your referral's first task is approved." },
-                    { icon: "🎁", stat: "Bonus",     label: "Your friend also gets a welcome bonus — making it easy to share." },
-                  ].map((b) => (
-                    <div key={b.stat}>
-                      <div style={{ fontSize: 36, marginBottom: 8 }}>{b.icon}</div>
-                      <div className="font-black text-2xl text-[#0D9488] mb-2" style={{ fontFamily: "'Instrument Serif', serif" }}>{b.stat}</div>
-                      <p className="text-sm text-stone-500 leading-relaxed">{b.label}</p>
-                    </div>
-                  ))}
-                </div>
+            <div className="rounded-3xl p-8 sm:p-10 text-center"
+              style={{ background: "linear-gradient(145deg, #0F3D36, #0D5C52)", border: "1px solid rgba(45,212,191,0.15)" }}>
+              <div aria-hidden style={{ fontSize: 40, marginBottom: 12 }}>🧮</div>
+              <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: "#2DD4BF" }}>Example Earnings</p>
+              <h3 className="text-2xl sm:text-3xl font-black text-white mb-6" style={{ fontFamily: "'Instrument Serif', serif" }}>
+                Guild of 50 Active Members
+              </h3>
+              <div className="grid grid-cols-3 gap-4 mb-6">
+                {[
+                  { label: "Guild earns per day",   value: "5,000", unit: "NexCoins" },
+                  { label: "Your 10% commission",   value: "500",   unit: "NexCoins/day" },
+                  { label: "Your monthly passive",  value: "15,000",unit: "NexCoins" },
+                ].map((s) => (
+                  <div key={s.label}>
+                    <div className="text-xl sm:text-2xl font-black text-[#2DD4BF]" style={{ fontFamily: "'Instrument Serif', serif" }}>{s.value}</div>
+                    <div className="text-[10px] text-white/40 uppercase tracking-wide mt-1">{s.unit}</div>
+                    <div className="text-[10px] text-white/30 mt-0.5">{s.label}</div>
+                  </div>
+                ))}
               </div>
+              <p className="text-xs text-white/40">Earnings vary based on guild activity. No guaranteed amounts.</p>
             </div>
           </FadeIn>
         </div>
       </section>
 
-      {/* ── Terms ── */}
-      <section className="pb-16 px-6">
+      {/* ── Benefits ── */}
+      <section className="py-16 px-6">
+        <div className="mx-auto max-w-container">
+          <FadeIn>
+            <div className="text-center mb-10">
+              <p className="text-xs font-bold uppercase tracking-widest text-[#0D9488] mb-2">Why NexLeader</p>
+              <h2 className="text-3xl font-black text-[#0F3D36]" style={{ fontFamily: "'Instrument Serif', serif" }}>
+                More Than Referrals
+              </h2>
+            </div>
+          </FadeIn>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {BENEFITS.map((b, i) => (
+              <FadeIn key={b.title} delay={i * 60} className="h-full">
+                <div className="group flex gap-5 p-5 rounded-2xl h-full transition-all duration-300 hover:translate-y-[-2px] hover:bg-white hover:shadow-lg"
+                  style={{ background: "rgba(255,255,255,0.5)", border: "1.5px solid rgba(13,148,136,0.1)", backdropFilter: "blur(12px)", borderLeft: `3px solid ${b.accent}` }}>
+                  <div className="flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center"
+                    style={{ background: `${b.accent}14`, border: `1.5px solid ${b.accent}30`, color: b.accent }}>
+                    {b.icon}
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-sm text-[#0F3D36] mb-1.5">{b.title}</h3>
+                    <p className="text-xs text-stone-500 leading-relaxed">{b.desc}</p>
+                  </div>
+                </div>
+              </FadeIn>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Requirements ── */}
+      <section className="py-12 px-6" style={{ background: "rgba(255,255,255,0.22)", borderTop: "1px solid rgba(13,148,136,0.08)", borderBottom: "1px solid rgba(13,148,136,0.08)" }}>
         <div className="mx-auto max-w-2xl">
           <FadeIn>
-            <div className="rounded-2xl p-6" style={{ background: "rgba(255,255,255,0.5)", border: "1.5px solid rgba(13,148,136,0.1)", backdropFilter: "blur(12px)" }}>
-              <p className="text-xs font-bold text-[#0D9488] uppercase tracking-widest mb-4">Referral Terms</p>
-              <ul className="space-y-2.5">
-                {TERMS.map((t) => (
-                  <li key={t} className="flex gap-3 items-start">
-                    <span className="flex-shrink-0 text-[#0D9488] font-bold text-xs mt-0.5">—</span>
-                    <span className="text-xs text-stone-500 leading-relaxed">{t}</span>
-                  </li>
-                ))}
-              </ul>
+            <div className="text-center mb-8">
+              <p className="text-xs font-bold uppercase tracking-widest text-[#0D9488] mb-2">Eligibility</p>
+              <h2 className="text-2xl font-black text-[#0F3D36]" style={{ fontFamily: "'Instrument Serif', serif" }}>
+                Requirements to Apply
+              </h2>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              {REQUIREMENTS.map((r) => (
+                <div key={r.label} className="flex items-center gap-3 p-4 rounded-xl"
+                  style={{ background: "rgba(255,255,255,0.7)", border: "1.5px solid rgba(13,148,136,0.12)" }}>
+                  <span className="text-2xl flex-shrink-0">{r.icon}</span>
+                  <div>
+                    <div className="text-xs text-stone-400 font-medium">{r.label}</div>
+                    <div className="text-sm font-bold text-[#0F3D36]">{r.value}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </FadeIn>
+        </div>
+      </section>
+
+      {/* ── CTA ── */}
+      <section style={{ background: "#EBFBFA", padding: "3rem 1.5rem" }}>
+        <div className="mx-auto max-w-container">
+          <FadeIn>
+            <div className="relative overflow-hidden rounded-3xl px-8 py-14 text-center"
+              style={{ background: "#0F3D36" }}>
+              <div aria-hidden style={{ position: "absolute", inset: 0, background: "radial-gradient(ellipse 70% 60% at 20% 50%, rgba(45,212,191,0.12) 0%, transparent 60%), radial-gradient(ellipse 50% 70% at 80% 50%, rgba(13,148,136,0.1) 0%, transparent 60%)" }} />
+              <div aria-hidden style={{ position: "absolute", inset: 0, backgroundImage: "radial-gradient(circle, rgba(45,212,191,0.08) 1px, transparent 1px)", backgroundSize: "28px 28px" }} />
+              <div className="relative z-10">
+                <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full mb-6"
+                  style={{ background: "rgba(245,158,11,0.12)", border: "1px solid rgba(245,158,11,0.25)" }}>
+                  <Crown className="h-3.5 w-3.5 text-amber-400" />
+                  <span className="text-xs font-bold text-amber-400 uppercase tracking-wider">Limited Spots Available</span>
+                </div>
+                <h2 className="text-3xl sm:text-5xl font-black text-white mb-4 tracking-tight"
+                  style={{ fontFamily: "'Instrument Serif', serif", textWrap: "balance" }}>
+                  Ready to Lead a Guild?
+                </h2>
+                <p className="text-white/55 text-sm sm:text-base mb-8 max-w-lg mx-auto">
+                  Meet the requirements, apply from your dashboard, and start building your passive income stream.
+                </p>
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+                  {loggedIn ? (
+                    <Link href="/dashboard/nexleader"
+                      className="h-12 px-10 inline-flex items-center gap-2 rounded-full font-bold text-sm transition-all duration-300 hover:translate-y-[-2px] hover:shadow-[0_10px_30px_rgba(13,148,136,0.4)]"
+                      style={{ background: "linear-gradient(135deg, #0D9488 0%, #2DD4BF 100%)", color: "#0A2520" }}>
+                      <Crown className="h-4 w-4" />
+                      {isNexLeader ? "Go to My Guild" : "Apply Now"}
+                    </Link>
+                  ) : (
+                    <Link href="/signup"
+                      className="h-12 px-10 inline-flex items-center gap-2 rounded-full font-bold text-sm transition-all duration-300 hover:translate-y-[-2px] hover:shadow-[0_10px_30px_rgba(13,148,136,0.4)]"
+                      style={{ background: "linear-gradient(135deg, #0D9488 0%, #2DD4BF 100%)", color: "#0A2520" }}>
+                      Join NexGuild Free <ArrowRight className="h-4 w-4" />
+                    </Link>
+                  )}
+                </div>
+              </div>
             </div>
           </FadeIn>
         </div>

@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { ChevronLeft, Layers, Loader2 } from "lucide-react";
 import { NexCoinIcon } from "@/components/ui/nexcoin-icon";
 import { supabase } from "@/lib/supabase";
-import { applyWidgetConfig, injectScript, type WidgetInitConfig } from "@/lib/offerwall-widget-inject";
+import { applyWidgetConfig, buildScriptUrl, injectScript, type WidgetInitConfig } from "@/lib/offerwall-widget-inject";
 
 interface Provider {
   id: string;
@@ -36,9 +36,13 @@ export default function ProviderExperiencePage({
   const [loading, setLoading]   = useState(true);
   const [notFound, setNotFound] = useState(false);
 
-  // TheoremReach iframe
+  // TheoremReach signed iframe URL
   const [trIframeUrl, setTrIframeUrl]         = useState<string | null>(null);
   const [trIframeLoading, setTrIframeLoading] = useState(false);
+
+  // CPAGrip: srcdoc HTML — needed because their script uses document.write and cannot
+  // be injected as an async dynamic script tag (browsers block document.write in that case).
+  const [cpagripSrcDoc, setCpagripSrcDoc] = useState<string | null>(null);
 
   useEffect(() => {
     async function init() {
@@ -47,7 +51,7 @@ export default function ProviderExperiencePage({
         supabase.auth.getSession(),
       ]);
 
-      setUserId(user?.id ?? null);
+      setUserId(user?.id ?? session?.user?.id ?? null);
       setToken(session?.access_token ?? null);
 
       if (!session?.access_token) { setLoading(false); return; }
@@ -83,7 +87,9 @@ export default function ProviderExperiencePage({
       .finally(() => setTrIframeLoading(false));
   }, [provider?.slug, token]);
 
-  // script_tag: inject widget script after mount
+  // script_tag providers: inject widget script after mount.
+  // Exception: CPAGrip uses document.write which is blocked in async scripts —
+  // instead we build a srcdoc HTML string and render it inside an <iframe>.
   useEffect(() => {
     if (!provider || provider.integration_type !== "script_tag") return;
     async function inject() {
@@ -96,8 +102,22 @@ export default function ProviderExperiencePage({
       const { widgets } = await res.json() as { widgets: WidgetInitConfig[] };
       const w = widgets?.find((x) => x.slug === provider!.slug);
       if (!w?.scriptUrl) return;
+      const builtUrl = buildScriptUrl(w);
+      if (!builtUrl) return;
+
+      if (provider!.slug === "cpagrip") {
+        // CPAGrip's script calls document.write — run it inside an iframe srcdoc
+        // so it operates on the iframe's own document (where document.write is valid).
+        setCpagripSrcDoc(
+          `<!DOCTYPE html><html><head><meta charset="utf-8">` +
+          `<style>html,body{margin:0;padding:0;width:100%;min-height:100%;overflow-x:hidden;}</style></head>` +
+          `<body><script type="text/javascript" src="${builtUrl}"><\/script></body></html>`
+        );
+        return;
+      }
+
       applyWidgetConfig(w);
-      injectScript(w.scriptUrl, true);
+      injectScript(builtUrl, true);
     }
     inject().catch(console.error);
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -107,9 +127,6 @@ export default function ProviderExperiencePage({
     if (!provider?.embed_url_template || !userId) return null;
     return provider.embed_url_template.replace(/\{user_id\}/g, userId);
   }
-
-  /* The page breaks out of the DashboardShell padding via negative margins
-     (-m-4 sm:-m-6) and fills the remaining viewport height (100vh - 64px header). */
 
   if (loading) {
     return (
@@ -142,8 +159,6 @@ export default function ProviderExperiencePage({
 
   if (!provider) return null;
 
-  /* Full-bleed layout: cancel the shell's p-4/p-6 padding with -m-4 sm:-m-6,
-     then fill the remaining screen height below the 64px header. */
   return (
     <div
       className="-m-4 sm:-m-6 flex flex-col"
@@ -168,7 +183,7 @@ export default function ProviderExperiencePage({
 
       {/* Widget — fills remaining height */}
       <div className="flex-1 flex flex-col">
-        {renderWidget(provider, trIframeUrl, trIframeLoading, buildEmbedUrl())}
+        {renderWidget(provider, trIframeUrl, trIframeLoading, buildEmbedUrl(), cpagripSrcDoc)}
       </div>
     </div>
   );
@@ -179,6 +194,7 @@ function renderWidget(
   trIframeUrl: string | null,
   trIframeLoading: boolean,
   embedUrl: string | null,
+  cpagripSrcDoc: string | null,
 ) {
   if (provider.slug === "theoremreach") {
     if (trIframeLoading) {
@@ -207,6 +223,26 @@ function renderWidget(
         <p className="font-semibold text-slate-700">Unable to load</p>
         <p className="text-sm text-slate-400 max-w-sm">Could not load the offerwall. Please refresh the page.</p>
       </div>
+    );
+  }
+
+  // CPAGrip: srcdoc iframe so document.write works inside the frame's own document
+  if (provider.slug === "cpagrip") {
+    if (!cpagripSrcDoc) {
+      return (
+        <div className="flex-1 flex items-center justify-center">
+          <Loader2 className="h-6 w-6 animate-spin text-indigo-500" />
+        </div>
+      );
+    }
+    return (
+      <iframe
+        srcDoc={cpagripSrcDoc}
+        className="flex-1 w-full border-0"
+        style={{ minHeight: "calc(100vh - 112px)" }}
+        sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox allow-top-navigation-by-user-activation"
+        title="CPAGrip Offerwall"
+      />
     );
   }
 

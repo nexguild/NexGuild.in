@@ -67,6 +67,11 @@ export function buildWindowConfig(w: WidgetInitConfig): Record<string, unknown> 
   };
 }
 
+export function buildScriptUrl(w: WidgetInitConfig): string | null {
+  if (!w.scriptUrl) return null;
+  return w.scriptUrl.replace(/\{user_id\}/g, encodeURIComponent(w.userId));
+}
+
 export function applyWidgetConfig(w: WidgetInitConfig): string {
   const configKey = w.windowConfigKey ?? `${w.slug.replace(/_/g, "")}Config`;
   (window as Record<string, unknown>)[configKey] = buildWindowConfig(w);

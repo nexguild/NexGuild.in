@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { X, Settings2, Copy, Check, Eye, EyeOff, Plus, Trash2, Loader2, Upload } from "lucide-react";
+import { X, Settings2, Copy, Check, Eye, EyeOff, Plus, Trash2, Loader2, Link2 } from "lucide-react";
 import { usePageGuard } from "@/components/layout/admin-auth-guard";
 import { ADMIN_ROLES } from "@/lib/admin-permissions";
 import { supabase } from "@/lib/supabase";
@@ -121,9 +121,7 @@ export default function AdminOfferwallsPage() {
   const [saving, setSaving]         = useState(false);
   const [saveError, setSaveError]   = useState<string | null>(null);
 
-  // Logo upload state
-  const [logoUploading, setLogoUploading] = useState(false);
-  const [logoUploadError, setLogoUploadError] = useState<string | null>(null);
+  const [logoPreviewError, setLogoPreviewError] = useState(false);
 
   // Add provider modal
   const [showAdd, setShowAdd]       = useState(false);
@@ -161,7 +159,7 @@ export default function AdminOfferwallsPage() {
   function openConfigure(p: Provider) {
     setConfiguring(p);
     setSaveError(null);
-    setLogoUploadError(null);
+    setLogoPreviewError(false);
 
     const cc = p.custom_config ?? {};
     const featureTags = Array.isArray(cc.feature_tags)
@@ -193,42 +191,6 @@ export default function AdminOfferwallsPage() {
       feature_tags:          featureTags,
       available_countries:   availableCountries,
     });
-  }
-
-  async function handleLogoFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file || !configuring) return;
-
-    const allowed = ["image/png", "image/jpeg", "image/svg+xml"];
-    if (!allowed.includes(file.type)) {
-      setLogoUploadError("Only PNG, JPG, or SVG files accepted.");
-      return;
-    }
-    if (file.size > 500 * 1024) {
-      setLogoUploadError("File must be under 500 KB.");
-      return;
-    }
-
-    setLogoUploadError(null);
-    setLogoUploading(true);
-
-    const ext = file.type === "image/svg+xml" ? "svg" : file.type === "image/png" ? "png" : "jpg";
-    const fileName = `${configuring.slug}.${ext}`;
-
-    const { error: uploadErr } = await supabase.storage
-      .from("offerwall-logos")
-      .upload(fileName, file, { contentType: file.type, upsert: true });
-
-    if (uploadErr) {
-      setLogoUploadError(uploadErr.message);
-      setLogoUploading(false);
-      return;
-    }
-
-    const { data: urlData } = supabase.storage.from("offerwall-logos").getPublicUrl(fileName);
-    setForm((f) => ({ ...f, logo_url: urlData.publicUrl }));
-    setLogoUploading(false);
-    e.target.value = "";
   }
 
   async function saveConfig(e: React.FormEvent) {
@@ -528,55 +490,49 @@ export default function AdminOfferwallsPage() {
                   className="w-full px-3 py-2 rounded-md border border-[var(--border-strong)] bg-[var(--surface-subtle)] text-xs text-[var(--text-primary)] font-mono focus:outline-none focus:ring-2 focus:ring-[var(--border-focus)] resize-y placeholder:font-sans placeholder:text-[var(--text-muted)]" />
               </div>
 
-              {/* ── Logo Upload ─────────────────────────────────────── */}
+              {/* ── Logo URL ────────────────────────────────────────── */}
               <div>
                 <label className="block text-sm font-medium text-[var(--text-primary)] mb-1.5">Provider Logo</label>
-                <div className="flex items-start gap-3">
-                  {/* 40×40 preview */}
-                  <div className="h-10 w-10 rounded-lg border border-[var(--border-default)] bg-[var(--surface-subtle)] flex items-center justify-center flex-shrink-0 overflow-hidden">
-                    {form.logo_url ? (
+                <div className="flex items-center gap-3">
+                  {/* Live preview */}
+                  <div className="h-11 w-11 rounded-xl border border-[var(--border-default)] bg-[var(--surface-subtle)] flex items-center justify-center flex-shrink-0 overflow-hidden">
+                    {form.logo_url && !logoPreviewError ? (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={form.logo_url} alt="" className="h-full w-full object-cover" />
+                      <img
+                        src={form.logo_url}
+                        alt=""
+                        className="h-full w-full object-contain p-1"
+                        onError={() => setLogoPreviewError(true)}
+                        onLoad={() => setLogoPreviewError(false)}
+                      />
                     ) : (
-                      <span className="text-sm font-bold text-[var(--text-muted)]">
-                        {configuring.name?.[0]?.toUpperCase() ?? "?"}
-                      </span>
+                      <Link2 className="h-4 w-4 text-[var(--text-muted)]" />
                     )}
                   </div>
-                  <div className="flex-1 space-y-2">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <label className="cursor-pointer">
-                        <span className="inline-flex items-center gap-1.5 h-8 px-3 rounded-md text-xs font-medium bg-[var(--surface-subtle)] border border-[var(--border-default)] text-[var(--text-secondary)] hover:bg-[var(--surface-page)] transition-colors">
-                          {logoUploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
-                          {logoUploading ? "Uploading…" : "Upload file"}
-                        </span>
-                        <input
-                          type="file"
-                          accept=".png,.jpg,.jpeg,.svg,image/png,image/jpeg,image/svg+xml"
-                          className="sr-only"
-                          disabled={logoUploading}
-                          onChange={handleLogoFileSelect}
-                        />
-                      </label>
+                  <div className="flex-1 space-y-1.5">
+                    <div className="relative">
+                      <input
+                        type="url"
+                        value={form.logo_url}
+                        onChange={(e) => {
+                          setLogoPreviewError(false);
+                          setForm((f) => ({ ...f, logo_url: e.target.value }));
+                        }}
+                        placeholder="https://example.com/logo.png"
+                        className="w-full h-9 px-3 pr-16 rounded-md border border-[var(--border-strong)] bg-[var(--surface-subtle)] text-xs text-[var(--text-primary)] font-mono focus:outline-none focus:ring-2 focus:ring-[var(--border-focus)] placeholder:font-sans placeholder:text-[var(--text-muted)]"
+                      />
                       {form.logo_url && (
                         <button
                           type="button"
-                          onClick={() => setForm((f) => ({ ...f, logo_url: "" }))}
-                          className="text-xs text-[var(--text-muted)] hover:text-red-400 transition-colors"
+                          onClick={() => { setForm((f) => ({ ...f, logo_url: "" })); setLogoPreviewError(false); }}
+                          className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-[var(--text-muted)] hover:text-red-400 transition-colors px-1"
                         >
                           Clear
                         </button>
                       )}
                     </div>
-                    <input
-                      type="text"
-                      value={form.logo_url}
-                      onChange={(e) => setForm((f) => ({ ...f, logo_url: e.target.value }))}
-                      placeholder="Or paste URL…"
-                      className="w-full h-8 px-3 rounded-md border border-[var(--border-strong)] bg-[var(--surface-subtle)] text-xs text-[var(--text-primary)] font-mono focus:outline-none focus:ring-2 focus:ring-[var(--border-focus)] placeholder:font-sans placeholder:text-[var(--text-muted)]"
-                    />
-                    {logoUploadError && <p className="text-xs text-red-400">{logoUploadError}</p>}
-                    <p className="text-xs text-[var(--text-muted)]">PNG, JPG, or SVG — max 500 KB. Uploaded to Supabase Storage.</p>
+                    {logoPreviewError && <p className="text-xs text-red-400">Could not load image from this URL.</p>}
+                    <p className="text-xs text-[var(--text-muted)]">Paste the logo URL — preview updates live.</p>
                   </div>
                 </div>
               </div>

@@ -40,7 +40,7 @@ const EARNING_GRID = [
   { icon: "▶️", name: "Social Media Tasks",    desc: "Organic engagement and awareness campaigns." },
   { icon: "🔍", name: "Web Research",          desc: "Research, fact-checking, and data gathering." },
   { icon: "🌿", name: "Field Data Collection", desc: "On-ground data collection across cities worldwide." },
-  { icon: "💸", name: "Referral Earnings",     desc: "Earn NexCoins for every active contributor you refer.", href: "/earn/refer" },
+  { icon: "👑", name: "NexLeader",              desc: "Lead a guild and earn 10% commission on every NexCoin your team earns — forever.", href: "/earn/refer" },
 ];
 
 const VOUCHERS = [

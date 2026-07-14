@@ -1,12 +1,12 @@
 import { NextRequest } from "next/server";
 import { createHash } from "crypto";
 import { createServerClient } from "@/lib/supabase-server";
+import { creditWithCommission } from "@/lib/nexleader-commission";
 
 type ParamMap = Record<string, string>;
 
 function extractParams(q: URLSearchParams, body: Record<string, unknown>, paramMap: ParamMap) {
   function get(internalKey: string): string | null {
-    // If param_map has an entry, use the mapped provider param name; else try the internal name directly
     const providerKey = paramMap[internalKey] ?? internalKey;
     const fromQuery = q.get(providerKey) ?? q.get(internalKey);
     if (fromQuery !== null) return fromQuery;
@@ -14,12 +14,12 @@ function extractParams(q: URLSearchParams, body: Record<string, unknown>, paramM
     return fromBody || null;
   }
   return {
-    userId:       get("user_id"),
-    transId:      get("trans_id") ?? get("transaction_id"),
-    amount:       parseFloat(get("amount") ?? "0") || 0,
-    status:       get("status"),
-    type:         get("type"),
-    hash:         get("hash"),
+    userId:         get("user_id"),
+    transId:        get("trans_id") ?? get("transaction_id"),
+    amount:         parseFloat(get("amount") ?? "0") || 0,
+    status:         get("status"),
+    type:           get("type"),
+    hash:           get("hash"),
     incomingSecret: get("secret") ?? get("api_key"),
   };
 }
@@ -36,10 +36,10 @@ function verifyByHashFormat(hashFormat: string, secret: string, vars: Record<str
 async function handlePostback(req: NextRequest, slug: string): Promise<Response> {
   const admin = createServerClient();
 
-  // 1. Look up provider — include new columns
+  // 1. Look up provider
   const { data: provider, error: provErr } = await admin
     .from("offerwall_providers")
-    .select("id, name, postback_secret, contributor_share_pct, postback_param_map, hash_format, is_active")
+    .select("id, name, postback_secret, contributor_share_pct, postback_param_map, hash_format, custom_config, is_active")
     .eq("slug", slug)
     .single();
 
@@ -81,7 +81,6 @@ async function handlePostback(req: NextRequest, slug: string): Promise<Response>
       return new Response("Forbidden", { status: 403 });
     }
   } else {
-    // Simple secret comparison
     if (incomingSecret !== provider.postback_secret) {
       console.warn(`[postback/${slug}] invalid secret`);
       return new Response("Forbidden", { status: 403 });
@@ -94,7 +93,7 @@ async function handlePostback(req: NextRequest, slug: string): Promise<Response>
     return new Response("Bad Request", { status: 400 });
   }
 
-  // 5. status=2 → fraud reversal (provider-agnostic)
+  // 5. status=2 → fraud reversal
   if (status === "2") {
     const { data: existing } = await admin
       .from("offerwall_transactions")
@@ -104,7 +103,6 @@ async function handlePostback(req: NextRequest, slug: string): Promise<Response>
       .single();
 
     if (!existing || existing.status === "reversed") {
-      console.log(`[postback/${slug}] reversal for unknown/already-reversed tx ${transId}`);
       return new Response("OK", { status: 200 });
     }
 
@@ -112,8 +110,8 @@ async function handlePostback(req: NextRequest, slug: string): Promise<Response>
     await admin.from("offerwall_transactions").update({ status: "reversed" }).eq("id", tx.id);
 
     const { data: p } = await admin.from("profiles").select("nexcoins").eq("id", tx.contributor_id).single();
-    const cur         = (p as { nexcoins: number | null } | null)?.nexcoins ?? 0;
-    await admin.from("profiles").update({ nexcoins: cur - tx.nexcoins_awarded }).eq("id", tx.contributor_id);
+    const cur = (p as { nexcoins: number | null } | null)?.nexcoins ?? 0;
+    await admin.from("profiles").update({ nexcoins: Math.max(0, cur - tx.nexcoins_awarded) }).eq("id", tx.contributor_id);
     await admin.from("coin_transactions").insert({
       contributor_id: tx.contributor_id,
       amount:         -tx.nexcoins_awarded,
@@ -122,26 +120,32 @@ async function handlePostback(req: NextRequest, slug: string): Promise<Response>
       description:    `${provider.name} fraud reversal (tx: ${transId})`,
     });
 
-    console.log(`[postback/${slug}] reversed ${tx.nexcoins_awarded} coins ← ${tx.contributor_id}`);
     return new Response("OK", { status: 200 });
   }
 
-  // 6. Skip non-credit statuses / screen-outs
+  // 6. Skip non-credit statuses
   if (status && status !== "1") {
-    console.log(`[postback/${slug}] non-credit status=${status} for tx ${transId} — skipping`);
     return new Response("OK", { status: 200 });
   }
   if (type === "out") {
-    console.log(`[postback/${slug}] screen-out tx ${transId} — skipping`);
     return new Response("OK", { status: 200 });
   }
 
-  // 7. Compute NexCoins
+  // 7. Compute gross NexCoins
+  // payout_multiplier in custom_config converts the provider's payout unit to NexCoins.
+  // USD-based providers (CPAGrip): set payout_multiplier=100 so $1 = 100 NexCoins.
+  // Virtual-currency providers: leave unset (default 1, amount is already in NexCoins).
   if (amount <= 0) {
     console.warn(`[postback/${slug}] zero amount tx ${transId}`);
     return new Response("Bad Request", { status: 400 });
   }
-  const nexcoinsAwarded = Math.max(1, Math.floor(amount * (Number(provider.contributor_share_pct) / 100)));
+  const customCfg      = (provider.custom_config as Record<string, unknown> | null) ?? {};
+  const payoutMult     = Number(customCfg.payout_multiplier ?? 1) || 1;
+  const sharePct       = Number(provider.contributor_share_pct) || 80;
+  const nexcoinsGross  = Math.max(1, Math.round(amount * payoutMult * (sharePct / 100)));
+
+  // Contributor preview (66% of gross) — stored in offerwall_transactions for reversal accuracy
+  const contributorPreview = Math.floor(nexcoinsGross * 0.66);
 
   // 8. Insert transaction (UNIQUE guard prevents double-credit)
   const { error: insertErr } = await admin.from("offerwall_transactions").insert({
@@ -149,7 +153,7 @@ async function handlePostback(req: NextRequest, slug: string): Promise<Response>
     contributor_id:          userId,
     provider_transaction_id: transId,
     gross_amount:            amount,
-    nexcoins_awarded:        nexcoinsAwarded,
+    nexcoins_awarded:        contributorPreview,
     status:                  "credited",
     raw_payload:             { query: Object.fromEntries(q.entries()), body: rawBody.slice(0, 2000) },
   });
@@ -163,27 +167,20 @@ async function handlePostback(req: NextRequest, slug: string): Promise<Response>
     return new Response("Internal Server Error", { status: 500 });
   }
 
-  // 9. Credit NexCoins
-  const { error: rpcErr } = await admin.rpc("increment_nexcoins", {
-    p_contributor_id: userId,
-    p_coins:          nexcoinsAwarded,
-  });
-  if (rpcErr) {
-    const { data: p } = await admin.from("profiles").select("nexcoins").eq("id", userId).single();
-    const cur = (p as { nexcoins: number | null } | null)?.nexcoins ?? 0;
-    await admin.from("profiles").update({ nexcoins: cur + nexcoinsAwarded }).eq("id", userId);
-  }
-
-  // 10. Coin transaction log
-  await admin.from("coin_transactions").insert({
-    contributor_id: userId,
-    amount:         nexcoinsAwarded,
-    type:           "earned",
-    source:         "offerwall",
-    description:    `${provider.name} offer completed`,
+  // 9. Credit with NexLeader commission split (Contributor 66% / NexLeader 10% / Platform 24%)
+  const { contributorCredit } = await creditWithCommission(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    admin as any,
+    userId,
+    nexcoinsGross,
+    "offerwall",
+    `${provider.name} offer completed`,
+  ).catch((err) => {
+    console.error(`[postback/${slug}] creditWithCommission failed:`, err);
+    return { contributorCredit: contributorPreview };
   });
 
-  // 11. Streak update
+  // 10. Streak update
   const today = new Date().toISOString().split("T")[0];
   const { data: sp } = await admin
     .from("profiles")
@@ -196,15 +193,15 @@ async function handlePostback(req: NextRequest, slug: string): Promise<Response>
     .update({ last_task_approved_date: today, tasks_approved_today: newCount })
     .eq("id", userId);
 
-  // 12. Notification
+  // 11. Notification
   await admin.from("notifications").insert({
     user_id: userId,
     title:   "NexCoins Earned!",
-    message: `+${nexcoinsAwarded} NexCoins from ${provider.name}`,
+    message: `+${contributorCredit} NexCoins from ${provider.name}`,
     type:    "bonus_coins",
   });
 
-  console.log(`[postback/${slug}] credited ${nexcoinsAwarded} coins → ${userId}`);
+  console.log(`[postback/${slug}] credited ${contributorCredit} coins → ${userId} (tx=${transId})`);
   return new Response("OK", { status: 200 });
 }
 
