@@ -35,7 +35,7 @@ const WHY = [
   { icon: "✅", title: "Fully Managed",    desc: "We recruit, brief, and monitor contributors so you don't have to." },
   { icon: "🔍", title: "Quality Reviewed", desc: "Every submission is reviewed before delivery." },
   { icon: "⚡", title: "Fast Turnaround",  desc: "Quick project delivery with regular progress updates." },
-  { icon: "💰", title: "Affordable",       desc: "Competitive Indian pricing with no hidden fees." },
+  { icon: "💰", title: "Affordable",       desc: "Competitive pricing with no hidden fees or surprises." },
   { icon: "📈", title: "Scalable",         desc: "From 10 samples to 10,000 — we scale with your needs." },
   { icon: "📊", title: "Transparent",      desc: "Regular progress reports and open communication." },
 ];
@@ -89,7 +89,7 @@ export default function ClientPage() {
           />
         </div>
 
-        <div className="relative z-10 mx-auto max-w-container px-6 pt-28 pb-10 text-center">
+        <div className="relative z-10 mx-auto max-w-container px-6 pt-20 pb-8 text-center">
           <FadeIn>
             <div
               className="inline-flex items-center gap-2 mb-8"
@@ -142,7 +142,7 @@ export default function ClientPage() {
           <FadeIn delay={300}>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link
-                href="/contact"
+                href="/client/contact"
                 style={{
                   display: "inline-flex",
                   alignItems: "center",
@@ -192,9 +192,9 @@ export default function ClientPage() {
       </section>
 
       {/* ── Stats ─────────────────────────────────────────────────────────── */}
-      <section style={{ padding: "2rem 1.5rem" }}>
+      <section style={{ padding: "1.5rem 1.5rem" }}>
         <div className="mx-auto max-w-container">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-5">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             {STATS.map((s, i) => (
               <FadeIn key={s.label} delay={i * 60} className="h-full">
                 <div
@@ -225,7 +225,7 @@ export default function ClientPage() {
       </section>
 
       {/* ── Services ──────────────────────────────────────────────────────── */}
-      <section id="services" style={{ padding: "6rem 1.5rem" }}>
+      <section id="services" style={{ padding: "3.5rem 1.5rem" }}>
         <div className="mx-auto max-w-container">
           <FadeIn>
             <div className="text-center mb-14">
@@ -271,10 +271,10 @@ export default function ClientPage() {
       </section>
 
       {/* ── How It Works ──────────────────────────────────────────────────── */}
-      <section style={{ padding: "6rem 1.5rem", background: "rgba(255,255,255,0.3)", backdropFilter: "blur(12px)", borderTop: "1px solid rgba(217,119,6,0.08)", borderBottom: "1px solid rgba(217,119,6,0.08)" }}>
+      <section style={{ padding: "3.5rem 1.5rem", background: "rgba(255,255,255,0.3)", backdropFilter: "blur(12px)", borderTop: "1px solid rgba(217,119,6,0.08)", borderBottom: "1px solid rgba(217,119,6,0.08)" }}>
         <div className="mx-auto max-w-container">
           <FadeIn>
-            <div className="text-center mb-16">
+            <div className="text-center mb-10">
               <h2 style={{
                 fontFamily: "Instrument Serif, serif",
                 fontSize: "clamp(2.25rem, 3vw, 3rem)",
@@ -325,7 +325,7 @@ export default function ClientPage() {
       </section>
 
       {/* ── Why NexGuild ──────────────────────────────────────────────────── */}
-      <section style={{ padding: "6rem 1.5rem" }}>
+      <section style={{ padding: "3.5rem 1.5rem" }}>
         <div className="mx-auto max-w-container">
           <FadeIn>
             <div className="text-center mb-14">
@@ -365,7 +365,7 @@ export default function ClientPage() {
       </section>
 
       {/* ── Meet the Founder ──────────────────────────────────────────────── */}
-      <section style={{ padding: "5rem 1.5rem", borderTop: "1px solid rgba(217,119,6,0.08)" }}>
+      <section style={{ padding: "3rem 1.5rem", borderTop: "1px solid rgba(217,119,6,0.08)" }}>
         <div className="mx-auto max-w-container">
           <FadeIn>
             <div
@@ -444,7 +444,7 @@ export default function ClientPage() {
       </section>
 
       {/* ── CTA ───────────────────────────────────────────────────────────── */}
-      <section style={{ padding: "2rem 1.5rem 6rem 1.5rem" }}>
+      <section style={{ padding: "2rem 1.5rem 3.5rem 1.5rem" }}>
         <div className="mx-auto max-w-container">
           <FadeIn>
             <div

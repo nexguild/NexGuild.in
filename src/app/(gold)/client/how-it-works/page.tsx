@@ -6,10 +6,11 @@ export const metadata: Metadata = {
   title: "How It Works — NexGuild for Organizations",
   description:
     "Four simple steps from project idea to clean deliverables. NexGuild scopes, executes, and delivers your data project — end to end.",
+  alternates: { canonical: "https://www.nexguild.in/client/how-it-works" },
   openGraph: {
     title: "How It Works — NexGuild",
     description: "Four steps from project idea to clean deliverables. We manage everything.",
-    url: "https://nexguild.in/client/how-it-works",
+    url: "https://www.nexguild.in/client/how-it-works",
   },
 };
 
@@ -58,7 +59,7 @@ export default function ClientHowItWorksPage() {
       
       {/* ── Hero Segment with Floating Orbs & Grid ────────────────────── */}
       <section 
-        className="relative overflow-hidden py-20 px-6"
+        className="relative overflow-hidden py-14 px-6"
         style={{ background: "linear-gradient(160deg, #FEF9F0 0%, #FAF3E4 100%)" }}
       >
         {/* Background Enhancements */}
@@ -104,7 +105,7 @@ export default function ClientHowItWorksPage() {
       </section>
 
       {/* ── Steps Section ────────────────────────────────────────────── */}
-      <section style={{ background: "#FAF6EF", padding: "4rem 1.5rem" }}>
+      <section style={{ background: "#FAF6EF", padding: "2.5rem 1.5rem" }}>
         <div className="mx-auto max-w-container">
           <div className="relative">
             {/* Desktop connecting line */}
@@ -135,7 +136,7 @@ export default function ClientHowItWorksPage() {
       </section>
 
       {/* ── What We Work On (Pill Badges) ────────────────────────────── */}
-      <section style={{ background: "rgba(255,255,255,0.3)", backdropFilter: "blur(12px)", padding: "4rem 1.5rem", borderTop: "1px solid rgba(217,119,6,0.06)", borderBottom: "1px solid rgba(217,119,6,0.06)" }}>
+      <section style={{ background: "rgba(255,255,255,0.3)", backdropFilter: "blur(12px)", padding: "2.5rem 1.5rem", borderTop: "1px solid rgba(217,119,6,0.06)", borderBottom: "1px solid rgba(217,119,6,0.06)" }}>
         <div className="mx-auto max-w-container">
           <FadeIn>
             <div className="text-center mb-10">
@@ -162,7 +163,7 @@ export default function ClientHowItWorksPage() {
           <FadeIn delay={150}>
             <div className="text-center mt-8">
               <Link
-                href="/services"
+                href="/client/services"
                 className="text-sm font-semibold text-[#92400E] hover:text-[#F59E0B] hover:underline transition-colors"
               >
                 View all services →
@@ -173,7 +174,7 @@ export default function ClientHowItWorksPage() {
       </section>
 
       {/* ── CTA Segment ────────────────────────────────────────────────── */}
-      <section style={{ background: "#FAF6EF", padding: "4rem 1.5rem" }}>
+      <section style={{ background: "#FAF6EF", padding: "2.5rem 1.5rem" }}>
         <div className="mx-auto max-w-container">
           <FadeIn>
             <div
@@ -212,7 +213,7 @@ export default function ClientHowItWorksPage() {
                     WhatsApp Us
                   </a>
                   <Link
-                    href="/contact"
+                    href="/client/contact"
                     style={{
                       display: "inline-flex",
                       alignItems: "center",
