@@ -565,7 +565,124 @@ export function accountDeactivatedHtml(name: string, adminEmail: string): string
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 13. Announcement
+// 13. Job Application — Admin Notification
+// ─────────────────────────────────────────────────────────────────────────────
+export function jobApplicationAdminHtml(
+  jobTitle: string,
+  company: string,
+  applicant: {
+    full_name: string;
+    email: string;
+    phone?: string | null;
+    applicant_role?: string | null;
+    experience_years?: string | null;
+    message?: string | null;
+  },
+  adminUrl: string,
+): string {
+  const jt = esc(jobTitle), co = esc(company);
+  const n  = esc(applicant.full_name), em = esc(applicant.email);
+  const ph = applicant.phone ? esc(applicant.phone) : null;
+  const ar = applicant.applicant_role ? esc(applicant.applicant_role) : null;
+  const ex = applicant.experience_years ? esc(applicant.experience_years) : null;
+  const mg = applicant.message ? esc(applicant.message) : null;
+  return `<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"></head>
+<body style="margin:0;padding:0;background:#0f0f0f;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#0f0f0f;padding:32px 16px;">
+<tr><td align="center">
+<table width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;background:#1a1a1a;border-radius:12px;overflow:hidden;border:1px solid #2a2a2a;">
+  <tr><td style="background:linear-gradient(135deg,#02b491,#029470);padding:20px 28px;">
+    <p style="margin:0;font-size:11px;font-weight:700;color:rgba(255,255,255,0.7);text-transform:uppercase;letter-spacing:1.5px;">NexGuild Jobs</p>
+    <h1 style="margin:4px 0 0;font-size:18px;font-weight:800;color:#fff;">New Job Application</h1>
+  </td></tr>
+  <tr><td style="padding:24px 28px;">
+    <p style="margin:0 0 16px;font-size:14px;color:#aaa;">Someone applied to an HR lead job on NexGuild.</p>
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:#111;border:1px solid #222;border-radius:10px;margin:0 0 20px;">
+      <tr><td style="padding:12px 18px;border-bottom:1px solid #1f1f1f;">
+        <span style="font-size:11px;color:#555;">Job</span><br>
+        <span style="font-size:14px;color:#fff;font-weight:600;">${jt}</span>
+        <span style="font-size:13px;color:#888;"> @ ${co}</span>
+      </td></tr>
+      <tr><td style="padding:12px 18px;border-bottom:1px solid #1f1f1f;">
+        <span style="font-size:11px;color:#555;">Applicant</span><br>
+        <span style="font-size:14px;color:#02b491;font-weight:600;">${n}</span>
+      </td></tr>
+      <tr><td style="padding:12px 18px;border-bottom:1px solid #1f1f1f;">
+        <span style="font-size:11px;color:#555;">Email</span><br>
+        <a href="mailto:${em}" style="font-size:14px;color:#02b491;text-decoration:none;">${em}</a>
+      </td></tr>
+      ${ph ? `<tr><td style="padding:12px 18px;border-bottom:1px solid #1f1f1f;">
+        <span style="font-size:11px;color:#555;">Phone</span><br>
+        <span style="font-size:14px;color:#e5e5e5;">${ph}</span>
+      </td></tr>` : ""}
+      ${ar ? `<tr><td style="padding:12px 18px;border-bottom:1px solid #1f1f1f;">
+        <span style="font-size:11px;color:#555;">Current Role</span><br>
+        <span style="font-size:14px;color:#e5e5e5;">${ar}</span>
+      </td></tr>` : ""}
+      ${ex ? `<tr><td style="padding:12px 18px;${mg ? "border-bottom:1px solid #1f1f1f;" : ""}">
+        <span style="font-size:11px;color:#555;">Experience</span><br>
+        <span style="font-size:14px;color:#e5e5e5;">${ex}</span>
+      </td></tr>` : ""}
+      ${mg ? `<tr><td style="padding:12px 18px;">
+        <span style="font-size:11px;color:#555;">Message</span><br>
+        <span style="font-size:14px;color:#e5e5e5;white-space:pre-wrap;">${mg}</span>
+      </td></tr>` : ""}
+    </table>
+    <table cellpadding="0" cellspacing="0">
+      <tr><td style="background:#02b491;border-radius:8px;">
+        <a href="${adminUrl}" style="display:inline-block;padding:11px 22px;font-size:13px;font-weight:700;color:#fff;text-decoration:none;">View in Admin →</a>
+      </td></tr>
+    </table>
+  </td></tr>
+  <tr><td style="padding:14px 28px;border-top:1px solid #2a2a2a;text-align:center;">
+    <p style="margin:0;font-size:11px;color:#444;">NexGuild Jobs · <a href="https://www.nexguild.in/admin/jobs" style="color:#444;text-decoration:none;">nexguild.in/admin/jobs</a></p>
+  </td></tr>
+</table>
+</td></tr>
+</table>
+</body></html>`;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 14. Job Application — Applicant Confirmation
+// ─────────────────────────────────────────────────────────────────────────────
+export function jobApplicationConfirmHtml(
+  applicantName: string,
+  jobTitle: string,
+  company: string,
+): string {
+  const n = esc(applicantName), jt = esc(jobTitle), co = esc(company);
+  return layout(`
+<h1 style="margin:0 0 6px;font-size:22px;font-weight:800;color:#fff;">Application Received! 🎉</h1>
+<p style="margin:0 0 24px;font-size:14px;color:rgba(255,255,255,0.38);">${jt} @ ${co}</p>
+
+<p style="margin:0 0 20px;font-size:15px;color:rgba(255,255,255,0.7);line-height:1.7;">
+  Hi <strong style="color:#fff;">${n}</strong>,<br><br>
+  We've received your application for <strong style="color:#fff;">${jt}</strong> at <strong style="color:#fff;">${co}</strong>.
+  Our team will review it and get back to you shortly.
+</p>
+
+<div style="background:#111;border:1px solid rgba(2,180,145,0.2);border-left:3px solid #02b491;border-radius:0 8px 8px 0;padding:16px 20px;margin:0 0 24px;">
+  <p style="margin:0 0 8px;font-size:12px;font-weight:700;color:#02b491;text-transform:uppercase;letter-spacing:1px;">What happens next?</p>
+  <p style="margin:0 0 6px;font-size:14px;color:rgba(255,255,255,0.6);line-height:1.6;">• Our team reviews your profile and application</p>
+  <p style="margin:0 0 6px;font-size:14px;color:rgba(255,255,255,0.6);line-height:1.6;">• If shortlisted, we'll connect you with the hiring team</p>
+  <p style="margin:0;font-size:14px;color:rgba(255,255,255,0.6);line-height:1.6;">• Expect a reply within 3–5 working days</p>
+</div>
+
+<p style="margin:0 0 20px;font-size:13px;color:rgba(255,255,255,0.4);">
+  While you wait, explore more opportunities on NexGuild — earn money with micro-tasks, surveys, and more.
+</p>
+
+${btn("Browse More Jobs →", "https://www.nexguild.in/jobs")}
+
+<p style="margin:16px 0 0;font-size:12px;color:rgba(255,255,255,0.25);">
+  Questions? Contact us at <a href="mailto:admin@nexguild.in" style="color:#F59E0B;text-decoration:none;">admin@nexguild.in</a>
+</p>`);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 15. Announcement
 // ─────────────────────────────────────────────────────────────────────────────
 export function announcementHtml(
   name: string,
