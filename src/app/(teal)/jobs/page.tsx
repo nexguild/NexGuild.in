@@ -57,6 +57,26 @@ interface ApplyForm {
   message: string;
 }
 
+function CompanyAvatar({ url, name }: { url: string | null; name: string }) {
+  const [failed, setFailed] = useState(false);
+  if (!url || failed) {
+    return (
+      <div className="h-12 w-12 rounded-lg bg-teal-50 border border-teal-100 flex items-center justify-center flex-shrink-0 text-[#0D9488] font-bold text-lg">
+        {name[0]}
+      </div>
+    );
+  }
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={url}
+      alt={name}
+      onError={() => setFailed(true)}
+      className="h-12 w-12 rounded-lg object-contain border border-slate-100 flex-shrink-0 bg-white p-1"
+    />
+  );
+}
+
 function timeAgo(dateStr: string) {
   const diff = Date.now() - new Date(dateStr).getTime();
   const d = Math.floor(diff / 86400000);
@@ -272,18 +292,7 @@ export default function JobsPage() {
 
                       <div className="flex items-start gap-4">
                         {/* Logo */}
-                        {job.company_logo_url ? (
-                          /* eslint-disable-next-line @next/next/no-img-element */
-                          <img
-                            src={job.company_logo_url}
-                            alt={job.company}
-                            className="h-12 w-12 rounded-lg object-contain border border-slate-100 flex-shrink-0 bg-white p-1"
-                          />
-                        ) : (
-                          <div className="h-12 w-12 rounded-lg bg-teal-50 border border-teal-100 flex items-center justify-center flex-shrink-0 text-[#0D9488] font-bold text-lg">
-                            {job.company[0]}
-                          </div>
-                        )}
+                        <CompanyAvatar url={job.company_logo_url} name={job.company} />
 
                         <div className="flex-1 min-w-0">
                           <div className="flex flex-wrap items-center gap-2 mb-1">
