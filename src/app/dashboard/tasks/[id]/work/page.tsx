@@ -16,12 +16,13 @@ import { supabase } from "@/lib/supabase";
 interface TaskStep {
   title: string;
   description: string;
-  submitType: "text" | "file" | "none" | "proof_code" | "telegram_join";
+  submitType: "text" | "file" | "none" | "proof_code" | "telegram_join" | "telegram_bot" | "youtube_subscribe";
   placeholder?: string;
   acceptedFiles?: string;
   url?: string;
   site_slug?: string;
   telegram_channel?: string;
+  youtube_channel?: string;
 }
 
 interface Task {
@@ -392,6 +393,50 @@ export default function TaskWorkPage() {
         return;
       }
       textValue = "telegram_verified";
+    } else if (step.submitType === "telegram_bot") {
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await fetch("/api/tasks/telegram/verify-bot", {
+        method:  "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session?.access_token ?? ""}`,
+        },
+        body: JSON.stringify({ task_id: id, step_index: modalStep }),
+      });
+      const json: { verified: boolean; reason?: string } = await res.json();
+      if (!json.verified) {
+        setModalError(
+          json.reason === "not_started"
+            ? "Please open @NexGuildBot and press Start first."
+            : "Verification failed. Please try again."
+        );
+        setSubmittingModal(false);
+        return;
+      }
+      textValue = "bot_started";
+    } else if (step.submitType === "youtube_subscribe") {
+      if (!modalFile) {
+        setModalError("Please upload a screenshot showing your subscription.");
+        setSubmittingModal(false);
+        return;
+      }
+      const { data: { session } } = await supabase.auth.getSession();
+      const formData = new FormData();
+      formData.append("file", modalFile);
+      formData.append("stepIndex", String(modalStep));
+      const upRes = await fetch(`/api/tasks/${id}/upload-to-drive`, {
+        method:  "POST",
+        headers: { Authorization: `Bearer ${session?.access_token ?? ""}` },
+        body:    formData,
+      });
+      if (!upRes.ok) {
+        const errJson = await upRes.json().catch(() => ({})) as { error?: string };
+        setModalError(errJson.error ?? "Upload failed — please try again.");
+        setSubmittingModal(false);
+        return;
+      }
+      const upJson = await upRes.json();
+      fileUrl = upJson.url;
     }
 
     const { error: saveErr } = await supabase.from("task_step_submissions").upsert({
@@ -900,7 +945,12 @@ export default function TaskWorkPage() {
                         className="flex w-full items-center justify-center gap-2 rounded-xl border border-white/25 bg-white/15 py-2.5 text-sm font-bold text-white transition-colors hover:bg-white/25"
                       >
                         <Send className="h-4 w-4" />
-                        {step.submitType === "none" ? "Mark as Complete" : step.submitType === "proof_code" ? "Verify Code →" : step.submitType === "telegram_join" ? "Verify Join →" : "Submit Stage →"}
+                        {step.submitType === "none" ? "Mark as Complete"
+                          : step.submitType === "proof_code"       ? "Verify Code →"
+                          : step.submitType === "telegram_join"    ? "Verify Join →"
+                          : step.submitType === "telegram_bot"     ? "Verify Bot Start →"
+                          : step.submitType === "youtube_subscribe" ? "Upload Screenshot →"
+                          : "Submit Stage →"}
                       </button>
                     </div>
                   </div>
@@ -1381,6 +1431,90 @@ export default function TaskWorkPage() {
                 </p>
               )}
 
+              {activeStep.submitType === "telegram_bot" && (
+                <div className="space-y-3">
+                  <div className={`rounded-xl border p-4 ${telegramLinked ? "border-green-200 bg-green-50" : "border-slate-200 bg-slate-50"}`}>
+                    <div className="flex items-center gap-2 mb-2">
+                      {telegramLinked
+                        ? <CheckCircle2 className="h-4 w-4 flex-shrink-0 text-green-500" />
+                        : <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-indigo-100 text-xs font-bold text-indigo-600">1</span>
+                      }
+                      <span className="text-sm font-semibold text-slate-700">
+                        {telegramLinked ? "Bot started — account linked ✓" : "Start @NexGuildBot"}
+                      </span>
+                    </div>
+                    {!telegramLinked && (
+                      <div className="space-y-2">
+                        <p className="text-xs text-slate-500">Open the bot and press Start. Your account will be linked automatically.</p>
+                        <div className="flex flex-wrap gap-2">
+                          <a
+                            href={`https://t.me/NexGuildBot?start=nexguild_${userId}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold text-white"
+                            style={{ background: "linear-gradient(135deg,#2AABEE,#229ED9)" }}
+                          >
+                            Open @NexGuildBot →
+                          </a>
+                          <button
+                            type="button"
+                            onClick={async () => {
+                              const { data } = await supabase.from("telegram_accounts").select("telegram_id").eq("contributor_id", userId!).maybeSingle();
+                              setTelegramLinked(!!data);
+                            }}
+                            className="text-xs font-semibold text-indigo-500 hover:text-indigo-700 transition-colors"
+                          >
+                            I&apos;ve started it — refresh ↺
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  <p className="text-xs text-slate-400">Once started, click <b>Verify Bot Start</b> below.</p>
+                </div>
+              )}
+
+              {activeStep.submitType === "youtube_subscribe" && (
+                <div className="space-y-3">
+                  {activeStep.youtube_channel && (
+                    <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-red-100 text-xs font-bold text-red-500">1</span>
+                        <span className="text-sm font-semibold text-slate-700">Subscribe to the channel</span>
+                      </div>
+                      <a
+                        href={activeStep.youtube_channel}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold text-white"
+                        style={{ background: "#FF0000" }}
+                      >
+                        Open YouTube Channel →
+                      </a>
+                    </div>
+                  )}
+                  <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-red-100 text-xs font-bold text-red-500">2</span>
+                      <span className="text-sm font-semibold text-slate-700">Upload screenshot showing subscribed</span>
+                    </div>
+                    <label
+                      htmlFor="yt-screenshot"
+                      className="flex flex-col items-center gap-2 border-2 border-dashed border-slate-200 rounded-xl p-5 cursor-pointer hover:border-red-300 transition-colors text-center"
+                      onDragOver={(e) => e.preventDefault()}
+                      onDrop={(e) => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (f) setModalFile(f); }}
+                    >
+                      {modalFile ? (
+                        <><FileText className="h-6 w-6 text-red-400" /><span className="text-sm font-semibold text-slate-700">{modalFile.name}</span><span className="text-xs text-slate-400">Click to change</span></>
+                      ) : (
+                        <><Upload className="h-6 w-6 text-slate-400" /><span className="text-sm text-slate-500">Click to upload screenshot</span><span className="text-xs text-slate-400">PNG, JPG — clearly shows the Subscribe button is active</span></>
+                      )}
+                      <input id="yt-screenshot" type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) setModalFile(f); }} />
+                    </label>
+                  </div>
+                </div>
+              )}
+
               {activeStep.submitType === "telegram_join" && (
                 <div className="space-y-3">
                   {/* Step 1: Link Telegram */}
@@ -1473,13 +1607,23 @@ export default function TaskWorkPage() {
                 <Button variant="ghost" onClick={closeModal} disabled={submittingModal}>Cancel</Button>
                 <button
                   onClick={handleStepSubmit}
-                  disabled={submittingModal || (activeStep.submitType === "telegram_join" && !telegramLinked)}
+                  disabled={
+                    submittingModal
+                    || ((activeStep.submitType === "telegram_join" || activeStep.submitType === "telegram_bot") && !telegramLinked)
+                  }
                   className="inline-flex items-center gap-1.5 rounded-xl px-5 py-2 text-sm font-bold text-white transition-all hover:opacity-90 disabled:opacity-50"
                   style={{ background: "linear-gradient(135deg, #6366f1 0%, #14b8a6 100%)" }}
                 >
                   {submittingModal
                     ? <><Loader2 className="h-4 w-4 animate-spin" /> Submitting…</>
-                    : <><Send className="h-3.5 w-3.5" /> {activeStep.submitType === "none" ? "Confirm" : activeStep.submitType === "proof_code" ? "Verify →" : activeStep.submitType === "telegram_join" ? "Verify Join →" : "Submit"}</>}
+                    : <><Send className="h-3.5 w-3.5" /> {
+                        activeStep.submitType === "none"               ? "Confirm"
+                      : activeStep.submitType === "proof_code"         ? "Verify →"
+                      : activeStep.submitType === "telegram_join"      ? "Verify Join →"
+                      : activeStep.submitType === "telegram_bot"       ? "Verify Bot Start →"
+                      : activeStep.submitType === "youtube_subscribe"  ? "Submit Screenshot →"
+                      : "Submit"
+                    }</>}
                 </button>
               </div>
             </div>
