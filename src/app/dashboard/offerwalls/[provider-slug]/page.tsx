@@ -108,9 +108,17 @@ export default function ProviderExperiencePage({
       if (provider!.slug === "cpagrip") {
         // CPAGrip's script calls document.write — run it inside an iframe srcdoc
         // so it operates on the iframe's own document (where document.write is valid).
+        // Viewport meta + responsive img CSS fixes broken images on mobile.
         setCpagripSrcDoc(
-          `<!DOCTYPE html><html><head><meta charset="utf-8">` +
-          `<style>html,body{margin:0;padding:0;width:100%;min-height:100%;overflow-x:hidden;}</style></head>` +
+          `<!DOCTYPE html><html><head>` +
+          `<meta charset="utf-8">` +
+          `<meta name="viewport" content="width=device-width, initial-scale=1">` +
+          `<style>` +
+          `*{box-sizing:border-box;}` +
+          `html,body{margin:0;padding:0;width:100%;min-height:100%;overflow-x:hidden;}` +
+          `img{max-width:100%;height:auto;display:block;}` +
+          `table{max-width:100%;word-break:break-word;}` +
+          `</style></head>` +
           `<body><script type="text/javascript" src="${builtUrl}"><\/script></body></html>`
         );
         return;
@@ -238,8 +246,8 @@ function renderWidget(
     return (
       <iframe
         srcDoc={cpagripSrcDoc}
-        className="flex-1 w-full border-0"
-        style={{ minHeight: "calc(100vh - 112px)" }}
+        className="w-full border-0"
+        style={{ height: "calc(100vh - 112px)", display: "block" }}
         sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox allow-top-navigation-by-user-activation"
         title="CPAGrip Offerwall"
       />
@@ -251,8 +259,8 @@ function renderWidget(
     return (
       <div
         id={widgetDivId}
-        className="flex-1 w-full"
-        style={{ minHeight: "calc(100vh - 112px)" }}
+        className="w-full"
+        style={{ height: "calc(100vh - 112px)", overflowY: "auto", overflowX: "hidden" }}
       />
     );
   }
