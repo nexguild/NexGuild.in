@@ -40,9 +40,9 @@ export default function ProviderExperiencePage({
   const [trIframeUrl, setTrIframeUrl]         = useState<string | null>(null);
   const [trIframeLoading, setTrIframeLoading] = useState(false);
 
-  // CPAGrip: srcdoc HTML — needed because their script uses document.write and cannot
-  // be injected as an async dynamic script tag (browsers block document.write in that case).
-  const [cpagripSrcDoc, setCpagripSrcDoc] = useState<string | null>(null);
+  // CPAGrip: served from a real API route (not srcdoc) to avoid Chrome Trusted Types
+  // blocking innerHTML calls on Android, and to support proper viewport meta.
+  const [cpagripFrameUrl, setCpagripFrameUrl] = useState<string | null>(null);
 
   useEffect(() => {
     async function init() {
@@ -106,21 +106,11 @@ export default function ProviderExperiencePage({
       if (!builtUrl) return;
 
       if (provider!.slug === "cpagrip") {
-        // CPAGrip's script calls document.write — run it inside an iframe srcdoc
-        // so it operates on the iframe's own document (where document.write is valid).
-        // Viewport meta + responsive img CSS fixes broken images on mobile.
-        setCpagripSrcDoc(
-          `<!DOCTYPE html><html><head>` +
-          `<meta charset="utf-8">` +
-          `<meta name="viewport" content="width=device-width, initial-scale=1">` +
-          `<style>` +
-          `*{box-sizing:border-box;}` +
-          `html,body{margin:0;padding:0;width:100%;min-height:100%;overflow-x:hidden;}` +
-          `img{max-width:100%;height:auto;display:block;}` +
-          `table{max-width:100%;word-break:break-word;}` +
-          `</style></head>` +
-          `<body><script type="text/javascript" src="${builtUrl}"><\/script></body></html>`
-        );
+        // Load CPAGrip via a real server-rendered HTML page (not srcdoc) to avoid
+        // Chrome's Trusted Types policy on Android blocking innerHTML calls.
+        const uid = w.userId;
+        const tok = session?.access_token ?? "";
+        setCpagripFrameUrl(`/api/offerwall/cpagrip-frame?user_id=${encodeURIComponent(uid)}&token=${encodeURIComponent(tok)}`);
         return;
       }
 
@@ -170,7 +160,7 @@ export default function ProviderExperiencePage({
   return (
     <div
       className="-m-4 sm:-m-6 flex flex-col"
-      style={{ minHeight: "calc(100vh - 64px)" }}
+      style={{ height: "calc(100vh - 64px)", overflow: "hidden" }}
     >
       {/* Breadcrumb bar */}
       <div className="flex items-center gap-2 px-4 sm:px-6 h-12 border-b border-slate-100 bg-white flex-shrink-0">
@@ -191,7 +181,7 @@ export default function ProviderExperiencePage({
 
       {/* Widget — fills remaining height */}
       <div className="flex-1 flex flex-col">
-        {renderWidget(provider, trIframeUrl, trIframeLoading, buildEmbedUrl(), cpagripSrcDoc)}
+        {renderWidget(provider, trIframeUrl, trIframeLoading, buildEmbedUrl(), cpagripFrameUrl, token)}
       </div>
     </div>
   );
@@ -202,7 +192,8 @@ function renderWidget(
   trIframeUrl: string | null,
   trIframeLoading: boolean,
   embedUrl: string | null,
-  cpagripSrcDoc: string | null,
+  cpagripFrameUrl: string | null,
+  token: string | null,
 ) {
   if (provider.slug === "theoremreach") {
     if (trIframeLoading) {
@@ -234,9 +225,10 @@ function renderWidget(
     );
   }
 
-  // CPAGrip: srcdoc iframe so document.write works inside the frame's own document
+  // CPAGrip: load from a real API-served HTML page so viewport meta and innerHTML
+  // work correctly on Android (srcdoc + sandbox triggers Trusted Types blocks).
   if (provider.slug === "cpagrip") {
-    if (!cpagripSrcDoc) {
+    if (!cpagripFrameUrl) {
       return (
         <div className="flex-1 flex items-center justify-center">
           <Loader2 className="h-6 w-6 animate-spin text-indigo-500" />
@@ -245,10 +237,9 @@ function renderWidget(
     }
     return (
       <iframe
-        srcDoc={cpagripSrcDoc}
+        src={cpagripFrameUrl}
         className="w-full border-0"
         style={{ height: "calc(100vh - 112px)", display: "block" }}
-        sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox allow-top-navigation-by-user-activation"
         title="CPAGrip Offerwall"
       />
     );
