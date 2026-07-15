@@ -2,9 +2,7 @@
 
 import { useEffect, useRef } from "react";
 
-// PAUSED — re-enable once offerwalls are active + site is indexed by Google (2026-06-21)
-// Flip ENABLE_MONETAG_ADS to true to restore the Vignette on earn-top.
-const ENABLE_MONETAG_ADS = false;
+const ENABLE_MONETAG_ADS = true;
 
 // Monetag Vignette — zone 11179049 via n6wxm.com/vignette.min.js
 // Was active on earn-top only. Blog slots (blog-index-top, blog-post-top,
