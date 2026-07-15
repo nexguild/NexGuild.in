@@ -53,25 +53,35 @@ Your response MUST be minimum 1,400 words of actual content. Count carefully bef
 
 SEO RULES:
 - Title MUST be 50-60 characters. Count the characters before finalizing. If under 50, expand it with more descriptive words. Never submit a title shorter than 50 characters.
-- Meta description MUST be between 150-155 characters exactly. Count carefully. Pad or trim to hit this range.
-- First paragraph: mention target keyword in first 100 words
+- Meta description MUST be between 150-160 characters. Count carefully. Pad or trim to hit this range.
+- First paragraph: mention target keyword naturally in first 100 words — do NOT announce it explicitly
 - Use target keyword 3-5 times naturally throughout
 - Use LSI/related keywords naturally
 - URL slug: lowercase, hyphens, keyword-focused, max 60 chars
 
-CONTENT DEPTH — REQUIRED:
+CONTENT STRUCTURE — REQUIRED:
+- Do NOT include a # H1 heading — the page template already renders the title as H1. Start content directly with an intro paragraph or the first ## section.
+- Do NOT name the first section "Introduction" — use a more descriptive, compelling heading or open with an intro paragraph before the first ##
 - Each H2 section must have at least 2-3 substantial paragraphs (not bullet points alone)
 - Each paragraph must be 3-5 sentences minimum — no one-line paragraphs
 - Use H2 headings (##) for main sections — minimum 5 H2s
 - Use H3 headings (###) for subsections where appropriate
 - Include at least one bulleted list
 - Include at least one numbered list
-- Add a "Key Takeaways" or "Quick Summary" section
-- Start with a compelling hook (question or bold statement)
+- Add a "Key Takeaways" section at the end
+- Start with a compelling hook (question or bold statement) in the opening paragraph
 - End with a clear CTA paragraph mentioning NexGuild
 - Write in a friendly, helpful, conversational tone
 - No fluff — every paragraph adds real value
 - No keyword stuffing — natural language only
+
+CRITICAL WRITING RULES — MANDATORY:
+- NEVER write phrases like "The target keyword for this article is..." or "Our focus keyword is..." or any explicit mention of SEO targeting. Integrate keywords naturally.
+- NEVER repeat the exact same sentence about NexGuild more than once in the entire article. Vary every NexGuild mention in wording, context, and placement.
+- NexGuild does NOT have a mobile app — it is web-based only. Never mention a "NexGuild mobile app."
+- NexGuild does NOT have forums, community boards, or discussion features. Do not mention these.
+- NexGuild is a micro-task and survey platform — it is NOT a traditional freelancing platform. Do not position it as one.
+- Do not claim NexGuild has "bonus opportunities" or "promotions" unless these are confirmed features.
 
 COMPETITOR RESTRICTION — MANDATORY:
 Do NOT mention any competitor platforms by name. This includes but is not limited to: Swagbucks, Survey Junkie, Vindale Research, Toluna, InboxDollars, ySense, Meesho, Roz Dhan, TaskBucks, or any other specific earning platform. You may reference "other platforms" or "most survey sites" generically, but always position NexGuild as the recommended option.
@@ -92,7 +102,7 @@ ADSENSE COMPATIBILITY:
 - No excessive repetition
 
 OUTPUT FORMAT (return valid JSON only, no markdown wrapping, no code fences):
-{"title":"SEO optimized title here 50-60 chars","slug":"url-slug-here","description":"Meta description exactly 150-155 characters — count carefully","category":"Remote Work","date":"YYYY-MM-DD","content":"Full markdown content here minimum 1400 words with ## headings"}`;
+{"title":"SEO optimized title here 50-60 chars","slug":"url-slug-here","description":"Meta description 150-160 characters — count carefully","category":"Remote Work","date":"YYYY-MM-DD","content":"Full markdown content here minimum 1400 words. NO # H1 heading. Start with intro paragraph or first ## section."}`;
 
 // ── POST handler ───────────────────────────────────────────────────────────────
 export async function POST(req: NextRequest) {

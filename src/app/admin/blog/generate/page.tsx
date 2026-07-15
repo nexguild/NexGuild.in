@@ -420,8 +420,8 @@ export default function BlogGeneratePage() {
                 <div>
                   <label className={lc}>Meta Description</label>
                   <textarea rows={2} value={editDesc} onChange={(e) => setEditDesc(e.target.value)} className={tc} />
-                  <p className={`text-xs mt-1 ${descLen >= 150 && descLen <= 155 ? "text-green-400" : "text-amber-400"}`}>
-                    {descLen} chars · target 150–155
+                  <p className={`text-xs mt-1 ${descLen >= 150 && descLen <= 160 ? "text-green-400" : "text-amber-400"}`}>
+                    {descLen} chars · target 150–160
                   </p>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
@@ -470,7 +470,7 @@ export default function BlogGeneratePage() {
                 {[
                   { label: "Word count", value: `${wordCount.toLocaleString()} words`, ok: wordCount >= 1200, note: "target 1,200+" },
                   { label: "Title length", value: `${titleLen} chars`, ok: titleLen >= 50 && titleLen <= 60, note: "target 50–60" },
-                  { label: "Meta description", value: `${descLen} chars`, ok: descLen >= 150 && descLen <= 155, note: "target 150–155" },
+                  { label: "Meta description", value: `${descLen} chars`, ok: descLen >= 150 && descLen <= 160, note: "target 150–160" },
                   { label: "H2 headings", value: `${h2Count} found`, ok: h2Count >= 5, note: "target 5+" },
                   { label: "Keyword density", value: keyword ? `${kwDensity}%` : "n/a", ok: keyword ? (kwDensity >= 0.3 && kwDensity <= 1.5) : true, note: "target 0.3–1.5%" },
                 ].map((row) => (

@@ -50,7 +50,7 @@ So why choose NexGuild over other platforms? Here are a few reasons:
 ## Tips for Success on NexGuild
 To be successful on NexGuild, it's essential to follow these tips:
 * **Be consistent**: Consistency is key when it comes to earning rewards on NexGuild. Make sure to log in regularly and complete offers and surveys.
-* **Stay engaged**: Stay engaged with the community by participating in discussions and sharing your experiences with others.
+* **Stay consistent**: Log in regularly and check for new offers. Offerwalls refresh with new opportunities, and consistent users are more likely to qualify for higher-value tasks.
 * **Follow the rules**: Make sure to follow the rules and guidelines set by NexGuild to avoid account suspension or termination.
 
 ### Common Mistakes to Avoid

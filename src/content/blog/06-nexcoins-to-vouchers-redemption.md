@@ -6,7 +6,6 @@ category: "NexGuild"
 date: "2026-06-21"
 ---
 
-# NexCoins to Vouchers: How Redemption Works on NexGuild
 
 One of the most common questions from new contributors is simple: "I've earned NexCoins — now what?" This post walks through exactly how the NexCoins economy works on NexGuild, from earning to redemption.
 

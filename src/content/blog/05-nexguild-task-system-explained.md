@@ -6,7 +6,6 @@ category: "NexGuild"
 date: "2026-06-21"
 ---
 
-# NexGuild Explained: How Our Task System Works
 
 If you're new to NexGuild, you might be wondering exactly how the task system works — what counts as a task, how you get paid, and what happens between starting a task and actually earning something from it. This post walks through the entire flow, start to finish.
 

@@ -6,7 +6,6 @@ category: "Remote Work"
 date: "2026-07-06"
 ---
 
-# Why You Keep Getting Disqualified from Surveys (And What to Do About It)
 
 If you've spent any time on survey platforms, you've experienced it: you start a survey, answer five or ten questions, and then get told you don't qualify. No reward (or a tiny partial one), and several minutes of your time gone. Do it enough times in a row and it's genuinely frustrating.
 

@@ -6,7 +6,6 @@ category: "NexGuild"
 date: "2026-06-21"
 ---
 
-# Building Trust as a New Contributor: How NexGuild's Level System Works
 
 Every contributor on NexGuild starts at the same place — Level 1, with access to the platform's entry-level opportunities. What happens after that is entirely shaped by your own activity. This post explains how the Level and XP system works, why we built it this way, and how to think about growing within it.
 

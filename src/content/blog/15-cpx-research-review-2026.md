@@ -6,7 +6,6 @@ category: "Remote Work"
 date: "2026-07-06"
 ---
 
-# CPX Research Review 2026: What It Is, How It Works, and What to Expect
 
 CPX Research is a survey and market research network that connects publishers (websites and apps) with survey respondents. If you've used a rewards or earning platform that offers surveys, there's a reasonable chance CPX Research was powering some of those surveys behind the scenes — they operate as a B2B provider that platforms integrate with, rather than a consumer-facing product people sign up for directly.
 

@@ -84,8 +84,35 @@ export default async function BlogPostPage({ params }: Props) {
     day: "numeric", month: "long", year: "numeric",
   });
 
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline: post.title,
+    description: post.description,
+    datePublished: new Date(post.date).toISOString(),
+    dateModified: new Date(post.date).toISOString(),
+    author: {
+      "@type": "Person",
+      name: "Somen Biswas",
+      url: "https://www.linkedin.com/in/somenbiswas/",
+    },
+    publisher: {
+      "@type": "Organization",
+      name: "NexGuild",
+      url: SITE_URL,
+    },
+    mainEntityOfPage: {
+      "@type": "WebPage",
+      "@id": postUrl,
+    },
+  };
+
   return (
     <div style={{ background: "#EBFBFA", color: "#1E293B", minHeight: "100vh" }}>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <ReadingProgress />
 
       {/* ── Hero ─────────────────────────────────────────────────────── */}
