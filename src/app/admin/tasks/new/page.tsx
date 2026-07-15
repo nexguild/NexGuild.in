@@ -30,10 +30,15 @@ const LANGUAGES = [
 interface TaskStep {
   title: string;
   description: string;
-  submitType: "text" | "file" | "none";
+  submitType: "text" | "file" | "none" | "proof_code" | "telegram_join" | "telegram_bot" | "youtube_subscribe" | "twitter_follow" | "twitter_retweet" | "twitter_like";
   placeholder: string;
   acceptedFiles: string;
   url: string;
+  site_slug: string;
+  telegram_channel: string;
+  youtube_channel: string;
+  twitter_handle: string;
+  twitter_post_url: string;
 }
 
 interface QuizQuestion {
@@ -46,7 +51,7 @@ interface QuizQuestion {
 }
 
 function newStep(): TaskStep {
-  return { title: "", description: "", submitType: "text", placeholder: "", acceptedFiles: "", url: "" };
+  return { title: "", description: "", submitType: "text", placeholder: "", acceptedFiles: "", url: "", site_slug: "", telegram_channel: "", youtube_channel: "", twitter_handle: "", twitter_post_url: "" };
 }
 
 function newQuestion(): QuizQuestion {
@@ -239,12 +244,17 @@ export default function PostNewTaskPage() {
     const stepsPayload = steps
       .filter((s) => s.title.trim())
       .map((s) => ({
-        title:         s.title.trim(),
-        description:   s.description.trim(),
-        submitType:    s.submitType,
-        placeholder:   s.placeholder.trim() || undefined,
-        acceptedFiles: s.acceptedFiles.trim() || undefined,
-        url:           s.url.trim() || undefined,
+        title:            s.title.trim(),
+        description:      s.description.trim(),
+        submitType:       s.submitType,
+        placeholder:      s.placeholder.trim() || undefined,
+        acceptedFiles:    s.acceptedFiles.trim() || undefined,
+        url:              s.url.trim() || undefined,
+        site_slug:        s.site_slug.trim() || undefined,
+        telegram_channel: s.telegram_channel.trim() || undefined,
+        youtube_channel:  s.youtube_channel.trim() || undefined,
+        twitter_handle:   s.twitter_handle.trim() || undefined,
+        twitter_post_url: s.twitter_post_url.trim() || undefined,
       }));
 
     const questionsPayload = assignmentType === "quiz"
@@ -882,20 +892,23 @@ export default function PostNewTaskPage() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-2">Submit Type</label>
-                  <div className="flex gap-4">
-                    {(["text", "file", "none"] as const).map((t) => (
-                      <label key={t} className="flex items-center gap-2 cursor-pointer">
-                        <input type="radio" name={`step-type-${i}`} value={t}
-                          checked={step.submitType === t}
-                          onChange={() => updateStep(i, "submitType", t)}
-                          className="accent-[var(--brand-500)]" />
-                        <span className="text-sm text-[var(--text-secondary)] capitalize">
-                          {t === "none" ? "Mark Complete" : t}
-                        </span>
-                      </label>
-                    ))}
-                  </div>
+                  <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Submit Type</label>
+                  <select
+                    value={step.submitType}
+                    onChange={(e) => updateStep(i, "submitType", e.target.value)}
+                    className={inputClass}
+                  >
+                    <option value="text">Text Response</option>
+                    <option value="file">File Upload</option>
+                    <option value="none">Mark Complete (no submission)</option>
+                    <option value="proof_code">Proof Code — verify via embedded widget</option>
+                    <option value="telegram_join">Telegram — verify channel/group join</option>
+                    <option value="telegram_bot">Telegram — verify bot was started</option>
+                    <option value="youtube_subscribe">YouTube — screenshot subscribe proof</option>
+                    <option value="twitter_follow">X/Twitter — screenshot follow proof</option>
+                    <option value="twitter_retweet">X/Twitter — screenshot repost/retweet proof</option>
+                    <option value="twitter_like">X/Twitter — screenshot like proof</option>
+                  </select>
                 </div>
 
                 {step.submitType === "text" && (
@@ -914,6 +927,83 @@ export default function PostNewTaskPage() {
                       onChange={(e) => updateStep(i, "acceptedFiles", e.target.value)}
                       placeholder="e.g. .mp3,.wav,.ogg (blank = any)"
                       className={inputClass} />
+                  </div>
+                )}
+                {step.submitType === "proof_code" && (
+                  <div>
+                    <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">
+                      Site Slug <span className="text-[var(--danger-text)]">*</span>
+                    </label>
+                    <input type="text" value={step.site_slug}
+                      onChange={(e) => updateStep(i, "site_slug", e.target.value)}
+                      placeholder="e.g. nexguild (must match SITE_SLUG in your widget)"
+                      className={inputClass} />
+                    <p className="text-xs text-[var(--text-muted)] mt-1">
+                      Used to generate the 8-char code. Must match the slug in your <code>nexguild-verify.js</code> embed.
+                    </p>
+                  </div>
+                )}
+                {step.submitType === "telegram_join" && (
+                  <div>
+                    <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">
+                      Telegram Channel / Group Username <span className="text-[var(--danger-text)]">*</span>
+                    </label>
+                    <input type="text" value={step.telegram_channel}
+                      onChange={(e) => updateStep(i, "telegram_channel", e.target.value)}
+                      placeholder="e.g. NexGuildOfficial (@ optional)"
+                      className={inputClass} />
+                    <p className="text-xs text-[var(--text-muted)] mt-1">
+                      Public username of the channel. @NexGuildBot must be an admin of that channel to check membership.
+                    </p>
+                  </div>
+                )}
+                {step.submitType === "telegram_bot" && (
+                  <div className="rounded-lg bg-blue-500/5 border border-blue-500/20 px-3 py-2.5">
+                    <p className="text-xs text-[var(--text-secondary)]">
+                      No extra config needed. Contributor must open <strong>@NexGuildBot</strong> and send <code>/start</code> with their unique link to verify.
+                    </p>
+                  </div>
+                )}
+                {step.submitType === "youtube_subscribe" && (
+                  <div>
+                    <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">
+                      YouTube Channel URL <span className="text-[var(--danger-text)]">*</span>
+                    </label>
+                    <input type="url" value={step.youtube_channel}
+                      onChange={(e) => updateStep(i, "youtube_channel", e.target.value)}
+                      placeholder="https://youtube.com/@ChannelName"
+                      className={inputClass} />
+                    <p className="text-xs text-[var(--text-muted)] mt-1">
+                      Contributor is sent here to subscribe, then uploads a screenshot as proof.
+                    </p>
+                  </div>
+                )}
+                {step.submitType === "twitter_follow" && (
+                  <div>
+                    <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">
+                      X/Twitter Handle <span className="text-[var(--danger-text)]">*</span>
+                    </label>
+                    <input type="text" value={step.twitter_handle}
+                      onChange={(e) => updateStep(i, "twitter_handle", e.target.value)}
+                      placeholder="e.g. NexGuild (@ optional)"
+                      className={inputClass} />
+                    <p className="text-xs text-[var(--text-muted)] mt-1">
+                      Contributor is sent to this X/Twitter profile to follow, then uploads a screenshot.
+                    </p>
+                  </div>
+                )}
+                {(step.submitType === "twitter_retweet" || step.submitType === "twitter_like") && (
+                  <div>
+                    <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">
+                      X/Twitter Post URL <span className="text-[var(--danger-text)]">*</span>
+                    </label>
+                    <input type="url" value={step.twitter_post_url}
+                      onChange={(e) => updateStep(i, "twitter_post_url", e.target.value)}
+                      placeholder="https://x.com/username/status/123456789"
+                      className={inputClass} />
+                    <p className="text-xs text-[var(--text-muted)] mt-1">
+                      Contributor is sent to this post to {step.submitType === "twitter_retweet" ? "repost/retweet" : "like"}, then uploads a screenshot.
+                    </p>
                   </div>
                 )}
                 <div>

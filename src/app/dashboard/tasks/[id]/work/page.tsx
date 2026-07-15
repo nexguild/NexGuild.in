@@ -16,13 +16,15 @@ import { supabase } from "@/lib/supabase";
 interface TaskStep {
   title: string;
   description: string;
-  submitType: "text" | "file" | "none" | "proof_code" | "telegram_join" | "telegram_bot" | "youtube_subscribe";
+  submitType: "text" | "file" | "none" | "proof_code" | "telegram_join" | "telegram_bot" | "youtube_subscribe" | "twitter_follow" | "twitter_retweet" | "twitter_like";
   placeholder?: string;
   acceptedFiles?: string;
   url?: string;
   site_slug?: string;
   telegram_channel?: string;
   youtube_channel?: string;
+  twitter_handle?: string;
+  twitter_post_url?: string;
 }
 
 interface Task {
@@ -437,6 +439,29 @@ export default function TaskWorkPage() {
       }
       const upJson = await upRes.json();
       fileUrl = upJson.url;
+    } else if (step.submitType === "twitter_follow" || step.submitType === "twitter_retweet" || step.submitType === "twitter_like") {
+      if (!modalFile) {
+        setModalError("Please upload a screenshot as proof.");
+        setSubmittingModal(false);
+        return;
+      }
+      const { data: { session } } = await supabase.auth.getSession();
+      const formData = new FormData();
+      formData.append("file", modalFile);
+      formData.append("stepIndex", String(modalStep));
+      const upRes = await fetch(`/api/tasks/${id}/upload-to-drive`, {
+        method:  "POST",
+        headers: { Authorization: `Bearer ${session?.access_token ?? ""}` },
+        body:    formData,
+      });
+      if (!upRes.ok) {
+        const errJson = await upRes.json().catch(() => ({})) as { error?: string };
+        setModalError(errJson.error ?? "Upload failed — please try again.");
+        setSubmittingModal(false);
+        return;
+      }
+      const upJson2 = await upRes.json();
+      fileUrl = upJson2.url;
     }
 
     const { error: saveErr } = await supabase.from("task_step_submissions").upsert({
@@ -945,11 +970,14 @@ export default function TaskWorkPage() {
                         className="flex w-full items-center justify-center gap-2 rounded-xl border border-white/25 bg-white/15 py-2.5 text-sm font-bold text-white transition-colors hover:bg-white/25"
                       >
                         <Send className="h-4 w-4" />
-                        {step.submitType === "none" ? "Mark as Complete"
+                        {step.submitType === "none"               ? "Mark as Complete"
                           : step.submitType === "proof_code"       ? "Verify Code →"
                           : step.submitType === "telegram_join"    ? "Verify Join →"
                           : step.submitType === "telegram_bot"     ? "Verify Bot Start →"
                           : step.submitType === "youtube_subscribe" ? "Upload Screenshot →"
+                          : step.submitType === "twitter_follow"   ? "Upload Screenshot →"
+                          : step.submitType === "twitter_retweet"  ? "Upload Screenshot →"
+                          : step.submitType === "twitter_like"     ? "Upload Screenshot →"
                           : "Submit Stage →"}
                       </button>
                     </div>
@@ -1510,6 +1538,58 @@ export default function TaskWorkPage() {
                         <><Upload className="h-6 w-6 text-slate-400" /><span className="text-sm text-slate-500">Click to upload screenshot</span><span className="text-xs text-slate-400">PNG, JPG — clearly shows the Subscribe button is active</span></>
                       )}
                       <input id="yt-screenshot" type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) setModalFile(f); }} />
+                    </label>
+                  </div>
+                </div>
+              )}
+
+              {(activeStep.submitType === "twitter_follow" || activeStep.submitType === "twitter_retweet" || activeStep.submitType === "twitter_like") && (
+                <div className="space-y-3">
+                  {/* Step 1: Go to the URL */}
+                  <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-sky-100 text-xs font-bold text-sky-600">1</span>
+                      <span className="text-sm font-semibold text-slate-700">
+                        {activeStep.submitType === "twitter_follow"
+                          ? "Follow the X/Twitter account"
+                          : activeStep.submitType === "twitter_retweet"
+                          ? "Repost/Retweet the post"
+                          : "Like the post"}
+                      </span>
+                    </div>
+                    {(activeStep.twitter_handle || activeStep.twitter_post_url) && (
+                      <a
+                        href={activeStep.twitter_handle
+                          ? `https://x.com/${activeStep.twitter_handle.replace(/^@/, "")}`
+                          : activeStep.twitter_post_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold text-white"
+                        style={{ background: "#000000" }}
+                      >
+                        Open on X →
+                      </a>
+                    )}
+                  </div>
+
+                  {/* Step 2: Upload screenshot */}
+                  <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-sky-100 text-xs font-bold text-sky-600">2</span>
+                      <span className="text-sm font-semibold text-slate-700">Upload screenshot as proof</span>
+                    </div>
+                    <label
+                      htmlFor="twitter-screenshot"
+                      className="flex flex-col items-center gap-2 border-2 border-dashed border-slate-200 rounded-xl p-5 cursor-pointer hover:border-sky-300 transition-colors text-center"
+                      onDragOver={(e) => e.preventDefault()}
+                      onDrop={(e) => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (f) setModalFile(f); }}
+                    >
+                      {modalFile ? (
+                        <><FileText className="h-6 w-6 text-sky-400" /><span className="text-sm font-semibold text-slate-700">{modalFile.name}</span><span className="text-xs text-slate-400">Click to change</span></>
+                      ) : (
+                        <><Upload className="h-6 w-6 text-slate-400" /><span className="text-sm text-slate-500">Click to upload screenshot</span><span className="text-xs text-slate-400">PNG, JPG — must clearly show the action completed</span></>
+                      )}
+                      <input id="twitter-screenshot" type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) setModalFile(f); }} />
                     </label>
                   </div>
                 </div>
