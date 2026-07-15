@@ -3,6 +3,8 @@
 import { useEffect, useRef } from "react";
 
 const ENABLE_MONETAG_ADS = true;
+// Only fire on blog post pages — earn and blog index slots remain inactive
+const ACTIVE_PLACEMENTS = ["blog-post-top"];
 
 // Monetag Vignette — zone 11179049 via n6wxm.com/vignette.min.js
 // Was active on earn-top only. Blog slots (blog-index-top, blog-post-top,
@@ -20,7 +22,7 @@ export function AdSlot({ placement }: AdSlotProps) {
 
   useEffect(() => {
     if (!ENABLE_MONETAG_ADS) return;
-    if (placement !== "earn-top") return;
+    if (!ACTIVE_PLACEMENTS.includes(placement)) return;
     if (injected.current) return;
     injected.current = true;
 
