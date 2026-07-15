@@ -86,6 +86,15 @@ export default function RootLayout({
           data-cfasync="false"
           strategy="afterInteractive"
         />
+
+        {/* Monetag In-Page Push Banner — zone 11299133 */}
+        <Script
+          id="monetag-inpage-push"
+          strategy="afterInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `(function(s){s.dataset.zone='11299133',s.src='https://nap5k.com/tag.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))`
+          }}
+        />
       </body>
     </html>
   );
