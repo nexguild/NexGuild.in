@@ -1,5 +1,6 @@
 import { GoogleAnalytics } from '@next/third-parties/google';
 import type { Metadata, Viewport } from "next";
+import Script from "next/script";
 import "./globals.css";
 import { ScrollReset } from "@/components/ui/scroll-reset";
 import { ScrollToTop } from "@/components/ui/scroll-to-top";
@@ -76,8 +77,15 @@ export default function RootLayout({
         {children}
         <ScrollToTop />
         
-        {/* Google Analytics Global Setup */}
+        {/* Google Analytics */}
         <GoogleAnalytics gaId="G-3WNZK6P6ZZ" />
+
+        {/* Monetag Push Notifications — zone 11299073 */}
+        <Script
+          src="https://5gvci.com/act/files/tag.min.js?z=11299073"
+          data-cfasync="false"
+          strategy="afterInteractive"
+        />
       </body>
     </html>
   );
