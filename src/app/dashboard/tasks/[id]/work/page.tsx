@@ -16,11 +16,12 @@ import { supabase } from "@/lib/supabase";
 interface TaskStep {
   title: string;
   description: string;
-  submitType: "text" | "file" | "none" | "proof_code";
+  submitType: "text" | "file" | "none" | "proof_code" | "telegram_join";
   placeholder?: string;
   acceptedFiles?: string;
   url?: string;
   site_slug?: string;
+  telegram_channel?: string;
 }
 
 interface Task {
@@ -124,6 +125,9 @@ export default function TaskWorkPage() {
   const [classicSubmitting, setClassicSubmitting] = useState(false);
   const [classicError, setClassicError]         = useState<string | null>(null);
 
+  // Telegram verification state
+  const [telegramLinked, setTelegramLinked] = useState<boolean | null>(null);
+
   // External tool proof state
   const [extCode, setExtCode]           = useState("");
   const [extFile, setExtFile]           = useState<File | null>(null);
@@ -155,6 +159,14 @@ export default function TaskWorkPage() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { router.push("/login"); return; }
       setUserId(user.id);
+
+      // Check if Telegram account is already linked
+      const { data: tgAcc } = await supabase
+        .from("telegram_accounts")
+        .select("telegram_id")
+        .eq("contributor_id", user.id)
+        .maybeSingle();
+      setTelegramLinked(!!tgAcc);
 
       const [taskRes, subRes] = await Promise.all([
         supabase.from("tasks").select("*").eq("id", id).single(),
@@ -353,6 +365,33 @@ export default function TaskWorkPage() {
         return;
       }
       textValue = code;
+    } else if (step.submitType === "telegram_join") {
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await fetch("/api/tasks/telegram/verify-join", {
+        method:  "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session?.access_token ?? ""}`,
+        },
+        body: JSON.stringify({
+          task_id:          id,
+          step_index:       modalStep,
+          telegram_channel: step.telegram_channel ?? "",
+        }),
+      });
+      const json: { verified: boolean; reason?: string } = await res.json();
+      if (!json.verified) {
+        setModalError(
+          json.reason === "not_linked"
+            ? "Link your Telegram account first using the button above."
+            : json.reason === "not_member"
+            ? "You haven't joined the channel yet. Please join and try again."
+            : "Verification failed. Please try again."
+        );
+        setSubmittingModal(false);
+        return;
+      }
+      textValue = "telegram_verified";
     }
 
     const { error: saveErr } = await supabase.from("task_step_submissions").upsert({
@@ -861,7 +900,7 @@ export default function TaskWorkPage() {
                         className="flex w-full items-center justify-center gap-2 rounded-xl border border-white/25 bg-white/15 py-2.5 text-sm font-bold text-white transition-colors hover:bg-white/25"
                       >
                         <Send className="h-4 w-4" />
-                        {step.submitType === "none" ? "Mark as Complete" : step.submitType === "proof_code" ? "Verify Code →" : "Submit Stage →"}
+                        {step.submitType === "none" ? "Mark as Complete" : step.submitType === "proof_code" ? "Verify Code →" : step.submitType === "telegram_join" ? "Verify Join →" : "Submit Stage →"}
                       </button>
                     </div>
                   </div>
@@ -1342,6 +1381,70 @@ export default function TaskWorkPage() {
                 </p>
               )}
 
+              {activeStep.submitType === "telegram_join" && (
+                <div className="space-y-3">
+                  {/* Step 1: Link Telegram */}
+                  <div className={`rounded-xl border p-4 ${telegramLinked ? "border-green-200 bg-green-50" : "border-slate-200 bg-slate-50"}`}>
+                    <div className="flex items-center gap-2 mb-2">
+                      {telegramLinked
+                        ? <CheckCircle2 className="h-4 w-4 flex-shrink-0 text-green-500" />
+                        : <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-indigo-100 text-xs font-bold text-indigo-600">1</span>
+                      }
+                      <span className="text-sm font-semibold text-slate-700">
+                        {telegramLinked ? "Telegram account linked ✓" : "Link your Telegram account"}
+                      </span>
+                    </div>
+                    {!telegramLinked && (
+                      <div className="space-y-2">
+                        <p className="text-xs text-slate-500">Open NexGuildBot and press Start to connect your account.</p>
+                        <div className="flex flex-wrap gap-2">
+                          <a
+                            href={`https://t.me/NexGuildBot?start=nexguild_${userId}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold text-white"
+                            style={{ background: "linear-gradient(135deg,#2AABEE,#229ED9)" }}
+                          >
+                            Open @NexGuildBot →
+                          </a>
+                          <button
+                            type="button"
+                            onClick={async () => {
+                              const { data } = await supabase.from("telegram_accounts").select("telegram_id").eq("contributor_id", userId!).maybeSingle();
+                              setTelegramLinked(!!data);
+                            }}
+                            className="text-xs font-semibold text-indigo-500 hover:text-indigo-700 transition-colors"
+                          >
+                            I&apos;ve linked — refresh ↺
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Step 2: Join channel */}
+                  <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-indigo-100 text-xs font-bold text-indigo-600">2</span>
+                      <span className="text-sm font-semibold text-slate-700">Join the Telegram channel</span>
+                    </div>
+                    {activeStep.telegram_channel && (
+                      <a
+                        href={`https://t.me/${activeStep.telegram_channel.replace("@", "")}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold"
+                        style={{ background: "rgba(42,171,238,0.1)", color: "#229ED9", border: "1px solid rgba(42,171,238,0.3)" }}
+                      >
+                        Join {activeStep.telegram_channel} →
+                      </a>
+                    )}
+                  </div>
+
+                  <p className="text-xs text-slate-400">Complete both steps, then click <b>Verify Join</b> below.</p>
+                </div>
+              )}
+
               {activeStep.submitType === "proof_code" && (
                 <div className="space-y-2">
                   <label className="text-sm font-semibold text-slate-700">Verification Code</label>
@@ -1370,13 +1473,13 @@ export default function TaskWorkPage() {
                 <Button variant="ghost" onClick={closeModal} disabled={submittingModal}>Cancel</Button>
                 <button
                   onClick={handleStepSubmit}
-                  disabled={submittingModal}
+                  disabled={submittingModal || (activeStep.submitType === "telegram_join" && !telegramLinked)}
                   className="inline-flex items-center gap-1.5 rounded-xl px-5 py-2 text-sm font-bold text-white transition-all hover:opacity-90 disabled:opacity-50"
                   style={{ background: "linear-gradient(135deg, #6366f1 0%, #14b8a6 100%)" }}
                 >
                   {submittingModal
                     ? <><Loader2 className="h-4 w-4 animate-spin" /> Submitting…</>
-                    : <><Send className="h-3.5 w-3.5" /> {activeStep.submitType === "none" ? "Confirm" : activeStep.submitType === "proof_code" ? "Verify →" : "Submit"}</>}
+                    : <><Send className="h-3.5 w-3.5" /> {activeStep.submitType === "none" ? "Confirm" : activeStep.submitType === "proof_code" ? "Verify →" : activeStep.submitType === "telegram_join" ? "Verify Join →" : "Submit"}</>}
                 </button>
               </div>
             </div>
