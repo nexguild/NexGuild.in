@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { FadeIn } from "@/components/ui/fade-in";
+import { AdSlot } from "@/components/ui/ad-slot";
 import { ArrowRight, ChevronDown } from "lucide-react";
 
 export const metadata: Metadata = {
@@ -65,6 +66,7 @@ const FAQ_SECTIONS = [
 export default function FAQPage() {
   return (
     <div style={{ background: "#EBFBFA", color: "#1E293B", minHeight: "100vh" }}>
+      <AdSlot placement="faq-top" />
 
       {/* Hero */}
       <section className="relative overflow-hidden py-24 px-6 text-center">

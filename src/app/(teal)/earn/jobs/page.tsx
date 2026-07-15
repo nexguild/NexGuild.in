@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { FadeIn } from "@/components/ui/fade-in";
+import { AdSlot } from "@/components/ui/ad-slot";
 import { Search, MapPin, Briefcase, ExternalLink, ChevronDown, Star, RefreshCw } from "lucide-react";
 
 const CATEGORIES = [
@@ -171,6 +172,7 @@ export default function JobsPage() {
 
   return (
     <div style={{ background: "#EBFBFA", color: "#1E293B", minHeight: "100vh" }}>
+      <AdSlot placement="jobs-top" />
 
       {/* ── Hero ───────────────────────────────────────────────────── */}
       <section className="relative overflow-hidden py-20 px-6 text-center">

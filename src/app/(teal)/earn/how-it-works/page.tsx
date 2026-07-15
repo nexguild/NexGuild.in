@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { FadeIn } from "@/components/ui/fade-in";
+import { AdSlot } from "@/components/ui/ad-slot";
 import { ChevronDown } from "lucide-react";
 
 export const metadata: Metadata = {
@@ -82,6 +83,7 @@ const VOUCHERS = [
 export default function HowItWorksPage() {
   return (
     <div style={{ background: "#EBFBFA", color: "#1E293B", minHeight: "100vh" }}>
+      <AdSlot placement="how-it-works-top" />
 
       {/* ── Hero ─────────────────────────────────────────────────── */}
       <section className="relative overflow-hidden pt-28 pb-16 px-6">
