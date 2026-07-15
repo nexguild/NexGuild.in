@@ -464,7 +464,7 @@ export default function BlogGeneratePage() {
             </div>
 
             {/* Right: SEO panel */}
-            <div className="hidden lg:block w-64 xl:w-72 flex-shrink-0 sticky top-20 space-y-4">
+            <div className="w-full lg:w-64 xl:w-72 flex-shrink-0 lg:sticky lg:top-20 space-y-4">
               <section className="rounded-xl border border-[var(--border-default)] bg-[var(--surface-card)] p-5 space-y-3">
                 <h2 className="font-bold text-[var(--text-primary)] text-sm">SEO Score</h2>
                 {[
