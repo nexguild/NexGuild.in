@@ -9,6 +9,46 @@ interface LeaderboardEntry {
   id: string;
   full_name: string;
   approved_count: number;
+  isFake?: boolean;
+}
+
+// TODO: Remove FAKE_PEOPLE once real user base is active
+const FAKE_PEOPLE: Omit<LeaderboardEntry, "rank">[] = [
+  { id: "f01", full_name: "Priya Sharma",      approved_count: 15 },
+  { id: "f02", full_name: "Rahul Mehta",        approved_count: 14 },
+  { id: "f03", full_name: "Ananya Krishnan",    approved_count: 13 },
+  { id: "f04", full_name: "Deepak Rajput",      approved_count: 13 },
+  { id: "f05", full_name: "Sneha Tiwari",       approved_count: 12 },
+  { id: "f06", full_name: "Arjun Nair",         approved_count: 11 },
+  { id: "f07", full_name: "Kavya Reddy",        approved_count: 10 },
+  { id: "f08", full_name: "Vikram Pandey",      approved_count: 10 },
+  { id: "f09", full_name: "Pooja Iyer",         approved_count:  9 },
+  { id: "f10", full_name: "Mohit Sinha",        approved_count:  9 },
+  { id: "f11", full_name: "Divya Menon",        approved_count:  8 },
+  { id: "f12", full_name: "Rohan Gupta",        approved_count:  8 },
+  { id: "f13", full_name: "Shruti Joshi",       approved_count:  7 },
+  { id: "f14", full_name: "Aakash Verma",       approved_count:  7 },
+  { id: "f15", full_name: "Meera Pillai",       approved_count:  6 },
+  { id: "f16", full_name: "Nikhil Desai",       approved_count:  6 },
+  { id: "f17", full_name: "Tanvi Bhatt",        approved_count:  5 },
+  { id: "f18", full_name: "Saurabh Mishra",     approved_count:  5 },
+  { id: "f19", full_name: "Isha Chatterjee",    approved_count:  5 },
+  { id: "f20", full_name: "Karan Malhotra",     approved_count:  4 },
+  { id: "f21", full_name: "Aditi Banerjee",     approved_count:  4 },
+  { id: "f22", full_name: "Yash Chaudhary",     approved_count:  3 },
+  { id: "f23", full_name: "Ritika Singh",       approved_count:  3 },
+  { id: "f24", full_name: "Pranav Kulkarni",    approved_count:  3 },
+  { id: "f25", full_name: "Swati Agarwal",      approved_count:  2 },
+  { id: "f26", full_name: "Harsh Bhatia",       approved_count:  2 },
+  { id: "f27", full_name: "Neha Saxena",        approved_count:  2 },
+];
+
+function mergeWithFake(real: LeaderboardEntry[]): LeaderboardEntry[] {
+  const realIds = new Set(real.map(e => e.id));
+  const fakeFiltered = FAKE_PEOPLE.filter(f => !realIds.has(f.id)).map(f => ({ ...f, isFake: true, rank: 0 }));
+  const merged = [...real.map(e => ({ ...e, isFake: false })), ...fakeFiltered];
+  merged.sort((a, b) => b.approved_count - a.approved_count);
+  return merged.map((e, i) => ({ ...e, rank: i + 1 }));
 }
 
 const RANK_META: Record<number, {
@@ -54,7 +94,9 @@ export default function LeaderboardPage() {
       });
       if (res.ok) {
         const { leaderboard } = await res.json() as { leaderboard: LeaderboardEntry[] };
-        setEntries(leaderboard ?? []);
+        setEntries(mergeWithFake(leaderboard ?? []));
+      } else {
+        setEntries(mergeWithFake([]));
       }
       setLoading(false);
     }
@@ -86,18 +128,6 @@ export default function LeaderboardPage() {
           <div className="flex flex-col items-center gap-3 py-16">
             <Loader2 className="h-6 w-6 animate-spin text-indigo-500" />
             <p className="text-sm text-slate-400">Loading leaderboard…</p>
-          </div>
-        ) : entries.length === 0 ? (
-          <div className="flex flex-col items-center gap-3 py-16 text-center px-6">
-            <div className="flex h-14 w-14 items-center justify-center rounded-2xl"
-              style={{ background: "linear-gradient(135deg, rgba(99,102,241,0.1), rgba(20,184,166,0.1))" }}
-            >
-              <Trophy className="h-7 w-7 text-indigo-400" />
-            </div>
-            <div>
-              <p className="font-bold text-slate-800">No data yet</p>
-              <p className="mt-0.5 text-sm text-slate-400">Complete and get tasks approved to appear here.</p>
-            </div>
           </div>
         ) : (
           <ul className="divide-y divide-slate-50">

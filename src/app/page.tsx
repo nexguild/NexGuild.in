@@ -23,7 +23,7 @@ export default function LandingPage() {
 
       {/* ── Logo Container (Added logo-wrap class) ────────────────── */}
       <div className="logo-wrap">
-        <div 
+        <div
           className="logo-box"
           style={{
             background: "rgba(255, 255, 255, 0.82)",
@@ -75,44 +75,44 @@ export default function LandingPage() {
           onMouseEnter={() => setHov("left")}
           onMouseLeave={() => setHov(null)}
         >
-          <motion.div 
-            className="aurora aurora-gold-1" 
-            animate={{ 
+          <motion.div
+            className="aurora aurora-gold-1"
+            animate={{
               transform: [
-                "translate(0px, 0px)", 
-                "translate(50px, -60px)", 
-                "translate(-30px, 40px)", 
+                "translate(0px, 0px)",
+                "translate(50px, -60px)",
+                "translate(-30px, 40px)",
                 "translate(0px, 0px)"
               ]
             }}
-            transition={{ 
-              duration: 4, 
-              repeat: Infinity, 
-              ease: "easeInOut" 
+            transition={{
+              duration: 4,
+              repeat: Infinity,
+              ease: "easeInOut"
             }}
           />
-          
-          <motion.div 
-            className="aurora aurora-gold-2" 
-            animate={{ 
+
+          <motion.div
+            className="aurora aurora-gold-2"
+            animate={{
               transform: [
-                "translate(0px, 0px)", 
-                "translate(-40px, 50px)", 
-                "translate(60px, -40px)", 
+                "translate(0px, 0px)",
+                "translate(-40px, 50px)",
+                "translate(60px, -40px)",
                 "translate(0px, 0px)"
               ]
             }}
-            transition={{ 
-              duration: 5, 
-              repeat: Infinity, 
-              ease: "easeInOut" 
+            transition={{
+              duration: 5,
+              repeat: Infinity,
+              ease: "easeInOut"
             }}
           />
           <div className="vig" />
 
           <div className="body">
             <span className="tag tg-gold">For Organizations</span>
-            <motion.h2 
+            <motion.h2
               className="hl"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -158,8 +158,8 @@ export default function LandingPage() {
 
           <div className="body">
             <span className="tag tg-teal">For Contributors</span>
-            
-            <motion.h2 
+
+            <motion.h2
               className="hl"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -312,9 +312,9 @@ export default function LandingPage() {
        .tag {
   font-size: 11px;
   font-weight: 600; letter-spacing: 0.10em; text-transform: uppercase;
-  padding: 6px 14px; border-radius: 9999px; 
-  margin-top: 16px;    /* 👈 এই নতুন গ্যাপটা যোগ করলাম ভাই */
-  margin-bottom: 22px; 
+  padding: 6px 14px; border-radius: 9999px;
+  margin-top: 16px;
+  margin-bottom: 22px;
   display: inline-block;
   font-family: 'Inter', sans-serif;
 }
@@ -416,19 +416,17 @@ export default function LandingPage() {
             background: linear-gradient(to bottom, #FAF6EF 50%, #F0FAFA 50%);
           }
 
-          /* Fixed: Logo flows correctly with clean padding and margin */
-.logo-wrap {
-  position: relative;
-  top: auto; left: auto; right: auto;
-  transform: none;
-  width: 100%;
-  display: flex;
-  justify-content: center;
-  padding: 08px 0 0px; /* 👈 এখানে ২৪ থেকে কমিয়ে ১০ করে দিলাম ভাই, ফলে লোগো ওপরে উঠে যাবে */
-  background: #FAF6EF;
-}
+          .logo-wrap {
+            position: relative;
+            top: auto; left: auto; right: auto;
+            transform: none;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            padding: 08px 0 0px;
+            background: #FAF6EF;
+          }
 
-          /* Cute and responsive pill shape for mobile */
           .logo-box {
             padding: 6px 16px;
           }
@@ -452,11 +450,10 @@ export default function LandingPage() {
           .panel.hov, .panel.shrink { flex-basis: auto !important; }
           .panel.hov .body { transform: none; }
 
-          /* Reduced top padding to accommodate the new logo position */
           .body { padding: 20px 20px 36px; }
 
-          .div-wrap { 
-            width: 100%; height: 1px; flex-direction: row; 
+          .div-wrap {
+            width: 100%; height: 1px; flex-direction: row;
             background: linear-gradient(to right, transparent, rgba(28,25,23,0.12) 50%, transparent);
           }
           .div-ln { flex: 1; height: 1px; width: auto; background: transparent; }

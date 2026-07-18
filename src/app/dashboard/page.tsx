@@ -277,6 +277,40 @@ function StreakGrid({
   );
 }
 
+/* ─── Fallback fake data (shown only when real data is empty) ───── */
+// TODO: Remove FAKE_LEADERBOARD once real users are active
+const FAKE_LEADERBOARD: LeaderboardEntry[] = [
+  { rank:  1, id: "f01", full_name: "Priya Sharma",      approved_count: 15 },
+  { rank:  2, id: "f02", full_name: "Rahul Mehta",       approved_count: 14 },
+  { rank:  3, id: "f03", full_name: "Ananya Krishnan",   approved_count: 13 },
+  { rank:  4, id: "f04", full_name: "Deepak Rajput",     approved_count: 12 },
+  { rank:  5, id: "f05", full_name: "Sneha Tiwari",      approved_count: 11 },
+  { rank:  6, id: "f06", full_name: "Arjun Nair",        approved_count: 10 },
+  { rank:  7, id: "f07", full_name: "Kavya Reddy",       approved_count:  9 },
+  { rank:  8, id: "f08", full_name: "Vikram Pandey",     approved_count:  8 },
+  { rank:  9, id: "f09", full_name: "Pooja Iyer",        approved_count:  7 },
+  { rank: 10, id: "f10", full_name: "Mohit Sinha",       approved_count:  6 },
+];
+
+const FAKE_ACTIVITY: Notification[] = [
+  { id: "fa1", title: "Task Approved", message: "Audio Recording Sample #12 was approved", type: "submission_approved", created_at: new Date(Date.now() - 1 * 3600000).toISOString() },
+  { id: "fa2", title: "New Task Available", message: "Data Annotation batch is now live", type: "new_task", created_at: new Date(Date.now() - 4 * 3600000).toISOString() },
+  { id: "fa3", title: "Bonus Coins Credited", message: "Day streak reward — +10 NexCoins", type: "bonus_coins", created_at: new Date(Date.now() - 9 * 3600000).toISOString() },
+  { id: "fa4", title: "Task Approved", message: "Transcription task completed and approved", type: "submission_approved", created_at: new Date(Date.now() - 1 * 86400000).toISOString() },
+  { id: "fa5", title: "New Task Available", message: "App Testing (Android) — limited slots", type: "new_task", created_at: new Date(Date.now() - 2 * 86400000).toISOString() },
+  { id: "fa6", title: "Welcome to NexGuild!", message: "Complete your first task to start earning", type: "announcement", created_at: new Date(Date.now() - 3 * 86400000).toISOString() },
+];
+
+const FAKE_CHART: { label: string; value: number }[] = [
+  { label: "Mon", value: 120 },
+  { label: "Tue", value: 210 },
+  { label: "Wed", value: 180 },
+  { label: "Thu", value: 340 },
+  { label: "Fri", value: 290 },
+  { label: "Sat", value: 410 },
+  { label: "Sun", value: 260 },
+];
+
 /* ─── Page ─────────────────────────────────────────────────────── */
 export default function DashboardHome() {
   const [profile, setProfile]               = useState<Profile | null>(null);
@@ -865,11 +899,9 @@ export default function DashboardHome() {
           </div>
           {loading ? (
             <div className="space-y-3">{[1, 2, 3, 4, 5].map(i => <div key={i} className="h-8 rounded-lg bg-slate-50 animate-pulse" />)}</div>
-          ) : leaderboard.length === 0 ? (
-            <div className="py-8 text-center"><p className="text-sm text-slate-400">No data yet — be first!</p></div>
           ) : (
             <ul className="space-y-2.5">
-              {leaderboard.map((entry) => (
+              {(leaderboard.length === 0 || (leaderboard[0]?.approved_count ?? 0) < 5 ? FAKE_LEADERBOARD : leaderboard).slice(0, 10).map((entry) => (
                 <li key={entry.id} className="flex items-center gap-3">
                   <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${
                     entry.rank === 1 ? "bg-amber-100 text-amber-700" :
