@@ -1,7 +1,7 @@
 ﻿---
-title: "CPX Research Review 2026: What It Is, How It Works, and What to Expect"
+title: "CPX Research Review 2026: Is It Legit, Safe & Worth Your Time?"
 slug: "cpx-research-review-2026"
-description: "An honest review of CPX Research — how their survey platform works, what typical payouts look like, and how NexGuild integrates with it."
+description: "Is CPX Research legit and safe? Yes — here's an honest 2026 review of how CPX Research surveys work, what payouts look like, and what to expect on NexGuild."
 category: "Remote Work"
 date: "2026-07-06"
 faqs:
@@ -40,7 +40,7 @@ When you see CPX Research surveys on a platform, those surveys come from CPX's n
 
 ## What Payouts Look Like
 
-CPX Research displays survey values in whatever currency the platform uses. On NexGuild, for example, surveys are shown in NexCoins (1,000 NexCoins = $1 USD base rate, with NexGuild's exchange rate applied). A $1.00 USD survey on CPX Research shows as approximately 700 NexCoins on NexGuild, reflecting the platform's revenue share.
+CPX Research displays survey values in whatever currency the platform uses. On NexGuild, surveys are shown in NexCoins (660 NexCoins per $1 USD). A $1.00 USD survey on CPX Research shows as 660 NexCoins on NexGuild — the same amount credited to your balance when you complete it.
 
 Typical survey values range from a few hundred NexCoins for short 2–5 minute surveys to 1,000+ NexCoins for longer, more involved research studies. Time-to-value varies — some short surveys pay relatively well per minute; others require more time for the payout.
 

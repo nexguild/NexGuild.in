@@ -128,7 +128,19 @@ For a more detailed look at how CPX Research works and what to expect from their
 
 TheoremReach's verification is handled on their end, so reward crediting timelines follow their systems. Most standard completions credit within minutes; more complex verifications (app engagement, retained installs) may take a day or two to confirm and credit.
 
-Having two providers — CPX Research and TheoremReach — means NexGuild's offerwall hub has more total inventory than platforms running a single provider. This reduces the common "nothing available" frustration that plagues single-provider offerwall setups, especially for users whose demographic profile doesn't match current campaign targeting.
+Having multiple providers — CPX Research, TheoremReach, ClixWall, and MyLead — means NexGuild's offerwall hub has more total inventory than platforms running a single provider. This reduces the common "nothing available" frustration that plagues single-provider offerwall setups, especially for users whose demographic profile doesn't match current campaign targeting.
+
+## ClixWall — Broad Mix of Tasks and Offers
+
+**ClixWall** is a general offerwall that goes beyond surveys to include a wider mix of advertiser campaigns — app installs, sign-ups, and other completion-based tasks alongside survey options. This variety is useful on days when survey inventory is thin or when your demographic profile isn't matching available survey campaigns well.
+
+ClixWall offers appear in the same NexGuild Offerwalls panel as CPX Research and TheoremReach, so you can switch between providers in the same session depending on what's available and what fits your time.
+
+## MyLead — Affiliate Tasks and Sign-Ups
+
+**MyLead** is an affiliate network with offerwall-style tasks — signing up for partner services, downloading apps, completing registration forms. Individual task payouts on MyLead tend to be higher for more involved actions like registering for a financial service, though these tasks have more steps than a standard survey.
+
+MyLead's offer inventory is distinct from survey-based offerwalls: it's primarily action-completion tasks. When you've exhausted available surveys for the day, MyLead's pool is an entirely separate set of earning options to work through.
 
 ## Tips for Earning More from Offerwalls
 

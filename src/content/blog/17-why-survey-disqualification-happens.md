@@ -4,6 +4,15 @@ slug: "why-survey-disqualification-happens-what-to-do"
 description: "An honest explanation of why survey disqualification happens so often, and practical strategies to reduce it and protect your time."
 category: "Remote Work"
 date: "2026-07-06"
+faqs:
+  - q: "Why do I keep getting disqualified from surveys?"
+    a: "Survey disqualification happens because every survey targets a specific demographic — age, gender, location, purchase behaviour — and if you don't match that profile, or the quota for your group is already full, you're screened out. It has nothing to do with how you answer; it's how market research targeting works."
+  - q: "Will getting disqualified too many times get my account banned?"
+    a: "No. Disqualification is a normal, expected part of survey participation — platforms and survey networks understand it and don't penalise users for it. Your account is only at risk if you deliberately give false demographic information or are detected bypassing quality checks."
+  - q: "What is a screener question in a survey?"
+    a: "A screener question is a qualifying question at the start of a survey that checks whether you match the study's target audience. If your answer doesn't fit the profile the researcher needs, you're immediately screened out. Common screeners cover age, gender, employment type, recent purchase behaviour, or product ownership."
+  - q: "Does completing my profile help reduce survey disqualification?"
+    a: "Yes, significantly. Earning platforms use your stored profile to pre-match you with surveys before you start. A complete and accurate profile means the system better predicts which surveys you'll qualify for — reducing the mid-survey disqualifications where you spend several minutes answering questions before being told you don't qualify."
 ---
 
 
