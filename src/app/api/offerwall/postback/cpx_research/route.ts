@@ -195,7 +195,7 @@ async function handleCpxPostback(req: NextRequest): Promise<Response> {
 
     console.log("[postback/cpx_research] crediting", {
       user_id: userId, trans_id: transId, type,
-      gross, share_pct: sharePct, nexcoins_gross: nexcoinsGross, contributor: contributorPreview,
+      gross, user_coins: userCoins,
     });
 
     const { error: insertErr } = await admin.from("offerwall_transactions").insert({
