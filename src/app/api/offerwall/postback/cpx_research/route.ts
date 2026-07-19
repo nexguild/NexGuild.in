@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import { createHash } from "crypto";
 import { createClient } from "@supabase/supabase-js";
 import { createServerClient } from "@/lib/supabase-server";
-import { creditWithCommission } from "@/lib/nexleader-commission";
+import { creditOfferwallUserShare } from "@/lib/nexleader-commission";
 
 // Set CPX_POSTBACK_DEBUG=true in Vercel env vars to bypass hash validation
 // and confirm the rest of the pipeline works. Remove after debugging.
@@ -189,11 +189,9 @@ async function handleCpxPostback(req: NextRequest): Promise<Response> {
       return new Response("OK", { status: 200 });
     }
 
-    const sharePct    = Number(provider.contributor_share_pct);
-    const gross       = amountLocal > 0 ? amountLocal : amountUsd;
-    const nexcoinsGross = Math.max(1, Math.floor(gross * (sharePct / 100)));
-    // Contributor receives 66%; store that in nexcoins_awarded so reversals deduct the right amount
-    const contributorPreview = Math.floor(nexcoinsGross * 0.66);
+    // Exchange rate in CPX publisher dashboard = 660, so amountLocal IS the user's coin amount
+    const gross     = amountLocal > 0 ? amountLocal : amountUsd;
+    const userCoins = Math.max(1, Math.floor(gross));
 
     console.log("[postback/cpx_research] crediting", {
       user_id: userId, trans_id: transId, type,
@@ -205,7 +203,7 @@ async function handleCpxPostback(req: NextRequest): Promise<Response> {
       contributor_id:          userId,
       provider_transaction_id: transId,
       gross_amount:            gross,
-      nexcoins_awarded:        contributorPreview,
+      nexcoins_awarded:        userCoins,
       status:                  "credited",
       raw_payload: {
         query:      rawParams,
@@ -229,16 +227,15 @@ async function handleCpxPostback(req: NextRequest): Promise<Response> {
       return new Response("OK", { status: 200 });
     }
 
-    // Apply NexLeader commission split (credits contributor 66%, NexLeader 8%)
-    const { contributorCredit } = await creditWithCommission(
+    // Credit user their exact share; NexLeader gets 10/66 on top automatically
+    const { contributorCredit } = await creditOfferwallUserShare(
       admin,
       userId,
-      nexcoinsGross,
-      "offerwall",
+      userCoins,
       `CPX Research ${type} (trans: ${transId})`,
     ).catch((err) => {
-      console.error("[postback/cpx_research] creditWithCommission failed:", err);
-      return { contributorCredit: contributorPreview };
+      console.error("[postback/cpx_research] creditOfferwallUserShare failed:", err);
+      return { contributorCredit: userCoins };
     });
 
     // Increment daily streak counter (status=2 reversals and screen-outs returned early above)

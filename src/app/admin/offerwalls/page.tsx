@@ -135,6 +135,7 @@ export default function AdminOfferwallsPage() {
   // Delete confirm
   const [deleteTarget, setDeleteTarget] = useState<Provider | null>(null);
   const [deleting, setDeleting]     = useState(false);
+  const [togglingId, setTogglingId] = useState<string | null>(null);
 
   useEffect(() => { if (allowed) loadProviders(); }, [allowed]);
 
@@ -280,6 +281,21 @@ export default function AdminOfferwallsPage() {
     setAdding(false);
   }
 
+  async function toggleActive(p: Provider) {
+    setTogglingId(p.id);
+    const token = await getToken();
+    const res = await fetch("/api/admin/offerwalls", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ id: p.id, is_active: !p.is_active }),
+    });
+    if (res.ok) {
+      const { provider: updated } = await res.json() as { provider: Provider };
+      setProviders((prev) => prev.map((x) => (x.id === updated.id ? updated : x)));
+    }
+    setTogglingId(null);
+  }
+
   async function handleDelete() {
     if (!deleteTarget) return;
     setDeleting(true);
@@ -339,6 +355,14 @@ export default function AdminOfferwallsPage() {
                       <td className="px-4 py-3"><PostbackUrlCell slug={p.slug} /></td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => toggleActive(p)}
+                            disabled={togglingId === p.id}
+                            title={p.is_active ? "Disable" : "Enable"}
+                            className={`relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none disabled:opacity-50 ${p.is_active ? "bg-green-500" : "bg-[var(--border-strong)]"}`}
+                          >
+                            <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform duration-200 ${p.is_active ? "translate-x-4" : "translate-x-0"}`} />
+                          </button>
                           <Button size="sm" variant="ghost" onClick={() => openConfigure(p)}>
                             <Settings2 className="h-3.5 w-3.5" /> Configure
                           </Button>

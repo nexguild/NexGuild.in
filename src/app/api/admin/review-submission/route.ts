@@ -72,33 +72,15 @@ export async function POST(req: NextRequest) {
         ? `Partial approval — ${validUnits} of ${taskMeta!.total_units} ${unitLabel}s: ${taskMeta!.title}`
         : `Task approved: ${taskTitle}`;
 
-      // 1. Apply NexLeader commission split — contributor gets 66%, NexLeader gets 8%
-      let contributorCoins = grossCoins;
-      try {
-        const result = await creditWithCommission(
-          admin,
-          sub.contributor_id,
-          grossCoins,
-          "task",
-          txDescription,
-        );
-        contributorCoins = result.contributorCredit;
-      } catch (commErr) {
-        console.error("[review-submission] creditWithCommission failed:", commErr);
-        // Fall back to direct crediting if commission logic fails
-        await admin.rpc("increment_nexcoins", {
-          p_contributor_id: sub.contributor_id,
-          p_coins:          grossCoins,
-        });
-        await admin.from("coin_transactions").insert({
-          contributor_id: sub.contributor_id,
-          amount:         grossCoins,
-          type:           "earned",
-          source:         "task",
-          description:    txDescription,
-        });
-        contributorCoins = grossCoins;
-      }
+      // 1. Apply NexLeader commission split — contributor gets 66%, NexLeader 10%, platform 24%
+      const commResult = await creditWithCommission(
+        admin,
+        sub.contributor_id,
+        grossCoins,
+        "task",
+        txDescription,
+      );
+      const contributorCoins = commResult.contributorCredit;
 
       // 2. Mark submission approved (store what contributor actually received)
       const { error: e1 } = await admin

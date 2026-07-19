@@ -52,25 +52,14 @@ export async function POST(
 
     try {
       if (payPerUnit > 0) {
-        try {
-          const result = await creditWithCommission(
-            admin,
-            item.contributor_id,
-            payPerUnit,
-            "task",
-            `Daily work approved: ${item.file_name ?? "item"} (${taskMeta?.title ?? "task"})`,
-          );
-          contributorCoins = result.contributorCredit;
-        } catch {
-          await admin.rpc("increment_nexcoins", { p_contributor_id: item.contributor_id, p_coins: payPerUnit });
-          await admin.from("coin_transactions").insert({
-            contributor_id: item.contributor_id,
-            amount:         payPerUnit,
-            type:           "earned",
-            source:         "task",
-            description:    `Daily work approved: ${item.file_name ?? "item"} (${taskMeta?.title ?? "task"})`,
-          });
-        }
+        const commResult = await creditWithCommission(
+          admin,
+          item.contributor_id,
+          payPerUnit,
+          "task",
+          `Daily work approved: ${item.file_name ?? "item"} (${taskMeta?.title ?? "task"})`,
+        );
+        contributorCoins = commResult.contributorCredit;
       }
 
       await admin.from("daily_work_items").update({

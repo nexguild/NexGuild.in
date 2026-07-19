@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import { createHash } from "crypto";
 import { createClient } from "@supabase/supabase-js";
 import { createServerClient } from "@/lib/supabase-server";
-import { creditWithCommission } from "@/lib/nexleader-commission";
+import { creditOfferwallUserShare } from "@/lib/nexleader-commission";
 
 type AdminClient = ReturnType<typeof createServerClient>;
 
@@ -144,14 +144,15 @@ async function handlePostback(req: NextRequest): Promise<Response> {
     return new Response("OK", { status: 200 });
   }
 
-  const nexcoinsPreview = Math.floor(amount * (Number(provider.contributor_share_pct) / 100));
+  // Exchange rate in MyLead dashboard = 660, so amount IS the user's coin amount
+  const userCoins = Math.max(1, Math.floor(amount));
 
   const { error: insertErr } = await admin.from("offerwall_transactions").insert({
     provider_id:             provider.id,
     contributor_id:          userId,
     provider_transaction_id: txId,
     gross_amount:            amount,
-    nexcoins_awarded:        nexcoinsPreview,
+    nexcoins_awarded:        userCoins,
     status:                  "credited",
     raw_payload:             { query: rawParams },
   });
@@ -167,15 +168,15 @@ async function handlePostback(req: NextRequest): Promise<Response> {
     return new Response("OK", { status: 200 });
   }
 
-  const { contributorCredit } = await creditWithCommission(
+  // Credit user their exact share; NexLeader gets 10/66 on top automatically
+  const { contributorCredit } = await creditOfferwallUserShare(
     admin as unknown as AdminClient,
     userId,
-    amount,
-    "offerwall",
+    userCoins,
     `MyLead offer completed (tx: ${txId})`,
   ).catch((err) => {
-    console.error("[postback/mylead] creditWithCommission failed:", err);
-    return { contributorCredit: nexcoinsPreview };
+    console.error("[postback/mylead] creditOfferwallUserShare failed:", err);
+    return { contributorCredit: userCoins };
   });
 
   // Streak

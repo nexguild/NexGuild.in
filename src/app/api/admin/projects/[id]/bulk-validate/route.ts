@@ -177,25 +177,14 @@ export async function POST(
         const grossCoins = db.tasks?.pay_per_task ?? 0;
         let contributorCoins = grossCoins;
 
-        try {
-          const result = await creditWithCommission(
-            admin,
-            db.contributor_id,
-            grossCoins,
-            "task",
-            `Client validation approved: ${taskTitle}`,
-          );
-          contributorCoins = result.contributorCredit;
-        } catch {
-          await admin.rpc("increment_nexcoins", { p_contributor_id: db.contributor_id, p_coins: grossCoins });
-          await admin.from("coin_transactions").insert({
-            contributor_id: db.contributor_id,
-            amount:         grossCoins,
-            type:           "earned",
-            source:         "task",
-            description:    `Client validation approved: ${taskTitle}`,
-          });
-        }
+        const commResult = await creditWithCommission(
+          admin,
+          db.contributor_id,
+          grossCoins,
+          "task",
+          `Client validation approved: ${taskTitle}`,
+        );
+        contributorCoins = commResult.contributorCredit;
 
         await admin.from("submissions").update({
           status:                    "approved",

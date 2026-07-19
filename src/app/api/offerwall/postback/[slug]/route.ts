@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import { createHash } from "crypto";
 import { createServerClient } from "@/lib/supabase-server";
-import { creditWithCommission } from "@/lib/nexleader-commission";
+import { creditOfferwallUserShare } from "@/lib/nexleader-commission";
 
 type ParamMap = Record<string, string>;
 
@@ -131,21 +131,23 @@ async function handlePostback(req: NextRequest, slug: string): Promise<Response>
     return new Response("OK", { status: 200 });
   }
 
-  // 7. Compute gross NexCoins
-  // payout_multiplier in custom_config converts the provider's payout unit to NexCoins.
-  // USD-based providers (CPAGrip): set payout_multiplier=100 so $1 = 100 NexCoins.
-  // Virtual-currency providers: leave unset (default 1, amount is already in NexCoins).
+  // 7. Compute userCoins — what the user actually receives.
+  //
+  //  S1 — rate_is_user_share=true  (e.g. ClixWall, percentage=66%):
+  //       postback sends the user's coin amount directly → userCoins = amount × payoutMult
+  //  S2 — rate_is_user_share=false (default, e.g. CPAGrip, sends USD):
+  //       userCoins = amount × payoutMult × 0.66
+  //       Exchange rate in CPAGrip dashboard must be set to 660 so widget matches.
   if (amount <= 0) {
     console.warn(`[postback/${slug}] zero amount tx ${transId}`);
     return new Response("Bad Request", { status: 400 });
   }
-  const customCfg      = (provider.custom_config as Record<string, unknown> | null) ?? {};
-  const payoutMult     = Number(customCfg.payout_multiplier ?? 1) || 1;
-  const sharePct       = Number(provider.contributor_share_pct) || 80;
-  const nexcoinsGross  = Math.max(1, Math.round(amount * payoutMult * (sharePct / 100)));
-
-  // Contributor preview (66% of gross) — stored in offerwall_transactions for reversal accuracy
-  const contributorPreview = Math.floor(nexcoinsGross * 0.66);
+  const customCfg       = (provider.custom_config as Record<string, unknown> | null) ?? {};
+  const payoutMult      = Number(customCfg.payout_multiplier ?? 1) || 1;
+  const rateIsUserShare = customCfg.rate_is_user_share === true;
+  const userCoins       = rateIsUserShare
+    ? Math.max(1, Math.round(amount * payoutMult))
+    : Math.max(1, Math.round(amount * payoutMult * 0.66));
 
   // 8. Insert transaction (UNIQUE guard prevents double-credit)
   const { error: insertErr } = await admin.from("offerwall_transactions").insert({
@@ -153,7 +155,7 @@ async function handlePostback(req: NextRequest, slug: string): Promise<Response>
     contributor_id:          userId,
     provider_transaction_id: transId,
     gross_amount:            amount,
-    nexcoins_awarded:        contributorPreview,
+    nexcoins_awarded:        userCoins,
     status:                  "credited",
     raw_payload:             { query: Object.fromEntries(q.entries()), body: rawBody.slice(0, 2000) },
   });
@@ -167,17 +169,16 @@ async function handlePostback(req: NextRequest, slug: string): Promise<Response>
     return new Response("Internal Server Error", { status: 500 });
   }
 
-  // 9. Credit with NexLeader commission split (Contributor 66% / NexLeader 10% / Platform 24%)
-  const { contributorCredit } = await creditWithCommission(
+  // 9. Credit user their exact share; NexLeader gets 10/66 on top automatically
+  const { contributorCredit } = await creditOfferwallUserShare(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     admin as any,
     userId,
-    nexcoinsGross,
-    "offerwall",
+    userCoins,
     `${provider.name} offer completed`,
   ).catch((err) => {
-    console.error(`[postback/${slug}] creditWithCommission failed:`, err);
-    return { contributorCredit: contributorPreview };
+    console.error(`[postback/${slug}] creditOfferwallUserShare failed:`, err);
+    return { contributorCredit: userCoins };
   });
 
   // 10. Streak update

@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import { createHmac } from "crypto";
 import { createClient } from "@supabase/supabase-js";
 import { createServerClient } from "@/lib/supabase-server";
-import { creditWithCommission } from "@/lib/nexleader-commission";
+import { creditOfferwallUserShare } from "@/lib/nexleader-commission";
 
 type AdminClient = ReturnType<typeof createServerClient>;
 
@@ -224,8 +224,8 @@ async function handlePostback(req: NextRequest): Promise<Response> {
     return new Response("OK", { status: 200 });
   }
 
-  // Contributor receives 66%; store that for correct reversal behavior
-  const contributorPreview = Math.floor(reward * 0.66);
+  // Exchange rate in TheoremReach dashboard = 660, so reward IS the user's coin amount
+  const userCoins = Math.max(1, reward);
 
   // Idempotent insert — unique constraint on provider_transaction_id
   const { error: insertErr } = await admin.from("offerwall_transactions").insert({
@@ -233,7 +233,7 @@ async function handlePostback(req: NextRequest): Promise<Response> {
     contributor_id:          userId,
     provider_transaction_id: txId,
     gross_amount:            reward,
-    nexcoins_awarded:        contributorPreview,
+    nexcoins_awarded:        userCoins,
     status:                  "credited",
     raw_payload: {
       query: rawParams,
@@ -252,16 +252,15 @@ async function handlePostback(req: NextRequest): Promise<Response> {
     return new Response("OK", { status: 200 });
   }
 
-  // Apply NexLeader commission split (credits contributor 66%, NexLeader 8%)
-  const { contributorCredit } = await creditWithCommission(
+  // Credit user their exact share; NexLeader gets 10/66 on top automatically
+  const { contributorCredit } = await creditOfferwallUserShare(
     admin as unknown as AdminClient,
     userId,
-    reward,
-    "offerwall",
+    userCoins,
     `TheoremReach${screenout ? " (screenout)" : ""} (tx: ${txId})`,
   ).catch((err) => {
-    console.error("[postback/theoremreach] creditWithCommission failed:", err);
-    return { contributorCredit: contributorPreview };
+    console.error("[postback/theoremreach] creditOfferwallUserShare failed:", err);
+    return { contributorCredit: userCoins };
   });
 
   // Increment daily streak counter
