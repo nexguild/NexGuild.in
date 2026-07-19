@@ -25,6 +25,10 @@ export default function SignupPage() {
   const [signedUp, setSignedUp]               = useState(false);
 
   useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      if (data.session) window.location.replace("/dashboard");
+    });
+
     const params = new URLSearchParams(window.location.search);
     const ref = params.get("ref");
     if (ref) setReferralCode(ref.toUpperCase());
