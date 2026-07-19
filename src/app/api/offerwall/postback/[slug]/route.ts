@@ -64,6 +64,10 @@ async function handlePostback(req: NextRequest, slug: string): Promise<Response>
 
   const paramMap: ParamMap = (provider.postback_param_map as ParamMap | null) ?? {};
   const { userId, transId, amount, status, type, hash, incomingSecret } = extractParams(q, bodyObj, paramMap);
+  // TEMP DEBUG — remove after identifying ClixWall param names
+  if (slug === "clixwall") {
+    console.log(`[postback/clixwall] DEBUG query:`, Object.fromEntries(q.entries()), `body:`, bodyObj);
+  }
 
   // 3. Auth — hash-format or simple secret
   const hashFormat = (provider.hash_format as string | null) ?? null;
