@@ -230,7 +230,7 @@ export default function BlogGeneratePage() {
                   Today&apos;s Topic Ideas
                 </h2>
                 <span className="text-xs text-amber-400/80 font-medium">
-                  {new Date().toLocaleDateString("en-IN", { day: "numeric", month: "short" })}
+                  {new Date().toLocaleDateString("en-US", { day: "numeric", month: "short" })}
                 </span>
               </div>
               <button
@@ -271,7 +271,7 @@ export default function BlogGeneratePage() {
             <div>
               <label className={lc}>Topic / Keyword <span className="text-[var(--danger-text)]">*</span></label>
               <input type="text" value={topic} onChange={(e) => setTopic(e.target.value)}
-                placeholder="e.g. how to earn money online for students in India" className={ic} />
+                placeholder="e.g. best side hustles that pay daily for beginners" className={ic} />
             </div>
 
             <div>

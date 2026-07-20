@@ -90,14 +90,21 @@ export default function AdminBlogPage() {
 
       {/* Stats */}
       {!loading && !error && (
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-          {[
-            { label: "Total Posts",   value: posts.length },
-            { label: "Total Words",   value: posts.reduce((s, p) => s + p.wordCount, 0).toLocaleString() },
-            { label: "Avg Word Count",value: posts.length ? Math.round(posts.reduce((s, p) => s + p.wordCount, 0) / posts.length).toLocaleString() : "—" },
-          ].map((s) => (
-            <div key={s.label} className="rounded-xl border border-[var(--border-default)] bg-[var(--surface-card)] px-4 py-3">
-              <p className="text-xl font-bold text-[var(--text-primary)]">{s.value}</p>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {(() => {
+            const weekStart = new Date();
+            weekStart.setDate(weekStart.getDate() - weekStart.getDay());
+            weekStart.setHours(0, 0, 0, 0);
+            const thisWeek = posts.filter((p) => p.date && new Date(p.date) >= weekStart).length;
+            return [
+              { label: "Total Posts",    value: posts.length },
+              { label: "Total Words",    value: posts.reduce((s, p) => s + p.wordCount, 0).toLocaleString() },
+              { label: "Avg Word Count", value: posts.length ? Math.round(posts.reduce((s, p) => s + p.wordCount, 0) / posts.length).toLocaleString() : "—" },
+              { label: "This Week",      value: `${thisWeek} / 7`, highlight: thisWeek >= 7 },
+            ];
+          })().map((s) => (
+            <div key={s.label} className={`rounded-xl border px-4 py-3 ${"highlight" in s && s.highlight ? "border-green-500/30 bg-green-500/5" : "border-[var(--border-default)] bg-[var(--surface-card)]"}`}>
+              <p className={`text-xl font-bold ${"highlight" in s && s.highlight ? "text-green-400" : "text-[var(--text-primary)]"}`}>{s.value}</p>
               <p className="text-xs text-[var(--text-muted)]">{s.label}</p>
             </div>
           ))}
@@ -152,7 +159,7 @@ export default function AdminBlogPage() {
                     {p.date ? (
                       <span className="inline-flex items-center gap-1 text-xs text-[var(--text-secondary)]">
                         <Calendar className="h-3 w-3" />
-                        {new Date(p.date).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+                        {new Date(p.date).toLocaleDateString("en-US", { day: "numeric", month: "short", year: "numeric" })}
                       </span>
                     ) : (
                       <span className="text-xs text-[var(--text-muted)]">—</span>
