@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import {
   Crown, Copy, Check, Users, TrendingUp, Zap, BookOpen,
   Loader2, AlertCircle, MessageCircle, ArrowRight, CheckCircle2,
+  CheckSquare, LayoutGrid, Coins,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { NexCoinIcon } from "@/components/ui/nexcoin-icon";
@@ -55,6 +56,143 @@ function mask(name: string | null): string {
 
 function daysAgo(iso: string): number {
   return Math.floor((Date.now() - new Date(iso).getTime()) / 86400000);
+}
+
+function timeAgo(iso: string): string {
+  const diff = Date.now() - new Date(iso).getTime();
+  if (diff < 60000)    return "just now";
+  if (diff < 3600000)  return `${Math.floor(diff / 60000)}m ago`;
+  if (diff < 86400000) return `${Math.floor(diff / 3600000)}h ago`;
+  if (diff < 172800000) return "yesterday";
+  return new Date(iso).toLocaleDateString("en-US", { day: "numeric", month: "short" });
+}
+
+function dayLabel(iso: string): string {
+  const d = new Date(iso);
+  const today = new Date();
+  if (d.toDateString() === today.toDateString()) return "Today";
+  const yesterday = new Date(today); yesterday.setDate(today.getDate() - 1);
+  if (d.toDateString() === yesterday.toDateString()) return "Yesterday";
+  return d.toLocaleDateString("en-US", { day: "numeric", month: "short" });
+}
+
+// ── Guild Activity Feed ────────────────────────────────────────────────────────
+function GuildActivityFeed({ commissions }: { commissions: StatusData["commissions"] }) {
+  const [showAll, setShowAll] = useState(false);
+  const nowMs = Date.now();
+
+  const visible = showAll ? commissions : commissions.slice(0, 20);
+
+  // Group by day label
+  type Group = { label: string; items: StatusData["commissions"] };
+  const groups: Group[] = [];
+  for (const c of visible) {
+    const label = dayLabel(c.created_at);
+    const last  = groups[groups.length - 1];
+    if (last && last.label === label) last.items.push(c);
+    else groups.push({ label, items: [c] });
+  }
+
+  function eventIcon(type: string) {
+    if (type === "task")     return <CheckSquare className="h-3.5 w-3.5 text-[#02b491]" />;
+    if (type === "offerwall") return <LayoutGrid className="h-3.5 w-3.5 text-violet-400" />;
+    return <Coins className="h-3.5 w-3.5 text-amber-400" />;
+  }
+
+  function eventLabel(type: string) {
+    if (type === "task")     return "completed a task";
+    if (type === "offerwall") return "earned from offerwall";
+    return type.replace(/_/g, " ");
+  }
+
+  function eventColor(type: string) {
+    if (type === "task")     return "bg-[rgba(2,180,145,0.08)] border-[rgba(2,180,145,0.2)]";
+    if (type === "offerwall") return "bg-violet-500/5 border-violet-500/20";
+    return "bg-amber-500/5 border-amber-500/20";
+  }
+
+  return (
+    <div className="rounded-xl overflow-hidden bg-white shadow-sm" style={{ border: "1px solid #E5E7EB" }}>
+      <div className="px-5 py-4 border-b border-[var(--border-default)] flex items-center justify-between">
+        <div>
+          <h2 className="text-sm font-bold text-[var(--text-primary)]">Guild Activity</h2>
+          <p className="text-xs text-[var(--text-muted)] mt-0.5">Recent earnings by your members</p>
+        </div>
+        {commissions.length > 0 && (
+          <span className="text-xs text-[var(--text-muted)]">{commissions.length} event{commissions.length !== 1 ? "s" : ""}</span>
+        )}
+      </div>
+
+      {commissions.length === 0 ? (
+        <div className="px-5 py-12 text-center">
+          <div className="inline-flex h-12 w-12 items-center justify-center rounded-full mb-3"
+            style={{ background: "rgba(2,180,145,0.08)", border: "1px solid rgba(2,180,145,0.2)" }}>
+            <Zap className="h-5 w-5 text-[#02b491]" />
+          </div>
+          <p className="text-sm font-semibold text-[var(--text-primary)]">No activity yet</p>
+          <p className="text-xs text-[var(--text-muted)] mt-1">Commission events will appear here as your members earn.</p>
+        </div>
+      ) : (
+        <div className="divide-y divide-[var(--border-default)]">
+          {groups.map((g) => (
+            <div key={g.label}>
+              {/* Day header */}
+              <div className="px-5 py-2 bg-slate-50 flex items-center gap-2">
+                <span className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wide">{g.label}</span>
+                <span className="text-xs text-[var(--text-muted)]">· {g.items.length} event{g.items.length !== 1 ? "s" : ""}</span>
+              </div>
+
+              {g.items.map((c) => {
+                const isRecent = nowMs - new Date(c.created_at).getTime() < 3600000;
+                return (
+                  <div key={c.id} className="flex items-center gap-4 px-5 py-3 hover:bg-slate-50 transition-colors">
+                    {/* Icon bubble */}
+                    <div className={`flex-shrink-0 h-8 w-8 rounded-full flex items-center justify-center border ${eventColor(c.event_type)}`}>
+                      {eventIcon(c.event_type)}
+                    </div>
+
+                    {/* Content */}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm text-[var(--text-primary)]">
+                        <span className="font-semibold">{mask(c.member_name)}</span>
+                        {" "}<span className="text-[var(--text-muted)]">{eventLabel(c.event_type)}</span>
+                      </p>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <span className="text-xs text-[var(--text-muted)]">{timeAgo(c.created_at)}</span>
+                        {isRecent && (
+                          <span className="inline-flex items-center gap-1 text-xs text-green-500 font-medium">
+                            <span className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse" />
+                            live
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Commission badge */}
+                    <span className="flex-shrink-0 inline-flex items-center gap-1 text-xs font-bold text-amber-600 px-2 py-1 rounded-lg"
+                      style={{ background: "rgba(217,119,6,0.08)", border: "1px solid rgba(217,119,6,0.2)" }}>
+                      +{c.nexleader_credit} NC
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          ))}
+
+          {commissions.length > 20 && (
+            <div className="px-5 py-4 text-center">
+              <button
+                onClick={() => setShowAll((v) => !v)}
+                className="text-xs font-semibold text-[var(--brand-500)] hover:underline transition-colors"
+              >
+                {showAll ? "Show less" : `Show all ${commissions.length} events`}
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
 }
 
 // ── NexLeader Dashboard (approved) ────────────────────────────────────────────
@@ -207,27 +345,8 @@ function NexLeaderDashboard({ data, copyLink, copied }: {
         </div>
       )}
 
-      {/* Commission history */}
-      {commissions.length > 0 && (
-        <div className="rounded-xl overflow-hidden bg-white shadow-sm" style={{ border: "1px solid #E5E7EB" }}>
-          <div className="px-5 py-4 border-b border-[var(--border-default)]">
-            <h2 className="text-sm font-bold text-[var(--text-primary)]">Commission History</h2>
-          </div>
-          {commissions.map((c) => (
-            <div key={c.id} className="flex items-center justify-between px-5 py-3 border-b border-[var(--border-default)]">
-              <div>
-                <p className="text-sm font-medium text-[var(--text-primary)]">{mask(c.member_name)}</p>
-                <p className="text-xs text-[var(--text-muted)] font-mono">UID: {c.member_id.slice(0, 8)}…</p>
-                <p className="text-xs text-[var(--text-muted)] mt-0.5">
-                  {c.event_type === "offerwall" ? "Offerwall" : c.event_type === "task" ? "Task" : c.event_type.replace(/_/g, " ")}
-                  {" · "}{new Date(c.created_at).toLocaleDateString("en-US", { day: "numeric", month: "short", year: "numeric" })}
-                </p>
-              </div>
-              <span className="text-sm font-semibold text-amber-600 flex-shrink-0">+{c.nexleader_credit} NC</span>
-            </div>
-          ))}
-        </div>
-      )}
+      {/* Guild activity feed */}
+      <GuildActivityFeed commissions={commissions} />
 
       <BlogTipCard
         slug="offerwalls-explained-how-to-earn"
