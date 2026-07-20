@@ -32,6 +32,8 @@ export async function GET(req: NextRequest) {
         coins_awarded,
         feedback,
         submitted_at,
+        suspicious,
+        reviewed,
         tasks ( id, title, pay_per_task, steps ),
         profiles ( full_name, email, nexleader_id )
       `)

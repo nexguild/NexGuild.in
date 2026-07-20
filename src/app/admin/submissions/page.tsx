@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import {
   CheckCircle2, XCircle, Loader2, Search,
-  FileText, ExternalLink, CheckSquare, RefreshCw, X, Copy, CheckCheck,
+  FileText, ExternalLink, CheckSquare, RefreshCw, X, Copy, CheckCheck, ShieldAlert,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar } from "@/components/ui/avatar";
@@ -39,6 +39,8 @@ interface Submission {
   coins_awarded: number | null;
   feedback: string | null;
   submitted_at: string;
+  suspicious: boolean;
+  reviewed: boolean;
   tasks: { id: string; title: string; pay_per_task: number | null; steps: TaskStep[] | null } | null;
   profiles: { full_name: string | null; email: string | null } | null;
   step_submissions: StepSubmission[];
@@ -104,13 +106,14 @@ function StepSubmissionItem({ ss, stepTitle }: { ss: StepSubmission; stepTitle: 
   );
 }
 
-const TABS = ["submitted", "approved", "rejected"] as const;
+const TABS = ["submitted", "approved", "rejected", "flagged"] as const;
 type Tab = typeof TABS[number];
 
 const TAB_LABELS: Record<Tab, string> = {
   submitted: "Pending Review",
   approved:  "Approved",
   rejected:  "Rejected",
+  flagged:   "Flagged",
 };
 
 const STATUS_BADGE: Record<string, string> = {
@@ -260,6 +263,8 @@ export default function AdminSubmissionsPage() {
       matchTab = s.status === "submitted" || s.status === "pending";
     } else if (activeTab === "rejected") {
       matchTab = s.status === "rejected" || s.status === "resubmit_requested";
+    } else if (activeTab === "flagged") {
+      matchTab = s.suspicious === true;
     } else {
       matchTab = s.status === activeTab;
     }
@@ -274,7 +279,8 @@ export default function AdminSubmissionsPage() {
     );
   });
 
-  const pendingCount  = submissions.filter((s) => s.status === "submitted" || s.status === "pending").length;
+  const pendingCount   = submissions.filter((s) => s.status === "submitted" || s.status === "pending").length;
+  const flaggedCount   = submissions.filter((s) => s.suspicious).length;
   const pendingFiltered = filtered.filter(isPending);
   const allPendingSelected = pendingFiltered.length > 0 && pendingFiltered.every((s) => selected.has(s.id));
 
@@ -326,6 +332,11 @@ export default function AdminSubmissionsPage() {
             {tab === "submitted" && pendingCount > 0 && (
               <span className="ml-1.5 inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-yellow-500/20 text-yellow-400 text-xs font-bold px-1">
                 {pendingCount}
+              </span>
+            )}
+            {tab === "flagged" && flaggedCount > 0 && (
+              <span className="ml-1.5 inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-amber-500/20 text-amber-400 text-xs font-bold px-1">
+                {flaggedCount}
               </span>
             )}
           </button>
@@ -407,11 +418,16 @@ export default function AdminSubmissionsPage() {
                   </div>
                 </div>
                 <div className="flex items-center gap-2 flex-wrap">
+                  {sub.suspicious && (
+                    <span className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/30">
+                      <ShieldAlert className="h-3 w-3" /> Suspicious
+                    </span>
+                  )}
                   <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${STATUS_BADGE[sub.status] ?? ""}`}>
                     {statusLabel(sub.status)}
                   </span>
                   <span className="text-xs text-[var(--text-muted)]">
-                    {new Date(sub.submitted_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+                    {new Date(sub.submitted_at).toLocaleDateString("en-US", { day: "numeric", month: "short", year: "numeric" })}
                   </span>
                 </div>
               </div>
