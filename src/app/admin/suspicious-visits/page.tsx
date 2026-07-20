@@ -47,7 +47,7 @@ export default function SuspiciousVisitsPage() {
       .eq("reviewed", showReviewed)
       .order("created_at", { ascending: false })
       .limit(200);
-    setVisits((data as SuspiciousVisit[]) ?? []);
+    setVisits((data as unknown as SuspiciousVisit[]) ?? []);
   }, [showReviewed]);
 
   const fetchSubs = useCallback(async () => {
@@ -58,7 +58,7 @@ export default function SuspiciousVisitsPage() {
       .eq("reviewed", showReviewed)
       .order("submitted_at", { ascending: false })
       .limit(200);
-    setSubs((data as SuspiciousSubmission[]) ?? []);
+    setSubs((data as unknown as SuspiciousSubmission[]) ?? []);
   }, [showReviewed]);
 
   const fetchAll = useCallback(async () => {
