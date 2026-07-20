@@ -66,6 +66,11 @@ function NexLeaderDashboard({ data, copyLink, copied }: {
   const { profile, members, commissions, activeThisWeek } = data;
   const recruitLink = `https://nexguild.in/signup?ref=${profile.referral_code ?? ""}`;
 
+  const weekAgo = Date.now() - 7 * 86400000;
+  const weekCommission = commissions
+    .filter((c) => new Date(c.created_at).getTime() >= weekAgo)
+    .reduce((sum, c) => sum + c.nexleader_credit, 0);
+
   return (
     <div className="space-y-5">
       {/* Header banner — stays dark indigo (intentional contrast) */}
@@ -83,7 +88,7 @@ function NexLeaderDashboard({ data, copyLink, copied }: {
             <h1 className="text-2xl sm:text-3xl font-extrabold text-white">Your NexLeader Dashboard</h1>
             <p className="text-sm mt-1" style={{ color: "rgba(255,255,255,0.6)" }}>
               Approved {profile.nexleader_approved_at
-                ? new Date(profile.nexleader_approved_at).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })
+                ? new Date(profile.nexleader_approved_at).toLocaleDateString("en-US", { day: "numeric", month: "long", year: "numeric" })
                 : ""}
             </p>
           </div>
@@ -91,11 +96,12 @@ function NexLeaderDashboard({ data, copyLink, copied }: {
       </div>
 
       {/* Stats row */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         {[
-          { label: "Total Members",     value: profile.guild_total_members,       color: "#6366f1", border: "rgba(99,102,241,0.35)"  },
-          { label: "Active This Week",  value: activeThisWeek,                     color: "#16a34a", border: "rgba(22,163,74,0.35)"   },
-          { label: "Commission Earned", value: `${profile.guild_total_earned} NC`, color: "#d97706", border: "rgba(217,119,6,0.35)"   },
+          { label: "Total Members",       value: profile.guild_total_members,       color: "#6366f1" },
+          { label: "Active This Week",    value: activeThisWeek,                    color: "#16a34a" },
+          { label: "This Week's NC",      value: `+${weekCommission} NC`,           color: "#02b491" },
+          { label: "Total Commission",    value: `${profile.guild_total_earned} NC`, color: "#d97706" },
         ].map((s) => (
           <div key={s.label} className="rounded-xl p-5 bg-white shadow-sm"
             style={{ border: "1px solid #E5E7EB", borderLeft: `4px solid ${s.color}` }}>
@@ -214,7 +220,7 @@ function NexLeaderDashboard({ data, copyLink, copied }: {
                 <p className="text-xs text-[var(--text-muted)] font-mono">UID: {c.member_id.slice(0, 8)}…</p>
                 <p className="text-xs text-[var(--text-muted)] mt-0.5">
                   {c.event_type === "offerwall" ? "Offerwall" : c.event_type === "task" ? "Task" : c.event_type.replace(/_/g, " ")}
-                  {" · "}{new Date(c.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+                  {" · "}{new Date(c.created_at).toLocaleDateString("en-US", { day: "numeric", month: "short", year: "numeric" })}
                 </p>
               </div>
               <span className="text-sm font-semibold text-amber-600 flex-shrink-0">+{c.nexleader_credit} NC</span>
@@ -446,7 +452,7 @@ function PendingView({ application }: { application: NonNullable<StatusData["app
           <p className="font-semibold text-[var(--text-primary)]">Application Under Review</p>
         </div>
         <p className="text-sm text-[var(--text-secondary)]">
-          Submitted on {new Date(application.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}.<br />
+          Submitted on {new Date(application.created_at).toLocaleDateString("en-US", { day: "numeric", month: "long", year: "numeric" })}.<br />
           We review applications within 3–5 business days. You&apos;ll receive an email when a decision is made.
         </p>
         <div className="flex gap-2 pt-1">

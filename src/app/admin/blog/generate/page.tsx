@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import {
   ArrowLeft, Loader2, Sparkles, RefreshCw, CheckCircle2,
-  AlertCircle, ExternalLink, Eye, Edit3, ChevronDown, ChevronUp, Lightbulb, ClipboardPaste,
+  AlertCircle, ExternalLink, Eye, Edit3, ChevronDown, ChevronUp, Lightbulb, ClipboardPaste, Link2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
@@ -85,6 +85,7 @@ export default function BlogGeneratePage() {
   const [angle, setAngle]       = useState("");
   const [audience, setAudience] = useState("Global");
   const [existingSlugs, setExistingSlugs] = useState<string[]>([]);
+  const [existingPosts, setExistingPosts] = useState<{ slug: string; title: string }[]>([]);
   const [slugsLoading, setSlugsLoading]   = useState(false);
   const [genError, setGenError]           = useState<string | null>(null);
 
@@ -120,6 +121,23 @@ export default function BlogGeneratePage() {
   const [pasteKeyword, setPasteKeyword]   = useState("");
   const [pasteError, setPasteError]       = useState<string | null>(null);
 
+  const STOP = new Set(["this","that","with","from","have","been","will","your","they","them","their","what","when","where","which","more","also","into","than","then","some","make","much","well","just","like","very","over","after","before","through","about","does","2024","2025","2026","how","the","and","for","can","are"]);
+
+  const suggestedLinks = useMemo(() => {
+    if (!pasteContent.trim() || existingPosts.length === 0) return [];
+    const body = pasteContent.toLowerCase();
+    return existingPosts
+      .map((p) => {
+        const words = p.title.toLowerCase().split(/\s+/).filter((w) => w.length >= 4 && !STOP.has(w));
+        const score = words.filter((w) => body.includes(w)).length;
+        return { ...p, score };
+      })
+      .filter((p) => p.score > 0)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 5);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pasteContent, existingPosts]);
+
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       tokenRef.current = session?.access_token ?? null;
@@ -135,9 +153,10 @@ export default function BlogGeneratePage() {
       headers: { Authorization: `Bearer ${token}` },
     });
     if (res.ok) {
-      const { posts } = await res.json() as { posts: { slug: string }[] };
+      const { posts } = await res.json() as { posts: { slug: string; title: string }[] };
       const slugs = (posts ?? []).map((p) => p.slug);
       setExistingSlugs(slugs);
+      setExistingPosts((posts ?? []).map((p) => ({ slug: p.slug, title: p.title })));
       loadSuggestions(slugs, token);
     }
     setSlugsLoading(false);
@@ -361,6 +380,31 @@ export default function BlogGeneratePage() {
             <p className="text-xs text-[var(--text-muted)]">
               {pasteContent.trim() ? `${countWords(pasteContent).toLocaleString()} words · ${countH2(pasteContent)} H2 headings` : "Paste article content above"}
             </p>
+
+            {suggestedLinks.length > 0 && (
+              <div className="rounded-lg border border-teal-500/20 bg-teal-500/5 p-4 space-y-2">
+                <div className="flex items-center gap-2">
+                  <Link2 className="h-3.5 w-3.5 text-teal-400 flex-shrink-0" />
+                  <p className="text-xs font-semibold text-teal-400 uppercase tracking-wide">Suggested Internal Links</p>
+                </div>
+                <p className="text-xs text-[var(--text-muted)]">Topics in your content that match existing posts — consider linking to them.</p>
+                <div className="space-y-1.5">
+                  {suggestedLinks.map((p) => (
+                    <div key={p.slug} className="flex items-center justify-between gap-3 text-xs">
+                      <span className="text-[var(--text-secondary)] flex-1 truncate">{p.title}</span>
+                      <code
+                        className="text-teal-400 font-mono cursor-pointer hover:text-teal-300 transition-colors flex-shrink-0"
+                        onClick={() => navigator.clipboard.writeText(`[${p.title}](/blog/${p.slug})`)}
+                        title="Click to copy markdown link"
+                      >
+                        /blog/{p.slug}
+                      </code>
+                    </div>
+                  ))}
+                </div>
+                <p className="text-xs text-[var(--text-muted)]">Click a URL to copy the markdown link.</p>
+              </div>
+            )}
           </section>
 
           {pasteError && (

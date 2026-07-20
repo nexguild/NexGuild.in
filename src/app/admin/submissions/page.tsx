@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import {
   CheckCircle2, XCircle, Loader2, Search,
-  FileText, ExternalLink, CheckSquare, RefreshCw, X, Copy, CheckCheck, ShieldAlert,
+  FileText, ExternalLink, CheckSquare, RefreshCw, X, Copy, CheckCheck, ShieldAlert, Download,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar } from "@/components/ui/avatar";
@@ -105,6 +105,14 @@ function StepSubmissionItem({ ss, stepTitle }: { ss: StepSubmission; stepTitle: 
     </div>
   );
 }
+
+const QUICK_REJECT_REASONS = [
+  "Low quality work",
+  "Proof doesn't match task requirements",
+  "Duplicate / copied submission",
+  "Incomplete submission",
+  "Suspicious activity detected",
+];
 
 const TABS = ["submitted", "approved", "rejected", "flagged"] as const;
 type Tab = typeof TABS[number];
@@ -246,6 +254,29 @@ export default function AdminSubmissionsPage() {
     setBulkApproving(false);
   }
 
+  function exportCSV() {
+    const rows = [
+      ["Name", "Email", "Task", "Status", "Submitted", "Coins Awarded", "Suspicious"],
+      ...filtered.map((s) => [
+        s.profiles?.full_name ?? "",
+        s.profiles?.email ?? "",
+        s.tasks?.title ?? "",
+        s.status,
+        new Date(s.submitted_at).toLocaleDateString("en-US"),
+        String(s.coins_awarded ?? ""),
+        s.suspicious ? "Yes" : "No",
+      ]),
+    ];
+    const csv  = rows.map((r) => r.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement("a");
+    a.href     = url;
+    a.download = `submissions-${activeTab}-${new Date().toISOString().split("T")[0]}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
   const isPending = (s: Submission) => s.status === "submitted" || s.status === "pending";
 
   // Unique NexLeaders in the data for the filter dropdown
@@ -307,13 +338,20 @@ export default function AdminSubmissionsPage() {
           <h1 className="text-2xl font-bold text-[var(--text-primary)]">Submissions</h1>
           <p className="text-sm text-[var(--text-secondary)]">Review contributor work and approve or reject.</p>
         </div>
-        {selected.size > 0 && (
-          <Button size="sm" disabled={bulkApproving} onClick={bulkApprove}>
-            {bulkApproving
-              ? <Loader2 className="h-4 w-4 animate-spin" />
-              : <><CheckSquare className="h-4 w-4" /> Approve {selected.size} selected</>}
-          </Button>
-        )}
+        <div className="flex items-center gap-2">
+          {filtered.length > 0 && (
+            <Button variant="secondary" size="sm" onClick={exportCSV}>
+              <Download className="h-4 w-4" /> Export CSV
+            </Button>
+          )}
+          {selected.size > 0 && (
+            <Button size="sm" disabled={bulkApproving} onClick={bulkApprove}>
+              {bulkApproving
+                ? <Loader2 className="h-4 w-4 animate-spin" />
+                : <><CheckSquare className="h-4 w-4" /> Approve {selected.size} selected</>}
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Tabs */}
@@ -566,12 +604,24 @@ export default function AdminSubmissionsPage() {
               </button>
             </div>
 
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-[var(--text-primary)]">Quick reasons</label>
+              <div className="flex flex-wrap gap-1.5">
+                {QUICK_REJECT_REASONS.map((r) => (
+                  <button key={r} onClick={() => setRejectReason(r)} disabled={rejecting}
+                    className="text-xs px-2.5 py-1 rounded-full border border-[var(--border-default)] bg-[var(--surface-subtle)] text-[var(--text-secondary)] hover:border-red-500/40 hover:text-red-400 transition-colors disabled:opacity-50">
+                    {r}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             <div className="space-y-1.5">
               <label className="text-sm font-semibold text-[var(--text-primary)]">Rejection reason <span className="text-red-400">*</span></label>
               <textarea
                 value={rejectReason}
                 onChange={(e) => setRejectReason(e.target.value)}
-                rows={4}
+                rows={3}
                 placeholder="Explain what was wrong with the submission…"
                 className="w-full px-3 py-2.5 rounded-lg border border-[var(--border-default)] bg-[var(--surface-subtle)] text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--border-focus)] resize-none"
                 autoFocus

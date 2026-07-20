@@ -213,7 +213,22 @@ export default function ContributorDetailPage({ params }: { params: Promise<{ id
   }
 
   const approvedSubs = submissions.filter((s) => s.status === "approved");
+  const rejectedSubs = submissions.filter((s) => s.status === "rejected");
   const totalEarned  = approvedSubs.reduce((sum, s) => sum + (s.coins_awarded ?? 0), 0);
+
+  const trustScore = (() => {
+    const total        = submissions.length;
+    const ageDays      = profile.joined_at ? (Date.now() - new Date(profile.joined_at).getTime()) / 86400000 : 0;
+    const approvalRate = total > 0 ? approvedSubs.length / total : 1;
+    const ageScore     = Math.min(ageDays / 7, 10);
+    const actScore     = Math.min(total / 10, 10);
+    const rejPenalty   = Math.min(rejectedSubs.length * 5, 30);
+    return Math.round(Math.max(0, Math.min(100, approvalRate * 70 + ageScore + actScore - rejPenalty)));
+  })();
+  const trustLabel = trustScore >= 80 ? "High Trust" : trustScore >= 50 ? "Medium" : "Low Trust";
+  const trustColor = trustScore >= 80 ? "text-green-400 border-green-500/30 bg-green-500/10"
+    : trustScore >= 50 ? "text-amber-400 border-amber-500/30 bg-amber-500/10"
+    : "text-red-400 border-red-500/30 bg-red-500/10";
 
   if (!allowed) return null;
   return (
@@ -278,6 +293,25 @@ export default function ContributorDetailPage({ params }: { params: Promise<{ id
               <p className="text-lg font-bold text-[var(--text-primary)]">{stat.value}</p>
             </div>
           ))}
+        </div>
+
+        {/* Trust Score */}
+        <div className="mt-4 flex items-center gap-3 rounded-lg border border-[var(--border-default)] bg-[var(--surface-subtle)] px-4 py-3">
+          <div className="flex-1">
+            <p className="text-xs text-[var(--text-muted)] mb-1">Trust Score</p>
+            <div className="flex items-center gap-3">
+              <div className="flex-1 h-2 rounded-full bg-[var(--surface-card)] overflow-hidden">
+                <div className={`h-full rounded-full transition-all ${trustScore >= 80 ? "bg-green-400" : trustScore >= 50 ? "bg-amber-400" : "bg-red-400"}`}
+                  style={{ width: `${trustScore}%` }} />
+              </div>
+              <span className={`text-xs font-bold px-2.5 py-1 rounded-full border ${trustColor}`}>
+                {trustScore} — {trustLabel}
+              </span>
+            </div>
+            <p className="text-[10px] text-[var(--text-muted)] mt-1">
+              Based on approval rate, account age, and activity. Approval: {submissions.length > 0 ? Math.round(approvedSubs.length / submissions.length * 100) : 100}% · Rejections: {rejectedSubs.length}
+            </p>
+          </div>
         </div>
       </div>
 
