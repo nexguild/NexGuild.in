@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import {
   ArrowLeft, Loader2, Sparkles, RefreshCw, CheckCircle2,
-  AlertCircle, ExternalLink, Eye, Edit3, ChevronDown, ChevronUp, Lightbulb,
+  AlertCircle, ExternalLink, Eye, Edit3, ChevronDown, ChevronUp, Lightbulb, ClipboardPaste,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
@@ -76,6 +76,9 @@ export default function BlogGeneratePage() {
   // Phase: form → loading → preview
   const [phase, setPhase] = useState<"form" | "loading" | "preview">("form");
 
+  // Mode: AI generate vs manual paste
+  const [mode, setMode] = useState<"generate" | "paste">("generate");
+
   // Form fields
   const [topic, setTopic]       = useState("");
   const [keyword, setKeyword]   = useState("");
@@ -105,6 +108,17 @@ export default function BlogGeneratePage() {
   // Topic suggestions
   const [suggestions, setSuggestions]         = useState<string[]>([]);
   const [suggestionsLoading, setSuggestionsLoading] = useState(false);
+
+  // Paste mode fields
+  const [pasteTitle, setPasteTitle]       = useState("");
+  const [pasteSlug, setPasteSlug]         = useState("");
+  const [pasteSlugManual, setPasteSlugManual] = useState(false);
+  const [pasteDesc, setPasteDesc]         = useState("");
+  const [pasteCategory, setPasteCategory] = useState("Side Hustles");
+  const [pasteDate, setPasteDate]         = useState(new Date().toISOString().split("T")[0]);
+  const [pasteContent, setPasteContent]   = useState("");
+  const [pasteKeyword, setPasteKeyword]   = useState("");
+  const [pasteError, setPasteError]       = useState<string | null>(null);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -142,6 +156,32 @@ export default function BlogGeneratePage() {
       setSuggestions(s ?? []);
     }
     setSuggestionsLoading(false);
+  }
+
+  function slugify(t: string) {
+    return t.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  }
+
+  function continueWithPaste() {
+    if (!pasteTitle.trim())   { setPasteError("Title is required."); return; }
+    if (!pasteContent.trim()) { setPasteError("Content is required."); return; }
+    setPasteError(null);
+    const slug = pasteSlug.trim() || slugify(pasteTitle);
+    const syntheticPost: GeneratedPost = {
+      title: pasteTitle, slug, description: pasteDesc,
+      category: pasteCategory, date: pasteDate, content: pasteContent,
+    };
+    setPost(syntheticPost);
+    setEditTitle(pasteTitle);
+    setEditSlug(slug);
+    setEditDesc(pasteDesc);
+    setEditContent(pasteContent);
+    setEditCategory(pasteCategory);
+    setEditDate(pasteDate);
+    setKeyword(pasteKeyword);
+    setPublished(null);
+    setPubError(null);
+    setPhase("preview");
   }
 
   async function generate() {
@@ -212,13 +252,132 @@ export default function BlogGeneratePage() {
           <ArrowLeft className="h-5 w-5" />
         </Link>
         <div>
-          <h1 className="text-2xl font-bold text-[var(--text-primary)]">AI Blog Generator</h1>
-          <p className="text-sm text-[var(--text-secondary)]">Generate SEO-optimised posts with Groq AI (llama-3.3-70b)</p>
+          <h1 className="text-2xl font-bold text-[var(--text-primary)]">Blog Publisher</h1>
+          <p className="text-sm text-[var(--text-secondary)]">Generate with AI or paste your own article</p>
         </div>
       </div>
 
-      {/* ── FORM PHASE ────────────────────────────────────────────────────── */}
+      {/* Mode tabs — only visible in form phase */}
       {phase === "form" && (
+        <div className="flex gap-1 p-1 rounded-xl bg-[var(--surface-subtle)] border border-[var(--border-default)] w-fit">
+          <button
+            onClick={() => setMode("generate")}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+              mode === "generate"
+                ? "bg-[var(--surface-card)] text-[var(--text-primary)] shadow-sm"
+                : "text-[var(--text-muted)] hover:text-[var(--text-secondary)]"
+            }`}
+          >
+            <Sparkles className="h-4 w-4" /> AI Generate
+          </button>
+          <button
+            onClick={() => setMode("paste")}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+              mode === "paste"
+                ? "bg-[var(--surface-card)] text-[var(--text-primary)] shadow-sm"
+                : "text-[var(--text-muted)] hover:text-[var(--text-secondary)]"
+            }`}
+          >
+            <ClipboardPaste className="h-4 w-4" /> Paste Article
+          </button>
+        </div>
+      )}
+
+      {/* ── FORM PHASE ────────────────────────────────────────────────────── */}
+      {phase === "form" && mode === "paste" && (
+        <div className="space-y-5 max-w-2xl">
+          <section className="rounded-xl border border-[var(--border-default)] bg-[var(--surface-card)] p-6 space-y-5">
+            <h2 className="font-bold text-[var(--text-primary)]">Article Details</h2>
+
+            <div>
+              <label className={lc}>Title <span className="text-[var(--danger-text)]">*</span></label>
+              <input
+                type="text"
+                value={pasteTitle}
+                onChange={(e) => {
+                  setPasteTitle(e.target.value);
+                  if (!pasteSlugManual) setPasteSlug(slugify(e.target.value));
+                }}
+                placeholder="e.g. How to Get Your First Freelance Client in 2026"
+                className={ic}
+              />
+            </div>
+
+            <div>
+              <label className={lc}>Slug</label>
+              <input
+                type="text"
+                value={pasteSlug}
+                onChange={(e) => { setPasteSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "-")); setPasteSlugManual(true); }}
+                placeholder="auto-generated from title"
+                className={ic}
+              />
+              {pasteSlug && existingSlugs.includes(pasteSlug) && (
+                <p className="text-xs text-red-400 mt-1">⚠ This slug already exists — change it to avoid overwriting.</p>
+              )}
+            </div>
+
+            <div>
+              <label className={lc}>Target SEO Keyword <span className="text-xs font-normal text-[var(--text-muted)]">for SEO scoring</span></label>
+              <input type="text" value={pasteKeyword} onChange={(e) => setPasteKeyword(e.target.value)}
+                placeholder="e.g. fiverr for beginners" className={ic} />
+            </div>
+
+            <div>
+              <label className={lc}>Meta Description</label>
+              <textarea rows={2} value={pasteDesc} onChange={(e) => setPasteDesc(e.target.value)}
+                placeholder="150–160 character summary for search engines" className={tc} />
+              <p className={`text-xs mt-1 ${pasteDesc.length >= 150 && pasteDesc.length <= 160 ? "text-green-400" : "text-[var(--text-muted)]"}`}>
+                {pasteDesc.length} chars · target 150–160
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className={lc}>Category</label>
+                <input type="text" value={pasteCategory} onChange={(e) => setPasteCategory(e.target.value)} className={ic} />
+              </div>
+              <div>
+                <label className={lc}>Date</label>
+                <input type="date" value={pasteDate} onChange={(e) => setPasteDate(e.target.value)} className={ic} />
+              </div>
+            </div>
+          </section>
+
+          <section className="rounded-xl border border-[var(--border-default)] bg-[var(--surface-card)] p-6 space-y-3">
+            <div className="flex items-center justify-between">
+              <h2 className="font-bold text-[var(--text-primary)]">
+                Content <span className="text-[var(--danger-text)]">*</span>
+              </h2>
+              <span className="text-xs text-[var(--text-muted)]">Markdown supported</span>
+            </div>
+            <textarea
+              rows={24}
+              value={pasteContent}
+              onChange={(e) => setPasteContent(e.target.value)}
+              placeholder={`Paste your markdown article here…\n\nExample:\n## Introduction\nYour intro paragraph here.\n\n## Section Two\nMore content…`}
+              className={`${tc} font-mono text-xs leading-relaxed`}
+            />
+            <p className="text-xs text-[var(--text-muted)]">
+              {pasteContent.trim() ? `${countWords(pasteContent).toLocaleString()} words · ${countH2(pasteContent)} H2 headings` : "Paste article content above"}
+            </p>
+          </section>
+
+          {pasteError && (
+            <div className="flex items-center gap-2 rounded-lg border border-red-500/20 bg-red-500/5 px-4 py-3">
+              <AlertCircle className="h-4 w-4 text-red-400 flex-shrink-0" />
+              <p className="text-sm text-red-400">{pasteError}</p>
+            </div>
+          )}
+
+          <Button size="lg" onClick={continueWithPaste} disabled={!pasteTitle.trim() || !pasteContent.trim()}
+            className="w-full sm:w-auto bg-teal-600 hover:bg-teal-700 text-white font-semibold">
+            <Eye className="h-4 w-4" /> Preview &amp; Publish
+          </Button>
+        </div>
+      )}
+
+      {phase === "form" && mode === "generate" && (
         <div className="space-y-5 max-w-2xl">
 
           {/* ── Today's Topic Ideas ─────────────────────────────────────────── */}
@@ -365,9 +524,11 @@ export default function BlogGeneratePage() {
             <Button variant="secondary" size="sm" onClick={() => { setPhase("form"); setPublished(null); setPubError(null); }}>
               <ArrowLeft className="h-3.5 w-3.5" /> Back to Form
             </Button>
-            <Button variant="secondary" size="sm" onClick={generate}>
-              <RefreshCw className="h-3.5 w-3.5" /> Regenerate
-            </Button>
+            {mode === "generate" && (
+              <Button variant="secondary" size="sm" onClick={generate}>
+                <RefreshCw className="h-3.5 w-3.5" /> Regenerate
+              </Button>
+            )}
             <div className="flex-1" />
             {published ? (
               <a href={published.url} target="_blank" rel="noopener noreferrer"
@@ -489,9 +650,11 @@ export default function BlogGeneratePage() {
 
               <section className="rounded-xl border border-[var(--border-default)] bg-[var(--surface-card)] p-5 space-y-2">
                 <h2 className="font-bold text-[var(--text-primary)] text-sm">Quick Actions</h2>
-                <Button size="sm" variant="secondary" className="w-full justify-start gap-2" onClick={generate}>
-                  <RefreshCw className="h-3.5 w-3.5" /> Regenerate
-                </Button>
+                {mode === "generate" && (
+                  <Button size="sm" variant="secondary" className="w-full justify-start gap-2" onClick={generate}>
+                    <RefreshCw className="h-3.5 w-3.5" /> Regenerate
+                  </Button>
+                )}
                 <Button size="sm"
                   className="w-full justify-start gap-2 bg-teal-600 hover:bg-teal-700 text-white"
                   onClick={publish} disabled={publishing}>
