@@ -34,6 +34,37 @@ export async function POST(req: NextRequest) {
   const { taskId } = parsedBody;
   if (!taskId) return NextResponse.json({ ok: true });
 
+  // Record IP and flag suspicious same-IP same-task submissions (fire-and-forget)
+  const ip = req.headers.get("x-forwarded-for")?.split(",")[0].trim()
+          ?? req.headers.get("x-real-ip")
+          ?? "unknown";
+  (async () => {
+    try {
+      const adminIp = makeAdmin();
+      await adminIp.from("submissions")
+        .update({ ip_address: ip })
+        .eq("task_id", taskId)
+        .eq("contributor_id", user.id);
+
+      const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+      const { data: dupes } = await adminIp
+        .from("submissions")
+        .select("contributor_id")
+        .eq("task_id", taskId)
+        .eq("ip_address", ip)
+        .neq("contributor_id", user.id)
+        .gte("submitted_at", since)
+        .limit(1);
+
+      if (dupes && dupes.length > 0) {
+        await adminIp.from("submissions")
+          .update({ suspicious: true })
+          .eq("task_id", taskId)
+          .eq("contributor_id", user.id);
+      }
+    } catch { /* never block the submitter */ }
+  })();
+
   try {
     const [{ data: profile }, { data: task }, { data: sub }] = await Promise.all([
       admin.from("profiles").select("full_name").eq("id", user.id).single(),

@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import {
   LayoutDashboard, Users, FolderOpen,
   ClipboardCheck, Layers, Gift, BarChart3,
-  Settings, LogOut, ClipboardList, GraduationCap, Megaphone, Headphones, Tag, X, Activity, Crown, Newspaper, TrendingUp, Briefcase,
+  Settings, LogOut, ClipboardList, GraduationCap, Megaphone, Headphones, Tag, X, Activity, Crown, Newspaper, TrendingUp, Briefcase, ShieldAlert,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { NexGuildLogo } from "@/components/ui/nexguild-logo";
@@ -23,20 +23,23 @@ export function AdminSidebar({ open, onClose }: AdminSidebarProps) {
   const [withdrawalCount, setWithdrawalCount]   = useState(0);
   const [assignmentCount, setAssignmentCount]   = useState(0);
   const [supportCount, setSupportCount]         = useState(0);
+  const [suspiciousCount, setSuspiciousCount]   = useState(0);
 
   useEffect(() => {
     async function fetchCounts() {
       try {
-        const [{ count: wdCount }, { count: subCount }, { count: asnCount }, { count: supCount }] = await Promise.all([
+        const [{ count: wdCount }, { count: subCount }, { count: asnCount }, { count: supCount }, { count: susCount }] = await Promise.all([
           supabase.from("voucher_requests").select("*", { count: "exact", head: true }).eq("status", "pending"),
           supabase.from("submissions").select("*", { count: "exact", head: true }).eq("status", "submitted"),
           supabase.from("assignments").select("*", { count: "exact", head: true }).eq("status", "pending"),
           supabase.from("support_tickets").select("*", { count: "exact", head: true }).eq("status", "open"),
+          supabase.from("proof_code_submissions").select("*", { count: "exact", head: true }).eq("suspicious", true).eq("reviewed", false),
         ]);
         setWithdrawalCount(wdCount ?? 0);
         setSubmissionCount(subCount ?? 0);
         setAssignmentCount(asnCount ?? 0);
         setSupportCount(supCount ?? 0);
+        setSuspiciousCount(susCount ?? 0);
       } catch {
         // silently keep counts at 0 if queries fail
       }
@@ -61,6 +64,7 @@ export function AdminSidebar({ open, onClose }: AdminSidebarProps) {
     { label: "Finances",         href: "/admin/finances",        icon: BarChart3,       badge: 0 },
     { label: "NexLeaders",        href: "/admin/nexleaders",      icon: Crown,           badge: 0 },
     { label: "Postback Logs",    href: "/admin/postback-logs",   icon: Activity,        badge: 0 },
+    { label: "Suspicious Visits", href: "/admin/suspicious-visits", icon: ShieldAlert,   badge: suspiciousCount },
     { label: "Insights",         href: "/admin/insights",        icon: TrendingUp,      badge: 0 },
     { label: "Settings",         href: "/admin/settings",        icon: Settings,        badge: 0 },
   ];

@@ -60,12 +60,18 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ valid: false, reason: "invalid_code" });
   }
 
+  // Get client IP (Vercel sets x-forwarded-for)
+  const ip = req.headers.get("x-forwarded-for")?.split(",")[0].trim()
+          ?? req.headers.get("x-real-ip")
+          ?? "unknown";
+
   // Record submission — the UNIQUE constraint (contributor_id, site_slug, code) prevents reuse
   const { error: insertErr } = await admin.from("proof_code_submissions").insert({
     contributor_id: user.id,
     site_slug:      siteSlug,
     task_id:        taskId,
     code,
+    ip_address:     ip,
   });
 
   if (insertErr) {
@@ -74,6 +80,26 @@ export async function POST(req: NextRequest) {
     }
     console.error("[proof-code/validate] insert error:", insertErr.message);
     return NextResponse.json({ valid: false, reason: "db_error" }, { status: 500 });
+  }
+
+  // Flag if same IP already has a submission for this site from a different user in the last 24h
+  const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+  const { data: dupes } = await admin
+    .from("proof_code_submissions")
+    .select("contributor_id")
+    .eq("site_slug", siteSlug)
+    .eq("ip_address", ip)
+    .neq("contributor_id", user.id)
+    .gte("created_at", since)
+    .limit(1);
+
+  if (dupes && dupes.length > 0) {
+    await admin
+      .from("proof_code_submissions")
+      .update({ suspicious: true })
+      .eq("contributor_id", user.id)
+      .eq("site_slug", siteSlug)
+      .eq("code", code);
   }
 
   return NextResponse.json({ valid: true });
