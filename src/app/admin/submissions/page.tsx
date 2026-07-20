@@ -152,6 +152,9 @@ export default function AdminSubmissionsPage() {
   const [token, setToken]                 = useState<string | null>(null);
   const [selected, setSelected]           = useState<Set<string>>(new Set());
   const [bulkApproving, setBulkApproving] = useState(false);
+  const [bulkRejectModal, setBulkRejectModal]   = useState(false);
+  const [bulkRejectReason, setBulkRejectReason] = useState("");
+  const [bulkRejecting, setBulkRejecting]       = useState(false);
   const [copiedId, setCopiedId]           = useState<string | null>(null);
 
   function copyId(id: string) {
@@ -254,6 +257,25 @@ export default function AdminSubmissionsPage() {
     setBulkApproving(false);
   }
 
+  async function bulkReject() {
+    if (!token || selected.size === 0 || !bulkRejectReason.trim()) return;
+    setBulkRejecting(true);
+    for (const id of selected) {
+      await fetch("/api/admin/review-submission", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ submissionId: id, action: "reject", feedback: bulkRejectReason.trim() }),
+      });
+      setSubmissions((prev) =>
+        prev.map((s) => s.id === id ? { ...s, status: "rejected" } : s)
+      );
+    }
+    setSelected(new Set());
+    setBulkRejectModal(false);
+    setBulkRejectReason("");
+    setBulkRejecting(false);
+  }
+
   function exportCSV() {
     const rows = [
       ["Name", "Email", "Task", "Status", "Submitted", "Coins Awarded", "Suspicious"],
@@ -345,11 +367,17 @@ export default function AdminSubmissionsPage() {
             </Button>
           )}
           {selected.size > 0 && (
-            <Button size="sm" disabled={bulkApproving} onClick={bulkApprove}>
-              {bulkApproving
-                ? <Loader2 className="h-4 w-4 animate-spin" />
-                : <><CheckSquare className="h-4 w-4" /> Approve {selected.size} selected</>}
-            </Button>
+            <>
+              <Button size="sm" disabled={bulkApproving || bulkRejecting} onClick={bulkApprove}>
+                {bulkApproving
+                  ? <Loader2 className="h-4 w-4 animate-spin" />
+                  : <><CheckSquare className="h-4 w-4" /> Approve {selected.size}</>}
+              </Button>
+              <Button variant="destructive" size="sm" disabled={bulkApproving || bulkRejecting}
+                onClick={() => { setBulkRejectModal(true); setBulkRejectReason(""); }}>
+                <XCircle className="h-4 w-4" /> Reject {selected.size}
+              </Button>
+            </>
           )}
         </div>
       </div>
@@ -661,6 +689,69 @@ export default function AdminSubmissionsPage() {
             </div>
 
             <Button variant="ghost" className="w-full" onClick={() => { setRejectModal(null); setRejectReason(""); }} disabled={rejecting}>
+              Cancel
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Bulk Reject Modal */}
+      {bulkRejectModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+          onClick={(e) => { if (e.target === e.currentTarget && !bulkRejecting) { setBulkRejectModal(false); setBulkRejectReason(""); } }}
+        >
+          <div className="w-full max-w-md rounded-2xl border border-[var(--border-default)] bg-[var(--surface-card)] shadow-2xl p-6 space-y-5">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h2 className="text-base font-bold text-[var(--text-primary)]">Reject {selected.size} Submissions</h2>
+                <p className="text-sm text-[var(--text-muted)] mt-0.5">One reason applied to all selected submissions.</p>
+              </div>
+              <button
+                onClick={() => { if (!bulkRejecting) { setBulkRejectModal(false); setBulkRejectReason(""); } }}
+                className="h-8 w-8 flex items-center justify-center rounded-lg border border-[var(--border-default)] text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-subtle)] transition-colors disabled:opacity-50"
+                disabled={bulkRejecting}
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-[var(--text-primary)]">Quick reasons</label>
+              <div className="flex flex-wrap gap-1.5">
+                {QUICK_REJECT_REASONS.map((r) => (
+                  <button key={r} onClick={() => setBulkRejectReason(r)} disabled={bulkRejecting}
+                    className="text-xs px-2.5 py-1 rounded-full border border-[var(--border-default)] bg-[var(--surface-subtle)] text-[var(--text-secondary)] hover:border-red-500/40 hover:text-red-400 transition-colors disabled:opacity-50">
+                    {r}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-sm font-semibold text-[var(--text-primary)]">Rejection reason <span className="text-red-400">*</span></label>
+              <textarea
+                value={bulkRejectReason}
+                onChange={(e) => setBulkRejectReason(e.target.value)}
+                rows={3}
+                placeholder="Explain what was wrong with these submissions…"
+                className="w-full px-3 py-2.5 rounded-lg border border-[var(--border-default)] bg-[var(--surface-subtle)] text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--border-focus)] resize-none"
+                autoFocus
+                disabled={bulkRejecting}
+              />
+            </div>
+
+            <Button
+              variant="destructive"
+              className="w-full"
+              onClick={bulkReject}
+              disabled={bulkRejecting || !bulkRejectReason.trim()}
+            >
+              {bulkRejecting
+                ? <><Loader2 className="h-4 w-4 animate-spin" /> Rejecting…</>
+                : <><XCircle className="h-4 w-4" /> Reject {selected.size} submissions</>}
+            </Button>
+            <Button variant="ghost" className="w-full" onClick={() => { setBulkRejectModal(false); setBulkRejectReason(""); }} disabled={bulkRejecting}>
               Cancel
             </Button>
           </div>

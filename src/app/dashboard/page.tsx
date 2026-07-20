@@ -333,6 +333,9 @@ export default function DashboardHome() {
   const [claimingDay, setClaimingDay]       = useState(false);
   const [claimResult, setClaimResult]       = useState<{ awarded: number; is_day7_bonus: boolean } | null>(null);
   const [claimError, setClaimError]         = useState<string | null>(null);
+  const [loginRewardClaimed, setLoginRewardClaimed] = useState<boolean | null>(null);
+  const [claimingLogin, setClaimingLogin]           = useState(false);
+  const [loginRewardAmount, setLoginRewardAmount]   = useState<number | null>(null);
 
   useEffect(() => {
     async function fetchData() {
@@ -414,6 +417,7 @@ export default function DashboardHome() {
 
       const txRows = (txData ?? []) as CoinTx[];
       setTotalEarned(txRows.reduce((s, r) => s + (r.amount ?? 0), 0));
+      setLoginRewardClaimed(txRows.some(r => r.source === "daily_login" && r.created_at.startsWith(today)));
 
       const todayTaskTx = txRows.filter(r => r.created_at.startsWith(today) && (r.source === "task" || r.source == null));
       setTodayApproved(todayTaskTx.length);
@@ -478,6 +482,26 @@ export default function DashboardHome() {
       }
     } catch { setClaimError("Network error. Try again."); }
     setClaimingDay(false);
+  }
+
+  async function claimLoginReward() {
+    setClaimingLogin(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await fetch("/api/daily-reward/claim", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${session?.access_token ?? ""}` },
+      });
+      const data = await res.json() as { success?: boolean; amount?: number; already_claimed?: boolean };
+      if (data.success) {
+        setLoginRewardClaimed(true);
+        setLoginRewardAmount(data.amount ?? 5);
+        setProfile(prev => prev ? { ...prev, nexcoins: prev.nexcoins + (data.amount ?? 5) } : prev);
+      } else {
+        setLoginRewardClaimed(true);
+      }
+    } catch { /* ignore */ }
+    setClaimingLogin(false);
   }
 
   /* ── Derived values ─────────────────────────────────────────────── */
@@ -625,6 +649,45 @@ export default function DashboardHome() {
           <span>👑</span><span>NexLeader Hub</span>
         </Link>
       </div>
+
+      {/* ── DAILY LOGIN REWARD ──────────────────────────────────────── */}
+      {!loading && loginRewardClaimed !== null && (
+        <div className="animate-fade-slide-up" style={{ animationDelay: "150ms" }}>
+          <div className={`rounded-2xl border px-5 py-3.5 flex items-center gap-4 transition-all duration-300 ${
+            loginRewardClaimed
+              ? "bg-emerald-50/80 border-emerald-200/60 dark:bg-emerald-950/30 dark:border-emerald-800/40"
+              : "bg-amber-50/80 border-amber-200/60 dark:bg-amber-950/30 dark:border-amber-800/40"
+          }`}>
+            <div className={`h-10 w-10 rounded-xl flex items-center justify-center flex-shrink-0 text-xl ${
+              loginRewardClaimed ? "bg-emerald-100 dark:bg-emerald-900/40" : "bg-amber-100 dark:bg-amber-900/40"
+            }`}>
+              {loginRewardClaimed ? "✅" : "🎁"}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className={`text-sm font-semibold ${loginRewardClaimed ? "text-emerald-700 dark:text-emerald-300" : "text-amber-700 dark:text-amber-300"}`}>
+                {loginRewardClaimed
+                  ? loginRewardAmount ? `+${loginRewardAmount} NC claimed!` : "Daily reward claimed"
+                  : "Daily Login Reward"}
+              </p>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                {loginRewardClaimed
+                  ? "Come back tomorrow for another reward."
+                  : "Claim 5 NC just for logging in today."}
+              </p>
+            </div>
+            {!loginRewardClaimed && (
+              <button
+                onClick={claimLoginReward}
+                disabled={claimingLogin}
+                className="flex-shrink-0 px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-sm font-semibold transition-colors disabled:opacity-60 disabled:cursor-not-allowed flex items-center gap-1.5"
+              >
+                {claimingLogin ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : null}
+                {claimingLogin ? "Claiming…" : "Claim +5 NC"}
+              </button>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* ── FIX 3: STAT CARDS ───────────────────────────────────────── */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
