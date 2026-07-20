@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Crown, CheckCircle2, XCircle, Loader2, Users, TrendingUp, AlertCircle } from "lucide-react";
+import { Crown, CheckCircle2, XCircle, Loader2, Users, TrendingUp, AlertCircle, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
 import { usePageGuard } from "@/components/layout/admin-auth-guard";
@@ -30,11 +30,13 @@ interface NexLeader {
   nexleader_approved_at: string | null;
   guild_total_members: number;
   guild_total_earned: number;
+  active_this_week: number;
   is_active: boolean | null;
 }
 
 interface Stats {
   total_active: number;
+  pending_apps: number;
   total_nc_paid: number;
   top_leader_name: string;
   top_leader_nc: number;
@@ -51,6 +53,9 @@ export default function AdminNexLeadersPage() {
   const [stats, setStats]               = useState<Stats | null>(null);
   const [loading, setLoading]           = useState(true);
   const [acting, setActing]             = useState<string | null>(null);
+
+  // Application status filter
+  const [appFilter, setAppFilter] = useState<"pending" | "all">("pending");
 
   // Reject modal
   const [rejectTarget, setRejectTarget] = useState<string | null>(null);
@@ -132,7 +137,8 @@ export default function AdminNexLeadersPage() {
 
   if (!allowed) return null;
 
-  const pendingApps = applications.filter((a) => a.status === "pending");
+  const pendingApps    = applications.filter((a) => a.status === "pending");
+  const filteredApps   = appFilter === "pending" ? pendingApps : applications;
 
   return (
     <div className="space-y-6">
@@ -148,10 +154,10 @@ export default function AdminNexLeadersPage() {
       {stats && (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {[
-            { label: "Active NexLeaders", value: stats.total_active, icon: Crown,       color: "text-yellow-400" },
-            { label: "Pending Applications", value: pendingApps.length, icon: Loader2, color: "text-blue-400"   },
-            { label: "Total NC in Commissions", value: stats.total_nc_paid, icon: NexCoinIcon, color: "text-green-400" },
-            { label: "Top Leader", value: stats.top_leader_name || "—", icon: TrendingUp, color: "text-[var(--brand-500)]" },
+            { label: "Active NexLeaders",      value: stats.total_active,          color: "text-yellow-400"            },
+            { label: "Pending Applications",   value: stats.pending_apps,          color: "text-blue-400"              },
+            { label: "Total NC Commissions",   value: stats.total_nc_paid,         color: "text-green-400"             },
+            { label: "Top Leader",             value: stats.top_leader_name || "—", color: "text-[var(--brand-500)]"   },
           ].map((s) => (
             <div key={s.label} className="rounded-xl border border-[var(--border-default)] bg-[var(--surface-card)] p-4">
               <p className="text-xs text-[var(--text-muted)] uppercase tracking-wider mb-1">{s.label}</p>
@@ -185,10 +191,22 @@ export default function AdminNexLeadersPage() {
       ) : tab === "applications" ? (
         /* ── Applications Tab ─────────────────────────────────────────────── */
         <div className="space-y-4">
-          {applications.length === 0 ? (
-            <p className="text-sm text-[var(--text-muted)] text-center py-12">No applications yet.</p>
+          <div className="flex items-center gap-2">
+            {(["pending", "all"] as const).map((f) => (
+              <button key={f} onClick={() => setAppFilter(f)}
+                className={`text-xs px-3 py-1.5 rounded-full font-semibold transition-colors ${
+                  appFilter === f
+                    ? "bg-[var(--brand-500)] text-white"
+                    : "border border-[var(--border-default)] text-[var(--text-muted)] hover:text-[var(--text-primary)]"
+                }`}>
+                {f === "pending" ? `Pending (${pendingApps.length})` : `All (${applications.length})`}
+              </button>
+            ))}
+          </div>
+          {filteredApps.length === 0 ? (
+            <p className="text-sm text-[var(--text-muted)] text-center py-12">No applications.</p>
           ) : (
-            applications.map((app) => (
+            filteredApps.map((app) => (
               <div key={app.id} className="rounded-xl border border-[var(--border-default)] bg-[var(--surface-card)] p-5 space-y-4">
                 <div className="flex items-start justify-between gap-4">
                   <div>
@@ -263,6 +281,7 @@ export default function AdminNexLeadersPage() {
                 <tr className="border-b border-[var(--border-default)] text-xs text-[var(--text-muted)] uppercase tracking-wider">
                   <th className="text-left px-4 py-3 font-semibold">Name</th>
                   <th className="text-left px-4 py-3 font-semibold">Members</th>
+                  <th className="text-left px-4 py-3 font-semibold">Active / Week</th>
                   <th className="text-left px-4 py-3 font-semibold">Commission</th>
                   <th className="text-left px-4 py-3 font-semibold">Since</th>
                   <th className="text-left px-4 py-3 font-semibold">Status</th>
@@ -273,7 +292,13 @@ export default function AdminNexLeadersPage() {
                 {nexleaders.map((l) => (
                   <tr key={l.id} className="hover:bg-[var(--surface-subtle)] transition-colors">
                     <td className="px-4 py-3">
-                      <p className="font-medium text-[var(--text-primary)]">{l.full_name ?? "—"}</p>
+                      <a href={`/admin/contributors/${l.id}`} target="_blank" rel="noreferrer"
+                        className="group flex items-center gap-1.5">
+                        <p className="font-medium text-[var(--text-primary)] group-hover:text-[var(--brand-500)] transition-colors">
+                          {l.full_name ?? "—"}
+                        </p>
+                        <ExternalLink className="h-3 w-3 text-[var(--text-muted)] opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
+                      </a>
                       <p className="text-xs text-[var(--text-muted)]">{l.email}</p>
                     </td>
                     <td className="px-4 py-3">
@@ -283,14 +308,19 @@ export default function AdminNexLeadersPage() {
                       </div>
                     </td>
                     <td className="px-4 py-3">
+                      <span className={`text-sm font-semibold ${l.active_this_week > 0 ? "text-green-400" : "text-[var(--text-muted)]"}`}>
+                        {l.active_this_week > 0 ? `${l.active_this_week} active` : "—"}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
                       <div className="flex items-center gap-1 text-yellow-400 font-semibold">
                         <NexCoinIcon size={12} />
                         {l.guild_total_earned}
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-[var(--text-muted)]">
+                    <td className="px-4 py-3 text-[var(--text-muted)] text-xs">
                       {l.nexleader_approved_at
-                        ? new Date(l.nexleader_approved_at).toLocaleDateString()
+                        ? new Date(l.nexleader_approved_at).toLocaleDateString("en-US", { day: "numeric", month: "short", year: "numeric" })
                         : "—"}
                     </td>
                     <td className="px-4 py-3">

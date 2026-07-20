@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import { getResend, FROM_NOREPLY, nexleaderApprovedHtml } from "@/lib/email";
+import { getResend, FROM_NOREPLY, nexleaderApprovedHtml, nexleaderRejectedHtml } from "@/lib/email";
 
 const SOMEN_ID = "6c95c54a-33e6-489b-9175-3626c774635e";
 const PROMOTION_FEE = 500;
@@ -31,7 +31,9 @@ export async function GET(req: NextRequest) {
   if (!ctx) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   const { admin } = ctx;
 
-  const [appsRes, leadersRes, commStatsRes] = await Promise.all([
+  const weekAgo = new Date(Date.now() - 7 * 86400000).toISOString();
+
+  const [appsRes, leadersRes, commStatsRes, activeWeekRes] = await Promise.all([
     admin
       .from("nexleader_applications")
       .select(`
@@ -49,6 +51,11 @@ export async function GET(req: NextRequest) {
     admin
       .from("nexleader_commissions")
       .select("nexleader_id, nexleader_credit"),
+    // Distinct (nexleader_id, member_id) pairs active this week
+    admin
+      .from("nexleader_commissions")
+      .select("nexleader_id, member_id")
+      .gte("created_at", weekAgo),
   ]);
 
   // Resolve NexLeader names for applications
@@ -82,6 +89,13 @@ export async function GET(req: NextRequest) {
     commsByLeader.set(c.nexleader_id, (commsByLeader.get(c.nexleader_id) ?? 0) + c.nexleader_credit);
   }
 
+  // Active members this week per NexLeader
+  const activeByLeader = new Map<string, Set<string>>();
+  for (const r of (activeWeekRes.data ?? []) as { nexleader_id: string; member_id: string }[]) {
+    if (!activeByLeader.has(r.nexleader_id)) activeByLeader.set(r.nexleader_id, new Set());
+    activeByLeader.get(r.nexleader_id)!.add(r.member_id);
+  }
+
   const totalNcPaid = [...commsByLeader.values()].reduce((s, v) => s + v, 0);
   const topEntry = [...commsByLeader.entries()].sort((a, b) => b[1] - a[1])[0];
 
@@ -100,9 +114,17 @@ export async function GET(req: NextRequest) {
       current_nexleader_id:     a.profiles?.nexleader_id ?? null,
       current_nexleader_name:   a.profiles?.nexleader_id ? nlMap.get(a.profiles.nexleader_id) ?? "Unknown" : "Platform",
     })),
-    nexleaders: leadersRes.data ?? [],
+    nexleaders: ((leadersRes.data ?? []) as {
+      id: string; full_name: string | null; email: string | null;
+      is_nexleader: boolean; nexleader_approved_at: string | null;
+      guild_total_members: number; guild_total_earned: number; is_active: boolean | null;
+    }[]).map((l) => ({
+      ...l,
+      active_this_week: activeByLeader.get(l.id)?.size ?? 0,
+    })),
     stats: {
       total_active:     (leadersRes.data ?? []).length,
+      pending_apps:     (appsRes.data ?? []).filter((a) => (a as { status: string }).status === "pending").length,
       total_nc_paid:    totalNcPaid,
       top_leader_name:  topLeaderName,
       top_leader_nc:    topEntry?.[1] ?? 0,
@@ -285,6 +307,20 @@ export async function POST(req: NextRequest) {
         : "Your NexLeader application was not approved at this time.",
       type: "system",
     });
+
+    // Send rejection email
+    const { data: rejProfile } = await admin
+      .from("profiles").select("full_name, email").eq("id", a.contributor_id).single();
+    const rp = rejProfile as { full_name: string | null; email: string | null } | null;
+    if (rp?.email) {
+      const resend = getResend();
+      resend?.emails.send({
+        from:    FROM_NOREPLY,
+        to:      rp.email,
+        subject: "NexLeader Application Update",
+        html:    nexleaderRejectedHtml(rp.full_name ?? "there", reason || null),
+      }).catch((e: unknown) => console.error("[nexleaders/reject] email error:", e));
+    }
 
     return NextResponse.json({ ok: true });
   }

@@ -538,7 +538,40 @@ ${btn("Open NexLeader Dashboard →", "https://nexguild.in/dashboard/nexleader")
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 12. Account Deactivated
+// 12. NexLeader Rejected
+// ─────────────────────────────────────────────────────────────────────────────
+export function nexleaderRejectedHtml(name: string, reason: string | null): string {
+  const n = esc(name), r = reason ? esc(reason) : null;
+  return layout(`
+<h1 style="margin:0 0 6px;font-size:22px;font-weight:800;color:#fff;">NexLeader Application Update</h1>
+<p style="margin:0 0 24px;font-size:14px;color:rgba(255,255,255,0.38);">We've reviewed your application</p>
+
+<p style="margin:0 0 20px;font-size:15px;color:rgba(255,255,255,0.7);line-height:1.7;">
+  Hi <strong style="color:#fff;">${n}</strong>,<br><br>
+  Thank you for applying to the NexLeader Program. After reviewing your application, we're unable to approve it at this time.
+</p>
+
+${r ? `<div style="background:#1c1010;border:1px solid rgba(239,68,68,0.25);border-left:3px solid #ef4444;border-radius:0 8px 8px 0;padding:16px 20px;margin:0 0 20px;">
+  <p style="margin:0 0 8px;font-size:12px;font-weight:700;color:#f87171;text-transform:uppercase;letter-spacing:1px;">Reason</p>
+  <p style="margin:0;font-size:14px;color:rgba(255,255,255,0.7);line-height:1.7;">${r}</p>
+</div>` : ""}
+
+<div style="background:#111;border:1px solid rgba(245,158,11,0.2);border-radius:10px;padding:16px 20px;margin:0 0 24px;">
+  <p style="margin:0 0 10px;font-size:12px;font-weight:700;color:#F59E0B;text-transform:uppercase;letter-spacing:1px;">You can reapply after</p>
+  <p style="margin:0 0 6px;font-size:14px;color:rgba(255,255,255,0.6);line-height:1.6;">• Earning more NexCoins to strengthen your profile</p>
+  <p style="margin:0 0 6px;font-size:14px;color:rgba(255,255,255,0.6);line-height:1.6;">• Growing your community further</p>
+  <p style="margin:0;font-size:14px;color:rgba(255,255,255,0.6);line-height:1.6;">• Addressing the feedback above</p>
+</div>
+
+<p style="margin:0 0 20px;font-size:13px;color:rgba(255,255,255,0.4);">
+  Questions? Reply to this email or contact us at <a href="mailto:admin@nexguild.in" style="color:#F59E0B;text-decoration:none;">admin@nexguild.in</a>
+</p>
+
+${btn("Keep Earning →", "https://nexguild.in/earn")}`);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 13. Account Deactivated
 // ─────────────────────────────────────────────────────────────────────────────
 export function accountDeactivatedHtml(name: string, adminEmail: string): string {
   const n = esc(name), a = esc(adminEmail);
