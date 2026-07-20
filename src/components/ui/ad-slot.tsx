@@ -5,11 +5,8 @@ import { useEffect, useRef } from "react";
 const ENABLE_MONETAG_ADS = true;
 const ACTIVE_PLACEMENTS = [
   "blog-post-top",    // individual blog articles
+  "blog-post-end",    // bottom of blog articles
   "blog-index-top",   // /earn/blog listing
-  "earn-top",         // /earn main page
-  "faq-top",          // /earn/faq
-  "how-it-works-top", // /earn/how-it-works
-  "jobs-top",         // /earn/jobs
 ];
 
 // Monetag Vignette — zone 11179049 via n6wxm.com/vignette.min.js
