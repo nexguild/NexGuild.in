@@ -22,7 +22,7 @@ Appen is one of the largest and most established crowdsourcing platforms in the 
 
 Getting started on Appen involves creating a free account and completing a qualification process for specific projects. Some projects require a language qualification test; others require you to pass a project-specific guideline exam before accessing the work. This onboarding process can take anywhere from a few days to a few weeks depending on which projects are open in your region.
 
-Pay on Appen varies significantly by project and region. Search engine rating projects typically pay between $10 and $15 per hour for contributors who pass the relevant assessments. Payments are processed monthly via PayPal. One important reality to understand about Appen: project availability fluctuates. Some contributors work steadily for months; others see gaps between projects. Having a backup earning source during quiet periods is worth planning for from the start.
+Pay on Appen varies significantly by project and region. Search engine rating projects typically pay between $10 and $15 per hour for contributors who pass the relevant assessments. Payments are processed monthly via PayPal. One important reality to understand about Appen: project availability fluctuates. Some contributors work steadily for months; others see gaps between projects. Having a backup earning source during quiet periods is worth planning for from the start. For a full breakdown of how Appen works, read our [complete Appen review for 2026](/earn/blog/appen-review-2026-legit-worth-it).
 
 ## Telus International AI: Flexible Work for Search Engine Raters
 
@@ -48,7 +48,7 @@ Clickworker is a German-based crowdsourcing platform with a large global contrib
 
 Pay rates on Clickworker are modest — typically $7 to $10 per hour equivalent, depending on task type and how efficiently you complete work. Payments are processed via PayPal or SEPA bank transfer (for European contributors), usually on a weekly or bi-weekly schedule once your balance reaches the minimum threshold.
 
-Clickworker works best for contributors who want to start earning quickly without committing to a lengthy onboarding process. The tasks are varied enough to stay interesting across a session, and the platform's mobile app allows you to complete shorter tasks from a phone when a full computer session is not practical.
+Clickworker works best for contributors who want to start earning quickly without committing to a lengthy onboarding process. The tasks are varied enough to stay interesting across a session, and the platform's mobile app allows you to complete shorter tasks from a phone when a full computer session is not practical. See our [Clickworker review 2026](/earn/blog/clickworker-review-2026-worth-it) for a deeper look at pay rates, assessments, and what to expect in your first month.
 
 ## Remotasks: AI-Powered Task Labeling for Machine Learning
 
