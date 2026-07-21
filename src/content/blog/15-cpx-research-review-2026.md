@@ -22,6 +22,11 @@ CPX Research is a survey and market research network that connects publishers (w
 
 This review covers what CPX Research is, how their survey system works, what payouts typically look like, and how it operates when accessed through an integrated platform like NexGuild.
 
+<figure>
+  <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&auto=format&fit=crop&q=80" alt="focused person working independently on a laptop" />
+  <figcaption>CPX Research connects survey takers with market research studies — completing your profile accurately is the most reliable way to qualify more often.</figcaption>
+</figure>
+
 ## What CPX Research Actually Is
 
 CPX Research is a market research technology company, not a standalone survey site you sign up for as an individual. They operate as an offerwall and survey network — meaning companies that want to offer surveys to their users integrate CPX Research's technology, and CPX supplies the actual survey inventory.
@@ -49,6 +54,11 @@ Typical survey values range from a few hundred NexCoins for short 2–5 minute s
 When you complete a CPX Research survey, they verify the completion on their end and fire a server-to-server notification to the platform you're using. On NexGuild, this automatically credits NexCoins to your balance — no manual approval needed. You'll see the credit appear in your earnings and wallet shortly after survey completion.
 
 This automatic crediting is one of the more reliable aspects of CPX Research's integration — completions that pass their quality checks are credited quickly, without the manual review delays that task-based work involves.
+
+<figure>
+  <img src="https://images.unsplash.com/photo-1553877522-43269d4ea984?w=800&auto=format&fit=crop&q=80" alt="person reviewing documents and making notes" />
+  <figcaption>Survey quality checks are built into CPX Research's flow — answering consistently and carefully is what separates earners who get credited from those who don't.</figcaption>
+</figure>
 
 ## Quality Checks
 

@@ -8,6 +8,11 @@ date: "2026-06-21"
 
 If you've spent any time online over the last few years, you've probably come across the term "gig economy." It gets thrown around a lot — sometimes to describe food delivery riders, sometimes freelance designers, sometimes people doing small digital tasks from their phone between classes or after work. So what does it actually mean, and why has it become such a big part of how India works and earns?
 
+<figure>
+  <img src="https://images.unsplash.com/photo-1521737711867-e3b97375f902?w=800&auto=format&fit=crop&q=80" alt="remote workers collaborating on computers" />
+  <figcaption>Remote work and crowdsourcing platforms have opened up flexible income paths for millions of people worldwide.</figcaption>
+</figure>
+
 ## Defining the Gig Economy
 
 At its core, the gig economy refers to a labor market built around short-term, flexible work arrangements instead of traditional full-time employment. Rather than committing to one employer for years, people take on individual "gigs" — a task, a project, a delivery, a freelance assignment — and get paid per piece of work rather than a fixed monthly salary.
@@ -37,6 +42,11 @@ The gig economy isn't one single thing — it spans a wide range of work types:
 - **On-demand local services** — home repairs, tutoring, event staffing
 
 Micro-task and digital task work in particular has grown quickly because it requires no physical commute, no specialized equipment, and can often be done in short bursts — ten minutes here, twenty minutes there — which fits naturally around school, a day job, or family responsibilities.
+
+<figure>
+  <img src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&auto=format&fit=crop&q=80" alt="analytics and data charts on a laptop screen" />
+  <figcaption>Understanding the gig economy means tracking where demand is growing — and which platforms pay the most reliably.</figcaption>
+</figure>
 
 ## The Real Appeal: Flexibility Over Everything
 

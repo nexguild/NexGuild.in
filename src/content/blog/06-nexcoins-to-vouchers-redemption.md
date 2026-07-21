@@ -9,6 +9,11 @@ date: "2026-06-21"
 
 One of the most common questions from new contributors is simple: "I've earned NexCoins — now what?" This post walks through exactly how the NexCoins economy works on NexGuild, from earning to redemption.
 
+<figure>
+  <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&auto=format&fit=crop&q=80" alt="focused person working independently on a laptop" />
+  <figcaption>NexCoins accumulate with every approved task and survey — and redeem directly for Amazon, Flipkart, Google Play, and Zomato vouchers.</figcaption>
+</figure>
+
 ## What Are NexCoins?
 
 NexCoins are NexGuild's in-platform currency. You earn them by completing approved tasks, participating in offerwall activities, and through daily streak bonuses. They're not a cryptocurrency and they're not directly cash — instead, they're a points system designed specifically to be redeemed for real rewards through NexStore.
@@ -32,6 +37,11 @@ There are a few ways NexCoins make it into your balance:
 ## Tracking Your Balance
 
 Your dashboard and Earnings page give you a complete view of your NexCoins activity: current available balance, total lifetime earned, a breakdown by source (tasks, offerwall, streak bonuses), and a full transaction history you can filter and export.
+
+<figure>
+  <img src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&auto=format&fit=crop&q=80" alt="analytics and data charts on a laptop screen" />
+  <figcaption>Tracking your NexCoin balance and choosing the right redemption option is how you turn online task work into real purchasing power.</figcaption>
+</figure>
 
 ## Redeeming NexCoins in NexStore
 

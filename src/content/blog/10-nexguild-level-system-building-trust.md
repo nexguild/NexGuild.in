@@ -9,6 +9,11 @@ date: "2026-06-21"
 
 Every contributor on NexGuild starts at the same place — Level 1, with access to the platform's entry-level opportunities. What happens after that is entirely shaped by your own activity. This post explains how the Level and XP system works, why we built it this way, and how to think about growing within it.
 
+<figure>
+  <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&auto=format&fit=crop&q=80" alt="focused person working independently on a laptop" />
+  <figcaption>Building trust on a contributor platform takes consistent, quality submissions — the level system rewards exactly that over time.</figcaption>
+</figure>
+
 ## Why a Level System Exists
 
 Not all tasks are equal. Some are simple and quick; others involve more complexity, more responsibility, or require a higher degree of trust in the contributor completing them. Rather than opening every task to every contributor regardless of experience, we use a level system to match contributors with opportunities appropriate to their demonstrated track record on the platform.
@@ -34,6 +39,11 @@ We chose this approach deliberately. Rather than hiding higher-level tasks from 
 **Pay attention to XP-weighted tasks.** Since XP and coin rewards are set independently per task, some tasks offer disproportionately good XP relative to their coin payout. These are worth prioritizing if leveling up quickly is your current goal.
 
 **Build a daily habit.** NexGuild's daily streak system rewards consistent activity — completing at least one approved task each day keeps your streak alive and unlocks bonus NexCoins, with a larger bonus on day seven. Beyond the direct reward, consistent daily activity naturally compounds your XP over time as well.
+
+<figure>
+  <img src="https://images.unsplash.com/photo-1551434678-e076c223a692?w=800&auto=format&fit=crop&q=80" alt="professionals working at laptops in an office" />
+  <figcaption>Higher trust levels unlock better tasks and faster approvals — a direct incentive to take every submission seriously.</figcaption>
+</figure>
 
 ## What Your Level Says About You
 

@@ -9,6 +9,11 @@ date: "2026-06-21"
 
 If you're new to NexGuild, you might be wondering exactly how the task system works — what counts as a task, how you get paid, and what happens between starting a task and actually earning something from it. This post walks through the entire flow, start to finish.
 
+<figure>
+  <img src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&auto=format&fit=crop&q=80" alt="person working on laptop from home" />
+  <figcaption>NexGuild's task system lets contributors earn NexCoins by completing structured tasks reviewed and approved by the platform team.</figcaption>
+</figure>
+
 ## What Is a Task on NexGuild?
 
 A task on NexGuild is a defined piece of work posted by our team — anything from a quick data entry job to a multi-step project requiring file uploads, screenshots, or written responses. Each task is created with a clear structure so you always know exactly what's expected before you start.
@@ -44,6 +49,11 @@ A fixed bar at the bottom of the task window keeps your current NexCoin reward a
 ## Submitting and Review
 
 Once you complete all steps in a task, your submission goes into a review queue. Our review team checks submitted work against the task's requirements before approving it. This protects the integrity of the NexCoin economy — it ensures coins are only awarded for genuinely completed, quality work, which keeps the whole system fair for everyone participating.
+
+<figure>
+  <img src="https://images.unsplash.com/photo-1484807352052-23338990c6c6?w=800&auto=format&fit=crop&q=80" alt="person working at a clean home office desk" />
+  <figcaption>A clean task interface, clear submission guidelines, and a reliable review process make the difference between earning consistently and getting stuck.</figcaption>
+</figure>
 
 ## What Happens If a Submission Is Rejected
 

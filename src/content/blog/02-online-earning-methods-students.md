@@ -11,6 +11,11 @@ College life comes with a lot of expenses that don't always fit neatly into a mo
 
 Here's a practical, no-hype look at the real ways students are earning online today.
 
+<figure>
+  <img src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&auto=format&fit=crop&q=80" alt="person working on laptop from home" />
+  <figcaption>Students worldwide are building side income online — no office, no commute, just a laptop and an internet connection.</figcaption>
+</figure>
+
 ## 1. Micro-Tasks and Digital Task Platforms
 
 Micro-tasks are small, well-defined pieces of work — things like data verification, content tagging, app testing, surveys, or simple research tasks. They typically take anywhere from a few minutes to an hour, and platforms pay out per completed task rather than by the hour.
@@ -42,6 +47,11 @@ YouTube, Instagram, and other platforms allow students to build an audience arou
 **Why it works for students:** If it clicks, content creation can become a meaningful income source through ad revenue, brand partnerships, or affiliate links — and it builds real skills in communication and content strategy.
 
 **Realistic expectations:** This is the slowest-growing and least predictable option on this list. Most creators take months or years to build a real audience, and many never monetize meaningfully. Treat it as a long-term project, not a quick income plan.
+
+<figure>
+  <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&auto=format&fit=crop&q=80" alt="focused person working independently on a laptop" />
+  <figcaption>Consistency and choosing the right platform for your available time are what separate occasional earners from reliable student income.</figcaption>
+</figure>
 
 ## 5. Offerwall and Reward-Based Earning
 

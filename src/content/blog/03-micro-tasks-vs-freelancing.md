@@ -9,6 +9,11 @@ date: "2026-06-21"
 
 When people start looking into earning online, they usually run into two broad categories pretty quickly: micro-tasks and freelancing. Both let you earn from a laptop or phone, both are flexible, and both have genuinely helped people build real income streams. But they work very differently, and the right choice depends entirely on what you're looking for.
 
+<figure>
+  <img src="https://images.unsplash.com/photo-1521737711867-e3b97375f902?w=800&auto=format&fit=crop&q=80" alt="remote workers collaborating on computers" />
+  <figcaption>Crowdsourcing platforms distribute small tasks to a global pool of contributors — no experience required to get started.</figcaption>
+</figure>
+
 ## What Are Micro-Tasks?
 
 Micro-tasks are small, clearly-defined pieces of work — things like data labeling, content moderation, app testing, transcription snippets, or short surveys. A platform posts the task, you complete it according to specific instructions, it gets reviewed, and you get paid a fixed amount.
@@ -50,6 +55,11 @@ Freelancing wins clearly here. Every project sharpens your actual skill and buil
 
 ### Stress and Communication
 Micro-tasks involve essentially no client communication — you complete the task per instructions and move on. Freelancing requires managing client expectations, sometimes handling revision requests, negotiating scope, and occasionally dealing with difficult clients. This is a real trade-off worth being honest about.
+
+<figure>
+  <img src="https://images.unsplash.com/photo-1553877522-43269d4ea984?w=800&auto=format&fit=crop&q=80" alt="person reviewing documents and making notes" />
+  <figcaption>Freelancing requires pitching clients and building a portfolio — micro-tasks let you earn from day one without either.</figcaption>
+</figure>
 
 ## Which Should You Choose?
 

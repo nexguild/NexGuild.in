@@ -24,6 +24,11 @@ Online earning in India has matured significantly. Platforms that once felt expe
 
 This guide focuses on what genuinely works in 2026 — the three methods that consistently produce real earnings for Indian users, what's realistic to expect, and how to get started without any investment.
 
+<figure>
+  <img src="https://images.unsplash.com/photo-1521737711867-e3b97375f902?w=800&auto=format&fit=crop&q=80" alt="remote workers collaborating on computers" />
+  <figcaption>Earning money online in 2026 is no longer limited to technical skills — task platforms, surveys, and micro-work sites have opened it up for everyone.</figcaption>
+</figure>
+
 ## Three Methods That Actually Work
 
 ### 1. Micro-Tasks
@@ -102,6 +107,11 @@ Unlike gig delivery (which requires a vehicle, physical presence, and fixed time
 This makes them accessible to students, homemakers, people between jobs, and anyone looking to supplement income in genuinely spare time.
 
 For broader context on this shift: [The Gig Economy in India — What It Means for Online Workers](/earn/blog/gig-economy-india-guide)
+
+<figure>
+  <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&auto=format&fit=crop&q=80" alt="focused person working independently on a laptop" />
+  <figcaption>The most reliable online earners use a combination of platforms rather than depending on a single source — variety protects income during slow periods.</figcaption>
+</figure>
 
 ## Who Gets the Most Value from Online Earning in India
 

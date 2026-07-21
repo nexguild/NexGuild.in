@@ -9,6 +9,11 @@ date: "2026-06-21"
 
 If you've spent any time on task-based earning platforms, you've probably experienced the frustration of a rejected submission — time spent, no payout, and sometimes an unclear reason why. The good news is that most rejections come down to a handful of avoidable mistakes. Here are five practical habits that consistently lead to faster, smoother approvals.
 
+<figure>
+  <img src="https://images.unsplash.com/photo-1484807352052-23338990c6c6?w=800&auto=format&fit=crop&q=80" alt="person working at a clean home office desk" />
+  <figcaption>Clear, complete task submissions get approved faster — attention to detail is the most reliable way to improve your approval rate.</figcaption>
+</figure>
+
 ## 1. Read the Full Task Instructions Before You Start
 
 This sounds obvious, but it's the single biggest reason submissions get rejected. It's tempting to skim instructions and jump straight into the work, especially on tasks that look simple. But small details — a specific format requirement, a particular screenshot angle, a word count minimum — are often exactly what reviewers are checking for.
@@ -32,6 +37,11 @@ This single habit — a quick self-review before hitting submit — eliminates a
 Tasks with multiple sequential steps are often structured that way intentionally — each step builds on the last, and skipping ahead or rushing through often leads to missing something a later step depends on. Take each step at the pace the task actually requires, rather than trying to blast through to the reward as quickly as possible.
 
 Platforms with step-by-step structures (rather than one big undefined task) are usually designed this way specifically to make instructions clearer and reduce rejection rates — work with that structure rather than against it.
+
+<figure>
+  <img src="https://images.unsplash.com/photo-1565728744382-61accd4aa148?w=800&auto=format&fit=crop&q=80" alt="remote worker with headphones completing tasks online" />
+  <figcaption>Contributors who read task guidelines carefully before starting consistently outperform those who submit and hope for the best.</figcaption>
+</figure>
 
 ## 5. Pay Attention to Rejection Feedback
 
