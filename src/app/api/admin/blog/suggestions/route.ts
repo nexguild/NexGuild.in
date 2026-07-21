@@ -27,20 +27,30 @@ export async function POST(req: NextRequest) {
 
   const prompt = `Today is ${today}.
 
-Generate exactly 8 fresh blog topic ideas for NexGuild (nexguild.in) — a global platform where people worldwide:
-1. Earn money online by completing micro-tasks, surveys, data annotation, app testing, and offerwalls (redeem as Amazon, Flipkart, Google Play, PayPal gift vouchers)
-2. Browse curated remote & WFH job listings from global companies like Telus International, Appen, Lionbridge, and similar
+Generate exactly 8 fresh blog topic ideas for NexGuild (nexguild.in) — a global platform where contributors worldwide earn NexCoins by completing micro-tasks and surveys, redeemable for Amazon, Flipkart, Google Play, and Zomato gift vouchers.
+
+NexGuild's blog covers: online earning, freelancing, crowdsourcing platforms, AI data annotation, survey platforms, remote work, and work-from-home guides — all for a GLOBAL audience.
+
+PROVEN SEO STRATEGY — topics that rank at low domain authority:
+Platform-specific queries: "[Platform name] review [year]", "is [platform] legit", "how to earn on [platform]", "how to start on [platform] for beginners". These exact-match searches convert well. Prioritize specific platform names over generic terms.
+
+Platforms to cover (pick from these for review/guide topics):
+- Freelancing: Fiverr, Upwork, Freelancer.com, Toptal, PeoplePerHour, 99designs
+- AI/Data annotation: Appen, DataAnnotation.tech, Remotasks, Scale AI, Labelbox, Surge AI
+- Transcription/content: Rev.com, TranscribeMe, GoTranscript, Scribie
+- Search quality / microtask: Telus International AI, Lionbridge AI, Clickworker, Amazon Mechanical Turk
+- Survey / offerwall adjacent: CPX Research, TheoremReach, ClixWall, Toloka, Prolific
+- YouTube / content creation: starting a YouTube channel, monetization, affiliate marketing
 
 Rules:
-- Topics must appeal to a GLOBAL audience — US, UK, Canada, Australia, India, Southeast Asia, Africa, Latin America
-- Mix of: how-to guides, listicles, remote job guides for specific global companies, WFH tips, earning tips, platform reviews, remote work advice, international freelancing
-- Include at least 2 topics about remote/WFH jobs open to global applicants or specific global companies hiring remotely
-- Include at least 1 topic with a regional angle (e.g. India, Philippines, Nigeria, or another active market)
-- Must be SEO-friendly and searchable internationally (people actively Google these)
+- Topics must target a GLOBAL audience — never India-only
+- Mix: platform reviews (at least 3), how-to guides, comparisons, earning tips, WFH guides
+- Include at least 1 topic with a regional angle (Philippines, Nigeria, Pakistan, Bangladesh, or another active market)
+- Must be SEO-friendly and searchable (people actively Google these exact phrases)
 - Timely / trending angle for today's date where possible
 - Do NOT suggest topics already covered: ${avoidList || "none yet"}
 - Return ONLY a JSON object: { "suggestions": ["topic 1", "topic 2", "topic 3", "topic 4", "topic 5", "topic 6", "topic 7", "topic 8"] }
-- Each topic: 8–15 words, specific and compelling`;
+- Each topic: 8–15 words, specific and compelling (include year where it helps SEO, e.g. "Rev.com Review 2026: Is It Worth It?")`;
 
   const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
     method: "POST",
