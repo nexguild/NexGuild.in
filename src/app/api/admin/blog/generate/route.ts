@@ -43,6 +43,44 @@ function stripQuotes(s: string): string {
   return s.replace(/^["'`]+|["'`]+$/g, "").trim();
 }
 
+// ── Unsplash helper ────────────────────────────────────────────────────────────
+interface UnsplashPhoto {
+  url: string;
+  alt: string;
+  credit: string;
+  downloadLocation: string;
+}
+
+async function searchUnsplash(accessKey: string, query: string): Promise<UnsplashPhoto[]> {
+  try {
+    const res = await fetch(
+      `https://api.unsplash.com/search/photos?query=${encodeURIComponent(query)}&per_page=5&orientation=landscape&content_filter=high`,
+      { headers: { Authorization: `Client-ID ${accessKey}` } },
+    );
+    if (!res.ok) return [];
+    const data = await res.json() as {
+      results: {
+        urls: { regular: string };
+        alt_description: string | null;
+        user: { name: string };
+        links: { download_location: string };
+      }[];
+    };
+    return data.results.slice(0, 5).map((p) => ({
+      url: p.urls.regular.split("?")[0] + "?w=800&auto=format&fit=crop&q=80",
+      alt: p.alt_description ?? query,
+      credit: p.user.name,
+      downloadLocation: p.links.download_location,
+    }));
+  } catch {
+    return [];
+  }
+}
+
+function triggerUnsplashDownload(accessKey: string, downloadLocation: string): void {
+  fetch(`${downloadLocation}&client_id=${accessKey}`).catch(() => {});
+}
+
 // ── System prompt ──────────────────────────────────────────────────────────────
 const SYSTEM_PROMPT = `You are an expert SEO content writer for NexGuild (nexguild.in), a global digital earning community where contributors worldwide earn NexCoins by completing surveys and tasks, redeemable for Amazon, Flipkart, Google Play, and Zomato gift vouchers.
 
@@ -84,29 +122,16 @@ REVIEW POST STRUCTURE — use this when angle is "Review":
 Position NexGuild naturally as a complementary earning option, not a direct replacement.
 
 IMAGES — REQUIRED (include exactly 2):
-Place images between major sections using this exact HTML format inside the markdown:
+Two Unsplash images will be pre-fetched and provided to you in the user prompt with their exact src URLs. You MUST use those exact URLs — never invent, guess, or change them.
 
+Place the images using this exact HTML format inside the markdown:
 <figure>
-  <img src="https://images.unsplash.com/photo-XXXXXXXXXX?w=800&auto=format&fit=crop&q=80" alt="descriptive alt text matching the topic" />
-  <figcaption>A specific, informative caption about what the image shows and why it relates to the topic.</figcaption>
+  <img src="USE_THE_PROVIDED_URL_EXACTLY" alt="write descriptive alt text for the topic" />
+  <figcaption>Write a specific, informative caption relating the image to the article topic.</figcaption>
 </figure>
 
-Place first image: after the opening intro paragraph, before the first ## section.
-Place second image: roughly halfway through the article, before a major ## section.
-
-Pick photo IDs from this curated library based on topic relevance:
-- Remote work / working from home: 1522202176988-66273c2fd55f
-- Freelancer at laptop: 1611532736597-de2d4265fba3
-- Analytics / data charts: 1460925895917-afdab827c52f
-- Reviewing contracts / proposals: 1553877522-43269d4ea984
-- Team working on computers: 1521737711867-e3b97375f902
-- AI / data annotation on screen: 1555949963-ff9fe0c870eb
-- Professional at laptop (neutral): 1551434678-e076c223a692
-- Focused person working: 1507003211169-0a1dd7228f2d
-- Home office desk setup: 1484807352052-23338990c6c6
-- Remote worker with headphones: 1565728744382-61accd4aa148
-- Developer reviewing code: 1555255707-c07966088b7b
-- Professional writing / evaluating: 1542744173-8e7e53415bb0
+Image 1 placement: after the opening intro paragraph, before the first ## section.
+Image 2 placement: roughly halfway through the article, before a major ## section.
 
 INTERNAL LINKS — REQUIRED (include 2-3):
 Link naturally to related NexGuild blog posts. ALWAYS use /earn/blog/[slug] format — NEVER /blog/[slug].
@@ -164,14 +189,47 @@ export async function POST(req: NextRequest) {
   if (!topic?.trim()) return NextResponse.json({ error: "topic is required." }, { status: 400 });
 
   const today = new Date().toISOString().split("T")[0];
+
+  // ── Fetch Unsplash images before generating ──────────────────────────────────
+  const unsplashKey = process.env.UNSPLASH_ACCESS_KEY;
+  let imageSection = "";
+  if (unsplashKey) {
+    const q1 = keyword?.trim() || topic.trim();
+    const q2 = "remote work online earning laptop";
+    const [photos1, photos2] = await Promise.all([
+      searchUnsplash(unsplashKey, q1),
+      searchUnsplash(unsplashKey, q2),
+    ]);
+    const photo1 = photos1[0];
+    const photo2 = photos2.find((p) => p.url !== photo1?.url) ?? photos2[0] ?? photos1[1];
+    if (photo1) triggerUnsplashDownload(unsplashKey, photo1.downloadLocation);
+    if (photo2) triggerUnsplashDownload(unsplashKey, photo2.downloadLocation);
+    if (photo1 && photo2) {
+      imageSection = `
+PRE-FETCHED IMAGES — use these exact src URLs, do not change them:
+Image 1 (after intro, before first ##):
+<figure>
+  <img src="${photo1.url}" alt="${photo1.alt}" />
+  <figcaption>Write a relevant caption here.</figcaption>
+</figure>
+
+Image 2 (midway, before a major ## section):
+<figure>
+  <img src="${photo2.url}" alt="${photo2.alt}" />
+  <figcaption>Write a relevant caption here.</figcaption>
+</figure>
+`;
+    }
+  }
+
   const userPrompt = [
     `Topic: ${topic.trim()}`,
-    keyword?.trim() ? `Target keyword: ${keyword.trim()}` : "",
-    angle?.trim()   ? `Post angle: ${angle.trim()}`        : "",
+    keyword?.trim()  ? `Target keyword: ${keyword.trim()}`   : "",
+    angle?.trim()    ? `Post angle: ${angle.trim()}`          : "",
     audience?.trim() ? `Target audience: ${audience.trim()}` : "",
     `Today's date: ${today}`,
-    "",
-    "Write the full blog post now. REMEMBER: minimum 1,400 words of content, title 50-60 chars, description 150-155 chars. Return ONLY valid JSON with no code fences.",
+    imageSection,
+    "Write the full blog post now. REMEMBER: minimum 1,500 words, title 50-60 chars, description 150-155 chars. Return ONLY valid JSON with no code fences.",
   ].filter(Boolean).join("\n");
 
   // ── Step 1: generate ────────────────────────────────────────────────────────
@@ -260,9 +318,10 @@ export async function POST(req: NextRequest) {
     ok: true,
     post: { ...parsed, title, slug, description, content },
     _debug: {
-      titleLen:  title.length,
-      descLen:   description.length,
-      wordCount: content.trim().split(/\s+/).filter(Boolean).length,
+      titleLen:   title.length,
+      descLen:    description.length,
+      wordCount:  content.trim().split(/\s+/).filter(Boolean).length,
+      unsplash:   !!unsplashKey && imageSection !== "",
     },
   });
 }
