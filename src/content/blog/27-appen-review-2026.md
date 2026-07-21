@@ -8,6 +8,11 @@ date: "2026-07-21"
 
 If you have spent any time researching ways to earn money online, you have almost certainly come across Appen. It is one of the largest and most established names in the AI training data industry, with a contractor network spanning over 130 countries. But being well-known does not automatically mean being worth your time — and the honest picture of what working for Appen looks like in 2026 is more nuanced than most introductory guides let on. This review covers how Appen actually works, what kinds of tasks are available, how much you can realistically earn, how payments are processed, and the real downsides that most positive write-ups conveniently skip.
 
+<figure>
+  <img src="https://images.unsplash.com/photo-1551434678-e076c223a692?w=800&auto=format&fit=crop&q=80" alt="Person working on a laptop completing AI training tasks from home" />
+  <figcaption>Appen contractors work from home on their own schedule — no commute, no fixed hours, paid per project.</figcaption>
+</figure>
+
 ## What Is Appen and How Does It Work
 
 Appen is an Australian technology company that specializes in collecting and annotating data for artificial intelligence and machine learning systems. The company works with some of the largest technology companies in the world, providing them with the labeled datasets their AI models need to function accurately.
@@ -65,6 +70,11 @@ Appen has a strong reputation, and it earns that reputation in meaningful ways �
 **Hours caps can be frustrating.** Being capped at 15 hours per week on a project when you want to work more is common. The platform is genuinely not designed for those seeking full-time income from a single source.
 
 **Support is limited.** Appen contractors communicate primarily through email tickets, and response times can be slow. For most day-to-day issues this is manageable, but when something goes wrong with a payment or project access, resolution can take time.
+
+<figure>
+  <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&auto=format&fit=crop&q=80" alt="Person working independently on a laptop with focused expression" />
+  <figcaption>Appen works best as a supplemental income source — flexible hours, but project availability can be unpredictable.</figcaption>
+</figure>
 
 ## Is Appen Worth It in 2026
 

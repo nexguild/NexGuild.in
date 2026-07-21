@@ -8,6 +8,11 @@ date: "2026-07-21"
 
 DataAnnotation.tech has grown from relative obscurity to one of the most talked-about AI task platforms in the online earning community over the past two years. The reason is simple: it pays more than most comparable platforms. While traditional crowdsourcing platforms typically offer $7 to $15 per hour for data labeling and quality review work, DataAnnotation.tech advertises rates of $20 to $40 per hour for its AI training tasks — and unlike many platforms that advertise high rates but bury the catch in the fine print, many contractors report actually receiving pay in that range. This review examines what DataAnnotation.tech is, how it works, what the work actually involves, and whether the high pay rates hold up in practice.
 
+<figure>
+  <img src="https://images.unsplash.com/photo-1555255707-c07966088b7b?w=800&auto=format&fit=crop&q=80" alt="Developer reviewing code on a laptop screen for AI training tasks" />
+  <figcaption>DataAnnotation.tech pays $20–$40/hr for reviewing AI responses — significantly above most crowdsourcing platforms.</figcaption>
+</figure>
+
 ## What Is DataAnnotation.tech
 
 DataAnnotation.tech is a company that specializes in providing human feedback for artificial intelligence systems, with a particular focus on large language models — the technology behind AI assistants like ChatGPT and similar tools. The company works with AI developers who need humans to evaluate, correct, and improve the responses their models generate.
@@ -49,6 +54,11 @@ General text evaluation and response comparison tasks tend to pay at the lower e
 One important distinction from hourly-pay jobs: DataAnnotation.tech pays per task completed, and the hourly rate you see is an estimate based on how long tasks typically take. If you work quickly and accurately, your effective hourly rate may exceed the advertised range. If tasks take you longer than expected — particularly early on while you are learning the guidelines — your effective rate will be lower.
 
 Payment is processed weekly via PayPal, with no minimum threshold reported by most contractors. The consistency of weekly payments is appreciated by contributors coming from platforms with monthly payment cycles.
+
+<figure>
+  <img src="https://images.unsplash.com/photo-1542744173-8e7e53415bb0?w=800&auto=format&fit=crop&q=80" alt="Professional working focused at laptop evaluating content and writing responses" />
+  <figcaption>Unlike click-through annotation tasks, DataAnnotation.tech work requires focused reading, reasoning, and written explanations.</figcaption>
+</figure>
 
 ## What Makes DataAnnotation.tech Different From Other AI Task Platforms
 

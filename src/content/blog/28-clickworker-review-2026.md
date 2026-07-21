@@ -8,6 +8,11 @@ date: "2026-07-21"
 
 Clickworker sits in an interesting middle ground in the online earning world — it is not as well known as the big freelancing marketplaces, but it is far more established than the wave of newer task apps that appear and disappear every year. Founded in Germany in 2005, Clickworker has been distributing microtasks to a global workforce for nearly two decades, which puts it in rare company for a platform in this space. But longevity does not automatically mean it is the right platform for you in 2026. This review covers everything you need to know before signing up — what the tasks look like, what you actually earn, how to get paid, and where the platform genuinely falls short.
 
+<figure>
+  <img src="https://images.unsplash.com/photo-1484807352052-23338990c6c6?w=800&auto=format&fit=crop&q=80" alt="Person working at a desk on a laptop completing microtasks online" />
+  <figcaption>Clickworker's marketplace model lets you log in, pick tasks, and earn — no fixed schedule or project invite required.</figcaption>
+</figure>
+
 ## What Is Clickworker and How Does It Work
 
 Clickworker is a crowdsourcing platform that connects businesses needing human intelligence for structured tasks with a global pool of remote workers. The companies that use Clickworker include e-commerce businesses needing product descriptions, technology companies building AI training datasets, market research firms needing data collected and categorized, and software developers needing their apps tested by real users.
@@ -57,6 +62,11 @@ Before accessing most task categories, Clickworker requires you to pass a short 
 Your assessment scores remain on your profile and affect which tasks you are eligible for. Higher scores unlock access to better-paying work. If you score poorly on an initial assessment, you can retake it after a waiting period. This system creates a clear incentive to take the initial assessments seriously — rushing through them just to access the task queue will limit your earning potential for months.
 
 The UHRS qualification, available through Clickworker for search quality tasks, is separate and more involved — it requires studying specific guidelines and passing an accuracy-based test. Contributors who clear this tend to report significantly better hourly earnings than those working on standard Clickworker tasks alone.
+
+<figure>
+  <img src="https://images.unsplash.com/photo-1565728744382-61accd4aa148?w=800&auto=format&fit=crop&q=80" alt="Remote worker completing tasks at home with headphones and laptop" />
+  <figcaption>Clickworker suits earners who want immediate access to tasks — no weeks-long qualification process before you can start.</figcaption>
+</figure>
 
 ## Who Clickworker Actually Suits
 

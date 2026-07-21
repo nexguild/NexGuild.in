@@ -421,6 +421,24 @@
   border-top: 1px solid rgba(13,148,136,0.12);
   margin: 2em 0;
 }
+.blog-prose img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 12px;
+  margin: 1.75em auto;
+  display: block;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.10);
+}
+.blog-prose figure {
+  margin: 2em 0;
+}
+.blog-prose figcaption {
+  text-align: center;
+  font-size: 0.8rem;
+  color: #6b7280;
+  margin-top: 0.6em;
+  font-style: italic;
+}
 
 /* ব্রাউজারের অটোফিল ব্যাকগ্রাউন্ড ও অদৃশ্য টেক্সট ফিক্স */
 input:-webkit-autofill,
