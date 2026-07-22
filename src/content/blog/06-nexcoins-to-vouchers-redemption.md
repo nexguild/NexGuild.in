@@ -1,9 +1,10 @@
-﻿---
+---
 title: "NexCoins to Vouchers: How Redemption Works on NexGuild"
 slug: "nexcoins-to-vouchers-redemption"
 description: "Everything you need to know about earning NexCoins and redeeming them for real rewards in NexStore."
 category: "NexGuild"
 date: "2026-06-21"
+tags: ["NexGuild", "gift vouchers", "online earning", "rewards"]
 ---
 
 
@@ -11,7 +12,7 @@ One of the most common questions from new contributors is simple: "I've earned N
 
 <figure>
   <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&auto=format&fit=crop&q=80" alt="focused person working independently on a laptop" />
-  <figcaption>NexCoins accumulate with every approved task and survey — and redeem directly for Amazon, Flipkart, Google Play, and Zomato vouchers.</figcaption>
+  <figcaption>NexCoins accumulate with every approved task and survey — and redeem directly for Amazon, Flipkart, Google Play, and Zomato vouchers. Photo via Unsplash</figcaption>
 </figure>
 
 ## What Are NexCoins?
@@ -40,7 +41,7 @@ Your dashboard and Earnings page give you a complete view of your NexCoins activ
 
 <figure>
   <img src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&auto=format&fit=crop&q=80" alt="analytics and data charts on a laptop screen" />
-  <figcaption>Tracking your NexCoin balance and choosing the right redemption option is how you turn online task work into real purchasing power.</figcaption>
+  <figcaption>Tracking your NexCoin balance and choosing the right redemption option is how you turn online task work into real purchasing power. Photo via Unsplash</figcaption>
 </figure>
 
 ## Redeeming NexCoins in NexStore

@@ -1,9 +1,10 @@
-﻿---
+---
 title: "Remote Work from Home in India: A 2026 Guide"
 slug: "remote-work-from-home-india-guide-2026"
 description: "An honest, practical guide to the remote work landscape in India today — opportunities, realistic expectations, and how to get started."
 category: "Remote Work"
 date: "2026-06-21"
+tags: ["remote work", "work from home", "online earning", "freelancing"]
 ---
 
 
@@ -11,7 +12,7 @@ Working from home in India has gone from a niche arrangement to a mainstream par
 
 <figure>
   <img src="https://images.unsplash.com/photo-1521737711867-e3b97375f902?w=800&auto=format&fit=crop&q=80" alt="remote workers collaborating on computers" />
-  <figcaption>Remote work from home has moved from a niche option to a mainstream career path — and the right platforms make it accessible to anyone.</figcaption>
+  <figcaption>Remote work from home has moved from a niche option to a mainstream career path — and the right platforms make it accessible to anyone. Photo via Unsplash</figcaption>
 </figure>
 
 ## The Current State of Remote Work in India
@@ -50,7 +51,7 @@ Going in with realistic expectations is the single biggest factor in whether som
 
 <figure>
   <img src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&auto=format&fit=crop&q=80" alt="person working on laptop from home" />
-  <figcaption>All you need to start earning remotely is a reliable internet connection, a laptop, and the right platform for your skills.</figcaption>
+  <figcaption>All you need to start earning remotely is a reliable internet connection, a laptop, and the right platform for your skills. Photo via Unsplash</figcaption>
 </figure>
 
 ## How to Get Started

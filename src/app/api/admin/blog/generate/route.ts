@@ -122,16 +122,19 @@ REVIEW POST STRUCTURE — use this when angle is "Review":
 Position NexGuild naturally as a complementary earning option, not a direct replacement.
 
 IMAGES — REQUIRED (include exactly 2):
-Two Unsplash images will be pre-fetched and provided to you in the user prompt with their exact src URLs. You MUST use those exact URLs — never invent, guess, or change them.
+Two Unsplash images will be pre-fetched and provided to you in the user prompt with their exact src URLs and photographer names. You MUST use those exact URLs — never invent, guess, or change them.
 
 Place the images using this exact HTML format inside the markdown:
 <figure>
   <img src="USE_THE_PROVIDED_URL_EXACTLY" alt="write descriptive alt text for the topic" />
-  <figcaption>Write a specific, informative caption relating the image to the article topic.</figcaption>
+  <figcaption>Write a specific, informative caption. End with: Photo by [PHOTOGRAPHER_NAME] on Unsplash</figcaption>
 </figure>
 
 Image 1 placement: after the opening intro paragraph, before the first ## section.
 Image 2 placement: roughly halfway through the article, before a major ## section.
+
+TAGS — REQUIRED:
+Include a "tags" field in the JSON output: an array of 3–5 lowercase strings that describe the post topic. Examples: "remote work", "freelancing", "online earning", "surveys", "micro-tasks", "crowdsourcing", "work from home", "ai training", "offerwalls", "platform review". Choose the most specific and relevant tags.
 
 INTERNAL LINKS — REQUIRED (include 2-3):
 Link naturally to related NexGuild blog posts. ALWAYS use /earn/blog/[slug] format — NEVER /blog/[slug].
@@ -173,7 +176,7 @@ ADSENSE COMPATIBILITY:
 - Factual, helpful, fully original content only — no excessive repetition
 
 OUTPUT FORMAT (return valid JSON only, no markdown wrapping, no code fences):
-{"title":"SEO title 50-60 chars","slug":"url-slug-here","description":"Meta description 150-160 chars","category":"Remote Work","date":"YYYY-MM-DD","content":"Full markdown content minimum 1500 words. NO # H1. Includes 2 Unsplash <figure> images. Includes 2-3 internal /earn/blog/ links."}`;
+{"title":"SEO title 50-60 chars","slug":"url-slug-here","description":"Meta description 150-160 chars","category":"Remote Work","date":"YYYY-MM-DD","tags":["tag1","tag2","tag3"],"content":"Full markdown content minimum 1500 words. NO # H1. Includes 2 Unsplash <figure> images with photographer credit. Includes 2-3 internal /earn/blog/ links."}`;
 
 // ── POST handler ───────────────────────────────────────────────────────────────
 export async function POST(req: NextRequest) {
@@ -206,17 +209,17 @@ export async function POST(req: NextRequest) {
     if (photo2) triggerUnsplashDownload(unsplashKey, photo2.downloadLocation);
     if (photo1 && photo2) {
       imageSection = `
-PRE-FETCHED IMAGES — use these exact src URLs, do not change them:
+PRE-FETCHED IMAGES — use these exact src URLs and photographer names, do not change them:
 Image 1 (after intro, before first ##):
 <figure>
   <img src="${photo1.url}" alt="${photo1.alt}" />
-  <figcaption>Write a relevant caption here.</figcaption>
+  <figcaption>Write a relevant caption here. Photo by ${photo1.credit} on Unsplash</figcaption>
 </figure>
 
 Image 2 (midway, before a major ## section):
 <figure>
   <img src="${photo2.url}" alt="${photo2.alt}" />
-  <figcaption>Write a relevant caption here.</figcaption>
+  <figcaption>Write a relevant caption here. Photo by ${photo2.credit} on Unsplash</figcaption>
 </figure>
 `;
     }
@@ -258,6 +261,9 @@ Image 2 (midway, before a major ## section):
   }
 
   let { title, slug, description, content } = parsed;
+  const tags = Array.isArray((parsed as Record<string, unknown>).tags)
+    ? ((parsed as Record<string, unknown>).tags as string[])
+    : [];
 
   // ── Step 2: fix title if too short ─────────────────────────────────────────
   if (title.length < 50) {
@@ -316,12 +322,13 @@ Image 2 (midway, before a major ## section):
 
   return NextResponse.json({
     ok: true,
-    post: { ...parsed, title, slug, description, content },
+    post: { ...parsed, title, slug, description, content, tags },
     _debug: {
       titleLen:   title.length,
       descLen:    description.length,
       wordCount:  content.trim().split(/\s+/).filter(Boolean).length,
       unsplash:   !!unsplashKey && imageSection !== "",
+      tagCount:   tags.length,
     },
   });
 }

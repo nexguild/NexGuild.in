@@ -4,11 +4,12 @@ slug: "earn-money-online-india-no-investment"
 description: "Learn how to earn money online in India without investment in 2026. Discover legit ways to make money online in India with no initial investment required."
 category: "Remote Work"
 date: "2026-07-12"
+tags: ["online earning", "work from home", "micro-tasks", "surveys"]
 ---
 
 <figure>
   <img src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&auto=format&fit=crop&q=80" alt="person working on laptop from home" />
-  <figcaption>Starting to earn online without any investment means using platforms that pay you for your time, attention, and judgment — not your wallet.</figcaption>
+  <figcaption>Starting to earn online without any investment means using platforms that pay you for your time, attention, and judgment — not your wallet. Photo via Unsplash</figcaption>
 </figure>
 
 ## Can You Really Earn Online in India With No Money Down?
@@ -51,7 +52,7 @@ Pay rates for these tasks are generally lower than skilled freelancing, but the 
 
 <figure>
   <img src="https://images.unsplash.com/photo-1484807352052-23338990c6c6?w=800&auto=format&fit=crop&q=80" alt="person working at a clean home office desk" />
-  <figcaption>Zero-investment earning platforms like NexGuild let you build toward real rewards from your very first approved task, with no upfront cost.</figcaption>
+  <figcaption>Zero-investment earning platforms like NexGuild let you build toward real rewards from your very first approved task, with no upfront cost. Photo via Unsplash</figcaption>
 </figure>
 
 ## Virtual Assistance

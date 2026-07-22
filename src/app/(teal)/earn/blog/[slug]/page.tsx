@@ -148,8 +148,17 @@ export default async function BlogPostPage({ params }: Props) {
             ← Back to Blog
           </Link>
 
-          <div className="mb-4">
+          <div className="mb-4 flex flex-wrap items-center gap-2">
             <CategoryBadge category={post.category} />
+            {post.tags?.map((tag) => (
+              <span
+                key={tag}
+                className="inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-medium"
+                style={{ background: "rgba(15,61,54,0.06)", color: "#64748B", border: "1px solid rgba(100,116,139,0.2)" }}
+              >
+                #{tag}
+              </span>
+            ))}
           </div>
 
           <h1

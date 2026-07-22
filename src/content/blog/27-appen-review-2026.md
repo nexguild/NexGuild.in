@@ -4,13 +4,14 @@ slug: "appen-review-2026-legit-worth-it"
 description: "Is Appen legit in 2026? This honest review covers how Appen works, what tasks pay, how long payments take, and whether it is genuinely worth joining."
 category: "Remote Work"
 date: "2026-07-21"
+tags: ["crowdsourcing", "AI training", "platform review", "remote work"]
 ---
 
 If you have spent any time researching ways to earn money online, you have almost certainly come across Appen. It is one of the largest and most established names in the AI training data industry, with a contractor network spanning over 130 countries. But being well-known does not automatically mean being worth your time — and the honest picture of what working for Appen looks like in 2026 is more nuanced than most introductory guides let on. This review covers how Appen actually works, what kinds of tasks are available, how much you can realistically earn, how payments are processed, and the real downsides that most positive write-ups conveniently skip.
 
 <figure>
   <img src="https://images.unsplash.com/photo-1551434678-e076c223a692?w=800&auto=format&fit=crop&q=80" alt="Person working on a laptop completing AI training tasks from home" />
-  <figcaption>Appen contractors work from home on their own schedule — no commute, no fixed hours, paid per project.</figcaption>
+  <figcaption>Appen contractors work from home on their own schedule — no commute, no fixed hours, paid per project. Photo via Unsplash</figcaption>
 </figure>
 
 ## What Is Appen and How Does It Work
@@ -73,7 +74,7 @@ Appen has a strong reputation, and it earns that reputation in meaningful ways �
 
 <figure>
   <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&auto=format&fit=crop&q=80" alt="Person working independently on a laptop with focused expression" />
-  <figcaption>Appen works best as a supplemental income source — flexible hours, but project availability can be unpredictable.</figcaption>
+  <figcaption>Appen works best as a supplemental income source — flexible hours, but project availability can be unpredictable. Photo via Unsplash</figcaption>
 </figure>
 
 ## Is Appen Worth It in 2026

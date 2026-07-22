@@ -4,13 +4,14 @@ slug: "clickworker-review-2026-worth-it"
 description: "Is Clickworker worth it in 2026? This honest review covers how Clickworker works, what tasks pay, how to withdraw earnings, and who the platform actually suits."
 category: "Remote Work"
 date: "2026-07-21"
+tags: ["micro-tasks", "crowdsourcing", "platform review", "remote work"]
 ---
 
 Clickworker sits in an interesting middle ground in the online earning world — it is not as well known as the big freelancing marketplaces, but it is far more established than the wave of newer task apps that appear and disappear every year. Founded in Germany in 2005, Clickworker has been distributing microtasks to a global workforce for nearly two decades, which puts it in rare company for a platform in this space. But longevity does not automatically mean it is the right platform for you in 2026. This review covers everything you need to know before signing up — what the tasks look like, what you actually earn, how to get paid, and where the platform genuinely falls short.
 
 <figure>
   <img src="https://images.unsplash.com/photo-1484807352052-23338990c6c6?w=800&auto=format&fit=crop&q=80" alt="Person working at a desk on a laptop completing microtasks online" />
-  <figcaption>Clickworker's marketplace model lets you log in, pick tasks, and earn — no fixed schedule or project invite required.</figcaption>
+  <figcaption>Clickworker's marketplace model lets you log in, pick tasks, and earn — no fixed schedule or project invite required. Photo via Unsplash</figcaption>
 </figure>
 
 ## What Is Clickworker and How Does It Work
@@ -65,7 +66,7 @@ The UHRS qualification, available through Clickworker for search quality tasks, 
 
 <figure>
   <img src="https://images.unsplash.com/photo-1565728744382-61accd4aa148?w=800&auto=format&fit=crop&q=80" alt="Remote worker completing tasks at home with headphones and laptop" />
-  <figcaption>Clickworker suits earners who want immediate access to tasks — no weeks-long qualification process before you can start.</figcaption>
+  <figcaption>Clickworker suits earners who want immediate access to tasks — no weeks-long qualification process before you can start. Photo via Unsplash</figcaption>
 </figure>
 
 ## Who Clickworker Actually Suits

@@ -4,11 +4,12 @@ slug: "increase-earnings-with-nexguild-offerwalls"
 description: "Earn rewards with offerwalls on NexGuild, a community where contributors complete surveys and tasks for gift vouchers and boost earnings"
 category: "Remote Work"
 date: "2026-07-15"
+tags: ["NexGuild", "offerwalls", "online earning", "surveys"]
 ---
 
 <figure>
   <img src="https://images.unsplash.com/photo-1551434678-e076c223a692?w=800&auto=format&fit=crop&q=80" alt="professionals working at laptops in an office" />
-  <figcaption>NexGuild's offerwall hub aggregates surveys and tasks from multiple providers — giving you more earning options in a single daily session.</figcaption>
+  <figcaption>NexGuild's offerwall hub aggregates surveys and tasks from multiple providers — giving you more earning options in a single daily session. Photo via Unsplash</figcaption>
 </figure>
 
 ## Introduction to Earning with Offerwalls
@@ -54,7 +55,7 @@ So why choose NexGuild over other platforms? Here are a few reasons:
 
 <figure>
   <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&auto=format&fit=crop&q=80" alt="focused person working independently on a laptop" />
-  <figcaption>Combining NexGuild's contributor tasks with offerwall surveys is the most effective way to maximize your NexCoin earnings between task approvals.</figcaption>
+  <figcaption>Combining NexGuild's contributor tasks with offerwall surveys is the most effective way to maximize your NexCoin earnings between task approvals. Photo via Unsplash</figcaption>
 </figure>
 
 ## Tips for Success on NexGuild

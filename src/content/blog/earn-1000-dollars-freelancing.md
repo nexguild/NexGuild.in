@@ -4,11 +4,12 @@ slug: "earn-1000-dollars-freelancing"
 description: "Learn how to earn 1000 dollars from freelancing online with NexGuild, a global community of contributors, and redeem NexCoins for gift vouchers"
 category: "Remote Work"
 date: "2026-07-14"
+tags: ["freelancing", "online earning", "remote work", "income goals"]
 ---
 
 <figure>
   <img src="https://images.unsplash.com/photo-1553877522-43269d4ea984?w=800&auto=format&fit=crop&q=80" alt="person reviewing documents and making notes" />
-  <figcaption>Reaching your first $1,000 in freelancing income requires the right platform, a focused skill, and a strategy for landing your first clients.</figcaption>
+  <figcaption>Reaching your first $1,000 in freelancing income requires the right platform, a focused skill, and a strategy for landing your first clients. Photo via Unsplash</figcaption>
 </figure>
 
 ## Is Earning $1000 Online Actually Achievable?
@@ -53,7 +54,7 @@ For your first client, pricing slightly below what you eventually want to charge
 
 <figure>
   <img src="https://images.unsplash.com/photo-1521737711867-e3b97375f902?w=800&auto=format&fit=crop&q=80" alt="remote workers collaborating on computers" />
-  <figcaption>Freelancers who hit consistent income milestones early build their rates on proven results — not promises to future clients.</figcaption>
+  <figcaption>Freelancers who hit consistent income milestones early build their rates on proven results — not promises to future clients. Photo via Unsplash</figcaption>
 </figure>
 
 ## Build a Rate That Gets You to $1,000

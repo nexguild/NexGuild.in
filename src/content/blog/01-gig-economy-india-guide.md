@@ -1,16 +1,17 @@
-﻿---
+---
 title: "What Is the Gig Economy in India? A Complete Guide for 2026"
 slug: "gig-economy-india-guide"
 description: "Understand how the gig economy works in India, why it's growing fast, and how everyday people are using it to build flexible income streams."
 category: "Remote Work"
 date: "2026-06-21"
+tags: ["gig economy", "remote work", "online earning", "work from home"]
 ---
 
 If you've spent any time online over the last few years, you've probably come across the term "gig economy." It gets thrown around a lot — sometimes to describe food delivery riders, sometimes freelance designers, sometimes people doing small digital tasks from their phone between classes or after work. So what does it actually mean, and why has it become such a big part of how India works and earns?
 
 <figure>
   <img src="https://images.unsplash.com/photo-1521737711867-e3b97375f902?w=800&auto=format&fit=crop&q=80" alt="remote workers collaborating on computers" />
-  <figcaption>Remote work and crowdsourcing platforms have opened up flexible income paths for millions of people worldwide.</figcaption>
+  <figcaption>Remote work and crowdsourcing platforms have opened up flexible income paths for millions of people worldwide. Photo via Unsplash</figcaption>
 </figure>
 
 ## Defining the Gig Economy
@@ -45,7 +46,7 @@ Micro-task and digital task work in particular has grown quickly because it requ
 
 <figure>
   <img src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&auto=format&fit=crop&q=80" alt="analytics and data charts on a laptop screen" />
-  <figcaption>Understanding the gig economy means tracking where demand is growing — and which platforms pay the most reliably.</figcaption>
+  <figcaption>Understanding the gig economy means tracking where demand is growing — and which platforms pay the most reliably. Photo via Unsplash</figcaption>
 </figure>
 
 ## The Real Appeal: Flexibility Over Everything

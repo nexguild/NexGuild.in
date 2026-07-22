@@ -4,6 +4,7 @@ slug: "how-to-make-money-with-chatgpt-2026"
 description: "Discover real ways to make money with ChatGPT in 2026 — freelancing, content writing, and task platforms that pay. Beginner-friendly guide with practical tips."
 category: "Side Hustles"
 date: "2026-07-20"
+tags: ["AI tools", "online earning", "freelancing", "work from home"]
 faqs:
   - q: "Can ChatGPT make you money directly?"
     a: "ChatGPT itself does not pay you — it is a tool you use to work faster and deliver better results. You make money by using ChatGPT to complete freelance work, write content, build products, or speed through tasks that clients or platforms pay you for."
@@ -21,7 +22,7 @@ Artificial intelligence is no longer just a tech curiosity — it has become one
 
 <figure>
   <img src="https://images.unsplash.com/photo-1555255707-c07966088b7b?w=800&auto=format&fit=crop&q=80" alt="developer reviewing code on a computer screen" />
-  <figcaption>AI tools like ChatGPT have created new categories of online work — and platforms that pay for human feedback on AI outputs are growing fast.</figcaption>
+  <figcaption>AI tools like ChatGPT have created new categories of online work — and platforms that pay for human feedback on AI outputs are growing fast. Photo via Unsplash</figcaption>
 </figure>
 
 ## How ChatGPT Is Changing the Way People Earn Online
@@ -66,7 +67,7 @@ One of the most scalable earning paths is creating products once and selling the
 
 <figure>
   <img src="https://images.unsplash.com/photo-1542744173-8e7e53415bb0?w=800&auto=format&fit=crop&q=80" alt="professional evaluating content on a laptop" />
-  <figcaption>Using AI effectively as a productivity tool is different from blindly trusting its output — human judgment is still what clients pay for.</figcaption>
+  <figcaption>Using AI effectively as a productivity tool is different from blindly trusting its output — human judgment is still what clients pay for. Photo via Unsplash</figcaption>
 </figure>
 
 ## Using ChatGPT to Complete Online Tasks Faster and Earn More

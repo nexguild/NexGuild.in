@@ -1,9 +1,10 @@
-﻿---
+---
 title: "Building Trust as a New Contributor: How NexGuild's Level System Works"
 slug: "nexguild-level-system-building-trust"
 description: "How NexGuild's Level and XP system works, why it exists, and how new contributors can grow their access to better opportunities over time."
 category: "NexGuild"
 date: "2026-06-21"
+tags: ["NexGuild", "platform guide", "online earning", "micro-tasks"]
 ---
 
 
@@ -11,7 +12,7 @@ Every contributor on NexGuild starts at the same place — Level 1, with access 
 
 <figure>
   <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&auto=format&fit=crop&q=80" alt="focused person working independently on a laptop" />
-  <figcaption>Building trust on a contributor platform takes consistent, quality submissions — the level system rewards exactly that over time.</figcaption>
+  <figcaption>Building trust on a contributor platform takes consistent, quality submissions — the level system rewards exactly that over time. Photo via Unsplash</figcaption>
 </figure>
 
 ## Why a Level System Exists
@@ -42,7 +43,7 @@ We chose this approach deliberately. Rather than hiding higher-level tasks from 
 
 <figure>
   <img src="https://images.unsplash.com/photo-1551434678-e076c223a692?w=800&auto=format&fit=crop&q=80" alt="professionals working at laptops in an office" />
-  <figcaption>Higher trust levels unlock better tasks and faster approvals — a direct incentive to take every submission seriously.</figcaption>
+  <figcaption>Higher trust levels unlock better tasks and faster approvals — a direct incentive to take every submission seriously. Photo via Unsplash</figcaption>
 </figure>
 
 ## What Your Level Says About You

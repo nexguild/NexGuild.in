@@ -14,6 +14,7 @@ export interface PostMeta {
   category: string;
   readingTime: number;
   date: string;
+  tags?: string[];
   faqs?: FAQ[];
 }
 
@@ -62,6 +63,7 @@ export function getAllPosts(): PostMeta[] {
       category:    data.category as string,
       readingTime: calcReadingTime(content),
       date:        (data.date as string | undefined) ?? "2026-06-21",
+      tags:        (data.tags as string[] | undefined) ?? undefined,
       faqs:        (data.faqs as FAQ[] | undefined) ?? undefined,
     };
   });
@@ -84,6 +86,7 @@ export function getPostBySlug(slug: string): Post | null {
         category:    data.category as string,
         readingTime: calcReadingTime(content),
         date:        (data.date as string | undefined) ?? "2026-06-21",
+        tags:        (data.tags as string[] | undefined) ?? undefined,
         faqs:        (data.faqs as FAQ[] | undefined) ?? undefined,
         html,
         headings,

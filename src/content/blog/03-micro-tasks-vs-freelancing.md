@@ -1,9 +1,10 @@
-﻿---
+---
 title: "Micro-Tasks vs Freelancing: Which Is Better for You?"
 slug: "micro-tasks-vs-freelancing"
 description: "A clear comparison of micro-task platforms and freelance work to help you decide which fits your goals, skills, and schedule."
 category: "Remote Work"
 date: "2026-06-21"
+tags: ["micro-tasks", "freelancing", "remote work", "online earning"]
 ---
 
 
@@ -11,7 +12,7 @@ When people start looking into earning online, they usually run into two broad c
 
 <figure>
   <img src="https://images.unsplash.com/photo-1521737711867-e3b97375f902?w=800&auto=format&fit=crop&q=80" alt="remote workers collaborating on computers" />
-  <figcaption>Crowdsourcing platforms distribute small tasks to a global pool of contributors — no experience required to get started.</figcaption>
+  <figcaption>Crowdsourcing platforms distribute small tasks to a global pool of contributors — no experience required to get started. Photo via Unsplash</figcaption>
 </figure>
 
 ## What Are Micro-Tasks?
@@ -58,7 +59,7 @@ Micro-tasks involve essentially no client communication — you complete the tas
 
 <figure>
   <img src="https://images.unsplash.com/photo-1553877522-43269d4ea984?w=800&auto=format&fit=crop&q=80" alt="person reviewing documents and making notes" />
-  <figcaption>Freelancing requires pitching clients and building a portfolio — micro-tasks let you earn from day one without either.</figcaption>
+  <figcaption>Freelancing requires pitching clients and building a portfolio — micro-tasks let you earn from day one without either. Photo via Unsplash</figcaption>
 </figure>
 
 ## Which Should You Choose?

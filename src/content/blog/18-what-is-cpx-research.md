@@ -4,6 +4,7 @@ slug: "what-is-cpx-research-complete-guide"
 description: "CPX Research is a legitimate market research company that powers surveys inside earning platforms. Here's everything beginners need to know before their first survey."
 category: "Remote Work"
 date: "2026-07-19"
+tags: ["surveys", "CPX Research", "online earning", "platform guide"]
 faqs:
   - q: "What is CPX Research?"
     a: "CPX Research is a B2B market research technology company that powers the survey sections inside earning platforms and reward apps. They supply a continuously updated inventory of surveys from advertising and research clients — platforms like NexGuild integrate CPX Research so their users can access these surveys and earn rewards."
@@ -24,7 +25,7 @@ If you've seen the name **CPX Research** on a rewards app or earning platform an
 
 <figure>
   <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&auto=format&fit=crop&q=80" alt="focused person working independently on a laptop" />
-  <figcaption>CPX Research is a B2B survey network that connects platforms with high-quality market research — and pays contributors for qualifying responses.</figcaption>
+  <figcaption>CPX Research is a B2B survey network that connects platforms with high-quality market research — and pays contributors for qualifying responses. Photo via Unsplash</figcaption>
 </figure>
 
 ## What Is CPX Research?
@@ -86,7 +87,7 @@ For a detailed breakdown: [Why You Keep Getting Disqualified from Surveys](/earn
 
 <figure>
   <img src="https://images.unsplash.com/photo-1553877522-43269d4ea984?w=800&auto=format&fit=crop&q=80" alt="person reviewing documents and making notes" />
-  <figcaption>Quality matters more than speed on CPX Research surveys — attention-check questions can disqualify rushed responses even after completion.</figcaption>
+  <figcaption>Quality matters more than speed on CPX Research surveys — attention-check questions can disqualify rushed responses even after completion. Photo via Unsplash</figcaption>
 </figure>
 
 ## How CPX Research Crediting Works

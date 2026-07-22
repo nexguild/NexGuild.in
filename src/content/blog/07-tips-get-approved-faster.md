@@ -1,9 +1,10 @@
-﻿---
+---
 title: "5 Tips to Get Your Submissions Approved Faster on Task Platforms"
 slug: "tips-get-approved-faster-task-platforms"
 description: "Practical, actionable advice to reduce rejections and speed up approvals on micro-task and digital work platforms like NexGuild."
 category: "Remote Work"
 date: "2026-06-21"
+tags: ["NexGuild", "micro-tasks", "online earning", "tips"]
 ---
 
 
@@ -11,7 +12,7 @@ If you've spent any time on task-based earning platforms, you've probably experi
 
 <figure>
   <img src="https://images.unsplash.com/photo-1484807352052-23338990c6c6?w=800&auto=format&fit=crop&q=80" alt="person working at a clean home office desk" />
-  <figcaption>Clear, complete task submissions get approved faster — attention to detail is the most reliable way to improve your approval rate.</figcaption>
+  <figcaption>Clear, complete task submissions get approved faster — attention to detail is the most reliable way to improve your approval rate. Photo via Unsplash</figcaption>
 </figure>
 
 ## 1. Read the Full Task Instructions Before You Start
@@ -40,7 +41,7 @@ Platforms with step-by-step structures (rather than one big undefined task) are 
 
 <figure>
   <img src="https://images.unsplash.com/photo-1565728744382-61accd4aa148?w=800&auto=format&fit=crop&q=80" alt="remote worker with headphones completing tasks online" />
-  <figcaption>Contributors who read task guidelines carefully before starting consistently outperform those who submit and hope for the best.</figcaption>
+  <figcaption>Contributors who read task guidelines carefully before starting consistently outperform those who submit and hope for the best. Photo via Unsplash</figcaption>
 </figure>
 
 ## 5. Pay Attention to Rejection Feedback

@@ -1,9 +1,10 @@
-﻿---
+---
 title: "Best Online Earning Methods for Students in 2026"
 slug: "online-earning-methods-students"
 description: "A practical, honest breakdown of how students can earn online without compromising their studies — from micro-tasks to freelancing."
 category: "Remote Work"
 date: "2026-06-21"
+tags: ["online earning", "students", "work from home", "micro-tasks"]
 ---
 
 
@@ -13,7 +14,7 @@ Here's a practical, no-hype look at the real ways students are earning online to
 
 <figure>
   <img src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&auto=format&fit=crop&q=80" alt="person working on laptop from home" />
-  <figcaption>Students worldwide are building side income online — no office, no commute, just a laptop and an internet connection.</figcaption>
+  <figcaption>Students worldwide are building side income online — no office, no commute, just a laptop and an internet connection. Photo via Unsplash</figcaption>
 </figure>
 
 ## 1. Micro-Tasks and Digital Task Platforms
@@ -50,7 +51,7 @@ YouTube, Instagram, and other platforms allow students to build an audience arou
 
 <figure>
   <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&auto=format&fit=crop&q=80" alt="focused person working independently on a laptop" />
-  <figcaption>Consistency and choosing the right platform for your available time are what separate occasional earners from reliable student income.</figcaption>
+  <figcaption>Consistency and choosing the right platform for your available time are what separate occasional earners from reliable student income. Photo via Unsplash</figcaption>
 </figure>
 
 ## 5. Offerwall and Reward-Based Earning

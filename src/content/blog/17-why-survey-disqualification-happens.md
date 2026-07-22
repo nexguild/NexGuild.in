@@ -1,9 +1,10 @@
-﻿---
+---
 title: "Why You Keep Getting Disqualified from Surveys (And What to Do About It)"
 slug: "why-survey-disqualification-happens-what-to-do"
 description: "An honest explanation of why survey disqualification happens so often, and practical strategies to reduce it and protect your time."
 category: "Remote Work"
 date: "2026-07-06"
+tags: ["surveys", "online earning", "tips", "micro-tasks"]
 faqs:
   - q: "Why do I keep getting disqualified from surveys?"
     a: "Survey disqualification happens because every survey targets a specific demographic — age, gender, location, purchase behaviour — and if you don't match that profile, or the quota for your group is already full, you're screened out. It has nothing to do with how you answer; it's how market research targeting works."
@@ -22,7 +23,7 @@ The good news is that disqualification isn't random or arbitrary — it follows 
 
 <figure>
   <img src="https://images.unsplash.com/photo-1484807352052-23338990c6c6?w=800&auto=format&fit=crop&q=80" alt="person working at a clean home office desk" />
-  <figcaption>Survey disqualification is frustrating but predictable — understanding why it happens is the first step to reducing it significantly.</figcaption>
+  <figcaption>Survey disqualification is frustrating but predictable — understanding why it happens is the first step to reducing it significantly. Photo via Unsplash</figcaption>
 </figure>
 
 ## Why Disqualification Happens
@@ -55,7 +56,7 @@ The good news is that disqualification isn't random or arbitrary — it follows 
 
 <figure>
   <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&auto=format&fit=crop&q=80" alt="focused person working independently on a laptop" />
-  <figcaption>Completing your demographic profile accurately before starting surveys is the single most effective way to improve your qualification rate.</figcaption>
+  <figcaption>Completing your demographic profile accurately before starting surveys is the single most effective way to improve your qualification rate. Photo via Unsplash</figcaption>
 </figure>
 
 ## Managing Expectations

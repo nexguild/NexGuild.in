@@ -4,11 +4,12 @@ slug: "maximizing-nexguild-earnings-in-india"
 description: "Learn how to maximize your earnings on NexGuild, a global digital workforce community, with expert strategies and tips for Indian users, redeemable for gift vouchers"
 category: "Remote Work"
 date: "2026-07-14"
+tags: ["NexGuild", "online earning", "micro-tasks", "tips"]
 ---
 
 <figure>
   <img src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&auto=format&fit=crop&q=80" alt="person working on laptop from home" />
-  <figcaption>NexGuild contributors worldwide earn NexCoins through tasks and surveys, redeemable for Amazon, Flipkart, Google Play, and Zomato vouchers.</figcaption>
+  <figcaption>NexGuild contributors worldwide earn NexCoins through tasks and surveys, redeemable for Amazon, Flipkart, Google Play, and Zomato vouchers. Photo via Unsplash</figcaption>
 </figure>
 
 ## Introduction to Maximizing Earnings on NexGuild
@@ -52,7 +53,7 @@ Here are some additional tips for increasing survey participation:
 
 <figure>
   <img src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&auto=format&fit=crop&q=80" alt="analytics and data charts on a laptop screen" />
-  <figcaption>Tracking which task types get approved fastest, and timing your offerwall sessions, is how consistent NexGuild earners maximize their monthly output.</figcaption>
+  <figcaption>Tracking which task types get approved fastest, and timing your offerwall sessions, is how consistent NexGuild earners maximize their monthly output. Photo via Unsplash</figcaption>
 </figure>
 
 ## Managing Your NexGuild Earnings

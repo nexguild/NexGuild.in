@@ -4,13 +4,14 @@ slug: "how-to-start-freelancing-on-fiverr-2026"
 description: "Ready to start freelancing on Fiverr in 2026? This beginner's guide covers profile setup, gig creation, smart pricing, and landing your very first client."
 category: "Remote Work"
 date: "2026-07-21"
+tags: ["freelancing", "Fiverr", "platform review", "remote work"]
 ---
 
 Starting to freelance online is easier than most people think — and Fiverr is one of the most accessible places to begin. Unlike traditional job boards where you apply to employers, Fiverr flips the model: you list your services, buyers browse them, and orders come to you. There is no application process, no interview, and no minimum experience required to get started. That openness is what draws millions of beginners to the platform every year. But it also creates an intensely competitive environment where the difference between a gig that earns consistently and one that sits idle for months often comes down to a handful of setup decisions most new sellers get completely wrong. If you are serious about freelancing on Fiverr in 2026, this guide gives you the full picture — what works, what to avoid, and how to build the kind of momentum that actually grows into reliable income.
 
 <figure>
   <img src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&auto=format&fit=crop&q=80" alt="Freelancer working on a laptop from home" />
-  <figcaption>Fiverr lets you offer services from anywhere — no office, no commute, no interview required.</figcaption>
+  <figcaption>Fiverr lets you offer services from anywhere — no office, no commute, no interview required. Photo via Unsplash</figcaption>
 </figure>
 
 ## Why Fiverr Still Works for New Freelancers in 2026
@@ -53,7 +54,7 @@ As orders come in and reviews accumulate, raise your prices gradually. Fiverr's 
 
 <figure>
   <img src="https://images.unsplash.com/photo-1611532736597-de2d4265fba3?w=800&auto=format&fit=crop&q=80" alt="Person setting up a freelance profile on a laptop" />
-  <figcaption>Your gig title and profile photo are the first things buyers see — getting them right is everything.</figcaption>
+  <figcaption>Your gig title and profile photo are the first things buyers see — getting them right is everything. Photo via Unsplash</figcaption>
 </figure>
 
 ## How to Land Your First Fiverr Order

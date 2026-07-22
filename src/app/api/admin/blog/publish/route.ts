@@ -17,18 +17,21 @@ const REPO = "nexguild/NexGuild.in";
 const BLOG_PATH = "src/content/blog";
 
 function buildFrontmatter(post: {
-  title: string; slug: string; description: string; category: string; date: string;
+  title: string; slug: string; description: string; category: string; date: string; tags?: string[];
 }): string {
-  return [
+  const lines = [
     "---",
     `title: "${post.title.replace(/"/g, '\\"')}"`,
     `slug: "${post.slug}"`,
     `description: "${post.description.replace(/"/g, '\\"')}"`,
     `category: "${post.category}"`,
     `date: "${post.date}"`,
-    "---",
-    "",
-  ].join("\n");
+  ];
+  if (post.tags && post.tags.length > 0) {
+    lines.push(`tags: [${post.tags.map((t) => `"${t}"`).join(", ")}]`);
+  }
+  lines.push("---", "");
+  return lines.join("\n");
 }
 
 export async function POST(req: NextRequest) {
@@ -38,9 +41,9 @@ export async function POST(req: NextRequest) {
   const ghPat = process.env.GITHUB_BLOG_PAT;
   if (!ghPat) return NextResponse.json({ error: "GITHUB_BLOG_PAT not configured." }, { status: 500 });
 
-  const { title, slug, description, category, date, content, filename } = await req.json() as {
+  const { title, slug, description, category, date, content, filename, tags } = await req.json() as {
     title: string; slug: string; description: string; category: string;
-    date: string; content: string; filename?: string;
+    date: string; content: string; filename?: string; tags?: string[];
   };
 
   if (!title || !slug || !description || !content) {
@@ -49,7 +52,12 @@ export async function POST(req: NextRequest) {
 
   const finalFilename = filename ?? `${slug}.md`;
   const filePath = `${BLOG_PATH}/${finalFilename}`;
-  const fileContent = buildFrontmatter({ title, slug, description, category: category ?? "Remote Work", date: date ?? new Date().toISOString().split("T")[0] }) + content;
+  const fileContent = buildFrontmatter({
+    title, slug, description,
+    category: category ?? "Remote Work",
+    date: date ?? new Date().toISOString().split("T")[0],
+    tags,
+  }) + content;
   const encoded = Buffer.from(fileContent, "utf-8").toString("base64");
 
   // Check if file already exists to get SHA (needed for update)

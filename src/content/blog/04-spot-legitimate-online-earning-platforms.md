@@ -1,9 +1,10 @@
-﻿---
+---
 title: "How to Spot Legitimate Online Earning Platforms (And Avoid Scams)"
 slug: "spot-legitimate-online-earning-platforms"
 description: "Practical red flags and trust signals to help you tell genuine earning platforms apart from scams before you invest your time."
 category: "Remote Work"
 date: "2026-06-21"
+tags: ["online earning", "platform review", "work from home", "scam avoidance"]
 ---
 
 
@@ -11,7 +12,7 @@ The growth of online earning has, unfortunately, come with a growth in scams des
 
 <figure>
   <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&auto=format&fit=crop&q=80" alt="focused person working independently on a laptop" />
-  <figcaption>Researching a platform before joining takes 10 minutes and can save you from wasting weeks on one that doesn't pay.</figcaption>
+  <figcaption>Researching a platform before joining takes 10 minutes and can save you from wasting weeks on one that doesn't pay. Photo via Unsplash</figcaption>
 </figure>
 
 ## The Biggest Red Flag: Asking You to Pay First
@@ -50,7 +51,7 @@ Legitimate task platforms typically review submitted work before paying out — 
 
 <figure>
   <img src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&auto=format&fit=crop&q=80" alt="analytics and data charts on a laptop screen" />
-  <figcaption>Legitimate platforms have clear payout records, real user reviews, and transparent earning structures — red flags are easy to spot once you know them.</figcaption>
+  <figcaption>Legitimate platforms have clear payout records, real user reviews, and transparent earning structures — red flags are easy to spot once you know them. Photo via Unsplash</figcaption>
 </figure>
 
 ## Trust Signal: Clear, Specific Task Instructions

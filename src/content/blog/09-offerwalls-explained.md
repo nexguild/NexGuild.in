@@ -1,9 +1,10 @@
-﻿---
+---
 title: "What is an Offerwall? How They Work and What You Can Earn"
 slug: "offerwalls-explained-how-to-earn"
 description: "An offerwall is a hub of third-party offers — surveys, app installs, sign-ups — inside a platform you trust. Here's how they work and what you can earn."
 category: "Remote Work"
 date: "2026-06-21"
+tags: ["offerwalls", "surveys", "online earning", "NexGuild"]
 faqs:
   - q: "What is an offerwall?"
     a: "An offerwall is a curated panel of third-party earning tasks — surveys, app installs, sign-ups, and similar actions — embedded inside an earning platform or rewards app. You browse available offers, complete one, and earn a reward. The name comes from the visual layout: a wall of offers displayed side by side."

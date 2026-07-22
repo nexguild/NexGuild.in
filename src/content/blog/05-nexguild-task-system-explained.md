@@ -1,9 +1,10 @@
-﻿---
+---
 title: "NexGuild Explained: How Our Task System Works"
 slug: "nexguild-task-system-explained"
 description: "A complete walkthrough of how tasks work on NexGuild — from browsing opportunities to getting approved and earning NexCoins."
 category: "NexGuild"
 date: "2026-06-21"
+tags: ["NexGuild", "micro-tasks", "online earning", "platform guide"]
 ---
 
 
@@ -11,7 +12,7 @@ If you're new to NexGuild, you might be wondering exactly how the task system wo
 
 <figure>
   <img src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&auto=format&fit=crop&q=80" alt="person working on laptop from home" />
-  <figcaption>NexGuild's task system lets contributors earn NexCoins by completing structured tasks reviewed and approved by the platform team.</figcaption>
+  <figcaption>NexGuild's task system lets contributors earn NexCoins by completing structured tasks reviewed and approved by the platform team. Photo via Unsplash</figcaption>
 </figure>
 
 ## What Is a Task on NexGuild?
@@ -52,7 +53,7 @@ Once you complete all steps in a task, your submission goes into a review queue.
 
 <figure>
   <img src="https://images.unsplash.com/photo-1484807352052-23338990c6c6?w=800&auto=format&fit=crop&q=80" alt="person working at a clean home office desk" />
-  <figcaption>A clean task interface, clear submission guidelines, and a reliable review process make the difference between earning consistently and getting stuck.</figcaption>
+  <figcaption>A clean task interface, clear submission guidelines, and a reliable review process make the difference between earning consistently and getting stuck. Photo via Unsplash</figcaption>
 </figure>
 
 ## What Happens If a Submission Is Rejected

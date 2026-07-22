@@ -4,6 +4,7 @@ slug: "how-to-qualify-cpx-research-surveys-tips"
 description: "Struggling to qualify for CPX Research surveys? Practical, honest tips for reducing disqualifications and getting through more surveys — based on how survey targeting actually works."
 category: "Remote Work"
 date: "2026-07-19"
+tags: ["surveys", "CPX Research", "tips", "online earning"]
 faqs:
   - q: "How do I qualify for CPX Research surveys?"
     a: "You qualify for CPX Research surveys by matching the target demographic the research client specified — age, gender, location, occupation, purchase behaviour. Keeping your profile complete and accurate on the platform you use helps the system match you to surveys that fit your profile before you start, reducing wasted attempts."
@@ -24,7 +25,7 @@ The good news: while you can't eliminate disqualification entirely (it's structu
 
 <figure>
   <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&auto=format&fit=crop&q=80" alt="focused person working independently on a laptop" />
-  <figcaption>Qualifying for CPX Research surveys consistently comes down to profile accuracy and answering screener questions honestly and completely.</figcaption>
+  <figcaption>Qualifying for CPX Research surveys consistently comes down to profile accuracy and answering screener questions honestly and completely. Photo via Unsplash</figcaption>
 </figure>
 
 ## Why CPX Research Disqualification Happens
@@ -97,7 +98,7 @@ For more detail on offerwall options: [Best Offerwall Sites in 2026](/earn/blog/
 
 <figure>
   <img src="https://images.unsplash.com/photo-1553877522-43269d4ea984?w=800&auto=format&fit=crop&q=80" alt="person reviewing documents and making notes" />
-  <figcaption>Survey screeners are designed to match respondents to the right study — a complete profile means fewer failed screeners and more paid completions.</figcaption>
+  <figcaption>Survey screeners are designed to match respondents to the right study — a complete profile means fewer failed screeners and more paid completions. Photo via Unsplash</figcaption>
 </figure>
 
 ## What Doesn't Work
