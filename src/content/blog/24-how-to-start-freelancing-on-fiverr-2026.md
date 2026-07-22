@@ -32,6 +32,8 @@ Your bio should answer three straightforward questions: what you do, who you do 
 
 Select relevant skills to anchor your profile. Fiverr allows up to 15 skill tags, but new sellers benefit more from appearing focused than from signalling every capability at once. You can expand your offering later once your first few reviews are in and your profile has search history behind it.
 
+If you have a personal portfolio website, include the link in your profile description. A dedicated personal site — like [somenbiswas.com](https://somenbiswas.com) as an example of a clean personal brand page — gives buyers a way to evaluate your background and past work independently of the platform. Even a basic portfolio with two or three samples significantly increases buyer confidence before an order is placed.
+
 ## How to Write Your First Gig: The Decisions That Matter
 
 A Fiverr gig is the listing buyers find when browsing categories or searching the marketplace. Most beginners spend too much time on the thumbnail design and far too little on the words — but your title, description, and tags are what determine whether Fiverr's algorithm surfaces your gig in search results at all.
@@ -42,7 +44,7 @@ A Fiverr gig is the listing buyers find when browsing categories or searching th
 
 **Gig packages**: Fiverr lets you offer Basic, Standard, and Premium packages. Even as a complete beginner, set up all three from the start with meaningful differences in scope and delivery speed. This increases your average order value over time and signals that you have thought carefully about your service offering. Buyers who see only one flat-rate package often wonder what else they are missing.
 
-**Gig tags**: Use all five available tags and make them match real search terms. Check which tags similar gigs are using and mirror the most relevant ones for your service.
+**Gig tags**: Use all five available tags and make them match real search terms. Check which tags similar gigs are using and mirror the most relevant ones for your service. Free SEO and text tools at [xtoolkit.live](https://xtoolkit.live) can speed up keyword research and copy refinement as you build out your listings — no subscription needed.
 
 ## Pricing Your Services Without Underselling Yourself
 

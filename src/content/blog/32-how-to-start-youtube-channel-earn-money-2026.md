@@ -24,7 +24,7 @@ Specificity is what makes a new channel viable. Instead of "fitness," consider "
 
 The most sustainable niches are ones where you have genuine expertise or experience. A channel where you are teaching something you actually know — a profession, a skill, a lifestyle — is easier to produce consistently than one where you are performing authority you do not have. Audiences can sense the difference, and the work of finding what to say every week becomes unsustainable if the topic does not genuinely interest you.
 
-Channels focused on career development, remote work strategy, and freelancing — like [CareerGrowthRemotely](https://youtube.com/@CareerGrowthRemotely) — succeed precisely because they answer specific, high-intent questions from viewers who are actively trying to change their work situation. That is the kind of specificity that builds a loyal audience.
+Channels focused on career development, remote work strategy, and freelancing — like [CareerGrowthRemotely](https://youtube.com/@CareerGrowthRemotely) — succeed precisely because they answer specific, high-intent questions from viewers who are actively trying to change their work situation. That is the kind of specificity that builds a loyal audience. Pairing a YouTube channel with a personal brand site — like [somenbiswas.com](https://somenbiswas.com) — gives your audience a permanent home base that exists independently of any single platform's algorithm and reinforces your credibility across every channel you publish on.
 
 ## What Equipment You Actually Need (And What You Can Skip)
 
@@ -36,7 +36,7 @@ Equipment costs are one of the biggest barriers people perceive when starting a 
 
 **Lighting** — Good lighting transforms smartphone footage. Natural window light is free and works well. A single inexpensive ring light or softbox solves indoor lighting completely. Avoid overhead-only lighting, which creates unflattering shadows.
 
-**Editing software** — CapCut (free), DaVinci Resolve (free), and iMovie (free on Mac) are all capable of producing professional-looking YouTube videos. You do not need paid software to start.
+**Editing software** — CapCut (free), DaVinci Resolve (free), and iMovie (free on Mac) are all capable of producing professional-looking YouTube videos. You do not need paid software to start. For free productivity tools alongside your workflow — thumbnail text utilities, image resizers, word counters, and more — [xtoolkit.live](https://xtoolkit.live) offers 44+ free online tools with no account needed.
 
 Everything else — gimbals, external capture cards, premium cameras, studio microphones — is optional and should be added only when the channel is generating income to fund it.
 

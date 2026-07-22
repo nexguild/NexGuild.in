@@ -73,3 +73,5 @@ Remote and flexible work in India is likely to keep growing, not shrinking. As m
 ## Final Thoughts
 
 There's no single "right" way to work remotely in India today — the landscape is broad enough to fit almost anyone's situation, whether that's a student earning pocket money between classes, a freelancer building a serious independent career, or someone supplementing a full-time job with flexible task-based work. The key is starting with realistic expectations, choosing platforms that are transparent and trustworthy, and building consistency over time.
+
+For ongoing content about remote work strategies, platform reviews, and online earning — the [Career Growth Remotely](https://youtube.com/@CareerGrowthRemotely) YouTube channel and [Telegram community](https://t.me/CareerGrowthRemotely) cover these topics regularly, including practical breakdowns of which platforms are worth your time and which ones are not. NexGuild's own community at [t.me/nexguild_community](https://t.me/nexguild_community) is also a good place to ask questions and follow platform updates.
