@@ -113,7 +113,7 @@ export async function creditWithCommission(
     });
 
     // Audit row
-    await supabaseAdmin.from("nexleader_commissions").insert({
+    const { error: commInsertErr } = await supabaseAdmin.from("nexleader_commissions").insert({
       nexleader_id:       nexleaderId,
       member_id:          contributorId,
       event_type:         source,
@@ -122,12 +122,18 @@ export async function creditWithCommission(
       nexleader_credit:   nexleaderCredit,
       platform_cut:       platformCut,
     });
+    if (commInsertErr) {
+      console.error("[nexleader-commission] nexleader_commissions insert failed:", commInsertErr.message, commInsertErr.code);
+    }
 
     // Update NexLeader guild stats (atomic via RPC)
-    await supabaseAdmin.rpc("increment_guild_earned", {
+    const { error: guildRpcErr } = await supabaseAdmin.rpc("increment_guild_earned", {
       p_nexleader_id: nexleaderId,
       p_amount:       nexleaderCredit,
     });
+    if (guildRpcErr) {
+      console.error("[nexleader-commission] increment_guild_earned failed:", guildRpcErr.message, guildRpcErr.code);
+    }
   }
 
   return { contributorCredit, nexleaderCredit, platformCut };
@@ -226,7 +232,7 @@ export async function creditOfferwallUserShare(
       description:    `Commission: ${memberName} (${contributorId.slice(0, 8)}) · ${description}`,
     });
 
-    await supabaseAdmin.from("nexleader_commissions").insert({
+    const { error: commInsertErr2 } = await supabaseAdmin.from("nexleader_commissions").insert({
       nexleader_id:       nexleaderId,
       member_id:          contributorId,
       event_type:         "offerwall",
@@ -235,11 +241,17 @@ export async function creditOfferwallUserShare(
       nexleader_credit:   nexleaderCredit,
       platform_cut:       platformCut,
     });
+    if (commInsertErr2) {
+      console.error("[nexleader-commission] nexleader_commissions insert (offerwall) failed:", commInsertErr2.message, commInsertErr2.code);
+    }
 
-    await supabaseAdmin.rpc("increment_guild_earned", {
+    const { error: guildRpcErr2 } = await supabaseAdmin.rpc("increment_guild_earned", {
       p_nexleader_id: nexleaderId,
       p_amount:       nexleaderCredit,
     });
+    if (guildRpcErr2) {
+      console.error("[nexleader-commission] increment_guild_earned (offerwall) failed:", guildRpcErr2.message, guildRpcErr2.code);
+    }
   }
 
   return { contributorCredit, nexleaderCredit, platformCut };

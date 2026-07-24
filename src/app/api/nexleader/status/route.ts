@@ -77,11 +77,12 @@ export async function GET(req: NextRequest) {
         .neq("id", user.id)
         .order("created_at", { ascending: false })
         .limit(500),
-      // All-time per-member totals (lightweight — only 2 cols, no limit)
+      // All-time per-member totals
       admin
         .from("nexleader_commissions")
         .select("member_id, nexleader_credit")
-        .eq("nexleader_id", user.id),
+        .eq("nexleader_id", user.id)
+        .limit(50000),
       // Recent commission history (for the activity feed)
       admin
         .from("nexleader_commissions")
@@ -96,6 +97,11 @@ export async function GET(req: NextRequest) {
         .eq("nexleader_id", user.id)
         .gte("created_at", new Date(Date.now() - 7 * 86400000).toISOString()),
     ]);
+
+    if (membersRes.error) console.error("[nexleader/status] members query error:", membersRes.error.message);
+    if (allTotalsRes.error) console.error("[nexleader/status] allTotals query error:", allTotalsRes.error.message, allTotalsRes.error.code);
+    if (recentCommRes.error) console.error("[nexleader/status] recentComm query error:", recentCommRes.error.message, recentCommRes.error.code);
+    if (activeRes.error) console.error("[nexleader/status] active query error:", activeRes.error.message);
 
     // Aggregate lifetime commission per member from ALL rows
     const lifetimeTotals = new Map<string, number>();
