@@ -40,6 +40,7 @@ interface StatusData {
     event_type: string;
     nexleader_credit: number;
     created_at: string;
+    description: string | null;
   }[];
   activeThisWeek: number;
 }
@@ -155,7 +156,7 @@ function GuildActivityFeed({ commissions }: { commissions: StatusData["commissio
                     <div className="flex-1 min-w-0">
                       <p className="text-sm text-[var(--text-primary)]">
                         <span className="font-semibold">{mask(c.member_name)}</span>
-                        {" "}<span className="text-[var(--text-muted)]">{eventLabel(c.event_type)}</span>
+                        {" "}<span className="text-[var(--text-muted)]">{c.description ?? eventLabel(c.event_type)}</span>
                       </p>
                       <div className="flex items-center gap-2 mt-0.5">
                         <span className="text-xs text-[var(--text-muted)]">{timeAgo(c.created_at)}</span>

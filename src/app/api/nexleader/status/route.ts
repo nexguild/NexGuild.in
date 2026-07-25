@@ -85,7 +85,7 @@ export async function GET(req: NextRequest) {
       // Recent commission history (for the activity feed)
       admin
         .from("nexleader_commissions")
-        .select("id, member_id, event_type, nexleader_credit, created_at")
+        .select("id, member_id, event_type, nexleader_credit, created_at, description")
         .eq("nexleader_id", user.id)
         .order("created_at", { ascending: false })
         .limit(100),
@@ -120,7 +120,7 @@ export async function GET(req: NextRequest) {
       .sort((a, b) => (b as { lifetime_commission: number }).lifetime_commission - (a as { lifetime_commission: number }).lifetime_commission);
 
     commissions = ((recentCommRes.data ?? []) as {
-      id: string; member_id: string; event_type: string; nexleader_credit: number; created_at: string;
+      id: string; member_id: string; event_type: string; nexleader_credit: number; created_at: string; description: string | null;
     }[]).map((c) => ({
       ...c,
       member_name: memberMap.get(c.member_id) ?? "Member",

@@ -124,6 +124,7 @@ export async function creditWithCommission(
       contributor_credit: contributorCredit,
       nexleader_credit:   nexleaderCredit,
       platform_cut:       platformCut,
+      description,
     });
     if (commInsertErr) {
       console.error("[nexleader-commission] nexleader_commissions insert failed:", commInsertErr.message, commInsertErr.code);
@@ -246,6 +247,7 @@ export async function creditOfferwallUserShare(
       contributor_credit: contributorCredit,
       nexleader_credit:   nexleaderCredit,
       platform_cut:       platformCut,
+      description,
     });
     if (commInsertErr2) {
       console.error("[nexleader-commission] nexleader_commissions insert (offerwall) failed:", commInsertErr2.message, commInsertErr2.code);
