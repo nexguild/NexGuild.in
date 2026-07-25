@@ -40,5 +40,6 @@ RETURNS void LANGUAGE SQL SECURITY DEFINER AS $$
   WHERE id = p_nexleader_id;
 $$;
 
--- Quick diagnostic: check how many rows exist
--- SELECT COUNT(*) FROM nexleader_commissions;
+-- Grant table access to all Supabase roles (service_role bypasses RLS but still needs object privileges)
+GRANT ALL ON nexleader_commissions TO service_role, authenticated, anon;
+GRANT ALL ON nexleader_applications TO service_role, authenticated, anon;

@@ -72,10 +72,9 @@ export async function GET(req: NextRequest) {
       // All guild members
       admin
         .from("profiles")
-        .select("id, full_name, created_at")
+        .select("id, full_name")
         .eq("nexleader_id", user.id)
         .neq("id", user.id)
-        .order("created_at", { ascending: false })
         .limit(500),
       // All-time per-member totals
       admin
@@ -117,7 +116,7 @@ export async function GET(req: NextRequest) {
     );
 
     // Attach lifetime_commission to each member row, sort by top earner
-    members = ((membersRes.data ?? []) as { id: string; full_name: string | null; created_at: string }[])
+    members = ((membersRes.data ?? []) as { id: string; full_name: string | null }[])
       .map((m) => ({ ...m, lifetime_commission: lifetimeTotals.get(m.id) ?? 0 }))
       .sort((a, b) => (b as { lifetime_commission: number }).lifetime_commission - (a as { lifetime_commission: number }).lifetime_commission);
 

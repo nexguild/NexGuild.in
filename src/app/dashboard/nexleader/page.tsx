@@ -32,7 +32,7 @@ interface StatusData {
     created_at: string;
     rejection_reason: string | null;
   } | null;
-  members: { id: string; full_name: string | null; created_at: string; lifetime_commission: number }[];
+  members: { id: string; full_name: string | null; lifetime_commission: number }[];
   commissions: {
     id: string;
     member_id: string;
@@ -317,7 +317,7 @@ function NexLeaderDashboard({ data, copyLink, copied }: {
                   <th className="text-left px-5 py-2.5 text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wide">#</th>
                   <th className="text-left px-5 py-2.5 text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wide">Name</th>
                   <th className="text-left px-5 py-2.5 text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wide">UID</th>
-                  <th className="text-left px-5 py-2.5 text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wide">Joined</th>
+
                   <th className="text-right px-5 py-2.5 text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wide">Lifetime Commission</th>
                 </tr>
               </thead>
@@ -327,7 +327,7 @@ function NexLeaderDashboard({ data, copyLink, copied }: {
                     <td className="px-5 py-3 text-xs text-[var(--text-muted)] font-mono">{i + 1}</td>
                     <td className="px-5 py-3 font-medium text-[var(--text-primary)]">{m.full_name ?? "—"}</td>
                     <td className="px-5 py-3 font-mono text-xs text-[var(--text-muted)]" title={m.id}>{m.id.slice(0, 12)}…</td>
-                    <td className="px-5 py-3 text-xs text-[var(--text-muted)]">{daysAgo(m.created_at)}d ago</td>
+
                     <td className="px-5 py-3 text-right">
                       {m.lifetime_commission > 0 ? (
                         <span className="inline-flex items-center gap-1 text-xs font-semibold text-amber-600">
