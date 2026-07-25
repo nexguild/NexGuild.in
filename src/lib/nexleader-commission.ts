@@ -104,13 +104,16 @@ export async function creditWithCommission(
     }
 
     // Log NexLeader transaction (not shown to contributor)
-    await supabaseAdmin.from("coin_transactions").insert({
+    const { error: nlTxnErr } = await supabaseAdmin.from("coin_transactions").insert({
       contributor_id: nexleaderId,
       amount:         nexleaderCredit,
       type:           "earned",
       source:         "nexleader_commission",
       description:    `Commission: ${memberName} (${contributorId.slice(0, 8)}) · ${description}`,
     });
+    if (nlTxnErr) {
+      console.error("[nexleader-commission] coin_transactions (nexleader) insert failed:", nlTxnErr.message, nlTxnErr.code, "nexleader_id:", nexleaderId);
+    }
 
     // Audit row
     const { error: commInsertErr } = await supabaseAdmin.from("nexleader_commissions").insert({
@@ -224,13 +227,16 @@ export async function creditOfferwallUserShare(
       await supabaseAdmin.from("profiles").update({ nexcoins: nlCur + nexleaderCredit }).eq("id", nexleaderId);
     }
 
-    await supabaseAdmin.from("coin_transactions").insert({
+    const { error: nlTxnErr2 } = await supabaseAdmin.from("coin_transactions").insert({
       contributor_id: nexleaderId,
       amount:         nexleaderCredit,
       type:           "earned",
       source:         "nexleader_commission",
       description:    `Commission: ${memberName} (${contributorId.slice(0, 8)}) · ${description}`,
     });
+    if (nlTxnErr2) {
+      console.error("[nexleader-commission] coin_transactions (nexleader offerwall) insert failed:", nlTxnErr2.message, nlTxnErr2.code, "nexleader_id:", nexleaderId);
+    }
 
     const { error: commInsertErr2 } = await supabaseAdmin.from("nexleader_commissions").insert({
       nexleader_id:       nexleaderId,
