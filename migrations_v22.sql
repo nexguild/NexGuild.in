@@ -44,14 +44,9 @@ WHERE ct.source = 'nexleader_commission'
       AND nc.created_at       = ct.created_at
   );
 
--- Re-sync guild_total_earned on all NexLeader profiles to match actual commission sum
-UPDATE profiles p
-SET guild_total_earned = (
-  SELECT COALESCE(SUM(nexleader_credit), 0)
-  FROM nexleader_commissions nc
-  WHERE nc.nexleader_id = p.id
-)
-WHERE p.is_nexleader = TRUE;
+-- NOTE: Do NOT auto-update guild_total_earned here.
+-- guild_total_earned is maintained by increment_guild_earned RPC calls
+-- and may be higher than SUM(nexleader_commissions) if some rows failed to insert.
 
 -- Optional diagnostic — uncomment to verify before/after
 -- SELECT COUNT(*) AS commission_rows FROM nexleader_commissions;

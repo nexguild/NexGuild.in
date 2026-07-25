@@ -102,6 +102,7 @@ export async function GET(req: NextRequest) {
     if (allTotalsRes.error) console.error("[nexleader/status] allTotals query error:", allTotalsRes.error.message, allTotalsRes.error.code);
     if (recentCommRes.error) console.error("[nexleader/status] recentComm query error:", recentCommRes.error.message, recentCommRes.error.code);
     if (activeRes.error) console.error("[nexleader/status] active query error:", activeRes.error.message);
+    console.log("[nexleader/status] user.id:", user.id, "recentComm rows:", recentCommRes.data?.length ?? 0, "allTotals rows:", allTotalsRes.data?.length ?? 0);
 
     // Aggregate lifetime commission per member from ALL rows
     const lifetimeTotals = new Map<string, number>();
