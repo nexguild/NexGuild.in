@@ -28,9 +28,9 @@ async function logPostback(
   if (error) console.error("[postback/mylead] postback_logs insert failed:", error.message);
 }
 
-// MyLead hash: MD5(postback_url + security_key)
+// MyLead hash: SHA-256(postback_url + security_key)
 function verifyHash(secret: string, urlStr: string, incomingHash: string): boolean {
-  const expected = createHash("md5").update(urlStr + secret).digest("hex");
+  const expected = createHash("sha256").update(urlStr + secret).digest("hex");
   return expected === incomingHash;
 }
 
@@ -73,8 +73,6 @@ async function handlePostback(req: NextRequest): Promise<Response> {
       await logPostback(rawParams, false, "hash_invalid", "missing security header");
       return new Response("OK", { status: 200 });
     }
-    const expectedHash = require("crypto").createHash("md5").update(req.url + (provider.postback_secret as string)).digest("hex");
-    console.log("[postback/mylead] hash debug", { url: req.url, incoming: incomingHash, expected: expectedHash });
     hashValid = verifyHash(provider.postback_secret as string, req.url, incomingHash);
     if (!hashValid) {
       console.warn("[postback/mylead] hash validation failed");
