@@ -25,7 +25,7 @@ const ACTION_STYLES: Record<string, string> = {
   error:         "bg-red-500/15   text-red-400   border-red-500/20",
 };
 
-const PROVIDERS  = ["theoremreach", "cpx_research", "mylead"];
+const PROVIDERS  = ["theoremreach", "cpx_research", "mylead", "clickwall"];
 const ACTIONS    = ["credited", "duplicate", "reversed", "debug_ignored", "hash_invalid", "error"];
 
 export default function PostbackLogsPage() {
