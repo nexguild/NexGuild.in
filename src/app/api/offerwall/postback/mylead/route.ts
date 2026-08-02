@@ -73,6 +73,14 @@ async function handlePostback(req: NextRequest): Promise<Response> {
       await logPostback(rawParams, false, "hash_invalid", "missing security header");
       return new Response("OK", { status: 200 });
     }
+    const _s = provider.postback_secret as string;
+    const { createHash: _ch, createHmac: _hm } = await import("crypto");
+    console.log("[postback/mylead] hash variants", {
+      incoming:          incomingHash,
+      sha256_url_s:      _ch("sha256").update(req.url + _s).digest("hex"),
+      sha256_s_url:      _ch("sha256").update(_s + req.url).digest("hex"),
+      hmac_sha256_url:   _hm("sha256", _s).update(req.url).digest("hex"),
+    });
     hashValid = verifyHash(provider.postback_secret as string, req.url, incomingHash);
     if (!hashValid) {
       console.warn("[postback/mylead] hash validation failed");
