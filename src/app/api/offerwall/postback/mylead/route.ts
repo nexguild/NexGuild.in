@@ -88,7 +88,8 @@ async function handlePostback(req: NextRequest): Promise<Response> {
   }
 
   // Rejected → reverse any prior credit
-  if (status === "rejected") {
+  // MyLead sends status=1 for rejected; "rejected" string also accepted
+  if (status === "rejected" || status === "1") {
     const { data: existing } = await admin
       .from("offerwall_transactions")
       .select("id, nexcoins_awarded, contributor_id, status")
@@ -131,8 +132,9 @@ async function handlePostback(req: NextRequest): Promise<Response> {
     return new Response("OK", { status: 200 });
   }
 
-  // pending / pre_approved → log only, do not credit yet
-  if (status !== "approved") {
+  // MyLead sends status=0 for approved; "approved" string also accepted
+  const isApproved = status === "approved" || status === "0";
+  if (!isApproved) {
     console.log(`[postback/mylead] status="${status}" — not crediting yet (tx=${txId})`);
     await logPostback(rawParams, hashValid, `skipped_${status || "unknown"}`);
     return new Response("OK", { status: 200 });
@@ -144,7 +146,7 @@ async function handlePostback(req: NextRequest): Promise<Response> {
     return new Response("OK", { status: 200 });
   }
 
-  // Exchange rate in MyLead dashboard = 660, so amount IS the user's coin amount
+  // Currency Multiplier in MyLead dashboard = 660, so amount IS the user's coin amount
   const userCoins = Math.max(1, Math.floor(amount));
 
   const { error: insertErr } = await admin.from("offerwall_transactions").insert({
