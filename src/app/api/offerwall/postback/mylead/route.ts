@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { createHash } from "crypto";
+import { createHmac } from "crypto";
 import { createClient } from "@supabase/supabase-js";
 import { createServerClient } from "@/lib/supabase-server";
 import { creditOfferwallUserShare } from "@/lib/nexleader-commission";
@@ -28,9 +28,9 @@ async function logPostback(
   if (error) console.error("[postback/mylead] postback_logs insert failed:", error.message);
 }
 
-// MyLead hash: SHA-256(postback_url + security_key)
+// MyLead hash: HMAC-SHA256(key=security_key, message=postback_url)
 function verifyHash(secret: string, urlStr: string, incomingHash: string): boolean {
-  const expected = createHash("sha256").update(urlStr + secret).digest("hex");
+  const expected = createHmac("sha256", secret).update(urlStr).digest("hex");
   return expected === incomingHash;
 }
 
@@ -73,14 +73,6 @@ async function handlePostback(req: NextRequest): Promise<Response> {
       await logPostback(rawParams, false, "hash_invalid", "missing security header");
       return new Response("OK", { status: 200 });
     }
-    const _s = provider.postback_secret as string;
-    const { createHash: _ch, createHmac: _hm } = await import("crypto");
-    console.log("[postback/mylead] hash variants", {
-      incoming:          incomingHash,
-      sha256_url_s:      _ch("sha256").update(req.url + _s).digest("hex"),
-      sha256_s_url:      _ch("sha256").update(_s + req.url).digest("hex"),
-      hmac_sha256_url:   _hm("sha256", _s).update(req.url).digest("hex"),
-    });
     hashValid = verifyHash(provider.postback_secret as string, req.url, incomingHash);
     if (!hashValid) {
       console.warn("[postback/mylead] hash validation failed");
@@ -96,8 +88,7 @@ async function handlePostback(req: NextRequest): Promise<Response> {
   }
 
   // Rejected → reverse any prior credit
-  // MyLead sends status=1 for rejected; "rejected" string also accepted
-  if (status === "rejected" || status === "1") {
+  if (status === "rejected") {
     const { data: existing } = await admin
       .from("offerwall_transactions")
       .select("id, nexcoins_awarded, contributor_id, status")
@@ -140,9 +131,7 @@ async function handlePostback(req: NextRequest): Promise<Response> {
     return new Response("OK", { status: 200 });
   }
 
-  // MyLead sends status=0 for approved; "approved" string also accepted
-  const isApproved = status === "approved" || status === "0";
-  if (!isApproved) {
+  if (status !== "approved") {
     console.log(`[postback/mylead] status="${status}" — not crediting yet (tx=${txId})`);
     await logPostback(rawParams, hashValid, `skipped_${status || "unknown"}`);
     return new Response("OK", { status: 200 });
