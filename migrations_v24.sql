@@ -1,4 +1,9 @@
 -- ============================================================
+-- Fix MyLead + TheoremReach contributor_share_pct and TheoremReach exchange_rate
+UPDATE offerwall_providers SET contributor_share_pct = 100 WHERE slug = 'mylead';
+UPDATE offerwall_providers SET custom_config = jsonb_set(custom_config, '{exchange_rate}', '660') WHERE slug = 'theoremreach';
+
+-- ============================================================
 -- v24: Add ClickWall offerwall provider
 -- ClickWall (clickwall.net) — iframe integration
 -- S1 model: exchange rate 660, amount = user's NexCoins directly
