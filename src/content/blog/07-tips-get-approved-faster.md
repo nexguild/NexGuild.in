@@ -1,4 +1,4 @@
----
+﻿---
 title: "5 Tips to Get Your Submissions Approved Faster on Task Platforms"
 slug: "tips-get-approved-faster-task-platforms"
 description: "Practical, actionable advice to reduce rejections and speed up approvals on micro-task and digital work platforms like NexGuild."
@@ -11,7 +11,7 @@ tags: ["NexGuild", "micro-tasks", "online earning", "tips"]
 If you've spent any time on task-based earning platforms, you've probably experienced the frustration of a rejected submission — time spent, no payout, and sometimes an unclear reason why. The good news is that most rejections come down to a handful of avoidable mistakes. Here are five practical habits that consistently lead to faster, smoother approvals.
 
 <figure>
-  <img src="https://images.unsplash.com/photo-1484807352052-23338990c6c6?w=800&auto=format&fit=crop&q=80" alt="person working at a clean home office desk" />
+  <img src="https://images.unsplash.com/photo-1484807352052-23338990c6c6?w=800&auto=format&fit=crop&q=80" alt="person working at a clean home office desk" width="800" height="450" />
   <figcaption>Clear, complete task submissions get approved faster — attention to detail is the most reliable way to improve your approval rate. Photo via Unsplash</figcaption>
 </figure>
 
@@ -40,7 +40,7 @@ Tasks with multiple sequential steps are often structured that way intentionally
 Platforms with step-by-step structures (rather than one big undefined task) are usually designed this way specifically to make instructions clearer and reduce rejection rates — work with that structure rather than against it.
 
 <figure>
-  <img src="https://images.unsplash.com/photo-1565728744382-61accd4aa148?w=800&auto=format&fit=crop&q=80" alt="remote worker with headphones completing tasks online" />
+  <img src="https://images.unsplash.com/photo-1565728744382-61accd4aa148?w=800&auto=format&fit=crop&q=80" alt="remote worker with headphones completing tasks online" width="800" height="450" />
   <figcaption>Contributors who read task guidelines carefully before starting consistently outperform those who submit and hope for the best. Photo via Unsplash</figcaption>
 </figure>
 

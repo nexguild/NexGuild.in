@@ -1,4 +1,4 @@
----
+﻿---
 title: "Earn 1000 Dollars Freelancing Online Quickly Today"
 slug: "earn-1000-dollars-freelancing"
 description: "Learn how to earn 1000 dollars from freelancing online with NexGuild, a global community of contributors, and redeem NexCoins for gift vouchers"
@@ -8,7 +8,7 @@ tags: ["freelancing", "online earning", "remote work", "income goals"]
 ---
 
 <figure>
-  <img src="https://images.unsplash.com/photo-1553877522-43269d4ea984?w=800&auto=format&fit=crop&q=80" alt="person reviewing documents and making notes" />
+  <img src="https://images.unsplash.com/photo-1553877522-43269d4ea984?w=800&auto=format&fit=crop&q=80" alt="person reviewing documents and making notes" width="800" height="450" />
   <figcaption>Reaching your first $1,000 in freelancing income requires the right platform, a focused skill, and a strategy for landing your first clients. Photo via Unsplash</figcaption>
 </figure>
 
@@ -53,7 +53,7 @@ LinkedIn, Twitter/X, and niche-specific communities (Slack groups, Discord serve
 For your first client, pricing slightly below what you eventually want to charge is acceptable — the priority is getting a job done, getting real feedback, and getting a testimonial you can use to attract the next client.
 
 <figure>
-  <img src="https://images.unsplash.com/photo-1521737711867-e3b97375f902?w=800&auto=format&fit=crop&q=80" alt="remote workers collaborating on computers" />
+  <img src="https://images.unsplash.com/photo-1521737711867-e3b97375f902?w=800&auto=format&fit=crop&q=80" alt="remote workers collaborating on computers" width="800" height="450" />
   <figcaption>Freelancers who hit consistent income milestones early build their rates on proven results — not promises to future clients. Photo via Unsplash</figcaption>
 </figure>
 

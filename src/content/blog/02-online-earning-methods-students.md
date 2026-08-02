@@ -1,4 +1,4 @@
----
+﻿---
 title: "Best Online Earning Methods for Students in 2026"
 slug: "online-earning-methods-students"
 description: "A practical, honest breakdown of how students can earn online without compromising their studies — from micro-tasks to freelancing."
@@ -13,7 +13,7 @@ College life comes with a lot of expenses that don't always fit neatly into a mo
 Here's a practical, no-hype look at the real ways students are earning online today.
 
 <figure>
-  <img src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&auto=format&fit=crop&q=80" alt="person working on laptop from home" />
+  <img src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&auto=format&fit=crop&q=80" alt="person working on laptop from home" width="800" height="450" />
   <figcaption>Students worldwide are building side income online — no office, no commute, just a laptop and an internet connection. Photo via Unsplash</figcaption>
 </figure>
 
@@ -50,7 +50,7 @@ YouTube, Instagram, and other platforms allow students to build an audience arou
 **Realistic expectations:** This is the slowest-growing and least predictable option on this list. Most creators take months or years to build a real audience, and many never monetize meaningfully. Treat it as a long-term project, not a quick income plan.
 
 <figure>
-  <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&auto=format&fit=crop&q=80" alt="focused person working independently on a laptop" />
+  <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&auto=format&fit=crop&q=80" alt="focused person working independently on a laptop" width="800" height="450" />
   <figcaption>Consistency and choosing the right platform for your available time are what separate occasional earners from reliable student income. Photo via Unsplash</figcaption>
 </figure>
 

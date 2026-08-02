@@ -84,6 +84,16 @@ export default async function BlogPostPage({ params }: Props) {
     day: "numeric", month: "long", year: "numeric",
   });
 
+  const breadcrumbJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Home",  item: SITE_URL },
+      { "@type": "ListItem", position: 2, name: "Blog",  item: `${SITE_URL}/earn/blog` },
+      { "@type": "ListItem", position: 3, name: post.title, item: postUrl },
+    ],
+  };
+
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Article",
@@ -119,6 +129,10 @@ export default async function BlogPostPage({ params }: Props) {
 
   return (
     <div style={{ background: "#EBFBFA", color: "#1E293B", minHeight: "100vh" }}>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}

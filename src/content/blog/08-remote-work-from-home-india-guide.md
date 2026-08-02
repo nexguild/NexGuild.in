@@ -1,4 +1,4 @@
----
+﻿---
 title: "Remote Work from Home in India: A 2026 Guide"
 slug: "remote-work-from-home-india-guide-2026"
 description: "An honest, practical guide to the remote work landscape in India today — opportunities, realistic expectations, and how to get started."
@@ -11,7 +11,7 @@ tags: ["remote work", "work from home", "online earning", "freelancing"]
 Working from home in India has gone from a niche arrangement to a mainstream part of how millions of people earn. Whether it's a full-time remote job, freelance work, or flexible task-based earning, the options available today are broader — and more legitimate — than they were just a few years ago. This guide breaks down the real landscape, without the hype.
 
 <figure>
-  <img src="https://images.unsplash.com/photo-1521737711867-e3b97375f902?w=800&auto=format&fit=crop&q=80" alt="remote workers collaborating on computers" />
+  <img src="https://images.unsplash.com/photo-1521737711867-e3b97375f902?w=800&auto=format&fit=crop&q=80" alt="remote workers collaborating on computers" width="800" height="450" />
   <figcaption>Remote work from home has moved from a niche option to a mainstream career path — and the right platforms make it accessible to anyone. Photo via Unsplash</figcaption>
 </figure>
 
@@ -50,7 +50,7 @@ It's worth being honest about what remote and task-based work can and can't offe
 Going in with realistic expectations is the single biggest factor in whether someone sticks with remote/task-based work long enough to actually build meaningful income from it.
 
 <figure>
-  <img src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&auto=format&fit=crop&q=80" alt="person working on laptop from home" />
+  <img src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&auto=format&fit=crop&q=80" alt="person working on laptop from home" width="800" height="450" />
   <figcaption>All you need to start earning remotely is a reliable internet connection, a laptop, and the right platform for your skills. Photo via Unsplash</figcaption>
 </figure>
 

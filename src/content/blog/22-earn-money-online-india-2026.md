@@ -1,4 +1,4 @@
----
+﻿---
 title: "How to Earn Money Online in India in 2026: Tasks, Surveys & Offerwalls"
 slug: "earn-money-online-india-tasks-surveys-offerwalls-2026"
 description: "A complete guide to earning money online in India in 2026 — tasks, surveys, and offerwalls that actually pay, with platforms that work for Indian users and pay via vouchers or UPI."
@@ -26,7 +26,7 @@ Online earning in India has matured significantly. Platforms that once felt expe
 This guide focuses on what genuinely works in 2026 — the three methods that consistently produce real earnings for Indian users, what's realistic to expect, and how to get started without any investment.
 
 <figure>
-  <img src="https://images.unsplash.com/photo-1521737711867-e3b97375f902?w=800&auto=format&fit=crop&q=80" alt="remote workers collaborating on computers" />
+  <img src="https://images.unsplash.com/photo-1521737711867-e3b97375f902?w=800&auto=format&fit=crop&q=80" alt="remote workers collaborating on computers" width="800" height="450" />
   <figcaption>Earning money online in 2026 is no longer limited to technical skills — task platforms, surveys, and micro-work sites have opened it up for everyone. Photo via Unsplash</figcaption>
 </figure>
 
@@ -110,7 +110,7 @@ This makes them accessible to students, homemakers, people between jobs, and any
 For broader context on this shift: [The Gig Economy in India — What It Means for Online Workers](/earn/blog/gig-economy-india-guide)
 
 <figure>
-  <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&auto=format&fit=crop&q=80" alt="focused person working independently on a laptop" />
+  <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&auto=format&fit=crop&q=80" alt="focused person working independently on a laptop" width="800" height="450" />
   <figcaption>The most reliable online earners use a combination of platforms rather than depending on a single source — variety protects income during slow periods. Photo via Unsplash</figcaption>
 </figure>
 

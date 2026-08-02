@@ -1,4 +1,4 @@
----
+﻿---
 title: "How to Earn Free Gift Vouchers Online in India (2026 Guide)"
 slug: "earn-free-gift-vouchers-online-india-2026"
 description: "Want to earn free Amazon, Flipkart, or Google Play vouchers in India? The most reliable methods for earning gift vouchers online in 2026 — no investment, no cash minimums."
@@ -22,7 +22,7 @@ faqs:
 Earning free gift vouchers online in India is more practical than most people expect — but only if you're on the right platforms. This guide covers the methods that actually work in 2026, what to realistically expect, and how to get your vouchers without hitting high cash-out minimums.
 
 <figure>
-  <img src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&auto=format&fit=crop&q=80" alt="person working on laptop from home" />
+  <img src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&auto=format&fit=crop&q=80" alt="person working on laptop from home" width="800" height="450" />
   <figcaption>Earning gift vouchers online in 2026 is more accessible than ever — the right platforms pay in Amazon, Flipkart, and Google Play credits with no minimum threshold. Photo via Unsplash</figcaption>
 </figure>
 
@@ -69,7 +69,7 @@ All accessible from NexGuild's single Offerwalls hub — no separate accounts ne
 For a full breakdown: [Best Offerwall Sites in 2026](/earn/blog/best-offerwall-sites-earn-rewards-2026)
 
 <figure>
-  <img src="https://images.unsplash.com/photo-1484807352052-23338990c6c6?w=800&auto=format&fit=crop&q=80" alt="person working at a clean home office desk" />
+  <img src="https://images.unsplash.com/photo-1484807352052-23338990c6c6?w=800&auto=format&fit=crop&q=80" alt="person working at a clean home office desk" width="800" height="450" />
   <figcaption>Combining task platforms with survey offerwalls gives you the best chance of earning consistently toward your next voucher redemption. Photo via Unsplash</figcaption>
 </figure>
 

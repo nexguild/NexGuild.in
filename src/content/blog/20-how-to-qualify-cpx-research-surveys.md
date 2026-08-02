@@ -1,4 +1,4 @@
----
+﻿---
 title: "How to Qualify for CPX Research Surveys: Tips That Actually Work (2026)"
 slug: "how-to-qualify-cpx-research-surveys-tips"
 description: "Struggling to qualify for CPX Research surveys? Practical, honest tips for reducing disqualifications and getting through more surveys — based on how survey targeting actually works."
@@ -24,7 +24,7 @@ Survey disqualification is one of the most common frustrations when using CPX Re
 The good news: while you can't eliminate disqualification entirely (it's structural to how market research works), there are practical steps that reduce it significantly. Here's what actually helps.
 
 <figure>
-  <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&auto=format&fit=crop&q=80" alt="focused person working independently on a laptop" />
+  <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&auto=format&fit=crop&q=80" alt="focused person working independently on a laptop" width="800" height="450" />
   <figcaption>Qualifying for CPX Research surveys consistently comes down to profile accuracy and answering screener questions honestly and completely. Photo via Unsplash</figcaption>
 </figure>
 
@@ -97,7 +97,7 @@ On NexGuild, CPX Research surveys sit alongside task work, TheoremReach, ClixWal
 For more detail on offerwall options: [Best Offerwall Sites in 2026](/earn/blog/best-offerwall-sites-earn-rewards-2026)
 
 <figure>
-  <img src="https://images.unsplash.com/photo-1553877522-43269d4ea984?w=800&auto=format&fit=crop&q=80" alt="person reviewing documents and making notes" />
+  <img src="https://images.unsplash.com/photo-1553877522-43269d4ea984?w=800&auto=format&fit=crop&q=80" alt="person reviewing documents and making notes" width="800" height="450" />
   <figcaption>Survey screeners are designed to match respondents to the right study — a complete profile means fewer failed screeners and more paid completions. Photo via Unsplash</figcaption>
 </figure>
 

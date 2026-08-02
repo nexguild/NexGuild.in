@@ -1,4 +1,4 @@
----
+﻿---
 title: "What Is the Gig Economy in India? A Complete Guide for 2026"
 slug: "gig-economy-india-guide"
 description: "Understand how the gig economy works in India, why it's growing fast, and how everyday people are using it to build flexible income streams."
@@ -10,7 +10,7 @@ tags: ["gig economy", "remote work", "online earning", "work from home"]
 If you've spent any time online over the last few years, you've probably come across the term "gig economy." It gets thrown around a lot — sometimes to describe food delivery riders, sometimes freelance designers, sometimes people doing small digital tasks from their phone between classes or after work. So what does it actually mean, and why has it become such a big part of how India works and earns?
 
 <figure>
-  <img src="https://images.unsplash.com/photo-1521737711867-e3b97375f902?w=800&auto=format&fit=crop&q=80" alt="remote workers collaborating on computers" />
+  <img src="https://images.unsplash.com/photo-1521737711867-e3b97375f902?w=800&auto=format&fit=crop&q=80" alt="remote workers collaborating on computers" width="800" height="450" />
   <figcaption>Remote work and crowdsourcing platforms have opened up flexible income paths for millions of people worldwide. Photo via Unsplash</figcaption>
 </figure>
 
@@ -45,7 +45,7 @@ The gig economy isn't one single thing — it spans a wide range of work types:
 Micro-task and digital task work in particular has grown quickly because it requires no physical commute, no specialized equipment, and can often be done in short bursts — ten minutes here, twenty minutes there — which fits naturally around school, a day job, or family responsibilities.
 
 <figure>
-  <img src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&auto=format&fit=crop&q=80" alt="analytics and data charts on a laptop screen" />
+  <img src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&auto=format&fit=crop&q=80" alt="analytics and data charts on a laptop screen" width="800" height="450" />
   <figcaption>Understanding the gig economy means tracking where demand is growing — and which platforms pay the most reliably. Photo via Unsplash</figcaption>
 </figure>
 

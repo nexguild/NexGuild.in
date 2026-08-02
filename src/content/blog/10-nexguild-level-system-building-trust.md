@@ -1,4 +1,4 @@
----
+﻿---
 title: "Building Trust as a New Contributor: How NexGuild's Level System Works"
 slug: "nexguild-level-system-building-trust"
 description: "How NexGuild's Level and XP system works, why it exists, and how new contributors can grow their access to better opportunities over time."
@@ -11,7 +11,7 @@ tags: ["NexGuild", "platform guide", "online earning", "micro-tasks"]
 Every contributor on NexGuild starts at the same place — Level 1, with access to the platform's entry-level opportunities. What happens after that is entirely shaped by your own activity. This post explains how the Level and XP system works, why we built it this way, and how to think about growing within it.
 
 <figure>
-  <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&auto=format&fit=crop&q=80" alt="focused person working independently on a laptop" />
+  <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&auto=format&fit=crop&q=80" alt="focused person working independently on a laptop" width="800" height="450" />
   <figcaption>Building trust on a contributor platform takes consistent, quality submissions — the level system rewards exactly that over time. Photo via Unsplash</figcaption>
 </figure>
 
@@ -42,7 +42,7 @@ We chose this approach deliberately. Rather than hiding higher-level tasks from 
 **Build a daily habit.** NexGuild's daily streak system rewards consistent activity — completing at least one approved task each day keeps your streak alive and unlocks bonus NexCoins, with a larger bonus on day seven. Beyond the direct reward, consistent daily activity naturally compounds your XP over time as well.
 
 <figure>
-  <img src="https://images.unsplash.com/photo-1551434678-e076c223a692?w=800&auto=format&fit=crop&q=80" alt="professionals working at laptops in an office" />
+  <img src="https://images.unsplash.com/photo-1551434678-e076c223a692?w=800&auto=format&fit=crop&q=80" alt="professionals working at laptops in an office" width="800" height="450" />
   <figcaption>Higher trust levels unlock better tasks and faster approvals — a direct incentive to take every submission seriously. Photo via Unsplash</figcaption>
 </figure>
 

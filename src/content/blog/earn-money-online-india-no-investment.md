@@ -1,4 +1,4 @@
----
+﻿---
 title: "Earn Money Online in India 2026 Without Investment"
 slug: "earn-money-online-india-no-investment"
 description: "Learn how to earn money online in India without investment in 2026. Discover legit ways to make money online in India with no initial investment required."
@@ -8,7 +8,7 @@ tags: ["online earning", "work from home", "micro-tasks", "surveys"]
 ---
 
 <figure>
-  <img src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&auto=format&fit=crop&q=80" alt="person working on laptop from home" />
+  <img src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&auto=format&fit=crop&q=80" alt="person working on laptop from home" width="800" height="450" />
   <figcaption>Starting to earn online without any investment means using platforms that pay you for your time, attention, and judgment — not your wallet. Photo via Unsplash</figcaption>
 </figure>
 
@@ -51,7 +51,7 @@ Transcription involves converting audio or video recordings to text. Research ta
 Pay rates for these tasks are generally lower than skilled freelancing, but the accessibility is much higher. They're a practical way to earn while you build skills in a higher-earning category in parallel.
 
 <figure>
-  <img src="https://images.unsplash.com/photo-1484807352052-23338990c6c6?w=800&auto=format&fit=crop&q=80" alt="person working at a clean home office desk" />
+  <img src="https://images.unsplash.com/photo-1484807352052-23338990c6c6?w=800&auto=format&fit=crop&q=80" alt="person working at a clean home office desk" width="800" height="450" />
   <figcaption>Zero-investment earning platforms like NexGuild let you build toward real rewards from your very first approved task, with no upfront cost. Photo via Unsplash</figcaption>
 </figure>
 

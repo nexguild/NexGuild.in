@@ -1,4 +1,4 @@
----
+﻿---
 title: "NexGuild vs Traditional Microtask Sites: What's Actually Different"
 slug: "nexguild-vs-traditional-microtask-sites"
 description: "A clear, honest comparison of how NexGuild's task system differs from established global microtask platforms — and where those platforms still have an edge."
@@ -11,7 +11,7 @@ tags: ["NexGuild", "micro-tasks", "platform review", "online earning"]
 If you've used established microtask platforms before — Clickworker, Microworkers, Toloka, or similar — you might wonder how NexGuild compares, and whether it's worth adding to your rotation. This post lays out the real differences honestly, including where traditional platforms still have advantages.
 
 <figure>
-  <img src="https://images.unsplash.com/photo-1551434678-e076c223a692?w=800&auto=format&fit=crop&q=80" alt="professionals working at laptops in an office" />
+  <img src="https://images.unsplash.com/photo-1551434678-e076c223a692?w=800&auto=format&fit=crop&q=80" alt="professionals working at laptops in an office" width="800" height="450" />
   <figcaption>Traditional microtask sites often pay fractions of a cent per task — newer platforms like NexGuild are built around real reward value. Photo via Unsplash</figcaption>
 </figure>
 
@@ -44,7 +44,7 @@ In the interest of a genuinely honest comparison:
 **Track record and scale.** Years of operation and millions of completed tasks build a kind of trust and predictability that's simply a function of time — something no newer platform can shortcut, regardless of how well-designed it is.
 
 <figure>
-  <img src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&auto=format&fit=crop&q=80" alt="analytics and data charts on a laptop screen" />
+  <img src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&auto=format&fit=crop&q=80" alt="analytics and data charts on a laptop screen" width="800" height="450" />
   <figcaption>Comparing payout structures, task variety, and redemption options is the clearest way to identify which platform is worth your time. Photo via Unsplash</figcaption>
 </figure>
 

@@ -1,4 +1,4 @@
----
+﻿---
 title: "How to Spot Legitimate Online Earning Platforms (And Avoid Scams)"
 slug: "spot-legitimate-online-earning-platforms"
 description: "Practical red flags and trust signals to help you tell genuine earning platforms apart from scams before you invest your time."
@@ -11,7 +11,7 @@ tags: ["online earning", "platform review", "work from home", "scam avoidance"]
 The growth of online earning has, unfortunately, come with a growth in scams designed to look like legitimate opportunities. Before you commit your time — or worse, your money — to a platform, it's worth knowing exactly what separates a real opportunity from a trap.
 
 <figure>
-  <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&auto=format&fit=crop&q=80" alt="focused person working independently on a laptop" />
+  <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&auto=format&fit=crop&q=80" alt="focused person working independently on a laptop" width="800" height="450" />
   <figcaption>Researching a platform before joining takes 10 minutes and can save you from wasting weeks on one that doesn't pay. Photo via Unsplash</figcaption>
 </figure>
 
@@ -50,7 +50,7 @@ Be cautious of any platform where the primary way to earn is recruiting new memb
 Legitimate task platforms typically review submitted work before paying out — checking quality, verifying completion, confirming authenticity. This protects both the platform and honest workers. If a platform pays out instantly for literally anything submitted with zero review, that's actually a sign the business model itself may not be sustainable, since there's no quality control protecting the value of the currency or rewards.
 
 <figure>
-  <img src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&auto=format&fit=crop&q=80" alt="analytics and data charts on a laptop screen" />
+  <img src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&auto=format&fit=crop&q=80" alt="analytics and data charts on a laptop screen" width="800" height="450" />
   <figcaption>Legitimate platforms have clear payout records, real user reviews, and transparent earning structures — red flags are easy to spot once you know them. Photo via Unsplash</figcaption>
 </figure>
 

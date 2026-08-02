@@ -1,4 +1,4 @@
----
+﻿---
 title: "How Online Surveys Actually Work: What You Earn, How You Get Paid, and What to Expect"
 slug: "how-online-surveys-work-what-you-earn"
 description: "A clear, honest explanation of how paid survey platforms work, what typical earnings look like, and how to choose the right platform for your situation."
@@ -11,7 +11,7 @@ tags: ["surveys", "online earning", "micro-tasks", "work from home"]
 Paid surveys have been around for decades, but the way they work — and what you can realistically earn — is still widely misunderstood. This post explains the mechanics clearly, without the hype that most "best survey sites" articles lead with.
 
 <figure>
-  <img src="https://images.unsplash.com/photo-1553877522-43269d4ea984?w=800&auto=format&fit=crop&q=80" alt="person reviewing documents and making notes" />
+  <img src="https://images.unsplash.com/photo-1553877522-43269d4ea984?w=800&auto=format&fit=crop&q=80" alt="person reviewing documents and making notes" width="800" height="450" />
   <figcaption>Online surveys match respondents to market research studies — qualifying for the right surveys consistently is what drives real earnings. Photo via Unsplash</figcaption>
 </figure>
 
@@ -51,7 +51,7 @@ Survey platforms generally offer rewards in a few ways:
 **Points/coins systems:** Most platforms use an intermediate currency. The conversion rate matters — make sure you understand what 1,000 points (or coins) is actually worth in real money before investing significant time.
 
 <figure>
-  <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&auto=format&fit=crop&q=80" alt="focused person working independently on a laptop" />
+  <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&auto=format&fit=crop&q=80" alt="focused person working independently on a laptop" width="800" height="450" />
   <figcaption>Understanding screener questions and demographic matching is the key to reducing disqualifications and improving your survey completion rate. Photo via Unsplash</figcaption>
 </figure>
 

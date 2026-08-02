@@ -1,5 +1,5 @@
----
-title: "CPX Research Review 2026: Is It Legit, Safe & Worth Your Time?"
+﻿---
+title: "CPX Research Review 2026: Legit, Safe & Worth It — Honest Assessment"
 slug: "cpx-research-review-2026"
 description: "Is CPX Research legit and safe? Yes — here's an honest 2026 review of how CPX Research surveys work, what payouts look like, and what to expect on NexGuild."
 category: "Remote Work"
@@ -24,7 +24,7 @@ CPX Research is a survey and market research network that connects publishers (w
 This review covers what CPX Research is, how their survey system works, what payouts typically look like, and how it operates when accessed through an integrated platform like NexGuild.
 
 <figure>
-  <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&auto=format&fit=crop&q=80" alt="focused person working independently on a laptop" />
+  <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&auto=format&fit=crop&q=80" alt="focused person working independently on a laptop" width="800" height="450" />
   <figcaption>CPX Research connects survey takers with market research studies — completing your profile accurately is the most reliable way to qualify more often. Photo via Unsplash</figcaption>
 </figure>
 
@@ -57,7 +57,7 @@ When you complete a CPX Research survey, they verify the completion on their end
 This automatic crediting is one of the more reliable aspects of CPX Research's integration — completions that pass their quality checks are credited quickly, without the manual review delays that task-based work involves.
 
 <figure>
-  <img src="https://images.unsplash.com/photo-1553877522-43269d4ea984?w=800&auto=format&fit=crop&q=80" alt="person reviewing documents and making notes" />
+  <img src="https://images.unsplash.com/photo-1553877522-43269d4ea984?w=800&auto=format&fit=crop&q=80" alt="person reviewing documents and making notes" width="800" height="450" />
   <figcaption>Survey quality checks are built into CPX Research's flow — answering consistently and carefully is what separates earners who get credited from those who don't. Photo via Unsplash</figcaption>
 </figure>
 

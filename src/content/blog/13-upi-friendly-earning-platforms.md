@@ -1,4 +1,4 @@
----
+﻿---
 title: "Best UPI-Friendly Earning Platforms in India (And Why Some Platforms Skip UPI Entirely)"
 slug: "upi-friendly-earning-platforms-india"
 description: "An honest look at UPI-based earning apps in India, and why some platforms — including NexGuild — use a voucher model instead of direct UPI payouts."
@@ -11,7 +11,7 @@ tags: ["online earning", "platform review", "work from home", "surveys"]
 UPI has become the default way most Indians move money, so it's no surprise that "UPI earning apps" is one of the most common searches for anyone looking to make money online in India. This post covers what UPI-based earning platforms typically look like, and explains why some platforms — NexGuild included — deliberately choose a different payout model instead.
 
 <figure>
-  <img src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&auto=format&fit=crop&q=80" alt="person working on laptop from home" />
+  <img src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&auto=format&fit=crop&q=80" alt="person working on laptop from home" width="800" height="450" />
   <figcaption>Online earning platforms with fast, local payment options make the difference between income you can use and income stuck in processing. Photo via Unsplash</figcaption>
 </figure>
 
@@ -46,7 +46,7 @@ It depends entirely on what you're optimizing for.
 Many people use both kinds of platforms simultaneously: a UPI-based app for building actual cash savings, and a voucher-based platform like NexGuild for everyday spending categories like shopping and entertainment vouchers.
 
 <figure>
-  <img src="https://images.unsplash.com/photo-1484807352052-23338990c6c6?w=800&auto=format&fit=crop&q=80" alt="person working at a clean home office desk" />
+  <img src="https://images.unsplash.com/photo-1484807352052-23338990c6c6?w=800&auto=format&fit=crop&q=80" alt="person working at a clean home office desk" width="800" height="450" />
   <figcaption>Choosing platforms with UPI or direct bank transfer support removes the payout friction that slows down most international earning sites. Photo via Unsplash</figcaption>
 </figure>
 

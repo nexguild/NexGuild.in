@@ -1,4 +1,4 @@
----
+﻿---
 title: "Micro-Tasks vs Freelancing: Which Is Better for You?"
 slug: "micro-tasks-vs-freelancing"
 description: "A clear comparison of micro-task platforms and freelance work to help you decide which fits your goals, skills, and schedule."
@@ -11,7 +11,7 @@ tags: ["micro-tasks", "freelancing", "remote work", "online earning"]
 When people start looking into earning online, they usually run into two broad categories pretty quickly: micro-tasks and freelancing. Both let you earn from a laptop or phone, both are flexible, and both have genuinely helped people build real income streams. But they work very differently, and the right choice depends entirely on what you're looking for.
 
 <figure>
-  <img src="https://images.unsplash.com/photo-1521737711867-e3b97375f902?w=800&auto=format&fit=crop&q=80" alt="remote workers collaborating on computers" />
+  <img src="https://images.unsplash.com/photo-1521737711867-e3b97375f902?w=800&auto=format&fit=crop&q=80" alt="remote workers collaborating on computers" width="800" height="450" />
   <figcaption>Crowdsourcing platforms distribute small tasks to a global pool of contributors — no experience required to get started. Photo via Unsplash</figcaption>
 </figure>
 
@@ -58,7 +58,7 @@ Freelancing wins clearly here. Every project sharpens your actual skill and buil
 Micro-tasks involve essentially no client communication — you complete the task per instructions and move on. Freelancing requires managing client expectations, sometimes handling revision requests, negotiating scope, and occasionally dealing with difficult clients. This is a real trade-off worth being honest about.
 
 <figure>
-  <img src="https://images.unsplash.com/photo-1553877522-43269d4ea984?w=800&auto=format&fit=crop&q=80" alt="person reviewing documents and making notes" />
+  <img src="https://images.unsplash.com/photo-1553877522-43269d4ea984?w=800&auto=format&fit=crop&q=80" alt="person reviewing documents and making notes" width="800" height="450" />
   <figcaption>Freelancing requires pitching clients and building a portfolio — micro-tasks let you earn from day one without either. Photo via Unsplash</figcaption>
 </figure>
 

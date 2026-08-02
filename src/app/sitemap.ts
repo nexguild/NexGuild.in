@@ -4,7 +4,7 @@ import { getAllPosts } from "@/lib/blog";
 const BASE = "https://www.nexguild.in";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const now = new Date("2026-07-14");
+  const now = new Date();
 
   const staticPages: MetadataRoute.Sitemap = [
     // Core contributor pages

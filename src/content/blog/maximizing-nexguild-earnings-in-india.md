@@ -1,4 +1,4 @@
----
+﻿---
 title: "Maximizing NexGuild Earnings in India: Expert Strategies"
 slug: "maximizing-nexguild-earnings-in-india"
 description: "Learn how to maximize your earnings on NexGuild, a global digital workforce community, with expert strategies and tips for Indian users, redeemable for gift vouchers"
@@ -8,7 +8,7 @@ tags: ["NexGuild", "online earning", "micro-tasks", "tips"]
 ---
 
 <figure>
-  <img src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&auto=format&fit=crop&q=80" alt="person working on laptop from home" />
+  <img src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&auto=format&fit=crop&q=80" alt="person working on laptop from home" width="800" height="450" />
   <figcaption>NexGuild contributors worldwide earn NexCoins through tasks and surveys, redeemable for Amazon, Flipkart, Google Play, and Zomato vouchers. Photo via Unsplash</figcaption>
 </figure>
 
@@ -52,7 +52,7 @@ Here are some additional tips for increasing survey participation:
 4. **Stay up-to-date with the latest surveys and tasks**: Stay up-to-date with the latest surveys and tasks to maximize your earnings.
 
 <figure>
-  <img src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&auto=format&fit=crop&q=80" alt="analytics and data charts on a laptop screen" />
+  <img src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&auto=format&fit=crop&q=80" alt="analytics and data charts on a laptop screen" width="800" height="450" />
   <figcaption>Tracking which task types get approved fastest, and timing your offerwall sessions, is how consistent NexGuild earners maximize their monthly output. Photo via Unsplash</figcaption>
 </figure>
 

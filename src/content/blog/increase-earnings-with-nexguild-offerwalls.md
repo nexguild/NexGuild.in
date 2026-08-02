@@ -1,4 +1,4 @@
----
+﻿---
 title: "Maximize Earnings with Offerwalls on NexGuild Platform"
 slug: "increase-earnings-with-nexguild-offerwalls"
 description: "Earn rewards with offerwalls on NexGuild, a community where contributors complete surveys and tasks for gift vouchers and boost earnings"
@@ -8,7 +8,7 @@ tags: ["NexGuild", "offerwalls", "online earning", "surveys"]
 ---
 
 <figure>
-  <img src="https://images.unsplash.com/photo-1551434678-e076c223a692?w=800&auto=format&fit=crop&q=80" alt="professionals working at laptops in an office" />
+  <img src="https://images.unsplash.com/photo-1551434678-e076c223a692?w=800&auto=format&fit=crop&q=80" alt="professionals working at laptops in an office" width="800" height="450" />
   <figcaption>NexGuild's offerwall hub aggregates surveys and tasks from multiple providers — giving you more earning options in a single daily session. Photo via Unsplash</figcaption>
 </figure>
 
@@ -54,7 +54,7 @@ So why choose NexGuild over other platforms? Here are a few reasons:
 * **Redeem rewards for gift vouchers**: NexCoins can be redeemed for gift vouchers from popular brands like Amazon, Flipkart, Google Play, and Zomato.
 
 <figure>
-  <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&auto=format&fit=crop&q=80" alt="focused person working independently on a laptop" />
+  <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&auto=format&fit=crop&q=80" alt="focused person working independently on a laptop" width="800" height="450" />
   <figcaption>Combining NexGuild's contributor tasks with offerwall surveys is the most effective way to maximize your NexCoin earnings between task approvals. Photo via Unsplash</figcaption>
 </figure>
 

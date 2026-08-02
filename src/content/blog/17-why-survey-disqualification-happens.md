@@ -1,4 +1,4 @@
----
+﻿---
 title: "Why You Keep Getting Disqualified from Surveys (And What to Do About It)"
 slug: "why-survey-disqualification-happens-what-to-do"
 description: "An honest explanation of why survey disqualification happens so often, and practical strategies to reduce it and protect your time."
@@ -22,7 +22,7 @@ If you've spent any time on survey platforms, you've experienced it: you start a
 The good news is that disqualification isn't random or arbitrary — it follows patterns you can understand and partially work around. Here's an honest breakdown of why it happens and what actually helps.
 
 <figure>
-  <img src="https://images.unsplash.com/photo-1484807352052-23338990c6c6?w=800&auto=format&fit=crop&q=80" alt="person working at a clean home office desk" />
+  <img src="https://images.unsplash.com/photo-1484807352052-23338990c6c6?w=800&auto=format&fit=crop&q=80" alt="person working at a clean home office desk" width="800" height="450" />
   <figcaption>Survey disqualification is frustrating but predictable — understanding why it happens is the first step to reducing it significantly. Photo via Unsplash</figcaption>
 </figure>
 
@@ -55,7 +55,7 @@ The good news is that disqualification isn't random or arbitrary — it follows 
 **Changing your answers to game screener questions.** Some people try to identify the "right" answers in screener questions to avoid disqualification. This runs into the same problem as above, and sophisticated platforms use follow-up questions and consistency checks that catch this fairly reliably.
 
 <figure>
-  <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&auto=format&fit=crop&q=80" alt="focused person working independently on a laptop" />
+  <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&auto=format&fit=crop&q=80" alt="focused person working independently on a laptop" width="800" height="450" />
   <figcaption>Completing your demographic profile accurately before starting surveys is the single most effective way to improve your qualification rate. Photo via Unsplash</figcaption>
 </figure>
 

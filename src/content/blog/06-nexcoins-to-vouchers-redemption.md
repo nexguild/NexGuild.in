@@ -1,4 +1,4 @@
----
+﻿---
 title: "NexCoins to Vouchers: How Redemption Works on NexGuild"
 slug: "nexcoins-to-vouchers-redemption"
 description: "Everything you need to know about earning NexCoins and redeeming them for real rewards in NexStore."
@@ -11,7 +11,7 @@ tags: ["NexGuild", "gift vouchers", "online earning", "rewards"]
 One of the most common questions from new contributors is simple: "I've earned NexCoins — now what?" This post walks through exactly how the NexCoins economy works on NexGuild, from earning to redemption.
 
 <figure>
-  <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&auto=format&fit=crop&q=80" alt="focused person working independently on a laptop" />
+  <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&auto=format&fit=crop&q=80" alt="focused person working independently on a laptop" width="800" height="450" />
   <figcaption>NexCoins accumulate with every approved task and survey — and redeem directly for Amazon, Flipkart, Google Play, and Zomato vouchers. Photo via Unsplash</figcaption>
 </figure>
 
@@ -40,7 +40,7 @@ There are a few ways NexCoins make it into your balance:
 Your dashboard and Earnings page give you a complete view of your NexCoins activity: current available balance, total lifetime earned, a breakdown by source (tasks, offerwall, streak bonuses), and a full transaction history you can filter and export.
 
 <figure>
-  <img src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&auto=format&fit=crop&q=80" alt="analytics and data charts on a laptop screen" />
+  <img src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&auto=format&fit=crop&q=80" alt="analytics and data charts on a laptop screen" width="800" height="450" />
   <figcaption>Tracking your NexCoin balance and choosing the right redemption option is how you turn online task work into real purchasing power. Photo via Unsplash</figcaption>
 </figure>
 

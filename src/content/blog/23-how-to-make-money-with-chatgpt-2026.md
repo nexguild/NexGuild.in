@@ -1,4 +1,4 @@
----
+﻿---
 title: "How to Make Money with ChatGPT in 2026: Practical Ways"
 slug: "how-to-make-money-with-chatgpt-2026"
 description: "Discover real ways to make money with ChatGPT in 2026 — freelancing, content writing, and task platforms that pay. Beginner-friendly guide with practical tips."
@@ -21,7 +21,7 @@ faqs:
 Artificial intelligence is no longer just a tech curiosity — it has become one of the most practical tools for generating income online. If you have spent any time with ChatGPT, you already know it can write, brainstorm, code, summarize, and explain almost anything in seconds. What many people have not yet figured out is how to convert that raw capability into actual money. This guide covers the most reliable ways to make money with ChatGPT in 2026, whether you are starting from zero or looking to expand what you already earn online.
 
 <figure>
-  <img src="https://images.unsplash.com/photo-1555255707-c07966088b7b?w=800&auto=format&fit=crop&q=80" alt="developer reviewing code on a computer screen" />
+  <img src="https://images.unsplash.com/photo-1555255707-c07966088b7b?w=800&auto=format&fit=crop&q=80" alt="developer reviewing code on a computer screen" width="800" height="450" />
   <figcaption>AI tools like ChatGPT have created new categories of online work — and platforms that pay for human feedback on AI outputs are growing fast. Photo via Unsplash</figcaption>
 </figure>
 
@@ -66,7 +66,7 @@ One of the most scalable earning paths is creating products once and selling the
 **Custom GPT configurations and automations** have become a real product category. If you can build a ChatGPT-powered tool that solves a specific business problem — a customer service assistant, a content calendar generator, a social media planning tool — businesses will pay for access to it, either as a subscription or a one-time purchase.
 
 <figure>
-  <img src="https://images.unsplash.com/photo-1542744173-8e7e53415bb0?w=800&auto=format&fit=crop&q=80" alt="professional evaluating content on a laptop" />
+  <img src="https://images.unsplash.com/photo-1542744173-8e7e53415bb0?w=800&auto=format&fit=crop&q=80" alt="professional evaluating content on a laptop" width="800" height="450" />
   <figcaption>Using AI effectively as a productivity tool is different from blindly trusting its output — human judgment is still what clients pay for. Photo via Unsplash</figcaption>
 </figure>
 

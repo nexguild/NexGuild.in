@@ -1,16 +1,25 @@
----
+﻿---
 title: "Telus International AI Review 2026: Pay, Tasks & Is It Worth It?"
 slug: "telus-international-ai-review-2026"
 description: "Is Telus International AI worth it in 2026? Honest review of pay rates, the qualification exam, search quality rating work, and how it compares to Appen."
 category: "Remote Work"
 date: "2026-07-22"
 tags: ["AI training", "crowdsourcing", "platform review", "remote work"]
+faqs:
+  - q: "Is Telus International AI legit?"
+    a: "Yes, Telus International AI is a legitimate platform operated by Telus International, a publicly traded Canadian company. It has paid independent contractors globally since 2012 and supplies search quality rating data to major search engines."
+  - q: "How do I qualify for Telus International AI?"
+    a: "Qualification requires studying Google's Search Quality Rater Guidelines (160+ pages, publicly available) and passing a multi-part exam. Most candidates invest two to three days of preparation. The exam is unpaid but the guidelines can be downloaded free."
+  - q: "How much does Telus International AI pay per hour?"
+    a: "Pay typically ranges from $12 to $18 per hour for search quality rating work, with variation by project and region. This is among the higher pay ranges in the AI training data category."
+  - q: "Is Telus International AI available worldwide?"
+    a: "Yes, Telus International AI operates in 50+ countries. Availability of specific project types varies by region — not all work types are accessible from every country. Check the application portal for what is currently open in your location."
 ---
 
 Telus International AI is one of the largest AI training and search quality rating companies in the world, operating across more than 50 countries and employing hundreds of thousands of independent contractors to help build and improve AI systems. If you have spent any time researching remote work options in the AI training space, you have almost certainly encountered it — either under its current name or its former name, Lionbridge AI, which it rebranded from after being acquired by Telus International in 2021. This review covers how the platform actually works in 2026, what the qualification process involves, what you can realistically earn, and where it falls short compared to the marketing.
 
 <figure>
-  <img src="https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?w=800&auto=format&fit=crop&q=80" alt="Person working on a laptop from home completing search quality rating tasks" />
+  <img src="https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?w=800&auto=format&fit=crop&q=80" alt="Person working on a laptop from home completing search quality rating tasks" width="800" height="450" />
   <figcaption>Telus International AI contractors work remotely on their own schedule — rating search results, evaluating AI outputs, and reviewing web content. Photo via Unsplash</figcaption>
 </figure>
 
@@ -63,7 +72,7 @@ The platform also sets weekly hour caps on most projects — often between 20 an
 Payment is processed through a dedicated payment portal, and the schedule varies by country — some regions receive weekly payments, others bi-weekly or monthly. PayPal is the most common payment method for international contributors.
 
 <figure>
-  <img src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&auto=format&fit=crop&q=80" alt="Laptop screen showing data and analytics in a home office setting" />
+  <img src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&auto=format&fit=crop&q=80" alt="Laptop screen showing data and analytics in a home office setting" width="800" height="450" />
   <figcaption>Search quality rating requires applying detailed guidelines to real search queries — a task that rewards careful reading and consistent judgment. Photo via Unsplash</figcaption>
 </figure>
 
@@ -92,6 +101,20 @@ Most experienced contributors in this space recommend maintaining accounts on bo
 For the right person with the patience to get through the qualification process, yes. Telus International AI offers consistently legitimate, well-structured AI training work with pay rates that are among the better options in the crowdsourcing category. The search quality rating work in particular is more intellectually engaging than most microtask platforms, and contractors who apply the guidelines carefully tend to find it genuinely interesting.
 
 The platform works best as one component of a diversified online earning strategy. While you are waiting for the qualification invitation or working through busy and slow periods on Telus International AI projects, complementary platforms fill in the gaps. NexGuild provides accessible daily earning through contributor tasks and surveys powered by CPX Research and TheoremReach — no lengthy qualification exam required to get started, and earnings redeem for gift vouchers at [nexguild.in](https://nexguild.in). The NexGuild community at [t.me/nexguild_community](https://t.me/nexguild_community) is also worth joining for platform tips and updates. For ongoing coverage of AI training platforms, crowdsourcing pay rates, and remote earning strategies, the [Career Growth Remotely](https://youtube.com/@CareerGrowthRemotely) YouTube channel and [Telegram](https://t.me/CareerGrowthRemotely) publish regular platform breakdowns. For a broader view of how Telus International AI fits into the crowdsourcing landscape, our [best crowdsourcing platforms guide 2026](/earn/blog/best-crowdsourcing-platforms-earn-money-2026) puts it alongside Appen, Clickworker, Remotasks, and others.
+
+## Frequently Asked Questions
+
+**Is Telus International AI legit?**
+Yes. Telus International AI is a legitimate platform operated by Telus International, a publicly traded Canadian company. It has paid millions of independent contractors globally since 2012 and supplies search quality rating data to major search engines.
+
+**How do I qualify for Telus International AI?**
+Qualification requires studying Google's Search Quality Rater Guidelines (160+ pages, publicly available as a free download) and passing a multi-part exam. Most candidates invest two to three days of preparation. The exam is unpaid, but the pay rates after passing justify that investment.
+
+**How much does Telus International AI pay per hour?**
+Pay typically ranges from $12 to $18 per hour for search quality rating work, with variation by project and region. This is among the higher pay ranges available for AI training data work in the crowdsourcing category.
+
+**Is Telus International AI available worldwide?**
+Yes, the platform operates across 50+ countries. Availability of specific project types varies by region — not all work types are accessible from every country. The application portal shows what is currently open in your location.
 
 ## Key Takeaways
 

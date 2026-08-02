@@ -1,4 +1,4 @@
----
+﻿---
 title: "Clickworker Review 2026: Is It Worth It for Beginners?"
 slug: "clickworker-review-2026-worth-it"
 description: "Is Clickworker worth it in 2026? This honest review covers how Clickworker works, what tasks pay, how to withdraw earnings, and who the platform actually suits."
@@ -10,7 +10,7 @@ tags: ["micro-tasks", "crowdsourcing", "platform review", "remote work"]
 Clickworker sits in an interesting middle ground in the online earning world — it is not as well known as the big freelancing marketplaces, but it is far more established than the wave of newer task apps that appear and disappear every year. Founded in Germany in 2005, Clickworker has been distributing microtasks to a global workforce for nearly two decades, which puts it in rare company for a platform in this space. But longevity does not automatically mean it is the right platform for you in 2026. This review covers everything you need to know before signing up — what the tasks look like, what you actually earn, how to get paid, and where the platform genuinely falls short.
 
 <figure>
-  <img src="https://images.unsplash.com/photo-1484807352052-23338990c6c6?w=800&auto=format&fit=crop&q=80" alt="Person working at a desk on a laptop completing microtasks online" />
+  <img src="https://images.unsplash.com/photo-1484807352052-23338990c6c6?w=800&auto=format&fit=crop&q=80" alt="Person working at a desk on a laptop completing microtasks online" width="800" height="450" />
   <figcaption>Clickworker's marketplace model lets you log in, pick tasks, and earn — no fixed schedule or project invite required. Photo via Unsplash</figcaption>
 </figure>
 
@@ -65,7 +65,7 @@ Your assessment scores remain on your profile and affect which tasks you are eli
 The UHRS qualification, available through Clickworker for search quality tasks, is separate and more involved — it requires studying specific guidelines and passing an accuracy-based test. Contributors who clear this tend to report significantly better hourly earnings than those working on standard Clickworker tasks alone.
 
 <figure>
-  <img src="https://images.unsplash.com/photo-1565728744382-61accd4aa148?w=800&auto=format&fit=crop&q=80" alt="Remote worker completing tasks at home with headphones and laptop" />
+  <img src="https://images.unsplash.com/photo-1565728744382-61accd4aa148?w=800&auto=format&fit=crop&q=80" alt="Remote worker completing tasks at home with headphones and laptop" width="800" height="450" />
   <figcaption>Clickworker suits earners who want immediate access to tasks — no weeks-long qualification process before you can start. Photo via Unsplash</figcaption>
 </figure>
 
