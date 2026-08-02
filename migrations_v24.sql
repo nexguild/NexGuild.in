@@ -28,7 +28,7 @@ INSERT INTO offerwall_providers (
   'https://clickwall.net/app/iframe/10682/{user_id}',
   'NxG_clickwall_2026',
   '{"trans_id": "txid"}',
-  66,
+  100,
   '{
     "rate_is_user_share": true,
     "payout_multiplier": 1,
