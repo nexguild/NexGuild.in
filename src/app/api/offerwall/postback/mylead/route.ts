@@ -131,7 +131,8 @@ async function handlePostback(req: NextRequest): Promise<Response> {
     return new Response("OK", { status: 200 });
   }
 
-  if (status !== "approved") {
+  // Real postbacks send status="approved"; tester sends status="0"
+  if (status !== "approved" && status !== "0") {
     console.log(`[postback/mylead] status="${status}" — not crediting yet (tx=${txId})`);
     await logPostback(rawParams, hashValid, `skipped_${status || "unknown"}`);
     return new Response("OK", { status: 200 });
