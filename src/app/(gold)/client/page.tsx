@@ -482,7 +482,12 @@ export default function ClientPage() {
               <div className="flex flex-col gap-2.5 text-center sm:text-left">
                 <div>
                   <h3 className="text-xl font-black" style={{ fontFamily: "Instrument Serif, serif", color: "#1C1917" }}>Somen Biswas</h3>
-                  <p className="text-xs mt-0.5" style={{ color: "#78716C" }}>Founder, NexGuild</p>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <p className="text-xs" style={{ color: "#78716C" }}>Founder, NexGuild</p>
+                    <a href="https://x.com/somen_official" target="_blank" rel="noopener noreferrer" className="text-stone-400 hover:text-stone-700 transition-colors" aria-label="Somen on X">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.737-8.852L1.254 2.25H8.08l4.26 5.632 5.904-5.632zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                    </a>
+                  </div>
                 </div>
                 <p className="text-sm leading-relaxed" style={{ color: "#44403C" }}>
                   &ldquo;I started NexGuild to bridge the gap between organizations that need reliable human-powered work and a global community ready to deliver it. Every feature is built with both sides in mind — quality output for clients, fair rewards for contributors.&rdquo;

@@ -515,7 +515,12 @@ export default function EarnPage() {
               <div className="flex flex-col gap-2.5 text-center sm:text-left">
                 <div>
                   <h3 className="text-xl font-black text-[#0F3D36]" style={{ fontFamily: "'Instrument Serif', serif" }}>Somen Biswas</h3>
-                  <p className="text-xs text-stone-500 mt-0.5">Founder, NexGuild</p>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <p className="text-xs text-stone-500">Founder, NexGuild</p>
+                    <a href="https://x.com/somen_official" target="_blank" rel="noopener noreferrer" className="text-stone-400 hover:text-[#0D9488] transition-colors" aria-label="Somen on X">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.737-8.852L1.254 2.25H8.08l4.26 5.632 5.904-5.632zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                    </a>
+                  </div>
                 </div>
                 <p className="text-sm text-stone-600 leading-relaxed">
                   &ldquo;I built NexGuild because I wanted to create a platform where anyone can earn real rewards in their free time — honestly and transparently, without fake promises. NexGuild is built and run from India, and I personally review every feature before it goes live.&rdquo;

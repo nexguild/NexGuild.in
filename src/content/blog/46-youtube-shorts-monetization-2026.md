@@ -19,7 +19,7 @@ faqs:
 YouTube Shorts crossed 70 billion daily views in 2024 and has continued growing since — but the question of how much that translates to actual creator earnings has been murky since the format launched. Shorts monetization changed significantly in 2023 when YouTube replaced the Shorts Fund with a real ad revenue share model. Two years into that system, the picture of what Shorts actually pays is clearer, and the answer involves trade-offs that every creator considering the format should understand.
 
 <figure>
-  <img src="https://images.unsplash.com/photo-1611162616305-c69b3fa7fbe0?w=800&auto=format&fit=crop&q=80" alt="Smartphone displaying YouTube app with creator content on screen" width="800" height="450" />
+  <img src="https://images.unsplash.com/photo-1542744173-8e7e53415bb0?w=800&auto=format&fit=crop&q=80" alt="Person reviewing content performance analytics on a laptop screen" width="800" height="450" />
   <figcaption>YouTube Shorts monetization shifted from a creator fund model to ad revenue share in 2023 — changing both how and how much creators earn from short-form content. Photo via Unsplash</figcaption>
 </figure>
 
@@ -77,7 +77,7 @@ To earn from YouTube Shorts in 2026, channels must meet YouTube Partner Program 
 Shorts watch time has counted toward the 4,000-hour threshold since February 2023 — a significant change from launch-era rules where only long-form view time qualified. For new channels publishing primarily Shorts, this makes the watch-hour threshold more reachable, though the 10 million Shorts views alternative is a viable path for channels growing quickly through short-form.
 
 <figure>
-  <img src="https://images.unsplash.com/photo-1626544827763-d516dce335e2?w=800&auto=format&fit=crop&q=80" alt="Creator filming a short video on a smartphone for social media" width="800" height="450" />
+  <img src="https://images.unsplash.com/photo-1551434678-e076c223a692?w=800&auto=format&fit=crop&q=80" alt="Content creator working on a laptop tracking channel growth and monetization metrics" width="800" height="450" />
   <figcaption>Reaching full YPP eligibility for Shorts ad revenue requires 1,000 subscribers and either 4,000 watch hours or 10 million Shorts views in the relevant period. Photo via Unsplash</figcaption>
 </figure>
 
