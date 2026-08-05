@@ -318,6 +318,8 @@ export function newTaskHtml(
   totalSlots: number | null,
   taskId: string,
 ): string {
+  // Contributors receive 66% of pay_per_task after platform commission
+  const userCoins = Math.floor(coinsPerTask * 0.66);
   const n = esc(name), t = esc(taskTitle), ty = esc(taskType), id = esc(taskId);
   return layout(`
 <div style="display:inline-block;background:#111;border:1px solid rgba(245,158,11,0.3);border-radius:8px;padding:4px 14px;margin:0 0 18px;">
@@ -335,7 +337,7 @@ export function newTaskHtml(
 <table width="100%" cellpadding="0" cellspacing="0" style="background:#111;border:1px solid #222;border-radius:10px;margin:0 0 24px;">
   <tr><td style="padding:14px 20px;${totalSlots != null ? "border-bottom:1px solid #1a1a1a;" : ""}">
     <span style="font-size:12px;color:rgba(255,255,255,0.38);">Reward</span><br>
-    <span style="font-size:20px;color:#F59E0B;font-weight:800;">${coinsPerTask.toLocaleString()} NexCoins</span>
+    <span style="font-size:20px;color:#F59E0B;font-weight:800;">${userCoins.toLocaleString()} NexCoins</span>
     <span style="font-size:12px;color:rgba(255,255,255,0.3);"> per submission</span>
   </td></tr>
   ${totalSlots != null ? `<tr><td style="padding:14px 20px;">
@@ -344,7 +346,7 @@ export function newTaskHtml(
   </td></tr>` : ""}
 </table>
 
-${btn("View Task →", `https://nexguild.in/dashboard/tasks/${id}`)}`);
+${btn("View Task →", `https://www.nexguild.in/dashboard/tasks/${id}`)}`);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
