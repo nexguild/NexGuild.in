@@ -93,7 +93,7 @@ function adminNotifHtml(eventLabel: string, contributorName: string, detail: str
       </tr>
       <tr>
         <td style="padding:14px 28px;border-top:1px solid #2a2a2a;text-align:center;">
-          <p style="margin:0;font-size:11px;color:#444;">NexGuild · <a href="https://nexguild.in/admin" style="color:#444;text-decoration:none;">nexguild.in/admin</a></p>
+          <p style="margin:0;font-size:11px;color:#444;">NexGuild · <a href="https://www.nexguild.in/admin" style="color:#444;text-decoration:none;">nexguild.in/admin</a></p>
         </td>
       </tr>
     </table>
@@ -130,7 +130,7 @@ function layout(body: string): string {
       <!-- footer -->
       <tr>
         <td style="padding:18px 36px;border-top:1px solid #1f1f1f;text-align:center;">
-          <p style="margin:0 0 4px;font-size:12px;color:#444;">&copy; 2025 NexGuild &middot; <a href="https://nexguild.in" style="color:#444;text-decoration:none;">nexguild.in</a></p>
+          <p style="margin:0 0 4px;font-size:12px;color:#444;">&copy; 2025 NexGuild &middot; <a href="https://www.nexguild.in" style="color:#444;text-decoration:none;">nexguild.in</a></p>
           <p style="margin:0;font-size:11px;color:#2f2f2f;">You received this because you have a NexGuild account.</p>
         </td>
       </tr>
@@ -170,10 +170,10 @@ export function welcomeHtml(name: string): string {
   <p style="margin:0;font-size:14px;color:rgba(255,255,255,0.65);line-height:1.6;"><strong style="color:#fff;">3.</strong> Submit your work and earn NexCoins</p>
 </div>
 
-${btn("Go to Dashboard →", "https://nexguild.in/dashboard")}
+${btn("Go to Dashboard →", "https://www.nexguild.in/dashboard")}
 
 <p style="margin:16px 0 0;font-size:13px;color:rgba(255,255,255,0.3);">
-  New to NexGuild? <a href="https://nexguild.in/earn" style="color:#F59E0B;text-decoration:none;">See how it works →</a>
+  New to NexGuild? <a href="https://www.nexguild.in/earn" style="color:#F59E0B;text-decoration:none;">See how it works →</a>
 </p>`);
 }
 
@@ -213,7 +213,7 @@ export function taskApprovedHtml(
   </td></tr>
 </table>
 
-${btn("View Earnings →", "https://nexguild.in/dashboard/earnings")}`);
+${btn("View Earnings →", "https://www.nexguild.in/dashboard/earnings")}`);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -247,7 +247,7 @@ ${f ? `<div style="background:#1c1010;border:1px solid rgba(239,68,68,0.25);bord
   <p style="margin:0;font-size:14px;color:rgba(255,255,255,0.6);line-height:1.6;">• You can re-submit when you're confident in your work</p>
 </div>
 
-${btn("Go to My Tasks →", "https://nexguild.in/dashboard/tasks")}`);
+${btn("Go to My Tasks →", "https://www.nexguild.in/dashboard/tasks")}`);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -270,7 +270,7 @@ export function assignmentApprovedHtml(
   Your assignment for <strong style="color:#fff;">${t}</strong> has been approved. You can now access the full task and start earning NexCoins.
 </p>
 
-${btn("Start the Task →", `https://nexguild.in/dashboard/tasks/${id}`)}`);
+${btn("Start the Task →", `https://www.nexguild.in/dashboard/tasks/${id}`)}`);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -304,7 +304,7 @@ ${f ? `<div style="background:#1c1010;border:1px solid rgba(239,68,68,0.25);bord
   <p style="margin:0;font-size:14px;color:rgba(255,255,255,0.6);line-height:1.6;">• You can re-apply for this assignment after reviewing</p>
 </div>
 
-${btn("Browse Tasks →", "https://nexguild.in/dashboard/tasks")}`);
+${btn("Browse Tasks →", "https://www.nexguild.in/dashboard/tasks")}`);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -411,7 +411,7 @@ ${r ? `<div style="background:#111;border:1px solid #222;border-radius:10px;padd
   </td></tr>
 </table>
 
-${btn("View Earnings →", "https://nexguild.in/dashboard/earnings")}`);
+${btn("View Earnings →", "https://www.nexguild.in/dashboard/earnings")}`);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -486,7 +486,7 @@ export function resubmissionRequestedHtml(
   <p style="margin:0;font-size:14px;color:rgba(255,255,255,0.6);line-height:1.6;">• Click "Resubmit" in your dashboard when ready</p>
 </div>
 
-${btn("Resubmit Now →", "https://nexguild.in/dashboard/tasks")}`);
+${btn("Resubmit Now →", "https://www.nexguild.in/dashboard/tasks")}`);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -520,7 +520,7 @@ export function nexleaderApprovedHtml(
 <table width="100%" cellpadding="0" cellspacing="0" style="background:#111;border:1px solid #222;border-radius:10px;margin:0 0 24px;">
   <tr><td style="padding:14px 20px;border-bottom:1px solid #1a1a1a;">
     <span style="font-size:12px;color:rgba(255,255,255,0.38);">NexLeader Handbook</span><br>
-    <a href="https://nexguild.in/nexleader-handbook.pdf" style="font-size:14px;color:#F59E0B;font-weight:600;text-decoration:none;">📘 Download Handbook →</a>
+    <a href="https://www.nexguild.in/nexleader-handbook.pdf" style="font-size:14px;color:#F59E0B;font-weight:600;text-decoration:none;">📘 Download Handbook →</a>
   </td></tr>
   <tr><td style="padding:14px 20px;border-bottom:1px solid #1a1a1a;">
     <span style="font-size:12px;color:rgba(255,255,255,0.38);">WhatsApp Community</span><br>
@@ -532,7 +532,7 @@ export function nexleaderApprovedHtml(
   </td></tr>
 </table>
 
-${btn("Open NexLeader Dashboard →", "https://nexguild.in/dashboard/nexleader")}
+${btn("Open NexLeader Dashboard →", "https://www.nexguild.in/dashboard/nexleader")}
 
 <p style="margin:16px 0 0;font-size:13px;color:rgba(255,255,255,0.3);">
   Questions? Contact us at <a href="mailto:admin@nexguild.in" style="color:#F59E0B;text-decoration:none;">admin@nexguild.in</a>
@@ -569,7 +569,7 @@ ${r ? `<div style="background:#1c1010;border:1px solid rgba(239,68,68,0.25);bord
   Questions? Reply to this email or contact us at <a href="mailto:admin@nexguild.in" style="color:#F59E0B;text-decoration:none;">admin@nexguild.in</a>
 </p>
 
-${btn("Keep Earning →", "https://nexguild.in/earn")}`);
+${btn("Keep Earning →", "https://www.nexguild.in/earn")}`);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -764,5 +764,5 @@ export function announcementHtml(
   <p style="margin:0;font-size:14px;color:rgba(255,255,255,0.75);line-height:1.7;white-space:pre-wrap;">${am}</p>
 </div>
 
-${btn("View on Dashboard →", "https://nexguild.in/dashboard/announcements")}`);
+${btn("View on Dashboard →", "https://www.nexguild.in/dashboard/announcements")}`);
 }
