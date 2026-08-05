@@ -5,6 +5,7 @@ import Link from "next/link";
 import {
   ArrowLeft, Loader2, Sparkles, RefreshCw, CheckCircle2,
   AlertCircle, ExternalLink, Eye, Edit3, ChevronDown, ChevronUp, Lightbulb, ClipboardPaste, Link2,
+  ImageIcon, Search, Copy, Check,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
@@ -168,6 +169,38 @@ export default function BlogGeneratePage() {
   const [pasteFaqs, setPasteFaqs]         = useState<FAQ[]>([]);
   const [pasteError, setPasteError]       = useState<string | null>(null);
   const [smartParsed, setSmartParsed]     = useState(false);
+
+  // Image picker state
+  interface UnsplashPhoto { id: string; url: string; thumb: string; alt: string; credit: string; aspectRatio: number; }
+  const [imgQuery, setImgQuery]       = useState("");
+  const [imgResults, setImgResults]   = useState<UnsplashPhoto[]>([]);
+  const [imgLoading, setImgLoading]   = useState(false);
+  const [imgError, setImgError]       = useState<string | null>(null);
+  const [copiedId, setCopiedId]       = useState<string | null>(null);
+
+  async function searchImages() {
+    if (!imgQuery.trim()) return;
+    setImgLoading(true); setImgError(null);
+    const res = await fetch("/api/admin/blog/images", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${tokenRef.current}` },
+      body: JSON.stringify({ query: imgQuery.trim() }),
+    });
+    if (res.ok) {
+      const { photos } = await res.json() as { photos: UnsplashPhoto[] };
+      setImgResults(photos ?? []);
+    } else {
+      setImgError("Image search failed. Check UNSPLASH_ACCESS_KEY.");
+    }
+    setImgLoading(false);
+  }
+
+  function copyFigure(photo: UnsplashPhoto) {
+    const html = `<figure>\n  <img src="${photo.url}" alt="${photo.alt}" width="800" height="450" />\n  <figcaption>Caption here. Photo via Unsplash</figcaption>\n</figure>`;
+    navigator.clipboard.writeText(html);
+    setCopiedId(photo.id);
+    setTimeout(() => setCopiedId(null), 2000);
+  }
 
   const STOP = new Set(["this","that","with","from","have","been","will","your","they","them","their","what","when","where","which","more","also","into","than","then","some","make","much","well","just","like","very","over","after","before","through","about","does","2024","2025","2026","how","the","and","for","can","are"]);
 
@@ -444,6 +477,70 @@ export default function BlogGeneratePage() {
                 className={ic}
               />
             </div>
+          </section>
+
+          {/* ── Image Picker ─────────────────────────────────────────────── */}
+          <section className="rounded-xl border border-[var(--border-default)] bg-[var(--surface-card)] p-6 space-y-4">
+            <div className="flex items-center gap-2">
+              <ImageIcon className="h-4 w-4 text-[var(--text-muted)]" />
+              <h2 className="font-bold text-[var(--text-primary)]">Find Images</h2>
+              <span className="text-xs text-[var(--text-muted)]">Search → copy figure HTML → paste into Claude prompt</span>
+            </div>
+
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={imgQuery}
+                onChange={(e) => setImgQuery(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && searchImages()}
+                placeholder="e.g. person working laptop, remote work desk"
+                className={`${ic} flex-1`}
+              />
+              <Button size="sm" onClick={searchImages} disabled={imgLoading || !imgQuery.trim()}
+                className="bg-teal-600 hover:bg-teal-700 text-white flex-shrink-0">
+                {imgLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
+              </Button>
+            </div>
+
+            {imgError && <p className="text-xs text-red-400">{imgError}</p>}
+
+            {imgResults.length > 0 && (
+              <div className="space-y-2">
+                <p className="text-xs text-[var(--text-muted)]">
+                  All results are landscape (orientation=landscape). Click <strong className="text-[var(--text-primary)]">Copy figure</strong> to copy the HTML, then paste it into your Claude.ai prompt as a pre-fetched image asset.
+                </p>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  {imgResults.map((photo) => (
+                    <div key={photo.id} className="group relative rounded-lg overflow-hidden border border-[var(--border-default)] bg-[var(--surface-subtle)]">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={photo.thumb}
+                        alt={photo.alt}
+                        className="w-full aspect-video object-cover"
+                      />
+                      <div className="p-2 space-y-1">
+                        <p className="text-[10px] text-[var(--text-muted)] truncate">by {photo.credit}</p>
+                        <button
+                          onClick={() => copyFigure(photo)}
+                          className={`w-full flex items-center justify-center gap-1 text-xs font-semibold py-1 rounded transition-colors ${
+                            copiedId === photo.id
+                              ? "bg-green-500/20 text-green-400"
+                              : "bg-teal-500/10 hover:bg-teal-500/20 text-teal-400"
+                          }`}
+                        >
+                          {copiedId === photo.id
+                            ? <><Check className="h-3 w-3" /> Copied!</>
+                            : <><Copy className="h-3 w-3" /> Copy figure</>}
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <p className="text-[10px] text-[var(--text-muted)]">
+                  Tip: search twice with different queries (e.g. &quot;{imgQuery}&quot; then &quot;remote work laptop&quot;) to get varied images for Image 1 and Image 2.
+                </p>
+              </div>
+            )}
           </section>
 
           <section className="rounded-xl border border-[var(--border-default)] bg-[var(--surface-card)] p-6 space-y-3">
