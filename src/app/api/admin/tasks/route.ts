@@ -156,8 +156,10 @@ export async function POST(req: NextRequest) {
     // ── Email blast — only for active, non-private tasks ─────────────────────
     // Drafts never trigger emails. Private tasks don't blast all contributors
     // (they're meant for specific people via direct link).
+    // MUST be awaited — Vercel terminates the function when the response is sent,
+    // killing any fire-and-forget before the batch email completes.
     if (status === "active" && !task.is_private) {
-      sendNewTaskEmails(null, task).catch((err) =>
+      await sendNewTaskEmails(null, task).catch((err) =>
         console.error("[admin/tasks] email blast failed:", err)
       );
     }

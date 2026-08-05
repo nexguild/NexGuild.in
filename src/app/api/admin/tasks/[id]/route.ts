@@ -61,8 +61,10 @@ export async function PATCH(
   if (updateErr) return NextResponse.json({ error: updateErr.message }, { status: 500 });
 
   // Email blast when publishing draft → active
+  // MUST be awaited — Vercel terminates the function when the response is sent,
+  // killing any fire-and-forget before the batch email completes.
   if (prevTask && updates.status === "active" && prevTask.status === "draft" && !prevTask.is_private) {
-    sendNewTaskEmails(prevTask).catch((err) =>
+    await sendNewTaskEmails(prevTask).catch((err) =>
       console.error("[tasks/[id]] publish email blast failed:", err)
     );
   }
