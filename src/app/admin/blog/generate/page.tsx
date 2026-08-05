@@ -12,9 +12,51 @@ import { usePageGuard } from "@/components/layout/admin-auth-guard";
 import { ADMIN_ROLES } from "@/lib/admin-permissions";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
+interface FAQ { q: string; a: string; }
 interface GeneratedPost {
   title: string; slug: string; description: string;
   category: string; date: string; content: string;
+  tags?: string[]; faqs?: FAQ[];
+}
+
+// ── Frontmatter parser (for Smart Parse of Claude output) ─────────────────────
+function parseFrontmatter(raw: string): (Partial<GeneratedPost> & { body: string }) | null {
+  const match = raw.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?([\s\S]*)$/);
+  if (!match) return null;
+  const fm = match[1];
+  const body = match[2].trim();
+
+  const getString = (key: string) => {
+    const m = fm.match(new RegExp(`^${key}:\\s*"((?:[^"\\\\]|\\\\.)*)"`, "m"));
+    return m ? m[1].replace(/\\"/g, '"') : undefined;
+  };
+
+  // tags: ["a", "b", "c"]
+  const tagsMatch = fm.match(/^tags:\s*\[([^\]]*)\]/m);
+  const tags = tagsMatch
+    ? tagsMatch[1].split(",").map((s) => s.trim().replace(/^["']|["']$/g, "")).filter(Boolean)
+    : [];
+
+  // faqs: multi-line YAML
+  const faqs: FAQ[] = [];
+  const faqSection = fm.match(/^faqs:\s*\n((?:[ \t]+- [\s\S]*?)(?=\n[^\s]|\s*$))/m);
+  if (faqSection) {
+    const pairs = [...faqSection[1].matchAll(/- q:\s*"((?:[^"\\]|\\.)*)"\s*\n\s+a:\s*"((?:[^"\\]|\\.)*)"/g)];
+    for (const p of pairs) {
+      faqs.push({ q: p[1].replace(/\\"/g, '"'), a: p[2].replace(/\\"/g, '"') });
+    }
+  }
+
+  return {
+    title:       getString("title"),
+    slug:        getString("slug"),
+    description: getString("description"),
+    category:    getString("category") ?? "Remote Work",
+    date:        getString("date"),
+    tags,
+    faqs,
+    body,
+  };
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -97,6 +139,8 @@ export default function BlogGeneratePage() {
   const [editContent, setEditContent]   = useState("");
   const [editCategory, setEditCategory] = useState("");
   const [editDate, setEditDate]         = useState("");
+  const [editTags, setEditTags]         = useState<string[]>([]);
+  const [editFaqs, setEditFaqs]         = useState<FAQ[]>([]);
 
   // Preview mode toggle
   const [showPreview, setShowPreview] = useState(true);
@@ -115,11 +159,15 @@ export default function BlogGeneratePage() {
   const [pasteSlug, setPasteSlug]         = useState("");
   const [pasteSlugManual, setPasteSlugManual] = useState(false);
   const [pasteDesc, setPasteDesc]         = useState("");
-  const [pasteCategory, setPasteCategory] = useState("Side Hustles");
+  const [pasteCategory, setPasteCategory] = useState("Remote Work");
   const [pasteDate, setPasteDate]         = useState(new Date().toISOString().split("T")[0]);
   const [pasteContent, setPasteContent]   = useState("");
   const [pasteKeyword, setPasteKeyword]   = useState("");
+  const [pasteTags, setPasteTags]         = useState<string[]>([]);
+  const [pasteTagsInput, setPasteTagsInput] = useState("");
+  const [pasteFaqs, setPasteFaqs]         = useState<FAQ[]>([]);
   const [pasteError, setPasteError]       = useState<string | null>(null);
+  const [smartParsed, setSmartParsed]     = useState(false);
 
   const STOP = new Set(["this","that","with","from","have","been","will","your","they","them","their","what","when","where","which","more","also","into","than","then","some","make","much","well","just","like","very","over","after","before","through","about","does","2024","2025","2026","how","the","and","for","can","are"]);
 
@@ -181,14 +229,32 @@ export default function BlogGeneratePage() {
     return t.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
   }
 
+  function handleSmartParse() {
+    const parsed = parseFrontmatter(pasteContent);
+    if (!parsed) return;
+    if (parsed.title) { setPasteTitle(parsed.title); }
+    if (parsed.slug)  { setPasteSlug(parsed.slug); setPasteSlugManual(true); }
+    if (parsed.description) setPasteDesc(parsed.description);
+    if (parsed.category)    setPasteCategory(parsed.category);
+    if (parsed.date)        setPasteDate(parsed.date);
+    if (parsed.tags?.length)  { setPasteTags(parsed.tags); setPasteTagsInput(parsed.tags.join(", ")); }
+    if (parsed.faqs?.length)  setPasteFaqs(parsed.faqs);
+    setPasteContent(parsed.body);
+    setSmartParsed(true);
+  }
+
   function continueWithPaste() {
     if (!pasteTitle.trim())   { setPasteError("Title is required."); return; }
     if (!pasteContent.trim()) { setPasteError("Content is required."); return; }
     setPasteError(null);
     const slug = pasteSlug.trim() || slugify(pasteTitle);
+    const tags = pasteTags.length > 0 ? pasteTags
+      : pasteTagsInput.trim() ? pasteTagsInput.split(",").map((s) => s.trim()).filter(Boolean)
+      : [];
     const syntheticPost: GeneratedPost = {
       title: pasteTitle, slug, description: pasteDesc,
       category: pasteCategory, date: pasteDate, content: pasteContent,
+      tags, faqs: pasteFaqs,
     };
     setPost(syntheticPost);
     setEditTitle(pasteTitle);
@@ -197,6 +263,8 @@ export default function BlogGeneratePage() {
     setEditContent(pasteContent);
     setEditCategory(pasteCategory);
     setEditDate(pasteDate);
+    setEditTags(tags);
+    setEditFaqs(pasteFaqs);
     setKeyword(pasteKeyword);
     setPublished(null);
     setPubError(null);
@@ -231,6 +299,8 @@ export default function BlogGeneratePage() {
     setEditContent(p.content);
     setEditCategory(p.category);
     setEditDate(p.date);
+    setEditTags(p.tags ?? []);
+    setEditFaqs(p.faqs ?? []);
     setPhase("preview");
   }
 
@@ -242,6 +312,8 @@ export default function BlogGeneratePage() {
       body: JSON.stringify({
         title: editTitle, slug: editSlug, description: editDesc,
         content: editContent, category: editCategory, date: editDate,
+        tags: editTags.length > 0 ? editTags : undefined,
+        faqs: editFaqs.length > 0 ? editFaqs : undefined,
       }),
     });
     const data = await res.json() as { ok?: boolean; slug?: string; url?: string; error?: string };
@@ -361,6 +433,17 @@ export default function BlogGeneratePage() {
                 <input type="date" value={pasteDate} onChange={(e) => setPasteDate(e.target.value)} className={ic} />
               </div>
             </div>
+
+            <div>
+              <label className={lc}>Tags <span className="text-xs font-normal text-[var(--text-muted)]">comma-separated</span></label>
+              <input
+                type="text"
+                value={pasteTagsInput}
+                onChange={(e) => { setPasteTagsInput(e.target.value); setPasteTags(e.target.value.split(",").map((s) => s.trim()).filter(Boolean)); }}
+                placeholder='e.g. remote work, AI jobs, online earning'
+                className={ic}
+              />
+            </div>
           </section>
 
           <section className="rounded-xl border border-[var(--border-default)] bg-[var(--surface-card)] p-6 space-y-3">
@@ -368,17 +451,37 @@ export default function BlogGeneratePage() {
               <h2 className="font-bold text-[var(--text-primary)]">
                 Content <span className="text-[var(--danger-text)]">*</span>
               </h2>
-              <span className="text-xs text-[var(--text-muted)]">Markdown supported</span>
+              <span className="text-xs text-[var(--text-muted)]">Paste full Claude output (with frontmatter) or body only</span>
             </div>
             <textarea
               rows={24}
               value={pasteContent}
-              onChange={(e) => setPasteContent(e.target.value)}
-              placeholder={`Paste your markdown article here…\n\nExample:\n## Introduction\nYour intro paragraph here.\n\n## Section Two\nMore content…`}
+              onChange={(e) => { setPasteContent(e.target.value); setSmartParsed(false); }}
+              placeholder={`Paste full Claude output here (including the --- frontmatter block) — then click "Auto-fill from frontmatter".\n\nOr paste just the article body without frontmatter.`}
               className={`${tc} font-mono text-xs leading-relaxed`}
             />
+
+            {/* Smart Parse banner */}
+            {pasteContent.trim().startsWith("---") && !smartParsed && (
+              <div className="flex items-center justify-between gap-3 rounded-lg border border-indigo-500/30 bg-indigo-500/5 px-4 py-3">
+                <div>
+                  <p className="text-xs font-semibold text-indigo-400">Frontmatter detected</p>
+                  <p className="text-xs text-[var(--text-muted)]">Auto-fill title, slug, description, date, tags, and FAQs from the Claude output.</p>
+                </div>
+                <button
+                  onClick={handleSmartParse}
+                  className="flex-shrink-0 text-xs font-semibold px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white transition-colors"
+                >
+                  Auto-fill fields
+                </button>
+              </div>
+            )}
+            {smartParsed && (
+              <p className="text-xs text-green-400">✅ Fields filled from frontmatter. Check them above, then preview.</p>
+            )}
+
             <p className="text-xs text-[var(--text-muted)]">
-              {pasteContent.trim() ? `${countWords(pasteContent).toLocaleString()} words · ${countH2(pasteContent)} H2 headings` : "Paste article content above"}
+              {pasteContent.trim() ? `${countWords(pasteContent).toLocaleString()} words · ${countH2(pasteContent)} H2 headings${pasteFaqs.length > 0 ? ` · ${pasteFaqs.length} FAQs` : ""}` : "Paste article content above"}
             </p>
 
             {suggestedLinks.length > 0 && (
@@ -394,10 +497,10 @@ export default function BlogGeneratePage() {
                       <span className="text-[var(--text-secondary)] flex-1 truncate">{p.title}</span>
                       <code
                         className="text-teal-400 font-mono cursor-pointer hover:text-teal-300 transition-colors flex-shrink-0"
-                        onClick={() => navigator.clipboard.writeText(`[${p.title}](/blog/${p.slug})`)}
+                        onClick={() => navigator.clipboard.writeText(`[${p.title}](/earn/blog/${p.slug})`)}
                         title="Click to copy markdown link"
                       >
-                        /blog/{p.slug}
+                        /earn/blog/{p.slug}
                       </code>
                     </div>
                   ))}
@@ -598,7 +701,7 @@ export default function BlogGeneratePage() {
             <div className="flex items-center gap-3 rounded-xl border border-green-500/30 bg-green-500/5 px-5 py-4">
               <CheckCircle2 className="h-5 w-5 text-green-400 flex-shrink-0" />
               <div>
-                <p className="font-semibold text-green-400">Post published! Going live at nexguild.in/blog/{published.slug}</p>
+                <p className="font-semibold text-green-400">Post published! Going live at www.nexguild.in/earn/blog/{published.slug}</p>
                 <p className="text-xs text-green-400/70 mt-0.5">Vercel auto-deploys in ~1 minute. Trigger a redeploy if not live after 2 minutes.</p>
               </div>
             </div>

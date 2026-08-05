@@ -17,7 +17,8 @@ const REPO = "nexguild/NexGuild.in";
 const BLOG_PATH = "src/content/blog";
 
 function buildFrontmatter(post: {
-  title: string; slug: string; description: string; category: string; date: string; tags?: string[];
+  title: string; slug: string; description: string; category: string; date: string;
+  tags?: string[]; faqs?: { q: string; a: string }[];
 }): string {
   const lines = [
     "---",
@@ -30,6 +31,13 @@ function buildFrontmatter(post: {
   if (post.tags && post.tags.length > 0) {
     lines.push(`tags: [${post.tags.map((t) => `"${t}"`).join(", ")}]`);
   }
+  if (post.faqs && post.faqs.length > 0) {
+    lines.push("faqs:");
+    for (const faq of post.faqs) {
+      lines.push(`  - q: "${faq.q.replace(/"/g, '\\"')}"`);
+      lines.push(`    a: "${faq.a.replace(/"/g, '\\"')}"`);
+    }
+  }
   lines.push("---", "");
   return lines.join("\n");
 }
@@ -41,9 +49,10 @@ export async function POST(req: NextRequest) {
   const ghPat = process.env.GITHUB_BLOG_PAT;
   if (!ghPat) return NextResponse.json({ error: "GITHUB_BLOG_PAT not configured." }, { status: 500 });
 
-  const { title, slug, description, category, date, content, filename, tags } = await req.json() as {
+  const { title, slug, description, category, date, content, filename, tags, faqs } = await req.json() as {
     title: string; slug: string; description: string; category: string;
     date: string; content: string; filename?: string; tags?: string[];
+    faqs?: { q: string; a: string }[];
   };
 
   if (!title || !slug || !description || !content) {
@@ -57,6 +66,7 @@ export async function POST(req: NextRequest) {
     category: category ?? "Remote Work",
     date: date ?? new Date().toISOString().split("T")[0],
     tags,
+    faqs,
   }) + content;
   const encoded = Buffer.from(fileContent, "utf-8").toString("base64");
 
@@ -104,7 +114,7 @@ export async function POST(req: NextRequest) {
   return NextResponse.json({
     ok: true,
     slug,
-    url: `https://nexguild.in/blog/${slug}`,
+    url: `https://www.nexguild.in/earn/blog/${slug}`,
     github_url: result.content?.html_url,
   });
 }
