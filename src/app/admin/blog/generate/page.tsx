@@ -119,8 +119,15 @@ export default function BlogGeneratePage() {
   // Phase: form → loading → preview
   const [phase, setPhase] = useState<"form" | "loading" | "preview">("form");
 
-  // Mode: AI generate vs manual paste
-  const [mode, setMode] = useState<"generate" | "paste">("generate");
+  // Mode: AI generate vs manual paste vs quick publish
+  const [mode, setMode] = useState<"generate" | "paste" | "quick">("quick");
+
+  // Quick Publish state
+  const [quickText, setQuickText]       = useState("");
+  const [quickParsed, setQuickParsed]   = useState<null | { title: string; slug: string; description: string; category: string; date: string; tags: string[]; faqs: FAQ[]; body: string }>(null);
+  const [quickError, setQuickError]     = useState<string | null>(null);
+  const [quickPublishing, setQuickPublishing] = useState(false);
+  const [quickDone, setQuickDone]       = useState<{ slug: string; url: string } | null>(null);
 
   // Form fields
   const [topic, setTopic]       = useState("");
@@ -177,6 +184,52 @@ export default function BlogGeneratePage() {
   const [imgLoading, setImgLoading]   = useState(false);
   const [imgError, setImgError]       = useState<string | null>(null);
   const [copiedId, setCopiedId]       = useState<string | null>(null);
+
+  function handleQuickParse() {
+    setQuickError(null);
+    setQuickDone(null);
+    setQuickParsed(null);
+    const trimmed = quickText.trim();
+    if (!trimmed) { setQuickError("Paste your article first."); return; }
+    if (!trimmed.startsWith("---")) { setQuickError("No frontmatter found. Make sure your Claude output starts with ---"); return; }
+    const parsed = parseFrontmatter(trimmed);
+    if (!parsed) { setQuickError("Could not read the frontmatter block. Check that it starts and ends with ---."); return; }
+    if (!parsed.title) { setQuickError("title: field is missing in frontmatter."); return; }
+    if (!parsed.body)  { setQuickError("Article body is empty."); return; }
+    setQuickParsed({
+      title:       parsed.title ?? "",
+      slug:        parsed.slug ?? parsed.title!.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
+      description: parsed.description ?? "",
+      category:    parsed.category ?? "Remote Work",
+      date:        parsed.date ?? new Date().toISOString().split("T")[0],
+      tags:        parsed.tags ?? [],
+      faqs:        parsed.faqs ?? [],
+      body:        parsed.body,
+    });
+  }
+
+  async function quickPublish() {
+    if (!quickParsed) return;
+    setQuickPublishing(true); setQuickError(null);
+    const res = await fetch("/api/admin/blog/publish", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${tokenRef.current}` },
+      body: JSON.stringify({
+        title: quickParsed.title, slug: quickParsed.slug, description: quickParsed.description,
+        category: quickParsed.category, date: quickParsed.date, content: quickParsed.body,
+        tags: quickParsed.tags.length > 0 ? quickParsed.tags : undefined,
+        faqs: quickParsed.faqs.length > 0 ? quickParsed.faqs : undefined,
+      }),
+    });
+    const data = await res.json() as { ok?: boolean; slug?: string; url?: string; error?: string };
+    if (res.ok && data.url) {
+      setQuickDone({ slug: data.slug ?? quickParsed.slug, url: data.url });
+      setQuickText(""); setQuickParsed(null);
+    } else {
+      setQuickError(data.error ?? "Publish failed. Try again.");
+    }
+    setQuickPublishing(false);
+  }
 
   async function searchImages() {
     if (!imgQuery.trim()) return;
@@ -385,14 +438,14 @@ export default function BlogGeneratePage() {
       {phase === "form" && (
         <div className="flex gap-1 p-1 rounded-xl bg-[var(--surface-subtle)] border border-[var(--border-default)] w-fit">
           <button
-            onClick={() => setMode("generate")}
+            onClick={() => setMode("quick")}
             className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
-              mode === "generate"
-                ? "bg-[var(--surface-card)] text-[var(--text-primary)] shadow-sm"
+              mode === "quick"
+                ? "bg-teal-600 text-white shadow-sm"
                 : "text-[var(--text-muted)] hover:text-[var(--text-secondary)]"
             }`}
           >
-            <Sparkles className="h-4 w-4" /> AI Generate
+            <ClipboardPaste className="h-4 w-4" /> Quick Publish
           </button>
           <button
             onClick={() => setMode("paste")}
@@ -402,8 +455,99 @@ export default function BlogGeneratePage() {
                 : "text-[var(--text-muted)] hover:text-[var(--text-secondary)]"
             }`}
           >
-            <ClipboardPaste className="h-4 w-4" /> Paste Article
+            <Edit3 className="h-4 w-4" /> Advanced Paste
           </button>
+          <button
+            onClick={() => setMode("generate")}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+              mode === "generate"
+                ? "bg-[var(--surface-card)] text-[var(--text-primary)] shadow-sm"
+                : "text-[var(--text-muted)] hover:text-[var(--text-secondary)]"
+            }`}
+          >
+            <Sparkles className="h-4 w-4" /> AI Generate
+          </button>
+        </div>
+      )}
+
+      {/* ── QUICK PUBLISH ─────────────────────────────────────────────────── */}
+      {phase === "form" && mode === "quick" && (
+        <div className="space-y-4 max-w-2xl">
+          <div className="rounded-xl border border-teal-500/30 bg-teal-500/5 px-5 py-4">
+            <p className="text-sm font-semibold text-teal-400 mb-1">How to use</p>
+            <ol className="text-sm text-[var(--text-secondary)] space-y-1 list-decimal pl-4">
+              <li>Write your article in Claude.ai chat</li>
+              <li>Copy the full output (including the <code className="text-xs bg-[var(--surface-subtle)] px-1 rounded">---</code> frontmatter block at the top)</li>
+              <li>Paste it below and click <strong className="text-[var(--text-primary)]">Publish</strong></li>
+            </ol>
+          </div>
+
+          {quickDone && (
+            <div className="flex items-start gap-3 rounded-xl border border-green-500/30 bg-green-500/5 px-5 py-4">
+              <CheckCircle2 className="h-5 w-5 text-green-400 flex-shrink-0 mt-0.5" />
+              <div className="space-y-1">
+                <p className="font-semibold text-green-400">Published!</p>
+                <a href={quickDone.url} target="_blank" rel="noopener noreferrer"
+                  className="text-sm text-green-400/80 hover:text-green-400 underline break-all flex items-center gap-1">
+                  {quickDone.url} <ExternalLink className="h-3.5 w-3.5 flex-shrink-0" />
+                </a>
+                <p className="text-xs text-green-400/60">Live in ~1 min. Submit URL in Google Search Console to index it.</p>
+              </div>
+            </div>
+          )}
+
+          <textarea
+            rows={28}
+            value={quickText}
+            onChange={(e) => { setQuickText(e.target.value); setQuickParsed(null); setQuickError(null); setQuickDone(null); }}
+            placeholder={`Paste your full Claude.ai article output here.\n\nIt should start with:\n---\ntitle: "Your Article Title"\nslug: "your-article-slug"\n...\n---\n\nArticle body follows here...`}
+            className={`${tc} font-mono text-xs leading-relaxed`}
+          />
+
+          {quickText.trim() && !quickParsed && (
+            <Button size="lg" onClick={handleQuickParse}
+              className="w-full bg-[var(--surface-card)] border border-[var(--border-default)] text-[var(--text-primary)] hover:bg-[var(--surface-subtle)] font-semibold">
+              <Eye className="h-4 w-4" /> Check article
+            </Button>
+          )}
+
+          {quickError && (
+            <div className="flex items-start gap-2 rounded-lg border border-red-500/20 bg-red-500/5 px-4 py-3">
+              <AlertCircle className="h-4 w-4 text-red-400 flex-shrink-0 mt-0.5" />
+              <p className="text-sm text-red-400">{quickError}</p>
+            </div>
+          )}
+
+          {quickParsed && (
+            <div className="rounded-xl border border-[var(--border-default)] bg-[var(--surface-card)] p-5 space-y-3">
+              <p className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wide">Ready to publish</p>
+              <div className="space-y-2">
+                {[
+                  { label: "Title",    value: quickParsed.title },
+                  { label: "Slug",     value: quickParsed.slug },
+                  { label: "Date",     value: quickParsed.date },
+                  { label: "Category", value: quickParsed.category },
+                  { label: "Tags",     value: quickParsed.tags.length > 0 ? quickParsed.tags.join(", ") : "none" },
+                  { label: "FAQs",     value: quickParsed.faqs.length > 0 ? `${quickParsed.faqs.length} questions` : "none" },
+                  { label: "Words",    value: `~${countWords(quickParsed.body).toLocaleString()}` },
+                ].map((row) => (
+                  <div key={row.label} className="flex gap-3 text-sm">
+                    <span className="w-20 flex-shrink-0 text-[var(--text-muted)]">{row.label}</span>
+                    <span className="text-[var(--text-primary)] font-medium truncate">{row.value}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="flex gap-3 pt-1">
+                <Button size="lg" onClick={quickPublish} disabled={quickPublishing}
+                  className="flex-1 bg-teal-600 hover:bg-teal-700 text-white font-semibold">
+                  {quickPublishing ? <><Loader2 className="h-4 w-4 animate-spin" /> Publishing…</> : "Publish to GitHub"}
+                </Button>
+                <Button size="lg" variant="secondary" onClick={() => setQuickParsed(null)}>
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
       )}
 

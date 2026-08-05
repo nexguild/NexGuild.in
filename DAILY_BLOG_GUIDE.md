@@ -18,34 +18,34 @@ Total: ~60–75 min/day
 
 ## Step 1 — Gemini Research Prompt
 
-Paste this into Gemini once per day. Replace `[DATE]` with today's date.
+Paste this into Gemini once per day. Replace `[DATE]` with today's date. No other changes needed — Gemini fetches the live blog and avoids repeats automatically.
 
 ```
-You are the editor for NexGuild (nexguild.in), a global online earning platform blog.
+You are the editor for NexGuild, a global online earning platform blog at www.nexguild.in.
 
-FIRST — fetch https://www.nexguild.in/earn/blog and list every post title you find.
-Do not suggest any topic already covered.
+FIRST — fetch https://www.nexguild.in/earn/blog and read every post title listed.
+Write them all down internally. You will not suggest any topic already covered there.
 
-SECOND — today is [DATE]. Pick 3 topics. Priority order:
-1. Platform review: "[platform] review 2026" — LOW competition, ranks fastest
-2. Platform comparison: "[A] vs [B] 2026"
-3. How-to guide: "how to [specific task] on [platform]"
-4. AI/remote work: specific platform or job type (not generic)
+SECOND — today is [DATE]. Pick exactly 3 topics for today. Rules:
+- Prefer SPECIFIC ANSWERABLE QUESTIONS over broad topics.
+  Bad: "how to make money online"
+  Good: "PeoplePerHour Review 2026: Is It Worth It for Freelancers?"
+- Priority: platform reviews > platform comparisons > how-to guides > AI/remote job guides
+- LOW competition only — NexGuild is a new domain and cannot rank for head terms yet
+- All topics must be GLOBAL — never India-only
+- Favour topics that can link to existing posts you found above
 
-Avoid generic topics like "how to make money online" — NexGuild cannot rank for these.
-Target specific answerable questions where competition is low.
+THIRD — for each topic give exactly this and nothing else:
 
-THIRD — for each of the 3 topics, give exactly this:
+TITLE: [exact article title, 50–60 characters]
+Slug: [kebab-case-slug]
+Angle: [the specific question this article answers in one sentence]
+Competition: [LOW or MEDIUM — be honest, flag if unsure]
+Sources: 2–3 real URLs that back the key facts
+Internal links: 2–3 slugs from the posts you fetched above
 
-TITLE: [exact article title]
-Slug: [kebab-case-slug-2026]
-Angle: [the specific question this article answers]
-Competition: [LOW / MEDIUM — be honest]
-Sources: [2–3 real URLs with key facts for this topic]
-Internal links: [2–3 slugs from the existing posts you fetched, e.g. appen-review-2026-legit-worth-it]
-
-FOURTH — before finalising, check: is every fact you cited something you actually know?
-Flag anything uncertain.
+FOURTH — before finalising: is every fact something you actually know?
+Flag anything uncertain rather than stating it as fact.
 ```
 
 ---
