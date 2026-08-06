@@ -22,7 +22,7 @@ faqs:
 CPX Research is legitimate, safe, and worth using — full stop. If you're getting screened out of their surveys constantly, the fix is simpler than you think: your demographic profile. CPX Research matches surveys to respondents based on profile data, and an incomplete or vague profile triggers automatic screenouts before a survey even loads. Fill your profile completely — age, income, household size, employment status — and your qualification rate improves immediately.
 
 > 🚀 **Access CPX Research Surveys Inside Our Dashboard**
-> We've integrated CPX Research directly into NexGuild. Every survey shows your reward in NexCoins before you start (660 NexCoins = $1 USD), coins credit the instant you finish, and you withdraw as Amazon, Flipkart, or Google Play vouchers — no delays, no hidden fees.
+> We've integrated CPX Research directly into NexGuild. Every survey shows your reward before you start — every 660 NexCoins you earn = $1 in gift vouchers, no hidden conversion, no minimum balance. Coins credit the instant you finish.
 > 👉 **[Create a Free NexGuild Account — Takes 60 Seconds](https://www.nexguild.in/auth/register)**
 
 <figure>
@@ -48,7 +48,7 @@ When you see CPX Research surveys on a platform, those surveys come from CPX's n
 
 ## What Payouts Look Like
 
-CPX Research displays survey values in whatever currency the platform uses. Inside our NexGuild dashboard, we convert every CPX Research survey value into NexCoins (660 NexCoins = $1 USD) with no hidden conversion fees. A $1.00 USD survey shows as 660 NexCoins — the exact amount credited to your balance when you complete it.
+CPX Research displays survey values in whatever currency the platform uses. Inside our NexGuild dashboard, we show every CPX Research survey value in NexCoins with no hidden conversion fees — every 660 NexCoins you earn equals $1 in gift vouchers. A $1.00 USD survey shows as 660 NexCoins, credited to your balance the moment you complete it.
 
 Typical survey values range from a few hundred NexCoins for short 2–5 minute surveys to 1,000+ NexCoins for longer, more involved research studies. Time-to-value varies — some short surveys pay relatively well per minute; others require more time for the payout.
 
