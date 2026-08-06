@@ -16,7 +16,11 @@ faqs:
     a: "Appen typically requires 70–80% to pass qualification tests, though the exact threshold varies by project. Some higher-paying or specialized projects set the bar at 80–85%. The score is not always displayed to you — you may simply see a pass or fail result after submission."
 ---
 
-Appen's qualification tests are the gateway between your account and actual paid project work. Passing them unlocks access to tasks; failing them — or not taking them seriously — keeps your account idle while other contributors earn. The tests are not particularly mysterious, but they do require a specific approach that many new contributors skip: reading the provided guidelines in full before attempting a single test case. Understanding exactly what the tests measure and how to prepare is what separates contributors who pass quickly from those who retry multiple times or give up.
+Appen qualification tests have one secret: read the guidelines before you open the test. Not skim — read. The tests are not general knowledge assessments. Every correct answer is defined by the project guidelines, not personal judgment. Contributors who read the guidelines in full pass. Contributors who skip them fail and have to wait 24–72 hours to retry. That is the entire difference between passing quickly and losing days to retakes.
+
+> ⏳ **Still Waiting for Your First Appen Project Invitation?**
+> Studying Appen's guidelines takes days. Project invitations can take weeks — or never arrive. Inside our **NexGuild dashboard**, AI data tasks and CPX Research surveys are available right now with no qualification exam required.
+> 👉 **[Earn While You Wait — Join NexGuild Free](https://www.nexguild.in/auth/register)**
 
 <figure>
   <img src="https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=800&auto=format&fit=crop&q=80" alt="Person studying documents and guidelines at a desk before an online assessment" width="800" height="450" />
