@@ -51,7 +51,7 @@ Survey platforms generally offer rewards in a few ways:
 **Points/coins systems:** Most platforms use an intermediate currency. The conversion rate matters — make sure you understand what 1,000 points (or coins) is actually worth in real money before investing significant time.
 
 <figure>
-  <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&auto=format&fit=crop&q=80" alt="focused person working independently on a laptop" width="800" height="450" />
+  <img src="https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?w=800&auto=format&fit=crop&q=80" alt="focused person working independently on a laptop" width="800" height="450" />
   <figcaption>Understanding screener questions and demographic matching is the key to reducing disqualifications and improving your survey completion rate. Photo via Unsplash</figcaption>
 </figure>
 

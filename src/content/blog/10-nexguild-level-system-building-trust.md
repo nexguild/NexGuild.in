@@ -11,7 +11,7 @@ tags: ["NexGuild", "platform guide", "online earning", "micro-tasks"]
 Every contributor on NexGuild starts at the same place — Level 1, with access to the platform's entry-level opportunities. What happens after that is entirely shaped by your own activity. This post explains how the Level and XP system works, why we built it this way, and how to think about growing within it.
 
 <figure>
-  <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&auto=format&fit=crop&q=80" alt="focused person working independently on a laptop" width="800" height="450" />
+  <img src="https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?w=800&auto=format&fit=crop&q=80" alt="focused person working independently on a laptop" width="800" height="450" />
   <figcaption>Building trust on a contributor platform takes consistent, quality submissions — the level system rewards exactly that over time. Photo via Unsplash</figcaption>
 </figure>
 

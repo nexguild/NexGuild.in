@@ -110,7 +110,7 @@ This makes them accessible to students, homemakers, people between jobs, and any
 For broader context on this shift: [The Gig Economy in India — What It Means for Online Workers](/earn/blog/gig-economy-india-guide)
 
 <figure>
-  <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&auto=format&fit=crop&q=80" alt="focused person working independently on a laptop" width="800" height="450" />
+  <img src="https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?w=800&auto=format&fit=crop&q=80" alt="focused person working independently on a laptop" width="800" height="450" />
   <figcaption>The most reliable online earners use a combination of platforms rather than depending on a single source — variety protects income during slow periods. Photo via Unsplash</figcaption>
 </figure>
 

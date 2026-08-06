@@ -26,7 +26,7 @@ CPX Research is legitimate, safe, and worth using — full stop. If you're getti
 > 👉 **[Create a Free NexGuild Account — Takes 60 Seconds](https://www.nexguild.in/auth/register)**
 
 <figure>
-  <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&auto=format&fit=crop&q=80" alt="focused person working independently on a laptop" width="800" height="450" />
+  <img src="https://images.unsplash.com/photo-1484807352052-23338990c6c6?w=800&auto=format&fit=crop&q=80" alt="person working at a desk on a laptop completing surveys online" width="800" height="450" />
   <figcaption>CPX Research connects survey takers with market research studies — completing your profile accurately is the most reliable way to qualify more often. Photo via Unsplash</figcaption>
 </figure>
 

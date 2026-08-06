@@ -78,7 +78,7 @@ Appen has a strong reputation, and it earns that reputation in meaningful ways â
 **Support is limited.** Appen contractors communicate primarily through email tickets, and response times can be slow. For most day-to-day issues this is manageable, but when something goes wrong with a payment or project access, resolution can take time.
 
 <figure>
-  <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&auto=format&fit=crop&q=80" alt="Person working independently on a laptop with focused expression" width="800" height="450" />
+  <img src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&auto=format&fit=crop&q=80" alt="laptop screen showing data and analytics in a home office setting" width="800" height="450" />
   <figcaption>Appen works best as a supplemental income source â€” flexible hours, but project availability can be unpredictable. Photo via Unsplash</figcaption>
 </figure>
 

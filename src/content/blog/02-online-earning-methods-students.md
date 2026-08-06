@@ -50,7 +50,7 @@ YouTube, Instagram, and other platforms allow students to build an audience arou
 **Realistic expectations:** This is the slowest-growing and least predictable option on this list. Most creators take months or years to build a real audience, and many never monetize meaningfully. Treat it as a long-term project, not a quick income plan.
 
 <figure>
-  <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&auto=format&fit=crop&q=80" alt="focused person working independently on a laptop" width="800" height="450" />
+  <img src="https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?w=800&auto=format&fit=crop&q=80" alt="focused person working independently on a laptop" width="800" height="450" />
   <figcaption>Consistency and choosing the right platform for your available time are what separate occasional earners from reliable student income. Photo via Unsplash</figcaption>
 </figure>
 

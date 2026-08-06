@@ -11,7 +11,7 @@ tags: ["online earning", "platform review", "work from home", "scam avoidance"]
 The growth of online earning has, unfortunately, come with a growth in scams designed to look like legitimate opportunities. Before you commit your time — or worse, your money — to a platform, it's worth knowing exactly what separates a real opportunity from a trap.
 
 <figure>
-  <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&auto=format&fit=crop&q=80" alt="focused person working independently on a laptop" width="800" height="450" />
+  <img src="https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?w=800&auto=format&fit=crop&q=80" alt="focused person working independently on a laptop" width="800" height="450" />
   <figcaption>Researching a platform before joining takes 10 minutes and can save you from wasting weeks on one that doesn't pay. Photo via Unsplash</figcaption>
 </figure>
 
