@@ -17,6 +17,7 @@ interface DbVoucher {
   category: string;
   emoji: string;
   is_available: boolean;
+  currency?: string;
 }
 
 interface CartEntry {
@@ -34,17 +35,23 @@ interface CouponResult {
 // Modal icon colors (kept for brand detail modal header)
 const BRAND_COLORS: Record<string, { bg: string; text: string }> = {
   "Amazon":      { bg: "bg-orange-500/15", text: "text-orange-400" },
+  "Amazon.com":  { bg: "bg-orange-500/15", text: "text-orange-400" },
   "Flipkart":    { bg: "bg-blue-500/15",   text: "text-blue-400" },
   "Google Play": { bg: "bg-green-500/15",  text: "text-green-400" },
   "Zomato":      { bg: "bg-red-500/15",    text: "text-red-400" },
+  "Steam":       { bg: "bg-sky-500/15",    text: "text-sky-400" },
+  "PayPal":      { bg: "bg-blue-600/15",   text: "text-blue-500" },
 };
 
 // Card top-banner gradients
 const BRAND_GRADIENTS: Record<string, string> = {
   "Amazon":      "from-orange-400 to-orange-500",
+  "Amazon.com":  "from-orange-400 to-orange-500",
   "Flipkart":    "from-blue-500 to-blue-600",
   "Google Play": "from-green-400 to-green-500",
   "Zomato":      "from-red-400 to-red-500",
+  "Steam":       "from-sky-500 to-sky-600",
+  "PayPal":      "from-blue-500 to-blue-700",
 };
 
 function brandColor(brand: string) {
@@ -53,14 +60,17 @@ function brandColor(brand: string) {
 function brandGradient(brand: string): string {
   return BRAND_GRADIENTS[brand] ?? "from-teal-400 to-teal-500";
 }
+function formatValue(v: DbVoucher): string {
+  return v.currency === "USD" ? `$${v.value_inr}` : `₹${v.value_inr}`;
+}
 
-const CATEGORIES = ["All", "Shopping", "Apps", "Food"];
+const CATEGORIES = ["All", "Shopping", "Apps", "Food", "Gaming"];
 const CATEGORY_EMOJIS: Record<string, string> = {
-  All: "🎁", Shopping: "🛍️", Apps: "📱", Food: "🍽️",
+  All: "🎁", Shopping: "🛍️", Apps: "📱", Food: "🍽️", Gaming: "🎮",
 };
 
 const CATEGORY_MAP: Record<string, string> = {
-  Shopping: "shopping", Apps: "apps", Food: "food",
+  Shopping: "shopping", Apps: "apps", Food: "food", Gaming: "gaming",
 };
 
 const HOW_TO_USE = [
@@ -113,7 +123,7 @@ export default function StorePage() {
         supabase.from("profiles").select("nexcoins").eq("id", user.id).single(),
         supabase
           .from("voucher_inventory")
-          .select("id, brand_name, description, value_inr, coins_required, category, emoji, is_available")
+          .select("id, brand_name, description, value_inr, coins_required, category, emoji, is_available, currency")
           .order("brand_name", { ascending: true })
           .order("value_inr", { ascending: true }),
       ]);
@@ -208,7 +218,7 @@ export default function StorePage() {
         body:    JSON.stringify({
           items: cart.flatMap((e) =>
             Array.from({ length: e.qty }, () => ({
-              voucherType: `${e.voucher.brand_name} ₹${e.voucher.value_inr} Voucher`,
+              voucherType: `${e.voucher.brand_name} ${formatValue(e.voucher)} Voucher`,
               coins:       e.voucher.coins_required,
             }))
           ),
@@ -389,7 +399,7 @@ export default function StorePage() {
                             : "bg-slate-50 text-slate-300 border-slate-100 line-through"
                         }`}
                       >
-                        ₹{v.value_inr}
+                        {formatValue(v)}
                       </span>
                     ))}
                   </div>
@@ -470,7 +480,7 @@ export default function StorePage() {
                             : "border-[var(--border-default)] text-[var(--text-muted)] opacity-50 cursor-not-allowed line-through"
                         }`}
                       >
-                        ₹{v.value_inr}
+                        {formatValue(v)}
                         {!avail && <span className="block text-[10px] font-normal">Sold out</span>}
                       </button>
                     );
@@ -481,7 +491,7 @@ export default function StorePage() {
               <div className="rounded-lg bg-[var(--surface-subtle)] border border-[var(--border-default)] p-4 flex items-center justify-between">
                 <div>
                   <p className="text-xs text-[var(--text-muted)] mb-1">Voucher Value</p>
-                  <p className="text-2xl font-bold text-[var(--text-primary)]">₹{selectedVoucher.value_inr}</p>
+                  <p className="text-2xl font-bold text-[var(--text-primary)]">{formatValue(selectedVoucher)}</p>
                 </div>
                 <div className="text-right">
                   <p className="text-xs text-[var(--text-muted)] mb-1">Coins Required</p>
@@ -576,7 +586,7 @@ export default function StorePage() {
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium text-[var(--text-primary)] truncate">{entry.voucher.brand_name}</p>
-                          <p className="text-xs text-[var(--text-muted)]">₹{entry.voucher.value_inr} · {entry.voucher.coins_required.toLocaleString()} coins each</p>
+                          <p className="text-xs text-[var(--text-muted)]">{formatValue(entry.voucher)} · {entry.voucher.coins_required.toLocaleString()} coins each</p>
                         </div>
                         <div className="flex items-center gap-1 flex-shrink-0">
                           <button onClick={() => updateQty(entry.voucher.id, -1)} className="h-6 w-6 rounded-md border border-[var(--border-default)] flex items-center justify-center hover:bg-[var(--surface-card)]">
