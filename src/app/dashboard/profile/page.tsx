@@ -235,280 +235,295 @@ export default function ProfilePage() {
     : "—";
 
   return (
-    <div className="space-y-6 max-w-2xl">
+    <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-slate-800 mb-1">Profile</h1>
         <p className="text-sm text-slate-500">Your contributor profile and account details.</p>
       </div>
 
-      {/* ── Premium Hero Card ──────────────────────────────────────── */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-indigo-600 to-teal-500 p-5 sm:p-6 text-white shadow-lg">
-        {/* Decorative circles */}
-        <div className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-white/10" />
-        <div className="pointer-events-none absolute -bottom-12 -left-12 h-32 w-32 rounded-full bg-white/5" />
+      {/* ── Two-column layout at lg ──────────────────────────────────── */}
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-6 items-start">
 
-        <div className="relative space-y-4">
-          {/* Row 1: Avatar + Name/email/badge + Edit button (all inline — no absolute) */}
-          <div className="flex items-start gap-4">
-            {/* Avatar */}
-            <div className="relative flex-shrink-0">
-              <div className="h-20 w-20 sm:h-24 sm:w-24 rounded-full border-4 border-white shadow-xl overflow-hidden bg-gradient-to-br from-indigo-400 to-teal-400 flex items-center justify-center">
-                {profile?.avatar_url ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={profile.avatar_url} alt={displayName} className="h-full w-full object-cover" />
-                ) : (
-                  <span className="text-white text-2xl sm:text-3xl font-bold">{initials}</span>
-                )}
-              </div>
-              <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarUpload} />
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                disabled={uploading}
-                className="absolute bottom-0 right-0 h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-white shadow-md border-2 border-indigo-100 flex items-center justify-center hover:bg-slate-50 transition-colors disabled:opacity-60"
-                title="Change profile picture"
-              >
-                {uploading
-                  ? <Loader2 className="h-3 w-3 text-slate-600 animate-spin" />
-                  : <Camera className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-slate-600" />}
-              </button>
-            </div>
+        {/* ── LEFT COLUMN ─────────────────────────────────────────────── */}
+        <div className="space-y-6">
 
-            {/* Name + email + badge + Edit button */}
-            <div className="flex-1 min-w-0 pt-1">
-              <div className="flex items-start justify-between gap-2">
-                <div className="min-w-0">
-                  <h2 className="text-lg sm:text-2xl font-bold text-white leading-tight truncate">
-                    {loading ? "Loading…" : displayName}
-                  </h2>
-                  <p className="text-white/70 text-xs sm:text-sm mt-0.5 truncate">{loading ? "—" : (email ?? "—")}</p>
-                  {!loading && profile?.is_nexleader && (
-                    <span className="mt-2 inline-flex items-center gap-1 rounded-full bg-white/20 px-2.5 py-1 text-xs font-bold text-white">
-                      <Crown className="h-3 w-3" /> NexLeader
-                    </span>
-                  )}
-                  {uploadError && <p className="mt-1 text-xs text-red-200">{uploadError}</p>}
+          {/* ── Premium Hero Card ──────────────────────────────────────── */}
+          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-indigo-600 to-teal-500 p-5 sm:p-6 text-white shadow-lg">
+            {/* Decorative circles */}
+            <div className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-white/10" />
+            <div className="pointer-events-none absolute -bottom-12 -left-12 h-32 w-32 rounded-full bg-white/5" />
+
+            <div className="relative space-y-4">
+              {/* Row 1: Avatar + Name/email/badge + Edit button (all inline — no absolute) */}
+              <div className="flex items-start gap-4">
+                {/* Avatar */}
+                <div className="relative flex-shrink-0">
+                  <div className="h-20 w-20 sm:h-24 sm:w-24 rounded-full border-4 border-white shadow-xl overflow-hidden bg-gradient-to-br from-indigo-400 to-teal-400 flex items-center justify-center">
+                    {profile?.avatar_url ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={profile.avatar_url} alt={displayName} className="h-full w-full object-cover" />
+                    ) : (
+                      <span className="text-white text-2xl sm:text-3xl font-bold">{initials}</span>
+                    )}
+                  </div>
+                  <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarUpload} />
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploading}
+                    className="absolute bottom-0 right-0 h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-white shadow-md border-2 border-indigo-100 flex items-center justify-center hover:bg-slate-50 transition-colors disabled:opacity-60"
+                    title="Change profile picture"
+                  >
+                    {uploading
+                      ? <Loader2 className="h-3 w-3 text-slate-600 animate-spin" />
+                      : <Camera className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-slate-600" />}
+                  </button>
                 </div>
-                {/* Edit button — inline, not absolute */}
-                <button
-                  onClick={openEdit}
-                  disabled={loading}
-                  className="flex-shrink-0 flex items-center gap-1 rounded-xl border border-white/30 bg-white/20 px-2.5 py-1.5 text-xs font-medium text-white backdrop-blur-sm transition-all hover:bg-white/30 disabled:opacity-50 whitespace-nowrap"
-                >
-                  ✏️ <span className="hidden sm:inline">Edit Profile</span><span className="sm:hidden">Edit</span>
-                </button>
+
+                {/* Name + email + badge + Edit button */}
+                <div className="flex-1 min-w-0 pt-1">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <h2 className="text-lg sm:text-2xl font-bold text-white leading-tight truncate">
+                        {loading ? "Loading…" : displayName}
+                      </h2>
+                      <p className="text-white/70 text-xs sm:text-sm mt-0.5 truncate">{loading ? "—" : (email ?? "—")}</p>
+                      {!loading && profile?.is_nexleader && (
+                        <span className="mt-2 inline-flex items-center gap-1 rounded-full bg-white/20 px-2.5 py-1 text-xs font-bold text-white">
+                          <Crown className="h-3 w-3" /> NexLeader
+                        </span>
+                      )}
+                      {uploadError && <p className="mt-1 text-xs text-red-200">{uploadError}</p>}
+                    </div>
+                    {/* Edit button — inline, not absolute */}
+                    <button
+                      onClick={openEdit}
+                      disabled={loading}
+                      className="flex-shrink-0 flex items-center gap-1 rounded-xl border border-white/30 bg-white/20 px-2.5 py-1.5 text-xs font-medium text-white backdrop-blur-sm transition-all hover:bg-white/30 disabled:opacity-50 whitespace-nowrap"
+                    >
+                      ✏️ <span className="hidden sm:inline">Edit Profile</span><span className="sm:hidden">Edit</span>
+                    </button>
+                  </div>
+                </div>
               </div>
+
+              {/* Row 2: Level badge + XP bar */}
+              {!loading && (
+                <div className="flex items-center gap-4 pt-3 border-t border-white/20">
+                  <div className="rounded-xl bg-white/20 px-4 py-2 text-center backdrop-blur-sm flex-shrink-0">
+                    <p className="text-white/60 text-[10px] uppercase tracking-widest font-semibold">Level</p>
+                    <p className="text-white text-3xl font-bold leading-none mt-0.5">{level}</p>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex justify-between text-xs text-white/60 mb-1.5">
+                      <span>XP Progress</span>
+                      <span>{xpInLevel.toLocaleString()} / 1,000</span>
+                    </div>
+                    <div className="h-2 rounded-full bg-white/20 overflow-hidden">
+                      <div className="h-full rounded-full bg-white transition-all duration-700" style={{ width: `${xpPct}%` }} />
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
-          {/* Row 2: Level badge + XP bar */}
-          {!loading && (
-            <div className="flex items-center gap-4 pt-3 border-t border-white/20">
-              <div className="rounded-xl bg-white/20 px-4 py-2 text-center backdrop-blur-sm flex-shrink-0">
-                <p className="text-white/60 text-[10px] uppercase tracking-widest font-semibold">Level</p>
-                <p className="text-white text-3xl font-bold leading-none mt-0.5">{level}</p>
+          {/* ── NexCoins Balance ────────────────────────────────────────── */}
+          <div className="flex items-center justify-between gap-4 rounded-2xl bg-gradient-to-r from-amber-400 to-amber-500 p-5 shadow-md">
+            <div className="flex items-center gap-4">
+              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/20">
+                <NexCoinIcon size={32} />
               </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex justify-between text-xs text-white/60 mb-1.5">
-                  <span>XP Progress</span>
-                  <span>{xpInLevel.toLocaleString()} / 1,000</span>
-                </div>
-                <div className="h-2 rounded-full bg-white/20 overflow-hidden">
-                  <div className="h-full rounded-full bg-white transition-all duration-700" style={{ width: `${xpPct}%` }} />
-                </div>
+              <div>
+                <p className="text-white/80 text-sm font-medium">NexCoins Balance</p>
+                <p className="text-white text-4xl font-bold leading-tight">
+                  {loading ? "—" : (profile?.nexcoins ?? 0).toLocaleString()}
+                </p>
               </div>
             </div>
-          )}
-        </div>
-      </div>
-
-      {/* ── NexCoins Balance ────────────────────────────────────────── */}
-      <div className="flex items-center justify-between gap-4 rounded-2xl bg-gradient-to-r from-amber-400 to-amber-500 p-5 shadow-md">
-        <div className="flex items-center gap-4">
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/20">
-            <NexCoinIcon size={32} />
+            <Link
+              href="/dashboard/store"
+              className="flex-shrink-0 rounded-xl bg-white px-4 py-2 text-sm font-semibold text-amber-600 transition-colors hover:bg-amber-50"
+            >
+              Redeem in Store →
+            </Link>
           </div>
-          <div>
-            <p className="text-white/80 text-sm font-medium">NexCoins Balance</p>
-            <p className="text-white text-4xl font-bold leading-tight">
-              {loading ? "—" : (profile?.nexcoins ?? 0).toLocaleString()}
-            </p>
+
+          {/* ── Account Details ─────────────────────────────────────────── */}
+          <div className="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
+            <div className="flex items-center gap-2 mb-5">
+              <User className="h-4 w-4 text-slate-400" />
+              <h3 className="font-bold text-slate-800">Account Details</h3>
+            </div>
+            <div className="divide-y divide-slate-50">
+              {[
+                { label: "Full Name",    value: loading ? "Loading…" : (profile?.full_name ?? "Not set") },
+                { label: "Email",        value: loading ? "Loading…" : (email ?? "—") },
+                { label: "Country",      value: loading ? "Loading…" : (profile?.country ?? "Not set") },
+                { label: "Phone",        value: loading ? "Loading…" : (profile?.phone ?? "Not set") },
+                { label: "Member Since", value: loading ? "Loading…" : joinedDate },
+              ].map((row) => (
+                <div key={row.label} className="flex items-center justify-between py-3">
+                  <p className="text-sm text-slate-400 w-32 flex-shrink-0">{row.label}</p>
+                  <p className="text-sm text-slate-800 font-medium text-right">{row.value}</p>
+                </div>
+              ))}
+              {!loading && userId && (
+                <div className="flex items-center justify-between py-3">
+                  <p className="text-sm text-slate-400 w-32 flex-shrink-0">Contributor ID</p>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(userId);
+                      setCopiedId(true);
+                      setTimeout(() => setCopiedId(false), 1500);
+                    }}
+                    title="Click to copy your ID"
+                    className="flex items-center gap-1.5 rounded-lg bg-slate-50 px-3 py-1.5 font-mono text-xs text-slate-600 transition-colors hover:bg-slate-100"
+                  >
+                    {userId.slice(0, 8)}…{userId.slice(-4)}
+                    {copiedId
+                      ? <CheckCheck className="h-3 w-3 text-green-500 flex-shrink-0" />
+                      : <Copy className="h-3 w-3 opacity-50 flex-shrink-0" />
+                    }
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
-        </div>
-        <Link
-          href="/dashboard/store"
-          className="flex-shrink-0 rounded-xl bg-white px-4 py-2 text-sm font-semibold text-amber-600 transition-colors hover:bg-amber-50"
-        >
-          Redeem in Store →
-        </Link>
-      </div>
 
-      {/* ── Account Details ─────────────────────────────────────────── */}
-      <div className="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
-        <div className="flex items-center gap-2 mb-5">
-          <User className="h-4 w-4 text-slate-400" />
-          <h3 className="font-bold text-slate-800">Account Details</h3>
-        </div>
-        <div className="divide-y divide-slate-50">
-          {[
-            { label: "Full Name",    value: loading ? "Loading…" : (profile?.full_name ?? "Not set") },
-            { label: "Email",        value: loading ? "Loading…" : (email ?? "—") },
-            { label: "Country",      value: loading ? "Loading…" : (profile?.country ?? "Not set") },
-            { label: "Phone",        value: loading ? "Loading…" : (profile?.phone ?? "Not set") },
-            { label: "Member Since", value: loading ? "Loading…" : joinedDate },
-          ].map((row) => (
-            <div key={row.label} className="flex items-center justify-between py-3">
-              <p className="text-sm text-slate-400 w-32 flex-shrink-0">{row.label}</p>
-              <p className="text-sm text-slate-800 font-medium text-right">{row.value}</p>
-            </div>
-          ))}
-          {!loading && userId && (
-            <div className="flex items-center justify-between py-3">
-              <p className="text-sm text-slate-400 w-32 flex-shrink-0">Contributor ID</p>
-              <button
-                onClick={() => {
-                  navigator.clipboard.writeText(userId);
-                  setCopiedId(true);
-                  setTimeout(() => setCopiedId(false), 1500);
-                }}
-                title="Click to copy your ID"
-                className="flex items-center gap-1.5 rounded-lg bg-slate-50 px-3 py-1.5 font-mono text-xs text-slate-600 transition-colors hover:bg-slate-100"
-              >
-                {userId.slice(0, 8)}…{userId.slice(-4)}
-                {copiedId
-                  ? <CheckCheck className="h-3 w-3 text-green-500 flex-shrink-0" />
-                  : <Copy className="h-3 w-3 opacity-50 flex-shrink-0" />
-                }
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
+        </div>{/* end LEFT COLUMN */}
 
-      {/* ── Lifetime Stats ──────────────────────────────────────────── */}
-      <div className="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
-        <h3 className="font-bold text-slate-800 mb-5">Lifetime Stats</h3>
-        <div className="grid grid-cols-2 gap-4">
-          {[
-            {
-              label: "Tasks Completed",
-              value: loading || tasksCompleted === null ? "—" : tasksCompleted.toLocaleString(),
-              icon: <CheckCircle2 className="h-6 w-6 text-teal-500" />,
-            },
-            {
-              label: "Approval Rate",
-              value: loading || approvalRate === null ? (loading ? "—" : "N/A") : `${approvalRate}%`,
-              icon: <Star className="h-6 w-6 text-indigo-500 fill-indigo-100" />,
-            },
-            {
-              label: "Member Since",
-              value: loading ? "—" : (profile?.joined_at
-                ? new Date(profile.joined_at).toLocaleDateString("en-IN", { month: "short", year: "numeric" })
-                : "—"),
-              icon: <Calendar className="h-6 w-6 text-slate-400" />,
-            },
-            {
-              label: "Total Earned",
-              value: loading || totalEarned === null ? "—" : totalEarned.toLocaleString(),
-              icon: <NexCoinIcon size={24} />,
-            },
-          ].map((stat) => (
-            <div key={stat.label} className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm text-center">
-              <div className="flex justify-center mb-2">{stat.icon}</div>
-              <p className="text-2xl font-bold text-slate-800">{stat.value}</p>
-              <p className="text-xs text-slate-400 uppercase tracking-wide mt-1">{stat.label}</p>
-            </div>
-          ))}
-        </div>
-      </div>
+        {/* ── RIGHT COLUMN ────────────────────────────────────────────── */}
+        <div className="space-y-6">
 
-      {/* ── Skills ──────────────────────────────────────────────────── */}
-      <div className="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
-        <div className="flex items-center gap-2 mb-4">
-          <span className="text-base">🎯</span>
-          <h3 className="font-bold text-slate-800">Skills</h3>
-        </div>
-        <div className="flex flex-wrap gap-2 mb-4 min-h-[28px]">
-          {(profile?.skills ?? []).map((skill) => (
-            <span key={skill} className="inline-flex items-center gap-1.5 rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1 text-sm font-medium text-indigo-700">
-              {skill}
-              <button onClick={() => removeSkill(skill)} className="ml-0.5 leading-none transition-colors hover:text-red-500">×</button>
-            </span>
-          ))}
-          {!loading && (profile?.skills ?? []).length === 0 && (
-            <p className="text-sm text-slate-400">No skills added yet.</p>
-          )}
-        </div>
-        {/* Quick-select skill chips */}
-        {SUGGESTED_SKILLS.filter(s => !(profile?.skills ?? []).includes(s)).length > 0 && (
-          <div className="mb-3">
-            <p className="text-xs text-slate-400 mb-1.5">Quick add:</p>
-            <div className="flex flex-wrap gap-1.5">
-              {SUGGESTED_SKILLS.filter(s => !(profile?.skills ?? []).includes(s)).map(s => (
-                <button
-                  key={s}
-                  type="button"
-                  onClick={() => addSkillByValue(s)}
-                  disabled={skillSaving}
-                  className="px-2.5 py-1 rounded-full border border-dashed border-indigo-200 bg-white text-xs text-indigo-500 hover:bg-indigo-50 hover:border-indigo-400 transition-colors disabled:opacity-50"
-                >
-                  + {s}
-                </button>
+          {/* ── Lifetime Stats ──────────────────────────────────────────── */}
+          <div className="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
+            <h3 className="font-bold text-slate-800 mb-5">Lifetime Stats</h3>
+            <div className="grid grid-cols-2 gap-3">
+              {[
+                {
+                  label: "Tasks Completed",
+                  value: loading || tasksCompleted === null ? "—" : tasksCompleted.toLocaleString(),
+                  icon: <CheckCircle2 className="h-5 w-5 text-teal-500" />,
+                },
+                {
+                  label: "Approval Rate",
+                  value: loading || approvalRate === null ? (loading ? "—" : "N/A") : `${approvalRate}%`,
+                  icon: <Star className="h-5 w-5 text-indigo-500 fill-indigo-100" />,
+                },
+                {
+                  label: "Member Since",
+                  value: loading ? "—" : (profile?.joined_at
+                    ? new Date(profile.joined_at).toLocaleDateString("en-IN", { month: "short", year: "numeric" })
+                    : "—"),
+                  icon: <Calendar className="h-5 w-5 text-slate-400" />,
+                },
+                {
+                  label: "Total Earned",
+                  value: loading || totalEarned === null ? "—" : totalEarned.toLocaleString(),
+                  icon: <NexCoinIcon size={20} />,
+                },
+              ].map((stat) => (
+                <div key={stat.label} className="rounded-xl border border-slate-100 bg-slate-50 p-3 text-center">
+                  <div className="flex justify-center mb-1.5">{stat.icon}</div>
+                  <p className="text-xl font-bold text-slate-800">{stat.value}</p>
+                  <p className="text-[10px] text-slate-400 uppercase tracking-wide mt-0.5 leading-tight">{stat.label}</p>
+                </div>
               ))}
             </div>
           </div>
-        )}
-        <form onSubmit={addSkill} className="flex gap-2">
-          <input
-            value={skillInput}
-            onChange={(e) => setSkillInput(e.target.value)}
-            placeholder="e.g. Transcription, Data Annotation…"
-            className="flex-1 h-9 px-3 rounded-xl border border-slate-200 bg-white text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-300 focus:border-teal-300"
-          />
-          <button
-            type="submit"
-            disabled={skillSaving || !skillInput.trim()}
-            className="h-9 w-9 flex-shrink-0 rounded-xl bg-teal-500 text-white flex items-center justify-center hover:bg-teal-600 transition-colors disabled:opacity-50"
-          >
-            {skillSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
-          </button>
-        </form>
-        <p className="mt-2 text-xs text-slate-400">Skills help match you with relevant project opportunities.</p>
-      </div>
 
-      {/* ── Languages ───────────────────────────────────────────────── */}
-      <div className="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
-        <div className="flex items-center gap-2 mb-1">
-          <span className="text-base">🌐</span>
-          <h3 className="font-bold text-slate-800">Languages</h3>
-        </div>
-        <p className="text-xs text-slate-400 mb-4">Add languages you speak fluently — used to match you with language-specific tasks.</p>
-        <div className="flex flex-wrap gap-2 mb-4 min-h-[28px]">
-          {(profile?.languages ?? []).map((lang) => (
-            <span key={lang} className="inline-flex items-center gap-1.5 rounded-full border border-teal-200 bg-teal-50 px-3 py-1 text-sm font-medium text-teal-700">
-              {lang}
-              <button onClick={() => removeLanguage(lang)} className="ml-0.5 leading-none transition-colors hover:text-red-500">×</button>
-            </span>
-          ))}
-          {!loading && (profile?.languages ?? []).length === 0 && (
-            <p className="text-sm text-slate-400">No languages added yet.</p>
-          )}
-        </div>
-        <form onSubmit={addLanguage} className="flex gap-2">
-          <input
-            value={langInput}
-            onChange={(e) => setLangInput(e.target.value)}
-            placeholder="e.g. English, Hindi, Tamil…"
-            className="flex-1 h-9 px-3 rounded-xl border border-slate-200 bg-white text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-300 focus:border-teal-300"
-          />
-          <button
-            type="submit"
-            disabled={langSaving || !langInput.trim()}
-            className="h-9 w-9 flex-shrink-0 rounded-xl bg-teal-500 text-white flex items-center justify-center hover:bg-teal-600 transition-colors disabled:opacity-50"
-          >
-            {langSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
-          </button>
-        </form>
-      </div>
+          {/* ── Skills ──────────────────────────────────────────────────── */}
+          <div className="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
+            <div className="flex items-center gap-2 mb-4">
+              <span className="text-base">🎯</span>
+              <h3 className="font-bold text-slate-800">Skills</h3>
+            </div>
+            <div className="flex flex-wrap gap-2 mb-4 min-h-[28px]">
+              {(profile?.skills ?? []).map((skill) => (
+                <span key={skill} className="inline-flex items-center gap-1.5 rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1 text-sm font-medium text-indigo-700">
+                  {skill}
+                  <button onClick={() => removeSkill(skill)} className="ml-0.5 leading-none transition-colors hover:text-red-500">×</button>
+                </span>
+              ))}
+              {!loading && (profile?.skills ?? []).length === 0 && (
+                <p className="text-sm text-slate-400">No skills added yet.</p>
+              )}
+            </div>
+            {/* Quick-select skill chips */}
+            {SUGGESTED_SKILLS.filter(s => !(profile?.skills ?? []).includes(s)).length > 0 && (
+              <div className="mb-3">
+                <p className="text-xs text-slate-400 mb-1.5">Quick add:</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {SUGGESTED_SKILLS.filter(s => !(profile?.skills ?? []).includes(s)).map(s => (
+                    <button
+                      key={s}
+                      type="button"
+                      onClick={() => addSkillByValue(s)}
+                      disabled={skillSaving}
+                      className="px-2.5 py-1 rounded-full border border-dashed border-indigo-200 bg-white text-xs text-indigo-500 hover:bg-indigo-50 hover:border-indigo-400 transition-colors disabled:opacity-50"
+                    >
+                      + {s}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+            <form onSubmit={addSkill} className="flex gap-2">
+              <input
+                value={skillInput}
+                onChange={(e) => setSkillInput(e.target.value)}
+                placeholder="e.g. Transcription…"
+                className="flex-1 h-9 px-3 rounded-xl border border-slate-200 bg-white text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-300 focus:border-teal-300"
+              />
+              <button
+                type="submit"
+                disabled={skillSaving || !skillInput.trim()}
+                className="h-9 w-9 flex-shrink-0 rounded-xl bg-teal-500 text-white flex items-center justify-center hover:bg-teal-600 transition-colors disabled:opacity-50"
+              >
+                {skillSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+              </button>
+            </form>
+            <p className="mt-2 text-xs text-slate-400">Skills help match you with relevant project opportunities.</p>
+          </div>
+
+          {/* ── Languages ───────────────────────────────────────────────── */}
+          <div className="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-base">🌐</span>
+              <h3 className="font-bold text-slate-800">Languages</h3>
+            </div>
+            <p className="text-xs text-slate-400 mb-4">Add languages you speak fluently — used to match you with language-specific tasks.</p>
+            <div className="flex flex-wrap gap-2 mb-4 min-h-[28px]">
+              {(profile?.languages ?? []).map((lang) => (
+                <span key={lang} className="inline-flex items-center gap-1.5 rounded-full border border-teal-200 bg-teal-50 px-3 py-1 text-sm font-medium text-teal-700">
+                  {lang}
+                  <button onClick={() => removeLanguage(lang)} className="ml-0.5 leading-none transition-colors hover:text-red-500">×</button>
+                </span>
+              ))}
+              {!loading && (profile?.languages ?? []).length === 0 && (
+                <p className="text-sm text-slate-400">No languages added yet.</p>
+              )}
+            </div>
+            <form onSubmit={addLanguage} className="flex gap-2">
+              <input
+                value={langInput}
+                onChange={(e) => setLangInput(e.target.value)}
+                placeholder="e.g. English, Hindi…"
+                className="flex-1 h-9 px-3 rounded-xl border border-slate-200 bg-white text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-300 focus:border-teal-300"
+              />
+              <button
+                type="submit"
+                disabled={langSaving || !langInput.trim()}
+                className="h-9 w-9 flex-shrink-0 rounded-xl bg-teal-500 text-white flex items-center justify-center hover:bg-teal-600 transition-colors disabled:opacity-50"
+              >
+                {langSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+              </button>
+            </form>
+          </div>
+
+        </div>{/* end RIGHT COLUMN */}
+
+      </div>{/* end grid */}
 
       {/* ── Edit Profile Modal ───────────────────────────────────────── */}
       {showEdit && (

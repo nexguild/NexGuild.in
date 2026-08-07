@@ -146,6 +146,7 @@ async function handlePostback(req: NextRequest, slug: string): Promise<Response>
 
   // 6. Skip non-credit statuses
   // Some providers (e.g. ClixWall) send "Credit" instead of "1" — configurable via credit_status_value
+  const customCfg       = (provider.custom_config as Record<string, unknown> | null) ?? {};
   const creditStatusValue = (customCfg.credit_status_value as string | null) ?? "1";
   if (status && status !== creditStatusValue) {
     await writeLog(admin, slug, { user_id: userId, trans_id: transId, amount, status, type }, "debug_ignored", hashFormat ? true : null);
@@ -167,7 +168,6 @@ async function handlePostback(req: NextRequest, slug: string): Promise<Response>
     console.warn(`[postback/${slug}] zero amount tx ${transId}`);
     return new Response("Bad Request", { status: 400 });
   }
-  const customCfg       = (provider.custom_config as Record<string, unknown> | null) ?? {};
   const payoutMult      = Number(customCfg.payout_multiplier ?? 1) || 1;
   const rateIsUserShare = customCfg.rate_is_user_share === true;
   const userCoins       = rateIsUserShare

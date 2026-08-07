@@ -124,80 +124,107 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="space-y-6 max-w-2xl">
+    <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-[var(--text-primary)] mb-1">Settings</h1>
         <p className="text-sm text-[var(--text-secondary)]">Manage your account preferences.</p>
       </div>
 
-      {/* Account */}
-      <section className="rounded-lg border border-[var(--border-default)] bg-[var(--surface-card)] divide-y divide-[var(--border-default)]">
-        <div className="px-6 py-4">
-          <h2 className="font-semibold text-[var(--text-primary)]">Account</h2>
-        </div>
-        <div className="px-6 py-4 flex items-center justify-between gap-4">
-          <div>
-            <p className="text-sm font-medium text-[var(--text-primary)]">Email</p>
-            <p className="text-sm text-[var(--text-muted)]">{email ?? "Loading…"}</p>
-          </div>
-          <Button variant="secondary" size="sm" onClick={() => setShowEmail(true)}>Change</Button>
-        </div>
-        <div className="px-6 py-4 flex items-center justify-between gap-4">
-          <div>
-            <p className="text-sm font-medium text-[var(--text-primary)]">Password</p>
-            <p className="text-sm text-[var(--text-muted)]">••••••••••••</p>
-          </div>
-          <Button variant="secondary" size="sm" onClick={() => setShowPassword(true)}>Change</Button>
-        </div>
-      </section>
+      {/* Two-column layout at lg */}
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6 items-start">
 
-      {/* Notifications */}
-      <section className="rounded-lg border border-[var(--border-default)] bg-[var(--surface-card)] divide-y divide-[var(--border-default)]">
-        <div className="px-6 py-4">
-          <h2 className="font-semibold text-[var(--text-primary)]">Notifications</h2>
-        </div>
-        {NOTIF_KEYS.map((item) => (
-          <div key={item.key} className="px-6 py-4 flex items-center justify-between gap-4">
-            <div>
-              <p className="text-sm font-medium text-[var(--text-primary)]">{item.label}</p>
-              <p className="text-xs text-[var(--text-muted)]">{item.desc}</p>
+        {/* Left: Account + Notifications */}
+        <div className="space-y-6">
+
+          {/* Account */}
+          <section className="rounded-lg border border-[var(--border-default)] bg-[var(--surface-card)] divide-y divide-[var(--border-default)]">
+            <div className="px-6 py-4">
+              <h2 className="font-semibold text-[var(--text-primary)]">Account</h2>
             </div>
-            <button
-              role="switch"
-              aria-checked={notifs[item.key]}
-              onClick={() => toggleNotif(item.key)}
-              style={{
-                backgroundColor: notifs[item.key] ? "#14b8a6" : "#4b5563",
-                transition: "background-color 0.2s ease",
-              }}
-              className="h-6 w-11 rounded-full relative flex-shrink-0 focus:outline-none focus:ring-2 focus:ring-[#14b8a6] focus:ring-offset-2 focus:ring-offset-[var(--surface-card)]"
-            >
-              <span
-                style={{
-                  transform: notifs[item.key] ? "translateX(22px)" : "translateX(2px)",
-                  transition: "transform 0.2s ease",
-                }}
-                className="absolute top-[2px] left-0 h-5 w-5 rounded-full bg-white shadow-md"
-              />
-            </button>
-          </div>
-        ))}
-      </section>
+            <div className="px-6 py-4 flex items-center justify-between gap-4">
+              <div>
+                <p className="text-sm font-medium text-[var(--text-primary)]">Email</p>
+                <p className="text-sm text-[var(--text-muted)]">{email ?? "Loading…"}</p>
+              </div>
+              <Button variant="secondary" size="sm" onClick={() => setShowEmail(true)}>Change</Button>
+            </div>
+            <div className="px-6 py-4 flex items-center justify-between gap-4">
+              <div>
+                <p className="text-sm font-medium text-[var(--text-primary)]">Password</p>
+                <p className="text-sm text-[var(--text-muted)]">••••••••••••</p>
+              </div>
+              <Button variant="secondary" size="sm" onClick={() => setShowPassword(true)}>Change</Button>
+            </div>
+          </section>
 
-      {/* Danger Zone */}
-      <section className="rounded-lg border border-[var(--danger-text)] bg-[rgba(239,68,68,0.05)] divide-y divide-[rgba(239,68,68,0.15)]">
-        <div className="px-6 py-4">
-          <h2 className="font-semibold text-[var(--danger-text)]">Danger Zone</h2>
-          <p className="text-xs text-[var(--danger-text)] opacity-70 mt-1">These actions are irreversible.</p>
-        </div>
-        <div className="px-6 py-4 flex items-center justify-between gap-4">
-          <div>
-            <p className="text-sm font-medium text-[var(--text-primary)]">Deactivate Account</p>
-            <p className="text-xs text-[var(--text-muted)]">Disable your account. Pending NexCoins will be frozen.</p>
+          {/* Notifications */}
+          <section className="rounded-lg border border-[var(--border-default)] bg-[var(--surface-card)] divide-y divide-[var(--border-default)]">
+            <div className="px-6 py-4">
+              <h2 className="font-semibold text-[var(--text-primary)]">Notifications</h2>
+            </div>
+            {NOTIF_KEYS.map((item) => (
+              <div key={item.key} className="px-6 py-4 flex items-center justify-between gap-4">
+                <div>
+                  <p className="text-sm font-medium text-[var(--text-primary)]">{item.label}</p>
+                  <p className="text-xs text-[var(--text-muted)]">{item.desc}</p>
+                </div>
+                <button
+                  role="switch"
+                  aria-checked={notifs[item.key]}
+                  onClick={() => toggleNotif(item.key)}
+                  style={{
+                    backgroundColor: notifs[item.key] ? "#14b8a6" : "#4b5563",
+                    transition: "background-color 0.2s ease",
+                  }}
+                  className="h-6 w-11 rounded-full relative flex-shrink-0 focus:outline-none focus:ring-2 focus:ring-[#14b8a6] focus:ring-offset-2 focus:ring-offset-[var(--surface-card)]"
+                >
+                  <span
+                    style={{
+                      transform: notifs[item.key] ? "translateX(22px)" : "translateX(2px)",
+                      transition: "transform 0.2s ease",
+                    }}
+                    className="absolute top-[2px] left-0 h-5 w-5 rounded-full bg-white shadow-md"
+                  />
+                </button>
+              </div>
+            ))}
+          </section>
+
+        </div>{/* end left */}
+
+        {/* Right: Danger Zone + Help card */}
+        <div className="space-y-6">
+
+          {/* Danger Zone */}
+          <section className="rounded-lg border border-[var(--danger-text)] bg-[rgba(239,68,68,0.05)] divide-y divide-[rgba(239,68,68,0.15)]">
+            <div className="px-6 py-4">
+              <h2 className="font-semibold text-[var(--danger-text)]">Danger Zone</h2>
+              <p className="text-xs text-[var(--danger-text)] opacity-70 mt-1">These actions are irreversible.</p>
+            </div>
+            <div className="px-6 py-4 flex items-center justify-between gap-4">
+              <div>
+                <p className="text-sm font-medium text-[var(--text-primary)]">Deactivate Account</p>
+                <p className="text-xs text-[var(--text-muted)]">Disable your account. Pending NexCoins will be frozen.</p>
+              </div>
+              <Button variant="destructive" size="sm" onClick={() => setShowDeactivate(true)}>Deactivate</Button>
+            </div>
+          </section>
+
+          {/* Help card */}
+          <div className="rounded-lg border border-[var(--border-default)] bg-[var(--surface-card)] p-5">
+            <p className="text-sm font-semibold text-[var(--text-primary)] mb-1">Need help?</p>
+            <p className="text-xs text-[var(--text-muted)] mb-3">Have a question or issue with your account? Our support team is here.</p>
+            <a
+              href="/dashboard/support"
+              className="inline-flex items-center gap-1 text-xs font-semibold text-teal-600 hover:underline"
+            >
+              Contact Support →
+            </a>
           </div>
-          <Button variant="destructive" size="sm" onClick={() => setShowDeactivate(true)}>Deactivate</Button>
-        </div>
-      </section>
+
+        </div>{/* end right */}
+
+      </div>{/* end grid */}
 
       {/* Change Email Modal */}
       {showEmail && (
