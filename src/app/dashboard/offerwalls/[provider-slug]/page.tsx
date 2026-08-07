@@ -179,9 +179,20 @@ export default function ProviderExperiencePage({
         </div>
       </div>
 
+      {/* ClixWall conversion notice */}
+      {provider.slug === "clixwall" && (
+        <div className="flex items-center gap-2.5 px-4 sm:px-6 py-2 bg-amber-50 border-b border-amber-100 flex-shrink-0">
+          <NexCoinIcon size={14} />
+          <p className="text-xs text-amber-800">
+            <span className="font-semibold">Currency note:</span> ClixWall displays offers in their own points scale.
+            Your earnings are automatically converted to NexCoins when credited to your balance.
+          </p>
+        </div>
+      )}
+
       {/* Widget — fills remaining height */}
       <div className="flex-1 flex flex-col">
-        {renderWidget(provider, trIframeUrl, trIframeLoading, buildEmbedUrl(), cpagripFrameUrl, token)}
+        {renderWidget(provider, trIframeUrl, trIframeLoading, buildEmbedUrl(), cpagripFrameUrl, token, provider.slug === "clixwall" ? 40 : 0)}
       </div>
     </div>
   );
@@ -194,7 +205,9 @@ function renderWidget(
   embedUrl: string | null,
   cpagripFrameUrl: string | null,
   token: string | null,
+  bannerOffset: number = 0,
 ) {
+  const widgetH = `calc(100vh - ${112 + bannerOffset}px)`;
   if (provider.slug === "theoremreach") {
     if (trIframeLoading) {
       return (
@@ -208,7 +221,7 @@ function renderWidget(
         <iframe
           src={trIframeUrl}
           className="flex-1 w-full border-0"
-          style={{ minHeight: "calc(100vh - 112px)" }}
+          style={{ minHeight: widgetH }}
           sandbox="allow-popups allow-popups-to-escape-sandbox allow-forms allow-scripts allow-same-origin allow-top-navigation"
           title="TheoremReach Offerwall"
         />
@@ -239,7 +252,7 @@ function renderWidget(
       <iframe
         src={cpagripFrameUrl}
         className="w-full border-0"
-        style={{ height: "calc(100vh - 112px)", display: "block" }}
+        style={{ height: widgetH, display: "block" }}
         title="CPAGrip Offerwall"
       />
     );
@@ -251,7 +264,7 @@ function renderWidget(
       <div
         id={widgetDivId}
         className="w-full"
-        style={{ height: "calc(100vh - 112px)", overflowY: "auto", overflowX: "hidden" }}
+        style={{ height: widgetH, overflowY: "auto", overflowX: "hidden" }}
       />
     );
   }
@@ -261,7 +274,7 @@ function renderWidget(
       <iframe
         src={embedUrl}
         className="flex-1 w-full border-0"
-        style={{ minHeight: "calc(100vh - 112px)" }}
+        style={{ minHeight: widgetH }}
         allow="accelerometer; autoplay; clipboard-write; encrypted-media"
         sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox"
         title={`${provider.name} Offerwall`}
