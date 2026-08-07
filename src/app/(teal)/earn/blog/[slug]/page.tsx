@@ -258,7 +258,7 @@ export default async function BlogPostPage({ params }: Props) {
                   LinkedIn ↗
                 </a>
                 <a
-                  href="https://x.com/nexguild"
+                  href="https://x.com/somen_official"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-xs font-semibold text-slate-500 hover:underline"
