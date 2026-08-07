@@ -11,7 +11,7 @@ The gig economy is any work arrangement where you're paid per task or project ra
 
 > 💼 **Ready to Earn Your First Gig Economy Income?**
 > NexGuild's task dashboard gives you structured micro-work immediately — no application, no waiting for clients to respond.
-> Every 660 NexCoins you earn = $1 in gift vouchers redeemable at NexStore.
+> Earn NexCoins and redeem for Amazon, Steam, Google Play vouchers directly in NexStore.
 > 👉 **[Start Your First Gig — Join NexGuild Free](https://www.nexguild.in/auth/register)**
 
 <figure>

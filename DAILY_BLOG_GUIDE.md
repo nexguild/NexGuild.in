@@ -166,9 +166,10 @@ Then immediately add this CTA box right after the opening paragraph:
 You own NexGuild. Never write "platforms like NexGuild" or "On NexGuild, surveys are shown..."
 Write: "Inside our NexGuild dashboard, we show..." or "We built NexGuild to solve exactly this..."
 
-When mentioning the NexCoin rate, always frame it as a benefit, never as a raw exchange:
-  WRONG: "660 NexCoins = $1 USD"
-  RIGHT: "every 660 NexCoins you earn = $1 in gift vouchers, no hidden conversion"
+Never mention a specific NexCoin-to-dollar conversion rate in blog posts or CTAs.
+  WRONG: "660 NexCoins = $1 USD" or "every 660 NexCoins = $1 in gift vouchers"
+  RIGHT: "earn NexCoins and redeem for real gift vouchers — Amazon, Steam, Google Play"
+  RIGHT: "NexCoins redeem directly for gift vouchers in NexStore, no minimum balance"
 
 === IMAGE FORMAT ===
 I will give you 2 pre-fetched image blocks. Use ONLY those exact <figure> blocks — do not change the src URL.

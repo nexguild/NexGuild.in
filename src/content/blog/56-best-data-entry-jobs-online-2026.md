@@ -45,7 +45,7 @@ Appen posts data annotation and verification projects that often involve structu
 **How to start:** Apply on Appen Connect, complete the qualification for available projects in your region
 
 ### NexGuild
-NexGuild at [nexguild.in](https://nexguild.in) includes structured task types that overlap with data entry — research tasks, content verification, product data tasks — alongside surveys and offerwalls. Earnings are in NexCoins (660 NC = $1 in gift vouchers) with no minimum payout.
+NexGuild at [nexguild.in](https://nexguild.in) includes structured task types that overlap with data entry — research tasks, content verification, product data tasks — alongside surveys and offerwalls. Earnings are in NexCoins redeemable for gift vouchers with no minimum payout.
 
 **Best for:** People who want structured task work alongside survey earnings in one dashboard, globally accessible
 

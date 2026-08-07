@@ -8,7 +8,7 @@ tags: ["NexGuild", "gift vouchers", "online earning", "rewards"]
 ---
 
 
-Every 660 NexCoins you earn = $1 in gift vouchers redeemable in NexStore — for Amazon, Steam, Google Play, and more. There's no minimum balance required to redeem, no conversion fee, and voucher codes are delivered digitally. Here's the complete earning-to-redemption flow so you know exactly what to expect.
+NexCoins you earn redeem directly for gift vouchers in NexStore — Amazon, Steam, Google Play, and more. There's no minimum balance required, no conversion fee, and voucher codes are delivered digitally. Here's the complete earning-to-redemption flow so you know exactly what to expect.
 
 > 🎁 **Have NexCoins Ready to Redeem?**
 > Head to NexStore in your dashboard and pick your voucher — Amazon, Steam, Google Play, and more available now.
