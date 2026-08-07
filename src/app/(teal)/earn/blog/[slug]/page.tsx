@@ -245,8 +245,8 @@ export default async function BlogPostPage({ params }: Props) {
               <p className="text-sm font-bold text-slate-900">Written by Somen Biswas</p>
               <p className="mb-2 text-xs font-medium text-teal-600">Founder, NexGuild</p>
               <p className="text-sm leading-relaxed text-slate-500">
-                Building NexGuild from India — a global platform connecting contributors with real
-                earning opportunities. Zero coding background, built with AI.
+                Building NexGuild — a global platform connecting contributors with real earning
+                opportunities across tasks, surveys, and offerwalls.
               </p>
               <div className="mt-3 flex gap-3">
                 <a
