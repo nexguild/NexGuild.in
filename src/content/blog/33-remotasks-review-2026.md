@@ -16,7 +16,12 @@ faqs:
     a: "Create an account at remotasks.com, complete the training courses for your chosen task category, pass the accuracy assessment, and then access paid tasks in your dashboard. Training is free but unpaid. Starting with the basic image annotation training is the most accessible entry point."
 ---
 
-Remotasks sits in an interesting position in the AI training data market. It is backed by Scale AI — one of the most well-funded and influential AI data companies in the world, with contracts across major technology companies and defense organizations — which immediately puts it on a different footing from the scrappier crowdsourcing platforms that appear and disappear every few years. But backing from a credible company does not automatically translate into a good experience for contributors. This review covers what Remotasks actually is, what the work looks like in practice, what you can realistically earn, and who the platform genuinely suits in 2026.
+Remotasks is legitimate — backed by Scale AI, one of the world's most valuable AI data companies. Whether it's worth your time depends on which task category you qualify for: basic annotation pays $3–$8/hr, but 3D lidar and specialized evaluation work pays $15–$30+. The gap between entry and advanced tasks is real, and reaching higher-paying work requires completing unpaid training courses and passing accuracy assessments first.
+
+> 🔒 **Remotasks Training Taking Too Long to Complete?**
+> Training is unpaid — and task availability after qualifying can still be inconsistent by region.
+> Inside our **NexGuild dashboard**, contributor tasks credit immediately with no unpaid training period.
+> 👉 **[Earn While You Train — Join NexGuild Free](https://www.nexguild.in/auth/register)**
 
 <figure>
   <img src="https://images.unsplash.com/photo-1531746790731-6c087fecd65a?w=800&auto=format&fit=crop&q=80" alt="Person working on AI data tasks on a digital device from home" width="800" height="450" />

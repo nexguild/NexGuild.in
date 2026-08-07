@@ -16,7 +16,12 @@ faqs:
     a: "All three operate in the AI training data and search evaluation space. Appen and Telus International AI are larger with broader project availability. OneForma offers similar work types and is a legitimate supplement — working for multiple platforms simultaneously is standard practice in this category."
 ---
 
-OneForma is one of the less visible names in the AI training data and crowdsourcing space, despite being operated by Centific — a company with significant scale in language services and AI data globally. For contributors who have already explored Appen and Telus International AI, OneForma represents a direct extension into the same type of work with a different platform behind it. For those newer to this category, it is a legitimate starting point worth understanding on its own terms. This review covers what OneForma actually is, how its qualification and task system works, what the pay looks like, and where it fits alongside the other major platforms in this space.
+OneForma is legitimate, operated by Centific — a major language services company with AI data contracts globally. Pay runs $12–$17/hr for search evaluation and data tasks, comparable to Appen and Telus International AI. Its lower profile works in your favor: less competition for the same type of work. It's a practical third platform to add once you're established on the bigger names, or a solid entry point for anyone new to search evaluation work.
+
+> ⏳ **OneForma Application Still Being Reviewed After Weeks?**
+> Application timelines at OneForma can stretch to weeks with no guarantee of task availability after passing.
+> Inside our **NexGuild dashboard**, you can start earning contributor tasks immediately after signup — no waiting period.
+> 👉 **[Start Earning Today — Join NexGuild Free](https://www.nexguild.in/auth/register)**
 
 <figure>
   <img src="https://images.unsplash.com/photo-1551434678-e076c223a692?w=800&auto=format&fit=crop&q=80" alt="Person working on a laptop completing AI training and data evaluation tasks remotely" width="800" height="450" />

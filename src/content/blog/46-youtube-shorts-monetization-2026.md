@@ -16,7 +16,12 @@ faqs:
     a: "Yes. Since February 2023, YouTube Shorts watch time counts toward the 4,000 watch-hour YPP requirement for full monetization. Before this change, only long-form video watch time counted. This makes Shorts a more viable path to monetization eligibility for new channels."
 ---
 
-YouTube Shorts crossed 70 billion daily views in 2024 and has continued growing since — but the question of how much that translates to actual creator earnings has been murky since the format launched. Shorts monetization changed significantly in 2023 when YouTube replaced the Shorts Fund with a real ad revenue share model. Two years into that system, the picture of what Shorts actually pays is clearer, and the answer involves trade-offs that every creator considering the format should understand.
+YouTube Shorts pays $0.03–$0.07 per 1,000 views — roughly $3–$7 RPM. That's 5 to 10 times lower than long-form YouTube content in most niches. A Short with 1 million views earns approximately $30–$70. YouTube Shorts is worth doing as a subscriber growth tool, not as a primary revenue source. This guide explains the exact monetization mechanics, how to qualify, and when Shorts makes financial sense versus when it doesn't.
+
+> 🎬 **Growing Your Shorts Channel But Waiting to Monetize?**
+> You need 1,000 subscribers and 4,000 watch hours before YouTube pays you a cent — that can take months.
+> Inside our **NexGuild dashboard**, surveys and tasks pay gift vouchers starting day one with no follower requirements.
+> 👉 **[Earn While You Build Your Channel — Join NexGuild Free](https://www.nexguild.in/auth/register)**
 
 <figure>
   <img src="https://images.unsplash.com/photo-1542744173-8e7e53415bb0?w=800&auto=format&fit=crop&q=80" alt="Person reviewing content performance analytics on a laptop screen" width="800" height="450" />

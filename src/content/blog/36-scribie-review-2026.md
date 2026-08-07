@@ -16,7 +16,12 @@ faqs:
     a: "Scribie has the lowest barrier to entry of the three (no formal entry test) and the lowest base pay ($0.10/min vs Rev's $0.45–$1.10/min). Rev pays the most for fast, accurate transcriptionists. TranscribeMe is a middle ground — a real but forgiving entry test and $15–$22 per audio hour. Scribie is the best starting point for complete beginners building their first transcription track record."
 ---
 
-Scribie occupies a specific niche in the transcription market: it is the most accessible entry-level option available, with no formal test blocking you from getting started, but it also has the lowest base pay of the major transcription platforms. Whether that trade-off makes sense depends entirely on where you are in building your transcription career. This review covers how Scribie actually works in 2026, what the pay translates to in real hourly terms, what the merit badge system means in practice, and where Scribie fits compared to Rev and TranscribeMe.
+Scribie is legitimate and the easiest transcription platform to start on — no formal entry test, $1 minimum payout, weekly PayPal payments. The trade-off is the lowest pay in the category: $0.10 per audio minute equals $6 per audio hour, which most contributors convert to $2–$5 of actual hourly earnings. It's the right starting point to build a transcription track record before applying to Rev or TranscribeMe.
+
+> 📝 **Scribie Pay Too Low for the Time You're Putting In?**
+> At $0.10/audio minute, most contributors earn $2–$5 per hour of real work time on Scribie.
+> Inside our **NexGuild dashboard**, contributor tasks are rated for fair time-to-reward before going live.
+> 👉 **[Explore NexGuild Tasks — Free to Join](https://www.nexguild.in/auth/register)**
 
 <figure>
   <img src="https://images.unsplash.com/photo-1484480974693-6ca0a78fb36b?w=800&auto=format&fit=crop&q=80" alt="Laptop on a desk with headphones for transcription work" width="800" height="450" />
