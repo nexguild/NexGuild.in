@@ -179,20 +179,9 @@ export default function ProviderExperiencePage({
         </div>
       </div>
 
-      {/* ClixWall conversion notice */}
-      {provider.slug === "clixwall" && (
-        <div className="flex items-center gap-2.5 px-4 sm:px-6 py-2 bg-amber-50 border-b border-amber-100 flex-shrink-0">
-          <NexCoinIcon size={14} />
-          <p className="text-xs text-amber-800">
-            <span className="font-semibold">Currency note:</span> ClixWall displays offers in their own points scale.
-            Your earnings are automatically converted to NexCoins when credited to your balance.
-          </p>
-        </div>
-      )}
-
       {/* Widget — fills remaining height */}
       <div className="flex-1 flex flex-col">
-        {renderWidget(provider, trIframeUrl, trIframeLoading, buildEmbedUrl(), cpagripFrameUrl, token, provider.slug === "clixwall" ? 40 : 0)}
+        {renderWidget(provider, trIframeUrl, trIframeLoading, buildEmbedUrl(), cpagripFrameUrl, token)}
       </div>
     </div>
   );
@@ -205,9 +194,8 @@ function renderWidget(
   embedUrl: string | null,
   cpagripFrameUrl: string | null,
   token: string | null,
-  bannerOffset: number = 0,
 ) {
-  const widgetH = `calc(100vh - ${112 + bannerOffset}px)`;
+  const widgetH = "calc(100vh - 112px)";
   if (provider.slug === "theoremreach") {
     if (trIframeLoading) {
       return (
