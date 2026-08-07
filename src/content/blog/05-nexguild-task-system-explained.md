@@ -8,7 +8,11 @@ tags: ["NexGuild", "micro-tasks", "online earning", "platform guide"]
 ---
 
 
-If you're new to NexGuild, you might be wondering exactly how the task system works — what counts as a task, how you get paid, and what happens between starting a task and actually earning something from it. This post walks through the entire flow, start to finish.
+NexGuild tasks are structured assignments — data entry, research, content work, verification — that pay NexCoins on approval, typically within 24–48 hours of submission. You see the reward amount, estimated time, and full instructions before you start. There's no minimum balance to redeem. Here's exactly how the task flow works from selection to payout.
+
+> 🎯 **Ready to Complete Your First NexGuild Task?**
+> Browse available tasks in your dashboard — pick one, complete it, submit it, and earn NexCoins when approved.
+> 👉 **[Start Your First Task — Join NexGuild Free](https://www.nexguild.in/auth/register)**
 
 <figure>
   <img src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&auto=format&fit=crop&q=80" alt="person working on laptop from home" width="800" height="450" />
