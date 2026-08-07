@@ -124,7 +124,9 @@ async function handlePostback(req: NextRequest, slug: string): Promise<Response>
   }
 
   // 6. Skip non-credit statuses
-  if (status && status !== "1") {
+  // Some providers (e.g. ClixWall) send "Credit" instead of "1" — configurable via credit_status_value
+  const creditStatusValue = (customCfg.credit_status_value as string | null) ?? "1";
+  if (status && status !== creditStatusValue) {
     return new Response("OK", { status: 200 });
   }
   if (type === "out") {
