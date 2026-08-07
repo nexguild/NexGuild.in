@@ -33,6 +33,25 @@ function verifyByHashFormat(hashFormat: string, secret: string, vars: Record<str
   return expected === incoming;
 }
 
+async function writeLog(
+  admin: ReturnType<typeof createServerClient>,
+  provider: string,
+  rawParams: Record<string, unknown>,
+  action: string,
+  hashValid: boolean | null = null,
+  errorMessage: string | null = null,
+) {
+  await admin.from("postback_logs").insert({
+    provider,
+    raw_params:    rawParams,
+    action_taken:  action,
+    hash_valid:    hashValid,
+    error_message: errorMessage,
+  }).then(({ error }) => {
+    if (error) console.warn(`[postback-log] insert failed:`, error.message);
+  });
+}
+
 async function handlePostback(req: NextRequest, slug: string): Promise<Response> {
   const admin = createServerClient();
 
@@ -78,11 +97,13 @@ async function handlePostback(req: NextRequest, slug: string): Promise<Response>
     };
     if (!verifyByHashFormat(hashFormat, provider.postback_secret, templateVars, hash)) {
       console.warn(`[postback/${slug}] hash mismatch`);
+      await writeLog(admin, slug, Object.fromEntries(q.entries()), "hash_invalid", false, "Hash mismatch");
       return new Response("Forbidden", { status: 403 });
     }
   } else {
     if (incomingSecret !== provider.postback_secret) {
       console.warn(`[postback/${slug}] invalid secret`);
+      await writeLog(admin, slug, Object.fromEntries(q.entries()), "hash_invalid", false, "Invalid secret");
       return new Response("Forbidden", { status: 403 });
     }
   }
@@ -119,7 +140,7 @@ async function handlePostback(req: NextRequest, slug: string): Promise<Response>
       source:         "offerwall",
       description:    `${provider.name} fraud reversal (tx: ${transId})`,
     });
-
+    await writeLog(admin, slug, { user_id: userId, trans_id: transId, amount, status }, "reversed", hashFormat ? true : null);
     return new Response("OK", { status: 200 });
   }
 
@@ -127,9 +148,11 @@ async function handlePostback(req: NextRequest, slug: string): Promise<Response>
   // Some providers (e.g. ClixWall) send "Credit" instead of "1" — configurable via credit_status_value
   const creditStatusValue = (customCfg.credit_status_value as string | null) ?? "1";
   if (status && status !== creditStatusValue) {
+    await writeLog(admin, slug, { user_id: userId, trans_id: transId, amount, status, type }, "debug_ignored", hashFormat ? true : null);
     return new Response("OK", { status: 200 });
   }
   if (type === "out") {
+    await writeLog(admin, slug, { user_id: userId, trans_id: transId, amount, status, type }, "debug_ignored", hashFormat ? true : null);
     return new Response("OK", { status: 200 });
   }
 
@@ -165,9 +188,11 @@ async function handlePostback(req: NextRequest, slug: string): Promise<Response>
   if (insertErr) {
     if (insertErr.code === "23505") {
       console.log(`[postback/${slug}] duplicate tx ${transId} — skipping`);
+      await writeLog(admin, slug, { user_id: userId, trans_id: transId, amount, status }, "duplicate", hashFormat ? true : null);
       return new Response("OK", { status: 200 });
     }
     console.error(`[postback/${slug}] insert error:`, insertErr.message);
+    await writeLog(admin, slug, { user_id: userId, trans_id: transId, amount, status }, "error", hashFormat ? true : null, insertErr.message);
     return new Response("Internal Server Error", { status: 500 });
   }
 
@@ -204,6 +229,7 @@ async function handlePostback(req: NextRequest, slug: string): Promise<Response>
     type:    "bonus_coins",
   });
 
+  await writeLog(admin, slug, { user_id: userId, trans_id: transId, amount, status, coins_credited: contributorCredit }, "credited", hashFormat ? true : null);
   console.log(`[postback/${slug}] credited ${contributorCredit} coins → ${userId} (tx=${transId})`);
   return new Response("OK", { status: 200 });
 }
