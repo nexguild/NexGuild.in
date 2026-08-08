@@ -35,11 +35,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
   ];
 
   // Blog posts — auto-discovered from src/content/blog/*.md
+  // lastModified uses build time so Google recrawls on every deploy
   const posts = getAllPosts();
   const blogPages: MetadataRoute.Sitemap = posts.map((post) => ({
     url:             `${BASE}/earn/blog/${post.slug}`,
-    lastModified:    new Date(post.date),
-    changeFrequency: "monthly" as const,
+    lastModified:    now,
+    changeFrequency: "weekly" as const,
     priority:        0.7,
   }));
 
