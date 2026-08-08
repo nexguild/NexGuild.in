@@ -12,6 +12,17 @@ const nextConfig: NextConfig = {
         destination: "https://www.nexguild.in/:path*",
         permanent:   true,
       },
+      // Old /blog/ paths → canonical /earn/blog/ (301 at edge, before page render)
+      {
+        source:      "/blog",
+        destination: "/earn/blog",
+        permanent:   true,
+      },
+      {
+        source:      "/blog/:path*",
+        destination: "/earn/blog/:path*",
+        permanent:   true,
+      },
     ];
   },
 };
