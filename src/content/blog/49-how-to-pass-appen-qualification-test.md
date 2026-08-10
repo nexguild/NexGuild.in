@@ -1,7 +1,7 @@
 ---
 title: "How to Pass the Appen Qualification Test: Tips That Work"
 slug: "how-to-pass-appen-qualification"
-description: "How to pass Appen qualification tests and unlock better-paying projects — what the tests cover, how scoring works, and the preparation steps that make the difference."
+description: "What Appen qualification tests cover, how scoring works, and the steps most contributors skip — giving you the best chance of passing on the first attempt."
 category: "Remote Work"
 date: "2026-08-05"
 tags: ["appen", "AI jobs", "remote work", "online earning", "data annotation"]
