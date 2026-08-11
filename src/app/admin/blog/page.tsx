@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import {
-  FileText, Plus, Loader2, Trash2, Eye, AlertCircle, ExternalLink, RefreshCw, Calendar, Hash,
+  FileText, Plus, Loader2, Trash2, Eye, AlertCircle, ExternalLink, RefreshCw, Calendar, Hash, Pencil,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
@@ -172,12 +172,17 @@ export default function AdminBlogPage() {
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-1.5">
-                      <Button variant="secondary" size="sm" asChild>
-                        <a href={`https://nexguild.in/blog/${p.slug}`} target="_blank" rel="noopener noreferrer">
+                      <Button variant="secondary" size="sm" asChild title="View live">
+                        <a href={`https://www.nexguild.in/earn/blog/${p.slug}`} target="_blank" rel="noopener noreferrer">
                           <Eye className="h-3.5 w-3.5" />
                         </a>
                       </Button>
-                      <Button variant="secondary" size="sm" asChild>
+                      <Button variant="secondary" size="sm" asChild title="Edit post">
+                        <Link href={`/admin/blog/edit?file=${encodeURIComponent(p.filename)}`}>
+                          <Pencil className="h-3.5 w-3.5" />
+                        </Link>
+                      </Button>
+                      <Button variant="secondary" size="sm" asChild title="View on GitHub">
                         <a href={`https://github.com/${encodeURIComponent("nexguild/NexGuild.in")}/blob/main/src/content/blog/${p.filename}`}
                           target="_blank" rel="noopener noreferrer">
                           <ExternalLink className="h-3.5 w-3.5" />
@@ -185,7 +190,8 @@ export default function AdminBlogPage() {
                       </Button>
                       <Button variant="secondary" size="sm"
                         onClick={() => setDeleteTarget(p)}
-                        className="text-red-400 hover:text-red-300 hover:border-red-500/30">
+                        className="text-red-400 hover:text-red-300 hover:border-red-500/30"
+                        title="Delete post">
                         <Trash2 className="h-3.5 w-3.5" />
                       </Button>
                     </div>
