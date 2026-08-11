@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Gift, CheckCircle, Loader2, Search } from "lucide-react";
+import { Gift, CheckCircle, Loader2, Search, Pencil, X, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
 import { usePageGuard } from "@/components/layout/admin-auth-guard";
@@ -41,6 +41,10 @@ export default function VouchersPage() {
   const [codes, setCodes] = useState<Record<string, string>>({});
   const [delivering, setDelivering] = useState<string | null>(null);
   const [deliverErrors, setDeliverErrors] = useState<Record<string, string>>({});
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editCode, setEditCode] = useState("");
+  const [updating, setUpdating] = useState(false);
+  const [updateError, setUpdateError] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchRequests() {
@@ -90,6 +94,38 @@ export default function VouchersPage() {
     }
 
     setDelivering(null);
+  }
+
+  function startEdit(req: VoucherRequest) {
+    setEditingId(req.id);
+    setEditCode(req.voucher_code ?? "");
+    setUpdateError(null);
+  }
+
+  async function saveEditedCode(req: VoucherRequest) {
+    if (!editCode.trim()) return;
+    setUpdating(true);
+    setUpdateError(null);
+    const { data: { session } } = await supabase.auth.getSession();
+    const token = session?.access_token;
+    const res = await fetch("/api/admin/update-voucher-code", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify({ requestId: req.id, voucherCode: editCode }),
+    });
+    if (res.ok) {
+      setRequests((prev) =>
+        prev.map((r) => r.id === req.id ? { ...r, voucher_code: editCode.trim() } : r)
+      );
+      setEditingId(null);
+    } else {
+      const data = await res.json().catch(() => ({}));
+      setUpdateError(data.error ?? "Update failed.");
+    }
+    setUpdating(false);
   }
 
   const filtered = requests.filter((r) => {
@@ -169,8 +205,39 @@ export default function VouchersPage() {
                       <span> · Delivered {new Date(req.delivered_at).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}</span>
                     )}
                   </p>
-                  {req.voucher_code && (
-                    <p className="text-xs font-mono text-[var(--brand-500)] mt-1">Code: {req.voucher_code}</p>
+                  {req.voucher_code && editingId !== req.id && (
+                    <div className="flex items-center gap-2 mt-1">
+                      <p className="text-xs font-mono text-[var(--brand-500)]">Code: {req.voucher_code}</p>
+                      {req.status === "delivered" && (
+                        <button
+                          onClick={() => startEdit(req)}
+                          title="Edit code"
+                          className="text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors"
+                        >
+                          <Pencil className="h-3 w-3" />
+                        </button>
+                      )}
+                    </div>
+                  )}
+                  {editingId === req.id && (
+                    <div className="mt-2 space-y-1.5">
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="text"
+                          value={editCode}
+                          onChange={(e) => setEditCode(e.target.value)}
+                          placeholder="Correct voucher code…"
+                          className="flex-1 h-8 px-2.5 rounded-md border border-[var(--border-strong)] bg-[var(--surface-subtle)] text-xs text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--border-focus)]"
+                        />
+                        <Button size="sm" disabled={updating || !editCode.trim()} onClick={() => saveEditedCode(req)}>
+                          {updating ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <><Save className="h-3.5 w-3.5" /> Save</>}
+                        </Button>
+                        <button onClick={() => setEditingId(null)} className="text-[var(--text-muted)] hover:text-[var(--text-primary)]">
+                          <X className="h-4 w-4" />
+                        </button>
+                      </div>
+                      {updateError && <p className="text-xs text-red-400">{updateError}</p>}
+                    </div>
                   )}
                 </div>
                 <span className={`text-xs font-medium px-2.5 py-1 rounded-full flex-shrink-0 ${STATUS_STYLES[req.status] ?? ""}`}>
