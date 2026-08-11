@@ -12,12 +12,12 @@ interface DbVoucher {
   id: string;
   brand_name: string;
   description: string;
-  value_inr: number;
+  value_inr: number | null;
+  value_usd: number | null;
   coins_required: number;
   category: string;
   emoji: string;
   is_available: boolean;
-  currency?: string;
 }
 
 interface CartEntry {
@@ -61,7 +61,9 @@ function brandGradient(brand: string): string {
   return BRAND_GRADIENTS[brand] ?? "from-teal-400 to-teal-500";
 }
 function formatValue(v: DbVoucher): string {
-  return v.currency === "USD" ? `$${v.value_inr}` : `₹${v.value_inr}`;
+  if (v.value_inr && v.value_inr > 0) return `₹${v.value_inr}`;
+  if (v.value_usd && v.value_usd > 0) return `$${v.value_usd}`;
+  return "—";
 }
 
 const CATEGORIES = ["All", "Shopping", "Apps", "Food", "Gaming"];
@@ -123,9 +125,9 @@ export default function StorePage() {
         supabase.from("profiles").select("nexcoins").eq("id", user.id).single(),
         supabase
           .from("voucher_inventory")
-          .select("id, brand_name, description, value_inr, coins_required, category, emoji, is_available, currency")
+          .select("id, brand_name, description, value_inr, value_usd, coins_required, category, emoji, is_available")
           .order("brand_name", { ascending: true })
-          .order("value_inr", { ascending: true }),
+          .order("coins_required", { ascending: true }),
       ]);
 
       setNexcoins((profileData as { nexcoins: number } | null)?.nexcoins ?? 0);
