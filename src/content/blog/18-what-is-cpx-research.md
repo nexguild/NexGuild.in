@@ -1,7 +1,7 @@
 ﻿---
 title: "What Is CPX Research? Legit Survey Network Explained (2026)"
 slug: "what-is-cpx-research-complete-guide"
-description: "CPX Research powers real paid surveys on hundreds of platforms worldwide. Learn what it is, how surveys work, what you earn, and how to access CPX Research in 2026."
+description: "CPX Research is the survey network behind most reward apps. 2026 guide: what it is, how it pays, and how to start accessing CPX surveys directly."
 category: "Remote Work"
 date: "2026-07-19"
 tags: ["surveys", "CPX Research", "online earning", "platform guide"]
