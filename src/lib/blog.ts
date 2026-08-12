@@ -48,25 +48,30 @@ function processHeadings(rawHtml: string): { html: string; headings: { id: strin
 }
 
 export function getAllPosts(): PostMeta[] {
+  const today = new Date();
+  today.setHours(23, 59, 59, 999);
+
   const files = fs
     .readdirSync(BLOG_DIR)
     .filter((f) => f.endsWith(".md"))
     .sort();
 
-  return files.map((file) => {
-    const raw = fs.readFileSync(path.join(BLOG_DIR, file), "utf-8");
-    const { data, content } = matter(raw);
-    return {
-      title:       data.title as string,
-      slug:        data.slug as string,
-      description: data.description as string,
-      category:    data.category as string,
-      readingTime: calcReadingTime(content),
-      date:        (data.date as string | undefined) ?? "2026-06-21",
-      tags:        (data.tags as string[] | undefined) ?? undefined,
-      faqs:        (data.faqs as FAQ[] | undefined) ?? undefined,
-    };
-  });
+  return files
+    .map((file) => {
+      const raw = fs.readFileSync(path.join(BLOG_DIR, file), "utf-8");
+      const { data, content } = matter(raw);
+      return {
+        title:       data.title as string,
+        slug:        data.slug as string,
+        description: data.description as string,
+        category:    data.category as string,
+        readingTime: calcReadingTime(content),
+        date:        (data.date as string | undefined) ?? "2026-06-21",
+        tags:        (data.tags as string[] | undefined) ?? undefined,
+        faqs:        (data.faqs as FAQ[] | undefined) ?? undefined,
+      };
+    })
+    .filter((p) => new Date(p.date) <= today);
 }
 
 export function getPostBySlug(slug: string): Post | null {

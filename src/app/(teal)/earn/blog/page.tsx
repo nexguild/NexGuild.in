@@ -4,6 +4,8 @@ import { getAllPosts } from "@/lib/blog";
 import { AdSlot } from "@/components/ui/ad-slot";
 import { BlogFilter } from "@/components/blog/BlogFilter";
 
+export const revalidate = 86400; // rebuild daily so scheduled posts appear on their date
+
 export const metadata: Metadata = {
   title: "Blog — Earning Guides, Remote Work Tips & NexGuild Updates",
   description:
