@@ -1,41 +1,44 @@
+import nodemailer from "nodemailer";
+
 export type BrevoEmail = {
   to: string;
   subject: string;
   html: string;
 };
 
-const BREVO_ENDPOINT = "https://api.brevo.com/v3/smtp/email";
+const BREVO_HOST = "smtp-relay.brevo.com";
+const BREVO_PORT = 587;
 
 export function isBrevoConfigured(): boolean {
-  return Boolean(process.env.BREVO_API_KEY);
+  return Boolean(process.env.BREVO_SMTP_USER && process.env.BREVO_SMTP_KEY);
+}
+
+function getTransporter() {
+  const smtpKey = process.env.BREVO_SMTP_KEY;
+  const smtpUser = process.env.BREVO_SMTP_USER;
+  if (!smtpKey || !smtpUser) {
+    throw new Error("BREVO_SMTP_USER and BREVO_SMTP_KEY are required");
+  }
+
+  return nodemailer.createTransport({
+    host: BREVO_HOST,
+    port: BREVO_PORT,
+    secure: false,
+    auth: {
+      user: smtpUser,
+      pass: smtpKey,
+    },
+  });
 }
 
 async function sendBrevoEmail(email: BrevoEmail): Promise<void> {
-  const apiKey = process.env.BREVO_API_KEY;
-  if (!apiKey) throw new Error("BREVO_API_KEY is not configured");
-
-  const response = await fetch(BREVO_ENDPOINT, {
-    method: "POST",
-    headers: {
-      accept: "application/json",
-      "api-key": apiKey,
-      "content-type": "application/json",
-    },
-    body: JSON.stringify({
-      sender: {
-        email: process.env.BREVO_FROM_EMAIL ?? "noreply@nexguild.in",
-        name: "NexGuild",
-      },
-      to: [{ email: email.to }],
-      subject: email.subject,
-      htmlContent: email.html,
-    }),
+  const transporter = getTransporter();
+  await transporter.sendMail({
+    from: `"NexGuild" <${process.env.BREVO_FROM_EMAIL ?? "noreply@nexguild.in"}>`,
+    to: email.to,
+    subject: email.subject,
+    html: email.html,
   });
-
-  if (!response.ok) {
-    const detail = await response.text();
-    throw new Error(`Brevo email failed (${response.status}): ${detail}`);
-  }
 }
 
 export async function sendBrevoEmails(emails: BrevoEmail[]): Promise<number> {

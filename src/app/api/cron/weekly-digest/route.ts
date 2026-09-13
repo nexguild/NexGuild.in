@@ -14,7 +14,7 @@ export async function GET(req: NextRequest) {
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
     { auth: { persistSession: false } }
   );
-  if (!process.env.BREVO_API_KEY) {
+  if (!process.env.BREVO_SMTP_USER || !process.env.BREVO_SMTP_KEY) {
     return NextResponse.json({ error: "Brevo not configured" }, { status: 500 });
   }
 
