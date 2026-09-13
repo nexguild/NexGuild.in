@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import { FROM_NOREPLY, getResend } from "@/lib/email";
+import { sendBrevoEmails } from "@/lib/brevo";
 
 export async function GET(req: NextRequest) {
   // Verify cron secret so only Vercel can call this
@@ -14,8 +14,9 @@ export async function GET(req: NextRequest) {
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
     { auth: { persistSession: false } }
   );
-  const resend = getResend();
-  if (!resend) return NextResponse.json({ error: "Resend not configured" }, { status: 500 });
+  if (!process.env.BREVO_API_KEY) {
+    return NextResponse.json({ error: "Brevo not configured" }, { status: 500 });
+  }
 
   const weekStart = new Date();
   weekStart.setDate(weekStart.getDate() - 7);
@@ -46,22 +47,20 @@ export async function GET(req: NextRequest) {
     .in("id", ids)
     .eq("status", "active");
 
-  let sent = 0;
+  const emails = [];
   for (const p of (profiles ?? []) as { id: string; full_name: string | null; email: string | null; nexcoins: number }[]) {
     if (!p.email) continue;
     const weekEarned = earningsMap.get(p.id) ?? 0;
     const name = p.full_name?.split(" ")[0] ?? "there";
 
-    const { error } = await resend.emails.send({
-      from:    FROM_NOREPLY,
+    emails.push({
       to:      p.email,
       subject: `Your NexGuild week in review — +${weekEarned.toLocaleString()} NexCoins earned`,
       html:    weeklyDigestHtml(name, weekEarned, p.nexcoins),
     });
-
-    if (!error) sent++;
   }
 
+  const sent = await sendBrevoEmails(emails);
   return NextResponse.json({ sent, total: ids.length });
 }
 

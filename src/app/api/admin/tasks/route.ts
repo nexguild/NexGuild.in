@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import { FROM_NOREPLY, getResend, newTaskHtml } from "@/lib/email";
+import { newTaskHtml } from "@/lib/email";
+import { isBrevoConfigured, sendBrevoEmails } from "@/lib/brevo";
 import { createDriveResourcesForTask, isDriveConfigured } from "@/lib/google-drive";
 
 export async function POST(req: NextRequest) {
@@ -185,8 +186,7 @@ async function sendNewTaskEmails(
   task: { id: string; title: string; task_type: string | null; pay_per_task: number | null; total_slots: number | null },
 ) {
   const admin = makeAdmin();
-  const resend = getResend();
-  if (!resend) return;
+  if (!isBrevoConfigured()) return;
 
   const { data: contributors } = await admin
     .from("profiles")
@@ -198,7 +198,6 @@ async function sendNewTaskEmails(
   if (profiles.length === 0) return;
 
   const emails = profiles.map((p) => ({
-    from:    FROM_NOREPLY,
     to:      p.email,
     subject: `New task available: ${task.title}`,
     html:    newTaskHtml(
@@ -211,9 +210,5 @@ async function sendNewTaskEmails(
     ),
   }));
 
-  const CHUNK = 100;
-  for (let i = 0; i < emails.length; i += CHUNK) {
-    const { error } = await resend.batch.send(emails.slice(i, i + CHUNK));
-    if (error) console.error("[admin/tasks] batch email error:", error);
-  }
+  await sendBrevoEmails(emails);
 }
