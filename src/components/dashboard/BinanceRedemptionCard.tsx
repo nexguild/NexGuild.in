@@ -22,13 +22,18 @@ interface Redemption {
   created_at: string;
 }
 
-function HistoryGroup({ title, count, color, children }: { title: string; count: number; color: "emerald" | "amber"; children: React.ReactNode }) {
+function HistoryGroup({ title, count, color, children }: { title: string; count: number; color: "emerald" | "amber" | "red"; children: React.ReactNode }) {
+  const colorStyles = {
+    emerald: { text: "text-emerald-700", dot: "bg-emerald-500", badge: "bg-emerald-100" },
+    amber: { text: "text-amber-700", dot: "bg-amber-500", badge: "bg-amber-100" },
+    red: { text: "text-red-700", dot: "bg-red-500", badge: "bg-red-100" },
+  }[color];
   return (
     <div>
-      <div className={`mb-2 flex items-center gap-2 text-sm font-bold ${color === "emerald" ? "text-emerald-700" : "text-amber-700"}`}>
-        <span className={`h-2 w-2 rounded-full ${color === "emerald" ? "bg-emerald-500" : "bg-amber-500"}`} />
+      <div className={`mb-2 flex items-center gap-2 text-sm font-bold ${colorStyles.text}`}>
+        <span className={`h-2 w-2 rounded-full ${colorStyles.dot}`} />
         {title}
-        <span className={`rounded-full px-2 py-0.5 text-[10px] ${color === "emerald" ? "bg-emerald-100" : "bg-amber-100"}`}>{count}</span>
+        <span className={`rounded-full px-2 py-0.5 text-[10px] ${colorStyles.badge}`}>{count}</span>
       </div>
       <div className="space-y-3">{children}</div>
     </div>
@@ -226,14 +231,19 @@ export function BinanceRedemptionCard({ nexcoins, onBalanceChange }: { nexcoins:
           </div>
           {loading ? <p className="text-sm text-slate-400">Loading…</p> : requests.length === 0 ? <p className="rounded-xl bg-slate-50 px-3 py-3 text-sm text-slate-400">No requests yet. Your submitted redemptions will appear here.</p> : (
             <div className="space-y-5">
-              {(["paid", "rejected"] as const).some((status) => requests.some((request) => request.status === status)) && (
-                <HistoryGroup title="Completed" count={requests.filter((request) => request.status === "paid" || request.status === "rejected").length} color="emerald">
-                  {requests.filter((request) => request.status === "paid" || request.status === "rejected").slice(0, 5).map((request) => <RedemptionHistoryItem key={request.id} request={request} />)}
+              {requests.some((request) => request.status === "paid") && (
+                <HistoryGroup title="Completed" count={requests.filter((request) => request.status === "paid").length} color="emerald">
+                  {requests.filter((request) => request.status === "paid").slice(0, 5).map((request) => <RedemptionHistoryItem key={request.id} request={request} />)}
                 </HistoryGroup>
               )}
               {requests.some((request) => request.status === "pending" || request.status === "under_review") && (
                 <HistoryGroup title="In progress" count={requests.filter((request) => request.status === "pending" || request.status === "under_review").length} color="amber">
                   {requests.filter((request) => request.status === "pending" || request.status === "under_review").slice(0, 5).map((request) => <RedemptionHistoryItem key={request.id} request={request} />)}
+                </HistoryGroup>
+              )}
+              {requests.some((request) => request.status === "rejected") && (
+                <HistoryGroup title="Rejected & refunded" count={requests.filter((request) => request.status === "rejected").length} color="red">
+                  {requests.filter((request) => request.status === "rejected").slice(0, 5).map((request) => <RedemptionHistoryItem key={request.id} request={request} />)}
                 </HistoryGroup>
               )}
             </div>
