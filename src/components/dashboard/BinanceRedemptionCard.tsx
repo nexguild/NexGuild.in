@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { CheckCircle2, Loader2, WalletCards } from "lucide-react";
+import { CheckCircle2, CircleDollarSign, Clock3, Loader2, ShieldCheck, WalletCards } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
 const REDEMPTION_PACKAGES = [
@@ -73,56 +73,115 @@ export function BinanceRedemptionCard({ nexcoins, onBalanceChange }: { nexcoins:
   }
 
   return (
-    <section className="rounded-2xl border border-slate-100 bg-white p-5 shadow-[0_2px_12px_rgba(0,0,0,0.06)]">
-      <div className="flex items-start gap-3 mb-4">
-        <div className="h-10 w-10 rounded-xl bg-yellow-50 flex items-center justify-center text-xl">₮</div>
-        <div>
-          <h2 className="font-bold text-slate-800">Redeem via Binance Pay</h2>
-          <p className="text-sm text-slate-500">Receive USDT through a manual finance payout.</p>
+    <section className="relative overflow-hidden rounded-3xl border border-slate-200/80 bg-white shadow-[0_12px_40px_rgba(15,23,42,0.08)]">
+      <div className="absolute right-0 top-0 h-40 w-40 rounded-full bg-teal-100/60 blur-3xl" />
+      <div className="relative border-b border-slate-100 bg-gradient-to-br from-slate-900 via-slate-800 to-teal-900 px-5 py-5 sm:px-7">
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex items-start gap-3">
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/15 text-teal-200 ring-1 ring-white/20">
+              <CircleDollarSign className="h-6 w-6" />
+            </div>
+            <div>
+              <h2 className="font-bold text-white">Redeem via Binance Pay</h2>
+              <p className="mt-0.5 text-sm text-slate-300">Convert your NexCoins into USDT.</p>
+            </div>
+          </div>
+          <span className="hidden items-center gap-1.5 rounded-full bg-emerald-400/15 px-3 py-1.5 text-xs font-semibold text-emerald-200 ring-1 ring-emerald-300/20 sm:inline-flex">
+            <ShieldCheck className="h-3.5 w-3.5" /> Manual review
+          </span>
+        </div>
+        <div className="mt-5 grid grid-cols-3 gap-2 text-center sm:max-w-md">
+          <div className="rounded-xl bg-white/10 px-2 py-2.5 ring-1 ring-white/10">
+            <p className="text-[10px] uppercase tracking-wider text-slate-400">Rate</p>
+            <p className="mt-0.5 text-sm font-bold text-white">1,000 = $1</p>
+          </div>
+          <div className="rounded-xl bg-white/10 px-2 py-2.5 ring-1 ring-white/10">
+            <p className="text-[10px] uppercase tracking-wider text-slate-400">Minimum</p>
+            <p className="mt-0.5 text-sm font-bold text-white">$10 USDT</p>
+          </div>
+          <div className="rounded-xl bg-white/10 px-2 py-2.5 ring-1 ring-white/10">
+            <p className="text-[10px] uppercase tracking-wider text-slate-400">Processing</p>
+            <p className="mt-0.5 text-sm font-bold text-white">24–48 hrs</p>
+          </div>
         </div>
       </div>
-      <div className="grid gap-3 sm:grid-cols-3">
-        <label className="text-sm text-slate-600">Choose payout package
-          <select value={coins} onChange={(e) => setCoins(e.target.value)} className="mt-1 h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-slate-800 focus:border-teal-500 focus:outline-none">
-            {REDEMPTION_PACKAGES.map((item) => (
-              <option key={item.coins} value={item.coins}>
-                ${item.usdt} USDT — {item.coins.toLocaleString()} NexCoins
-              </option>
-            ))}
-          </select>
-        </label>
-        <div className="rounded-lg bg-slate-50 px-3 py-2 text-sm text-slate-600">You receive<div className="font-bold text-slate-800">{usdtAmount > 0 ? `${usdtAmount} USDT` : "—"}</div></div>
-        <div className="rounded-lg bg-slate-50 px-3 py-2 text-sm text-slate-600">Minimum<div className="font-bold text-slate-800">10 USDT</div></div>
-      </div>
-      <div className="grid gap-3 sm:grid-cols-2 mt-3">
-        <label className="text-sm text-slate-600">Binance UID
-          <input value={uid} onChange={(e) => setUid(e.target.value)} placeholder="Your Binance UID" className="mt-1 h-10 w-full rounded-lg border border-slate-200 px-3 text-slate-800 focus:border-teal-500 focus:outline-none" />
-        </label>
-        <label className="text-sm text-slate-600">Binance username
-          <input value={username} onChange={(e) => setUsername(e.target.value)} placeholder="Your Binance username" className="mt-1 h-10 w-full rounded-lg border border-slate-200 px-3 text-slate-800 focus:border-teal-500 focus:outline-none" />
-        </label>
-      </div>
-      <label className="mt-3 flex items-start gap-2 text-xs text-slate-500">
-        <input type="checkbox" checked={confirmed} onChange={(e) => setConfirmed(e.target.checked)} className="mt-0.5" />
-        I confirm that my Binance UID and username are correct. Incorrect details may delay or prevent payment.
-      </label>
-      {message && <p className="mt-3 rounded-lg bg-slate-50 px-3 py-2 text-sm text-slate-600">{message}</p>}
-      <button disabled={!canSubmit || submitting} onClick={submit} className="mt-4 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-teal-500 to-teal-600 px-4 py-2.5 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50">
-        {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <WalletCards className="h-4 w-4" />} Submit redemption
-      </button>
-      <div className="mt-5 border-t border-slate-100 pt-4">
-        <p className="mb-2 text-sm font-semibold text-slate-700">Your Binance Pay redemptions</p>
-        {loading ? <p className="text-sm text-slate-400">Loading…</p> : requests.length === 0 ? <p className="text-sm text-slate-400">No requests yet.</p> : (
-          <div className="space-y-2">
-            {requests.slice(0, 5).map((request) => (
-              <div key={request.id} className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-slate-50 px-3 py-2 text-sm">
-                <span className="text-slate-600">{request.coins_requested.toLocaleString()} coins · {request.usdt_amount} USDT</span>
-                <span className="inline-flex items-center gap-1 font-semibold capitalize text-slate-700">{request.status === "paid" && <CheckCircle2 className="h-4 w-4 text-green-500" />}{request.status}</span>
-                {request.rejection_reason && <span className="basis-full text-xs text-red-600">Reason: {request.rejection_reason}</span>}
-              </div>
-            ))}
+      <div className="relative space-y-4 p-5 sm:p-7">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm font-semibold text-slate-800">Choose your payout</p>
+            <p className="mt-0.5 text-xs text-slate-500">Select a package that matches your balance.</p>
           </div>
-        )}
+          <span className="rounded-full bg-amber-50 px-2.5 py-1 text-xs font-bold text-amber-700">
+            {(nexcoins ?? 0).toLocaleString()} coins
+          </span>
+        </div>
+        <div className="grid grid-cols-3 gap-2.5">
+          {REDEMPTION_PACKAGES.map((item) => {
+            const selected = item.coins === coinAmount;
+            const affordable = item.coins <= nexcoins;
+            return (
+              <button
+                key={item.coins}
+                type="button"
+                onClick={() => setCoins(String(item.coins))}
+                disabled={!affordable}
+                className={`rounded-2xl border px-2 py-3 text-center transition-all ${
+                  selected
+                    ? "border-teal-500 bg-teal-50 shadow-[0_0_0_3px_rgba(20,184,166,0.12)]"
+                    : affordable
+                      ? "border-slate-200 bg-white hover:border-teal-300 hover:bg-teal-50/50"
+                      : "cursor-not-allowed border-slate-100 bg-slate-50 opacity-45"
+                }`}
+              >
+                <span className={`block text-lg font-extrabold ${selected ? "text-teal-700" : "text-slate-800"}`}>${item.usdt}</span>
+                <span className="mt-0.5 block text-[11px] font-medium text-slate-500">{item.coins.toLocaleString()} coins</span>
+              </button>
+            );
+          })}
+        </div>
+        <div className="grid gap-3 rounded-2xl bg-slate-50 p-3 sm:grid-cols-2">
+          <div className="rounded-xl bg-white px-4 py-3 shadow-sm ring-1 ring-slate-100">
+            <p className="text-xs text-slate-500">You will receive</p>
+            <p className="mt-1 text-xl font-extrabold text-teal-700">{usdtAmount > 0 ? `${usdtAmount} USDT` : "—"}</p>
+          </div>
+          <div className="rounded-xl bg-white px-4 py-3 shadow-sm ring-1 ring-slate-100">
+            <p className="text-xs text-slate-500">Coins reserved</p>
+            <p className="mt-1 text-xl font-extrabold text-slate-800">{coinAmount.toLocaleString()}</p>
+          </div>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <label className="text-sm font-medium text-slate-700">Binance UID
+            <input value={uid} onChange={(e) => setUid(e.target.value)} placeholder="Enter your Binance UID" className="mt-1 h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-slate-800 shadow-sm outline-none transition focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10" />
+          </label>
+          <label className="text-sm font-medium text-slate-700">Binance username
+            <input value={username} onChange={(e) => setUsername(e.target.value)} placeholder="Enter your Binance username" className="mt-1 h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-slate-800 shadow-sm outline-none transition focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10" />
+          </label>
+        </div>
+        <div className="flex items-start gap-2 rounded-xl border border-amber-100 bg-amber-50/70 px-3 py-2.5 text-xs leading-5 text-amber-800">
+          <input type="checkbox" checked={confirmed} onChange={(e) => setConfirmed(e.target.checked)} className="mt-1 accent-teal-600" />
+          <span>I confirm that my Binance UID and username are correct. Incorrect details may delay or prevent payment.</span>
+        </div>
+        {message && <p className="rounded-xl bg-slate-50 px-3 py-2.5 text-sm text-slate-600 ring-1 ring-slate-100">{message}</p>}
+        <button disabled={!canSubmit || submitting} onClick={submit} className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-teal-500 to-teal-600 px-5 text-sm font-bold text-white shadow-lg shadow-teal-500/20 transition hover:from-teal-600 hover:to-teal-700 disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none sm:w-fit">
+          {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <WalletCards className="h-4 w-4" />} Submit redemption
+        </button>
+        <div className="border-t border-slate-100 pt-5">
+          <div className="mb-3 flex items-center gap-2">
+            <Clock3 className="h-4 w-4 text-slate-400" />
+            <p className="text-sm font-bold text-slate-700">Your redemption history</p>
+          </div>
+          {loading ? <p className="text-sm text-slate-400">Loading…</p> : requests.length === 0 ? <p className="rounded-xl bg-slate-50 px-3 py-3 text-sm text-slate-400">No requests yet. Your submitted redemptions will appear here.</p> : (
+            <div className="space-y-2">
+              {requests.slice(0, 5).map((request) => (
+                <div key={request.id} className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-slate-100 bg-slate-50/70 px-3 py-2.5 text-sm">
+                  <span className="text-slate-600">{request.coins_requested.toLocaleString()} coins · {request.usdt_amount} USDT</span>
+                  <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold capitalize ${request.status === "paid" ? "bg-emerald-100 text-emerald-700" : request.status === "rejected" ? "bg-red-100 text-red-700" : "bg-amber-100 text-amber-700"}`}>{request.status === "paid" && <CheckCircle2 className="h-3.5 w-3.5" />}{request.status}</span>
+                  {request.rejection_reason && <span className="basis-full text-xs text-red-600">Reason: {request.rejection_reason}</span>}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </section>
   );
