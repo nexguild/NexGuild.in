@@ -62,10 +62,13 @@ function RedemptionHistoryItem({ request }: { request: Redemption }) {
       {!rejected && (
         <div className="px-4 pb-2">
           <div className="relative grid grid-cols-3 items-center">
-            <div className={`absolute left-[16.666%] right-[16.666%] top-1/2 h-px -translate-y-1/2 ${progress > 1 ? (paid ? "bg-emerald-300" : "bg-amber-300") : "bg-slate-200"}`} />
-            <div className={`absolute left-[16.666%] top-1/2 h-px w-[33.333%] -translate-y-1/2 ${progress > 2 ? "bg-emerald-300" : "bg-slate-200"}`} />
+            <div className="absolute left-0 right-0 top-1/2 h-px -translate-y-1/2 bg-slate-200" />
+            <div
+              className={`absolute left-0 top-1/2 h-px -translate-y-1/2 ${paid ? "bg-emerald-300" : "bg-amber-300"}`}
+              style={{ width: progress === 1 ? "0%" : progress === 2 ? "50%" : "100%" }}
+            />
             {["Requested", "Reviewing", "Paid"].map((step, index) => (
-              <div key={step} className="relative z-10 flex justify-center">
+              <div key={step} className={`relative z-10 flex ${index === 0 ? "justify-start" : index === 1 ? "justify-center" : "justify-end"}`}>
                 <div className={`h-2 w-2 rounded-full ring-4 ring-white ${index < progress ? (paid ? "bg-emerald-500" : "bg-amber-500") : "bg-slate-200"}`} />
               </div>
             ))}
