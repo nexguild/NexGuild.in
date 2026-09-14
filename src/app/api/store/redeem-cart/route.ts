@@ -94,15 +94,16 @@ export async function POST(req: NextRequest) {
 
   const finalTotal = Math.max(0, totalCoins - discountCoins);
 
-  // Check contributor's balance
-  const { data: profile } = await admin
-    .from("profiles")
-    .select("nexcoins")
-    .eq("id", user.id)
-    .single();
-
-  const currentBalance = (profile as { nexcoins: number } | null)?.nexcoins ?? 0;
-  if (currentBalance < finalTotal) {
+  // Reserve coins atomically so concurrent redemptions cannot spend the same balance.
+  const { data: reserved, error: reserveErr } = await admin.rpc("reserve_nexcoins", {
+    p_contributor_id: user.id,
+    p_coins: finalTotal,
+  });
+  if (reserveErr) {
+    console.error("[redeem-cart] coin reservation error:", reserveErr.message);
+    return NextResponse.json({ error: "Unable to reserve NexCoins. Please try again." }, { status: 500 });
+  }
+  if (!reserved) {
     return NextResponse.json({ error: "Insufficient NexCoins balance." }, { status: 400 });
   }
 
@@ -117,12 +118,15 @@ export async function POST(req: NextRequest) {
 
   const { error: insertErr } = await admin.from("voucher_requests").insert(inserts);
   if (insertErr) {
+    const { error: refundErr } = await admin.rpc("refund_nexcoins", {
+      p_contributor_id: user.id,
+      p_coins: finalTotal,
+    });
+    if (refundErr) {
+      console.error("[redeem-cart] reservation refund error:", refundErr.message);
+    }
     return NextResponse.json({ error: "Failed to create voucher requests." }, { status: 500 });
   }
-
-  // Deduct coins
-  const newBalance = currentBalance - finalTotal;
-  await admin.from("profiles").update({ nexcoins: newBalance }).eq("id", user.id);
 
   // Log coin transaction (single entry for the whole cart)
   await admin.from("coin_transactions").insert({
@@ -145,6 +149,13 @@ export async function POST(req: NextRequest) {
       await admin.from("coupons").update({ used_count: (cur as { used_count: number }).used_count + 1 }).eq("id", couponId);
     }
   }
+
+  const { data: balanceProfile } = await admin
+    .from("profiles")
+    .select("nexcoins")
+    .eq("id", user.id)
+    .single();
+  const newBalance = (balanceProfile as { nexcoins: number } | null)?.nexcoins ?? null;
 
   // Notify admins async — fire and forget
   const { data: requesterProfile } = await admin.from("profiles").select("full_name").eq("id", user.id).single();
