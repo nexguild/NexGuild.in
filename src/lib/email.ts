@@ -454,6 +454,58 @@ ${r ? `<div style="background:#1c1010;border:1px solid rgba(239,68,68,0.2);borde
 </p>`);
 }
 
+export function binanceRedemptionSubmittedHtml(
+  name: string,
+  usdtAmount: number,
+  coins: number,
+): string {
+  const n = esc(name);
+  return layout(`
+<div style="background:linear-gradient(135deg,#06201d,#0d1717);border:1px solid rgba(20,184,166,0.25);border-radius:10px;padding:18px 22px;margin:0 0 24px;">
+  <p style="margin:0 0 4px;font-size:12px;font-weight:700;color:#5eead4;text-transform:uppercase;letter-spacing:1px;">Binance Pay Redemption</p>
+  <p style="margin:0;font-size:28px;font-weight:800;color:#5eead4;">${usdtAmount} USDT</p>
+</div>
+<p style="margin:0 0 20px;font-size:15px;color:rgba(255,255,255,0.7);line-height:1.7;">
+  Hi <strong style="color:#fff;">${n}</strong>,<br><br>
+  Your Binance Pay redemption request has been submitted and is now pending finance review.
+</p>
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#111;border:1px solid #222;border-radius:10px;margin:0 0 24px;">
+  <tr><td style="padding:14px 20px;border-bottom:1px solid #1a1a1a;"><span style="font-size:12px;color:rgba(255,255,255,0.38);">Requested payout</span><br><span style="font-size:16px;color:#5eead4;font-weight:700;">${usdtAmount} USDT</span></td></tr>
+  <tr><td style="padding:14px 20px;"><span style="font-size:12px;color:rgba(255,255,255,0.38);">NexCoins reserved</span><br><span style="font-size:16px;color:#F59E0B;font-weight:700;">${coins.toLocaleString()} NexCoins</span></td></tr>
+</table>
+<p style="margin:0;font-size:13px;color:rgba(255,255,255,0.42);line-height:1.6;">Finance will review your request and update you within 24–48 hours.</p>`);
+}
+
+export function binanceRedemptionPaidHtml(
+  name: string,
+  usdtAmount: number,
+  reference: string,
+): string {
+  const n = esc(name), ref = esc(reference);
+  return layout(`
+<div style="background:linear-gradient(135deg,#0a1f0a,#0f1a0f);border:1px solid rgba(34,197,94,0.2);border-radius:10px;padding:18px 22px;margin:0 0 24px;">
+  <p style="margin:0 0 4px;font-size:12px;font-weight:700;color:#4ade80;text-transform:uppercase;letter-spacing:1px;">Payout Completed ✓</p>
+  <p style="margin:0;font-size:28px;font-weight:800;color:#4ade80;">${usdtAmount} USDT paid</p>
+</div>
+<p style="margin:0 0 20px;font-size:15px;color:rgba(255,255,255,0.7);line-height:1.7;">Hi <strong style="color:#fff;">${n}</strong>,<br><br>Your Binance Pay redemption has been paid successfully.</p>
+<div style="background:#111;border:1px solid #222;border-radius:10px;padding:16px 20px;margin:0 0 24px;"><p style="margin:0 0 8px;font-size:12px;color:rgba(255,255,255,0.38);text-transform:uppercase;letter-spacing:1px;">Transaction reference</p><p style="margin:0;font-size:14px;color:#fff;font-family:monospace;word-break:break-all;">${ref}</p></div>
+${btn("View NexStore →", "https://www.nexguild.in/dashboard/store")}`);
+}
+
+export function binanceRedemptionRejectedHtml(
+  name: string,
+  coins: number,
+  reason: string,
+): string {
+  const n = esc(name), r = esc(reason);
+  return layout(`
+<h1 style="margin:0 0 6px;font-size:22px;font-weight:800;color:#fff;">Redemption Update</h1>
+<p style="margin:0 0 24px;font-size:14px;color:rgba(255,255,255,0.38);">Your Binance Pay request was rejected</p>
+<p style="margin:0 0 20px;font-size:15px;color:rgba(255,255,255,0.7);line-height:1.7;">Hi <strong style="color:#fff;">${n}</strong>,<br><br>Your request could not be completed, but your NexCoins have been refunded.</p>
+<div style="background:#1c1010;border:1px solid rgba(239,68,68,0.25);border-left:3px solid #ef4444;border-radius:0 8px 8px 0;padding:16px 20px;margin:0 0 20px;"><p style="margin:0 0 8px;font-size:12px;font-weight:700;color:#f87171;text-transform:uppercase;letter-spacing:1px;">Reason</p><p style="margin:0;font-size:14px;color:rgba(255,255,255,0.7);line-height:1.7;">${r}</p></div>
+<p style="margin:0;font-size:13px;color:#4ade80;">${coins.toLocaleString()} NexCoins have been returned to your balance.</p>`);
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // 10. Resubmission Requested
 // ─────────────────────────────────────────────────────────────────────────────

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import { FROM_NOREPLY, getResend } from "@/lib/email";
+import { binanceRedemptionPaidHtml, binanceRedemptionRejectedHtml, FROM_NOREPLY, getResend } from "@/lib/email";
 
 const ALLOWED_ROLES = ["owner", "admin", "finance"] as const;
 
@@ -95,8 +95,8 @@ export async function PATCH(req: NextRequest) {
       to: contributor.email,
       subject: paid ? "Your Binance Pay redemption was paid" : "Your Binance Pay redemption was rejected",
       html: paid
-        ? `<p>Hi ${contributor.full_name ?? "there"},</p><p>Your <strong>${item.usdt_amount} USDT</strong> Binance Pay redemption has been paid.</p><p>Transaction reference: <strong>${body.paymentReference}</strong></p>`
-        : `<p>Hi ${contributor.full_name ?? "there"},</p><p>Your Binance Pay redemption was rejected and <strong>${item.coins_requested.toLocaleString()} NexCoins</strong> were refunded.</p><p>Reason: ${body.rejectionReason}</p>`,
+        ? binanceRedemptionPaidHtml(contributor.full_name ?? "there", item.usdt_amount, body.paymentReference!)
+        : binanceRedemptionRejectedHtml(contributor.full_name ?? "there", item.coins_requested, body.rejectionReason!),
     });
   }
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { CheckCircle2, CircleDollarSign, Clock3, Loader2, ShieldCheck, WalletCards } from "lucide-react";
+import { CheckCircle2, CircleDollarSign, Clock3, Loader2, ShieldCheck, WalletCards, XCircle } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
 const REDEMPTION_PACKAGES = [
@@ -173,10 +173,21 @@ export function BinanceRedemptionCard({ nexcoins, onBalanceChange }: { nexcoins:
           {loading ? <p className="text-sm text-slate-400">Loading…</p> : requests.length === 0 ? <p className="rounded-xl bg-slate-50 px-3 py-3 text-sm text-slate-400">No requests yet. Your submitted redemptions will appear here.</p> : (
             <div className="space-y-2">
               {requests.slice(0, 5).map((request) => (
-                <div key={request.id} className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-slate-100 bg-slate-50/70 px-3 py-2.5 text-sm">
-                  <span className="text-slate-600">{request.coins_requested.toLocaleString()} coins · {request.usdt_amount} USDT</span>
-                  <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold capitalize ${request.status === "paid" ? "bg-emerald-100 text-emerald-700" : request.status === "rejected" ? "bg-red-100 text-red-700" : "bg-amber-100 text-amber-700"}`}>{request.status === "paid" && <CheckCircle2 className="h-3.5 w-3.5" />}{request.status}</span>
-                  {request.rejection_reason && <span className="basis-full text-xs text-red-600">Reason: {request.rejection_reason}</span>}
+                <div key={request.id} className="rounded-2xl border border-slate-200 bg-white p-3.5 shadow-sm">
+                  <div className="flex items-center gap-3">
+                    <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${request.status === "paid" ? "bg-emerald-50 text-emerald-600" : request.status === "rejected" ? "bg-red-50 text-red-500" : "bg-amber-50 text-amber-600"}`}>
+                      {request.status === "paid" ? <CheckCircle2 className="h-5 w-5" /> : request.status === "rejected" ? <XCircle className="h-5 w-5" /> : <Clock3 className="h-5 w-5" />}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="font-bold text-slate-800">{request.usdt_amount} USDT</p>
+                        <span className={`rounded-full px-2.5 py-1 text-[11px] font-bold capitalize ${request.status === "paid" ? "bg-emerald-100 text-emerald-700" : request.status === "rejected" ? "bg-red-100 text-red-700" : "bg-amber-100 text-amber-700"}`}>{request.status.replace("_", " ")}</span>
+                      </div>
+                      <p className="mt-0.5 text-xs text-slate-500">{request.coins_requested.toLocaleString()} NexCoins · {new Date(request.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}</p>
+                    </div>
+                  </div>
+                  {request.payment_reference && <p className="mt-3 rounded-lg bg-emerald-50 px-3 py-2 text-xs text-emerald-700"><span className="font-semibold">Transaction reference:</span> {request.payment_reference}</p>}
+                  {request.rejection_reason && <p className="mt-3 rounded-lg bg-red-50 px-3 py-2 text-xs text-red-700"><span className="font-semibold">Reason:</span> {request.rejection_reason}</p>}
                 </div>
               ))}
             </div>

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase-server";
-import { getResend, FROM_NOREPLY } from "@/lib/email";
+import { binanceRedemptionSubmittedHtml, FROM_NOREPLY, getResend } from "@/lib/email";
 
 const COINS_PER_USDT = 1_000;
 const ALLOWED_PACKAGES = [10_000, 20_000, 50_000];
@@ -108,7 +108,7 @@ export async function POST(req: NextRequest) {
       from: FROM_NOREPLY,
       to: profile.email,
       subject: "Binance Pay redemption submitted",
-      html: `<p>Hi ${profile.full_name ?? "there"},</p><p>Your request for <strong>${usdtAmount} USDT</strong> (${coinsRequested.toLocaleString()} NexCoins) is pending finance review.</p><p>We will update you when it is paid or rejected.</p>`,
+      html: binanceRedemptionSubmittedHtml(profile.full_name ?? "there", usdtAmount, coinsRequested),
     });
   }
 
