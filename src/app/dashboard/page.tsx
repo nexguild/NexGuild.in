@@ -538,33 +538,30 @@ export default function DashboardHome() {
 
   return (
     /* FIX 8 — page background gradient */
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/20 space-y-5 pb-8">
+    <div className="min-h-screen bg-[#f7f5f8] space-y-6 pb-10">
       <style>{PULSE_STYLE}</style>
 
       {/* ── FIX 1: HERO BANNER ──────────────────────────────────────── */}
       <div
-        className="animate-fade-slide-up relative rounded-2xl overflow-hidden"
-        style={{ background: "linear-gradient(135deg,#4F46E5 0%,#0891B2 100%)", animationDelay: "0ms" }}
+        className="animate-fade-slide-up relative overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"
+        style={{ animationDelay: "0ms" }}
       >
-        {/* noise texture overlay */}
-        <div className="absolute inset-0 bg-white/5 pointer-events-none" />
-
-        <div className="relative p-6 sm:p-8 flex flex-col md:flex-row gap-6 items-start">
+        <div className="relative flex flex-col items-start gap-6 p-6 sm:p-8 md:flex-row">
 
           {/* ── Left: greeting + balance + XP ───────────────────────── */}
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between gap-4 flex-wrap">
               <div>
-                <p className="text-white/60 text-xs font-medium tracking-widest uppercase mb-1">{greeting}</p>
-                <h1 className="text-3xl font-bold text-white">
+                <p className="mb-1 text-xs font-semibold uppercase tracking-widest text-slate-400">{greeting}</p>
+                <h1 className="text-3xl font-bold tracking-tight text-slate-900">
                   {loading ? "Welcome back!" : `${displayName}!`}
                 </h1>
-                <p className="text-white/70 text-sm mt-1">Here&apos;s your overview for today.</p>
+                <p className="mt-1 text-sm text-slate-500">Here&apos;s your overview for today.</p>
               </div>
               {!loading && streak > 0 && (
-                <div className="flex items-center gap-1.5 bg-white/20 backdrop-blur-sm rounded-full px-4 py-2 flex-shrink-0">
-                  <Flame className="h-4 w-4 text-orange-300" />
-                  <span className="text-white font-bold text-sm">{streak} day streak</span>
+                <div className="flex flex-shrink-0 items-center gap-1.5 rounded-full bg-orange-50 px-4 py-2">
+                  <Flame className="h-4 w-4 text-orange-500" />
+                  <span className="text-sm font-bold text-orange-700">{streak} day streak</span>
                 </div>
               )}
             </div>
@@ -572,27 +569,26 @@ export default function DashboardHome() {
             {!loading && (
               <div className="mt-6 flex items-center gap-3 flex-wrap">
                 {/* NexCoins pill */}
-                <div className="flex items-center gap-3 bg-white/15 backdrop-blur-sm rounded-2xl border border-white/20 px-5 py-3">
+                <div className="flex items-center gap-3 rounded-xl border border-teal-100 bg-teal-50 px-5 py-3">
                   <NexCoinIcon size={22} />
                   <div>
-                    <p className="text-white/60 text-xs font-medium">NexCoins Balance</p>
-                    <p className="text-white font-bold text-2xl leading-tight">{countCoins.toLocaleString()}</p>
+                    <p className="text-xs font-medium text-slate-500">NexCoins Balance</p>
+                    <p className="text-2xl font-bold leading-tight text-slate-900">{countCoins.toLocaleString()}</p>
                   </div>
                 </div>
-                {/* Level badge */}
-                <div className="bg-white/20 rounded-full px-3 py-1">
-                  <p className="text-white/70 text-[10px] font-medium">LEVEL</p>
-                  <p className="text-white font-bold text-xl leading-tight text-center">{level}</p>
+                <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-2">
+                  <p className="text-[10px] font-semibold text-slate-400">LEVEL</p>
+                  <p className="text-center text-xl font-bold leading-tight text-slate-900">{level}</p>
                 </div>
                 {/* XP bar */}
                 <div className="flex-1 min-w-[160px]">
-                  <div className="flex justify-between text-[11px] text-white/60 mb-2">
+                  <div className="mb-2 flex justify-between text-[11px] text-slate-400">
                     <span>XP Progress</span>
                     <span>{xpInLevel.toLocaleString()} / 1,000</span>
                   </div>
-                  <div className="h-2 rounded-full bg-white/20 overflow-hidden">
+                  <div className="h-2 overflow-hidden rounded-full bg-slate-100">
                     <div
-                      className="h-full rounded-full bg-white transition-all duration-1000"
+                      className="h-full rounded-full bg-teal-500 transition-all duration-1000"
                       style={{ width: `${xpPct}%` }}
                     />
                   </div>
@@ -603,30 +599,30 @@ export default function DashboardHome() {
 
           {/* ── Right: Today's Snapshot (desktop only) ──────────────── */}
           {!loading && (
-            <div className="hidden md:block w-64 flex-shrink-0 bg-white/15 backdrop-blur-sm rounded-2xl p-4">
-              <p className="text-white/60 text-xs font-medium tracking-widest uppercase mb-3">Today&apos;s Snapshot</p>
+            <div className="hidden w-64 flex-shrink-0 rounded-xl border border-slate-200 bg-slate-50 p-4 md:block">
+              <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-slate-400">Today&apos;s Snapshot</p>
               <div className="space-y-2.5">
                 <div className="flex items-center gap-2">
                   <span className="text-lg leading-none">🔥</span>
-                  <span className="text-white/70 text-sm flex-1">Day Streak</span>
-                  <span className="text-white font-bold text-sm">{streak}</span>
+                  <span className="flex-1 text-sm text-slate-500">Day Streak</span>
+                  <span className="text-sm font-bold text-slate-900">{streak}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-lg leading-none">✅</span>
-                  <span className="text-white/70 text-sm flex-1">Tasks Today</span>
-                  <span className="text-white font-bold text-sm">{tasksToday} / {tasksRequired}</span>
+                  <span className="flex-1 text-sm text-slate-500">Tasks Today</span>
+                  <span className="text-sm font-bold text-slate-900">{tasksToday} / {tasksRequired}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-lg leading-none">💰</span>
-                  <span className="text-white/70 text-sm flex-1">NC Earned Today</span>
-                  <span className="text-white font-bold text-sm">
+                  <span className="flex-1 text-sm text-slate-500">NC Earned Today</span>
+                  <span className="text-sm font-bold text-slate-900">
                     {chartData.find(d => d.label === new Date().toLocaleDateString("en-IN", { weekday: "short" }))?.value ?? 0}
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-lg leading-none">⭐</span>
-                  <span className="text-white/70 text-sm flex-1">Level {level}</span>
-                  <span className="text-white font-bold text-sm">{xpInLevel.toLocaleString()} / 1,000 XP</span>
+                  <span className="flex-1 text-sm text-slate-500">Level {level}</span>
+                  <span className="text-sm font-bold text-slate-900">{xpInLevel.toLocaleString()} / 1,000 XP</span>
                 </div>
               </div>
             </div>
@@ -635,17 +631,17 @@ export default function DashboardHome() {
       </div>
 
       {/* ── QUICK ACTIONS GRID ──────────────────────────────────────── */}
-      <div className="animate-fade-slide-up grid grid-cols-2 sm:grid-cols-4 gap-3" style={{ animationDelay: "100ms" }}>
-        <Link href="/dashboard/offerwalls" className="rounded-2xl px-4 py-3 text-sm font-semibold flex items-center gap-2 w-full justify-center transition-all duration-200 hover:-translate-y-0.5 bg-gradient-to-r from-teal-500 to-teal-600 text-white shadow-md hover:shadow-lg">
+      <div className="animate-fade-slide-up grid grid-cols-2 gap-3 sm:grid-cols-4" style={{ animationDelay: "100ms" }}>
+        <Link href="/dashboard/offerwalls" className="flex w-full items-center justify-center gap-2 rounded-xl bg-teal-600 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-teal-700">
           <span>🎯</span><span>Complete a Survey</span>
         </Link>
-        <Link href="/dashboard/opportunities" className="rounded-2xl px-4 py-3 text-sm font-semibold flex items-center gap-2 w-full justify-center transition-all duration-200 hover:-translate-y-0.5 bg-gradient-to-r from-indigo-500 to-indigo-600 text-white shadow-md hover:shadow-lg">
+        <Link href="/dashboard/opportunities" className="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-teal-300 hover:text-teal-700">
           <span>📋</span><span>Browse Tasks</span>
         </Link>
-        <Link href="/dashboard/store" className="rounded-2xl px-4 py-3 text-sm font-semibold flex items-center gap-2 w-full justify-center transition-all duration-200 hover:-translate-y-0.5 bg-gradient-to-r from-purple-500 to-purple-600 text-white shadow-md hover:shadow-lg">
+        <Link href="/dashboard/store" className="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-teal-300 hover:text-teal-700">
           <span>🛍️</span><span>NexStore</span>
         </Link>
-        <Link href="/dashboard/nexleader" className="rounded-2xl px-4 py-3 text-sm font-semibold flex items-center gap-2 w-full justify-center transition-all duration-200 hover:-translate-y-0.5 bg-gradient-to-r from-amber-500 to-amber-600 text-white shadow-md hover:shadow-lg">
+        <Link href="/dashboard/nexleader" className="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-teal-300 hover:text-teal-700">
           <span>👑</span><span>NexLeader Hub</span>
         </Link>
       </div>
@@ -723,15 +719,15 @@ export default function DashboardHome() {
         ].map((s, i) => (
           <div
             key={s.label}
-            className={`animate-fade-slide-up bg-white/70 backdrop-blur-md rounded-2xl border border-white/50 border-t-2 ${s.topBorder} shadow-[0_4px_24px_rgba(0,0,0,0.06)] hover:-translate-y-1 hover:shadow-[0_8px_32px_rgba(0,0,0,0.1)] transition-all duration-300 p-4`}
+            className={`animate-fade-slide-up rounded-xl border border-slate-200 border-t-2 ${s.topBorder} bg-white p-4 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md`}
             style={{ animationDelay: `${200 + i * 50}ms` }}
           >
             <div className="flex items-center gap-2 mb-2">
               {s.icon}
               <p className="text-xs text-slate-500 uppercase tracking-wide truncate">{s.label}</p>
             </div>
-            <p className="text-2xl font-bold text-slate-800">{s.value}</p>
-            <p className="text-sm text-slate-400 mt-0.5">{s.sub}</p>
+            <p className="text-2xl font-bold text-slate-900">{s.value}</p>
+            <p className="mt-0.5 text-sm text-slate-500">{s.sub}</p>
           </div>
         ))}
       </div>
