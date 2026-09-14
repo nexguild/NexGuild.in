@@ -25,11 +25,12 @@ export function AdminSidebar({ open, onClose }: AdminSidebarProps) {
   const [supportCount, setSupportCount]         = useState(0);
   const [suspiciousCount, setSuspiciousCount]   = useState(0);
   const [nexleaderCount, setNexleaderCount]     = useState(0);
+  const [binanceRedemptionCount, setBinanceRedemptionCount] = useState(0);
 
   useEffect(() => {
     async function fetchCounts() {
       try {
-        const [{ count: wdCount }, { count: subCount }, { count: asnCount }, { count: supCount }, { count: susCount }, { count: susSubCount }, { count: nlCount }] = await Promise.all([
+        const [{ count: wdCount }, { count: subCount }, { count: asnCount }, { count: supCount }, { count: susCount }, { count: susSubCount }, { count: nlCount }, { count: binanceCount }] = await Promise.all([
           supabase.from("voucher_requests").select("*", { count: "exact", head: true }).eq("status", "pending"),
           supabase.from("submissions").select("*", { count: "exact", head: true }).eq("status", "submitted"),
           supabase.from("assignments").select("*", { count: "exact", head: true }).eq("status", "pending"),
@@ -37,6 +38,7 @@ export function AdminSidebar({ open, onClose }: AdminSidebarProps) {
           supabase.from("proof_code_submissions").select("*", { count: "exact", head: true }).eq("suspicious", true).eq("reviewed", false),
           supabase.from("submissions").select("*", { count: "exact", head: true }).eq("suspicious", true).eq("reviewed", false),
           supabase.from("nexleader_applications").select("*", { count: "exact", head: true }).eq("status", "pending"),
+          supabase.from("binance_redemption_requests").select("*", { count: "exact", head: true }).in("status", ["pending", "under_review"]),
         ]);
         setWithdrawalCount(wdCount ?? 0);
         setSubmissionCount(subCount ?? 0);
@@ -44,11 +46,14 @@ export function AdminSidebar({ open, onClose }: AdminSidebarProps) {
         setSupportCount(supCount ?? 0);
         setSuspiciousCount((susCount ?? 0) + (susSubCount ?? 0));
         setNexleaderCount(nlCount ?? 0);
+        setBinanceRedemptionCount(binanceCount ?? 0);
       } catch {
         // silently keep counts at 0 if queries fail
       }
     }
     fetchCounts();
+    const refresh = window.setInterval(fetchCounts, 30_000);
+    return () => window.clearInterval(refresh);
   }, []);
 
   const NAV_ITEMS = [
@@ -60,7 +65,7 @@ export function AdminSidebar({ open, onClose }: AdminSidebarProps) {
     { label: "Assignments",      href: "/admin/assignments",     icon: GraduationCap,   badge: assignmentCount },
     { label: "Offerwalls",       href: "/admin/offerwalls",      icon: Layers,          badge: 0 },
     { label: "Vouchers",         href: "/admin/vouchers",        icon: Gift,            badge: withdrawalCount },
-    { label: "Binance Redemptions", href: "/admin/binance-redemptions", icon: WalletCards, badge: 0 },
+    { label: "Binance Redemptions", href: "/admin/binance-redemptions", icon: WalletCards, badge: binanceRedemptionCount },
     { label: "Voucher Catalog",  href: "/admin/voucher-catalog", icon: Tag,             badge: 0 },
     { label: "Jobs",              href: "/admin/jobs",            icon: Briefcase,       badge: 0 },
     { label: "Blog",             href: "/admin/blog",            icon: Newspaper,       badge: 0 },
