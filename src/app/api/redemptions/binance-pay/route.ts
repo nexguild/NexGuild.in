@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase-server";
 import { getResend, FROM_NOREPLY } from "@/lib/email";
 
-const MIN_COINS = 10_000;
 const COINS_PER_USDT = 1_000;
+const ALLOWED_PACKAGES = [10_000, 20_000, 50_000];
 
 async function getUser(req: NextRequest) {
   const token = req.headers.get("authorization")?.replace("Bearer ", "");
@@ -41,8 +41,8 @@ export async function POST(req: NextRequest) {
   const uid = body.binanceUid?.trim();
   const username = body.binanceUsername?.trim();
 
-  if (!Number.isInteger(coinsRequested) || coinsRequested < MIN_COINS || coinsRequested % COINS_PER_USDT !== 0) {
-    return NextResponse.json({ error: "Enter a whole NexCoin amount in multiples of 1,000, with a minimum of 10,000." }, { status: 400 });
+  if (!Number.isInteger(coinsRequested) || !ALLOWED_PACKAGES.includes(coinsRequested)) {
+    return NextResponse.json({ error: "Please select one of the available redemption packages: 10, 20, or 50 USDT." }, { status: 400 });
   }
   if (!uid || uid.length < 4 || !username || username.length < 2) {
     return NextResponse.json({ error: "Binance UID and username are required." }, { status: 400 });

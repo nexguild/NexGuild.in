@@ -4,6 +4,12 @@ import { useEffect, useState } from "react";
 import { CheckCircle2, Loader2, WalletCards } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
+const REDEMPTION_PACKAGES = [
+  { coins: 10_000, usdt: 10 },
+  { coins: 20_000, usdt: 20 },
+  { coins: 50_000, usdt: 50 },
+];
+
 interface Redemption {
   id: string;
   coins_requested: number;
@@ -37,8 +43,9 @@ export function BinanceRedemptionCard({ nexcoins, onBalanceChange }: { nexcoins:
 
   useEffect(() => { loadRequests(); }, []);
 
-  const coinAmount = Number(coins) || 0;
-  const usdtAmount = coinAmount / 1000;
+  const coinAmount = Number(coins);
+  const selectedPackage = REDEMPTION_PACKAGES.find((item) => item.coins === coinAmount);
+  const usdtAmount = selectedPackage?.usdt ?? 0;
   const canSubmit = coinAmount >= 10000 && coinAmount % 1000 === 0 && coinAmount <= nexcoins && uid.trim() && username.trim() && confirmed;
 
   async function submit() {
@@ -75,8 +82,14 @@ export function BinanceRedemptionCard({ nexcoins, onBalanceChange }: { nexcoins:
         </div>
       </div>
       <div className="grid gap-3 sm:grid-cols-3">
-        <label className="text-sm text-slate-600">NexCoins
-          <input value={coins} onChange={(e) => setCoins(e.target.value.replace(/\D/g, ""))} inputMode="numeric" className="mt-1 h-10 w-full rounded-lg border border-slate-200 px-3 text-slate-800 focus:border-teal-500 focus:outline-none" />
+        <label className="text-sm text-slate-600">Choose payout package
+          <select value={coins} onChange={(e) => setCoins(e.target.value)} className="mt-1 h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-slate-800 focus:border-teal-500 focus:outline-none">
+            {REDEMPTION_PACKAGES.map((item) => (
+              <option key={item.coins} value={item.coins}>
+                ${item.usdt} USDT — {item.coins.toLocaleString()} NexCoins
+              </option>
+            ))}
+          </select>
         </label>
         <div className="rounded-lg bg-slate-50 px-3 py-2 text-sm text-slate-600">You receive<div className="font-bold text-slate-800">{usdtAmount > 0 ? `${usdtAmount} USDT` : "—"}</div></div>
         <div className="rounded-lg bg-slate-50 px-3 py-2 text-sm text-slate-600">Minimum<div className="font-bold text-slate-800">10 USDT</div></div>
