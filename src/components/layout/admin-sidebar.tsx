@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import {
   LayoutDashboard, Users, FolderOpen,
   ClipboardCheck, Layers, Gift, BarChart3,
-  Settings, LogOut, ClipboardList, GraduationCap, Megaphone, Headphones, Tag, X, Activity, Crown, Newspaper, TrendingUp, Briefcase, ShieldAlert,
+  Settings, LogOut, ClipboardList, GraduationCap, Megaphone, Headphones, Tag, X, Activity, Crown, Newspaper, TrendingUp, Briefcase, ShieldAlert, WalletCards,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { NexGuildLogo } from "@/components/ui/nexguild-logo";
@@ -60,6 +60,7 @@ export function AdminSidebar({ open, onClose }: AdminSidebarProps) {
     { label: "Assignments",      href: "/admin/assignments",     icon: GraduationCap,   badge: assignmentCount },
     { label: "Offerwalls",       href: "/admin/offerwalls",      icon: Layers,          badge: 0 },
     { label: "Vouchers",         href: "/admin/vouchers",        icon: Gift,            badge: withdrawalCount },
+    { label: "Binance Redemptions", href: "/admin/binance-redemptions", icon: WalletCards, badge: 0 },
     { label: "Voucher Catalog",  href: "/admin/voucher-catalog", icon: Tag,             badge: 0 },
     { label: "Jobs",              href: "/admin/jobs",            icon: Briefcase,       badge: 0 },
     { label: "Blog",             href: "/admin/blog",            icon: Newspaper,       badge: 0 },

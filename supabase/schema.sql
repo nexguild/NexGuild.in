@@ -268,6 +268,75 @@ CREATE POLICY "Admins can manage voucher requests"
 GRANT ALL ON public.coin_transactions TO authenticated, service_role;
 GRANT ALL ON public.voucher_requests  TO authenticated, service_role;
 
+-- Manual Binance Pay NexCoin redemptions
+CREATE TABLE IF NOT EXISTS binance_redemption_requests (
+  id                  UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  contributor_id      UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  coins_requested     INTEGER NOT NULL CHECK (coins_requested >= 10000 AND coins_requested % 1000 = 0),
+  usdt_amount         NUMERIC(18, 8) NOT NULL CHECK (usdt_amount > 0),
+  binance_uid         TEXT NOT NULL,
+  binance_username    TEXT NOT NULL,
+  status              TEXT NOT NULL DEFAULT 'pending'
+    CHECK (status IN ('pending', 'under_review', 'paid', 'rejected', 'refunded', 'cancelled')),
+  payment_reference   TEXT UNIQUE,
+  payment_proof_url   TEXT,
+  rejection_reason    TEXT,
+  admin_notes         TEXT,
+  reviewed_by        UUID REFERENCES profiles(id),
+  reviewed_at        TIMESTAMPTZ,
+  paid_at             TIMESTAMPTZ,
+  created_at          TIMESTAMPTZ DEFAULT NOW(),
+  updated_at          TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE binance_redemption_requests ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view own Binance redemptions"
+  ON binance_redemption_requests FOR SELECT USING (auth.uid() = contributor_id);
+
+CREATE POLICY "Finance admins can manage Binance redemptions"
+  ON binance_redemption_requests FOR ALL
+  USING (EXISTS (
+    SELECT 1 FROM profiles p
+    WHERE p.id = auth.uid() AND p.role IN ('owner', 'admin', 'finance')
+  ));
+
+GRANT ALL ON public.binance_redemption_requests TO authenticated, service_role;
+
+CREATE OR REPLACE FUNCTION reserve_nexcoins(
+  p_contributor_id UUID,
+  p_coins INTEGER
+) RETURNS BOOLEAN
+LANGUAGE plpgsql SECURITY DEFINER SET search_path = public
+AS $$
+DECLARE
+  updated_count INTEGER;
+BEGIN
+  UPDATE profiles
+  SET nexcoins = COALESCE(nexcoins, 0) - p_coins
+  WHERE id = p_contributor_id AND COALESCE(nexcoins, 0) >= p_coins;
+  GET DIAGNOSTICS updated_count = ROW_COUNT;
+  RETURN updated_count = 1;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION refund_nexcoins(
+  p_contributor_id UUID,
+  p_coins INTEGER
+) RETURNS BOOLEAN
+LANGUAGE plpgsql SECURITY DEFINER SET search_path = public
+AS $$
+BEGIN
+  UPDATE profiles
+  SET nexcoins = COALESCE(nexcoins, 0) + p_coins
+  WHERE id = p_contributor_id;
+  RETURN FOUND;
+END;
+$$;
+
+GRANT EXECUTE ON FUNCTION reserve_nexcoins(UUID, INTEGER) TO authenticated, service_role;
+GRANT EXECUTE ON FUNCTION refund_nexcoins(UUID, INTEGER) TO service_role;
+
 -- ── 6. Profile extensions ─────────────────────────────────────
 -- Run these to add skills, notification prefs, and phone columns.
 

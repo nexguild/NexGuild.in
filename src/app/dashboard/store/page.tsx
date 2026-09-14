@@ -7,6 +7,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
 import { BlogTipCard } from "@/components/dashboard/BlogTipCard";
+import { BinanceRedemptionCard } from "@/components/dashboard/BinanceRedemptionCard";
 
 interface DbVoucher {
   id: string;
@@ -442,6 +443,8 @@ export default function StorePage() {
           View your redeemed vouchers →
         </Link>
       </div>
+
+      <BinanceRedemptionCard nexcoins={nexcoins ?? 0} onBalanceChange={setNexcoins} />
 
       {/* ── Brand Detail Modal ────────────────────────────────────────── */}
       {detailBrand && selectedVoucher && (
