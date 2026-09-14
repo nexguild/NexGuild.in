@@ -24,10 +24,23 @@ export async function GET(req: NextRequest) {
   if (!ctx) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const { data, error } = await ctx.admin
     .from("binance_redemption_requests")
-    .select("id, contributor_id, coins_requested, usdt_amount, binance_uid, binance_username, status, payment_reference, payment_proof_url, rejection_reason, admin_notes, reviewed_by, reviewed_at, paid_at, created_at, profiles(full_name, email)")
+    .select("id, contributor_id, coins_requested, usdt_amount, binance_uid, binance_username, status, payment_reference, payment_proof_url, rejection_reason, admin_notes, reviewed_by, reviewed_at, paid_at, created_at")
     .order("created_at", { ascending: false });
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ requests: data ?? [] });
+
+  const contributorIds = [...new Set((data ?? []).map((request) => request.contributor_id))];
+  const { data: profiles, error: profilesError } = contributorIds.length
+    ? await ctx.admin.from("profiles").select("id, full_name, email").in("id", contributorIds)
+    : { data: [], error: null };
+  if (profilesError) return NextResponse.json({ error: profilesError.message }, { status: 500 });
+
+  const profilesById = new Map((profiles ?? []).map((profile) => [profile.id, profile]));
+  return NextResponse.json({
+    requests: (data ?? []).map((request) => ({
+      ...request,
+      profiles: profilesById.get(request.contributor_id) ?? null,
+    })),
+  });
 }
 
 export async function PATCH(req: NextRequest) {

@@ -36,11 +36,15 @@ export default function BinanceRedemptionsPage() {
   const [reason, setReason] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<Record<string, string>>({});
+  const [loadError, setLoadError] = useState("");
 
   async function load() {
+    setLoadError("");
     const { data: { session } } = await supabase.auth.getSession();
     const res = await fetch("/api/admin/binance-redemptions", { headers: session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {} });
-    if (res.ok) setRequests((await res.json() as { requests: Request[] }).requests ?? []);
+    const data = await res.json() as { requests?: Request[]; error?: string };
+    if (res.ok) setRequests(data.requests ?? []);
+    else setLoadError(data.error ?? "Unable to load redemption requests.");
     setLoading(false);
   }
   useEffect(() => { load(); }, []);
@@ -78,7 +82,8 @@ export default function BinanceRedemptionsPage() {
         <Search className="h-4 w-4 text-[var(--text-muted)]" />
         <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search contributor or UID…" className="flex-1 bg-transparent text-sm text-[var(--text-primary)] focus:outline-none" />
       </div>
-      {loading ? <div className="h-24 rounded-lg bg-[var(--surface-card)] animate-pulse" /> : visible.length === 0 ? <div className="rounded-lg border border-[var(--border-default)] bg-[var(--surface-card)] py-16 text-center text-[var(--text-secondary)]">No redemption requests.</div> : (
+      {loadError && <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">{loadError}</div>}
+      {loading ? <div className="h-24 rounded-lg bg-[var(--surface-card)] animate-pulse" /> : loadError ? null : visible.length === 0 ? <div className="rounded-lg border border-[var(--border-default)] bg-[var(--surface-card)] py-16 text-center text-[var(--text-secondary)]">No redemption requests.</div> : (
         <div className="space-y-3">
           {visible.map((request) => (
             <div key={request.id} className="rounded-lg border border-[var(--border-default)] bg-[var(--surface-card)] p-5">
