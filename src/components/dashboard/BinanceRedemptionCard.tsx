@@ -22,6 +22,60 @@ interface Redemption {
   created_at: string;
 }
 
+function HistoryGroup({ title, count, color, children }: { title: string; count: number; color: "emerald" | "amber"; children: React.ReactNode }) {
+  return (
+    <div>
+      <div className={`mb-2 flex items-center gap-2 text-sm font-bold ${color === "emerald" ? "text-emerald-700" : "text-amber-700"}`}>
+        <span className={`h-2 w-2 rounded-full ${color === "emerald" ? "bg-emerald-500" : "bg-amber-500"}`} />
+        {title}
+        <span className={`rounded-full px-2 py-0.5 text-[10px] ${color === "emerald" ? "bg-emerald-100" : "bg-amber-100"}`}>{count}</span>
+      </div>
+      <div className="space-y-3">{children}</div>
+    </div>
+  );
+}
+
+function RedemptionHistoryItem({ request }: { request: Redemption }) {
+  const paid = request.status === "paid";
+  const rejected = request.status === "rejected";
+  const progress = paid ? 3 : rejected ? 1 : request.status === "under_review" ? 2 : 1;
+  const statusLabel = paid ? "Paid" : rejected ? "Rejected" : request.status === "under_review" ? "Under review" : "Pending";
+  return (
+    <div className={`overflow-hidden rounded-2xl border bg-white shadow-sm ${paid ? "border-emerald-100 border-t-2 border-t-emerald-400" : rejected ? "border-red-100 border-t-2 border-t-red-400" : "border-amber-100 border-t-2 border-t-amber-400"}`}>
+      <div className="flex items-start gap-3 px-3.5 py-3.5">
+        <div className={`mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${paid ? "bg-emerald-50 text-emerald-600" : rejected ? "bg-red-50 text-red-500" : "bg-amber-50 text-amber-600"}`}>
+          {paid ? <CheckCircle2 className="h-5 w-5" /> : rejected ? <XCircle className="h-5 w-5" /> : <Clock3 className="h-5 w-5" />}
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <p className="font-bold text-slate-800">{request.usdt_amount} USDT payout</p>
+            <span className={`rounded-full px-2.5 py-1 text-[11px] font-bold ${paid ? "bg-emerald-50 text-emerald-700" : rejected ? "bg-red-50 text-red-700" : "bg-amber-50 text-amber-700"}`}>{statusLabel}</span>
+          </div>
+          <p className="mt-0.5 text-xs text-slate-500">{request.coins_requested.toLocaleString()} NexCoins <span className="text-slate-300">·</span> {new Date(request.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}</p>
+        </div>
+      </div>
+      {!rejected && (
+        <div className="px-4 pb-2">
+          <div className="flex items-center">
+            {["Requested", "Reviewing", "Paid"].map((step, index) => (
+              <div key={step} className="flex min-w-0 flex-1 items-center">
+                <div className={`h-2 w-2 shrink-0 rounded-full ${index < progress ? (paid ? "bg-emerald-500" : "bg-amber-500") : "bg-slate-200"}`} />
+                {index < 2 && <div className={`h-px flex-1 ${index < progress - 1 ? (paid ? "bg-emerald-300" : "bg-amber-300") : "bg-slate-200"}`} />}
+              </div>
+            ))}
+          </div>
+          <div className="mt-1 flex justify-between text-[10px] text-slate-400"><span>Requested</span><span>Reviewing</span><span>Paid</span></div>
+        </div>
+      )}
+      <div className="px-3.5 pb-3 text-xs">
+        {request.payment_reference && <p className="rounded-lg bg-emerald-50 px-3 py-2 text-emerald-700"><span className="font-semibold">Transaction reference:</span> {request.payment_reference}</p>}
+        {request.rejection_reason && <p className="rounded-lg bg-red-50 px-3 py-2 text-red-700"><span className="font-semibold">Reason:</span> {request.rejection_reason}</p>}
+        {!paid && !rejected && <p className="mt-1 text-slate-400">{request.status === "under_review" ? "Finance is reviewing your payout details." : "Queued for review — expect payment within 24–48 hours."}</p>}
+      </div>
+    </div>
+  );
+}
+
 export function BinanceRedemptionCard({ nexcoins, onBalanceChange }: { nexcoins: number; onBalanceChange: (balance: number) => void }) {
   const [coins, setCoins] = useState("10000");
   const [uid, setUid] = useState("");
@@ -171,25 +225,17 @@ export function BinanceRedemptionCard({ nexcoins, onBalanceChange }: { nexcoins:
             <p className="text-sm font-bold text-slate-700">Your redemption history</p>
           </div>
           {loading ? <p className="text-sm text-slate-400">Loading…</p> : requests.length === 0 ? <p className="rounded-xl bg-slate-50 px-3 py-3 text-sm text-slate-400">No requests yet. Your submitted redemptions will appear here.</p> : (
-            <div className="space-y-2">
-              {requests.slice(0, 5).map((request) => (
-                <div key={request.id} className="rounded-2xl border border-slate-200 bg-white p-3.5 shadow-sm">
-                  <div className="flex items-center gap-3">
-                    <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${request.status === "paid" ? "bg-emerald-50 text-emerald-600" : request.status === "rejected" ? "bg-red-50 text-red-500" : "bg-amber-50 text-amber-600"}`}>
-                      {request.status === "paid" ? <CheckCircle2 className="h-5 w-5" /> : request.status === "rejected" ? <XCircle className="h-5 w-5" /> : <Clock3 className="h-5 w-5" />}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <p className="font-bold text-slate-800">{request.usdt_amount} USDT</p>
-                        <span className={`rounded-full px-2.5 py-1 text-[11px] font-bold capitalize ${request.status === "paid" ? "bg-emerald-100 text-emerald-700" : request.status === "rejected" ? "bg-red-100 text-red-700" : "bg-amber-100 text-amber-700"}`}>{request.status.replace("_", " ")}</span>
-                      </div>
-                      <p className="mt-0.5 text-xs text-slate-500">{request.coins_requested.toLocaleString()} NexCoins · {new Date(request.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}</p>
-                    </div>
-                  </div>
-                  {request.payment_reference && <p className="mt-3 rounded-lg bg-emerald-50 px-3 py-2 text-xs text-emerald-700"><span className="font-semibold">Transaction reference:</span> {request.payment_reference}</p>}
-                  {request.rejection_reason && <p className="mt-3 rounded-lg bg-red-50 px-3 py-2 text-xs text-red-700"><span className="font-semibold">Reason:</span> {request.rejection_reason}</p>}
-                </div>
-              ))}
+            <div className="space-y-5">
+              {(["paid", "rejected"] as const).some((status) => requests.some((request) => request.status === status)) && (
+                <HistoryGroup title="Completed" count={requests.filter((request) => request.status === "paid" || request.status === "rejected").length} color="emerald">
+                  {requests.filter((request) => request.status === "paid" || request.status === "rejected").slice(0, 5).map((request) => <RedemptionHistoryItem key={request.id} request={request} />)}
+                </HistoryGroup>
+              )}
+              {requests.some((request) => request.status === "pending" || request.status === "under_review") && (
+                <HistoryGroup title="In progress" count={requests.filter((request) => request.status === "pending" || request.status === "under_review").length} color="amber">
+                  {requests.filter((request) => request.status === "pending" || request.status === "under_review").slice(0, 5).map((request) => <RedemptionHistoryItem key={request.id} request={request} />)}
+                </HistoryGroup>
+              )}
             </div>
           )}
         </div>
