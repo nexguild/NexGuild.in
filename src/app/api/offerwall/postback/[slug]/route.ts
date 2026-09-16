@@ -20,6 +20,7 @@ function extractParams(q: URLSearchParams, body: Record<string, unknown>, paramM
     status:         get("status"),
     type:           get("type"),
     hash:           get("hash"),
+    s1:             get("s1"),
     rewardedTxnId:  get("rewarded_txn_id"),
     incomingSecret: get("secret") ?? get("api_key"),
   };
@@ -93,13 +94,14 @@ async function handlePostback(req: NextRequest, slug: string): Promise<Response>
   }
 
   const paramMap: ParamMap = (provider.postback_param_map as ParamMap | null) ?? {};
-  const { userId, transId, amount, status, type, hash, rewardedTxnId, incomingSecret } = extractParams(q, bodyObj, paramMap);
+  const { userId, transId, amount, status, type, hash, s1, rewardedTxnId, incomingSecret } = extractParams(q, bodyObj, paramMap);
 
   // 3. Auth — hash-format or simple secret
   const hashFormat = (provider.hash_format as string | null) ?? null;
 
   const customCfg = (provider.custom_config as Record<string, unknown> | null) ?? {};
   const notikHmac = customCfg.hash_algorithm === "hmac-sha1-url";
+  const contributorId = notikHmac ? (s1 ?? userId) : userId;
 
   if (notikHmac) {
     if (!verifyNotikHash(req.url, provider.postback_secret, hash)) {
@@ -129,8 +131,8 @@ async function handlePostback(req: NextRequest, slug: string): Promise<Response>
   }
 
   // 4. Validate required fields
-  if (!userId || !transId) {
-    console.warn(`[postback/${slug}] missing user_id or trans_id`, { userId, transId });
+  if (!contributorId || !transId) {
+    console.warn(`[postback/${slug}] missing contributor ID or trans_id`, { userId, s1, transId });
     return new Response("Bad Request", { status: 400 });
   }
 
@@ -198,7 +200,7 @@ async function handlePostback(req: NextRequest, slug: string): Promise<Response>
   // 8. Insert transaction (UNIQUE guard prevents double-credit)
   const { error: insertErr } = await admin.from("offerwall_transactions").insert({
     provider_id:             provider.id,
-    contributor_id:          userId,
+    contributor_id:          contributorId,
     provider_transaction_id: transId,
     gross_amount:            amount,
     nexcoins_awarded:        userCoins,
@@ -221,7 +223,7 @@ async function handlePostback(req: NextRequest, slug: string): Promise<Response>
   const { contributorCredit } = await creditOfferwallUserShare(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     admin as any,
-    userId,
+    contributorId,
     userCoins,
     `${provider.name} offer completed`,
   ).catch((err) => {
@@ -234,24 +236,24 @@ async function handlePostback(req: NextRequest, slug: string): Promise<Response>
   const { data: sp } = await admin
     .from("profiles")
     .select("last_task_approved_date, tasks_approved_today")
-    .eq("id", userId)
+    .eq("id", contributorId)
     .single();
   const sp2     = sp as { last_task_approved_date: string | null; tasks_approved_today: number | null } | null;
   const newCount = sp2?.last_task_approved_date === today ? (sp2.tasks_approved_today ?? 0) + 1 : 1;
   await admin.from("profiles")
     .update({ last_task_approved_date: today, tasks_approved_today: newCount })
-    .eq("id", userId);
+    .eq("id", contributorId);
 
   // 11. Notification
   await admin.from("notifications").insert({
-    user_id: userId,
+    user_id: contributorId,
     title:   "NexCoins Earned!",
     message: `+${contributorCredit} NexCoins from ${provider.name}`,
     type:    "bonus_coins",
   });
 
-  await writeLog(admin, slug, { user_id: userId, trans_id: transId, amount, status, coins_credited: contributorCredit }, "credited", notikHmac || !!hashFormat ? true : null);
-  console.log(`[postback/${slug}] credited ${contributorCredit} coins → ${userId} (tx=${transId})`);
+  await writeLog(admin, slug, { user_id: contributorId, notik_user_id: userId, s1, trans_id: transId, amount, status, coins_credited: contributorCredit }, "credited", notikHmac || !!hashFormat ? true : null);
+  console.log(`[postback/${slug}] credited ${contributorCredit} coins → ${contributorId} (tx=${transId})`);
   return new Response("OK", { status: 200 });
 }
 
