@@ -30,8 +30,8 @@ export async function GET(req: NextRequest) {
   iframeUrl.searchParams.set("app_id", appId);
   iframeUrl.searchParams.set("user_id", user.id);
 
-  return NextResponse.redirect(iframeUrl, {
-    status: 307,
-    headers: { "Cache-Control": "no-store" },
-  });
+  return NextResponse.json(
+    { iframeUrl: iframeUrl.toString() },
+    { headers: { "Cache-Control": "no-store" } },
+  );
 }

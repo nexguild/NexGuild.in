@@ -90,7 +90,14 @@ export default function ProviderExperiencePage({
 
   useEffect(() => {
     if (provider?.slug !== "notik" || !token) return;
-    setNotikFrameUrl(`/api/offerwall/notik-frame?token=${encodeURIComponent(token)}`);
+    setNotikFrameUrl(null);
+    fetch(`/api/offerwall/notik-frame?token=${encodeURIComponent(token)}`)
+      .then((response) => {
+        if (!response.ok) throw new Error("Unable to load Notik offerwall");
+        return response.json() as Promise<{ iframeUrl?: string }>;
+      })
+      .then(({ iframeUrl }) => setNotikFrameUrl(iframeUrl ?? null))
+      .catch(() => setNotikFrameUrl(null));
   }, [provider?.slug, token]);
 
   // script_tag providers: inject widget script after mount.
