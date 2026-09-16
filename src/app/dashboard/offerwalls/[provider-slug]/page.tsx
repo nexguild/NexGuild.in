@@ -43,6 +43,7 @@ export default function ProviderExperiencePage({
   // CPAGrip: served from a real API route (not srcdoc) to avoid Chrome Trusted Types
   // blocking innerHTML calls on Android, and to support proper viewport meta.
   const [cpagripFrameUrl, setCpagripFrameUrl] = useState<string | null>(null);
+  const [notikFrameUrl, setNotikFrameUrl] = useState<string | null>(null);
 
   useEffect(() => {
     async function init() {
@@ -85,6 +86,11 @@ export default function ProviderExperiencePage({
       .then((d: { iframeUrl?: string }) => setTrIframeUrl(d.iframeUrl ?? null))
       .catch(() => setTrIframeUrl(null))
       .finally(() => setTrIframeLoading(false));
+  }, [provider?.slug, token]);
+
+  useEffect(() => {
+    if (provider?.slug !== "notik" || !token) return;
+    setNotikFrameUrl(`/api/offerwall/notik-frame?token=${encodeURIComponent(token)}`);
   }, [provider?.slug, token]);
 
   // script_tag providers: inject widget script after mount.
@@ -181,7 +187,7 @@ export default function ProviderExperiencePage({
 
       {/* Widget — fills remaining height */}
       <div className="flex-1 flex flex-col">
-        {renderWidget(provider, trIframeUrl, trIframeLoading, buildEmbedUrl(), cpagripFrameUrl, token)}
+        {renderWidget(provider, trIframeUrl, trIframeLoading, buildEmbedUrl(), cpagripFrameUrl, notikFrameUrl, token)}
       </div>
     </div>
   );
@@ -193,6 +199,7 @@ function renderWidget(
   trIframeLoading: boolean,
   embedUrl: string | null,
   cpagripFrameUrl: string | null,
+  notikFrameUrl: string | null,
   token: string | null,
 ) {
   const widgetH = "calc(100vh - 112px)";
@@ -224,6 +231,13 @@ function renderWidget(
         <p className="text-sm text-slate-400 max-w-sm">Could not load the offerwall. Please refresh the page.</p>
       </div>
     );
+  }
+
+  if (provider.slug === "notik") {
+    if (!notikFrameUrl) {
+      return <div className="flex-1 flex items-center justify-center"><Loader2 className="h-6 w-6 animate-spin text-indigo-500" /></div>;
+    }
+    return <iframe src={notikFrameUrl} className="flex-1 w-full border-0" style={{ minHeight: widgetH }} title="Notik Offerwall" />;
   }
 
   // CPAGrip: load from a real API-served HTML page so viewport meta and innerHTML

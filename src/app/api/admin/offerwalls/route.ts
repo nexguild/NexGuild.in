@@ -67,7 +67,7 @@ export async function POST(req: NextRequest) {
     is_ad_network:         body.is_ad_network    === true,
     is_active:             body.is_active         !== false,
     integration_type:      String(body.integration_type ?? "iframe"),
-    contributor_share_pct: parseFloat(String(body.contributor_share_pct ?? "70")) || 70,
+    contributor_share_pct: parseFloat(String(body.contributor_share_pct ?? "66")) || 66,
     display_order:         parseInt(String(body.display_order ?? "0"), 10) || 0,
     api_key:               String(body.api_key               ?? "").trim() || null,
     postback_secret:       String(body.postback_secret        ?? "").trim() || null,

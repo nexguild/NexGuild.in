@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { createHash } from "crypto";
+import { createHash, createHmac } from "crypto";
 import { createServerClient } from "@/lib/supabase-server";
 import { creditOfferwallUserShare } from "@/lib/nexleader-commission";
 
@@ -30,6 +30,16 @@ function verifyByHashFormat(hashFormat: string, secret: string, vars: Record<str
     key === "secret" ? secret : (vars[key] ?? "")
   );
   const expected = createHash("md5").update(template).digest("hex");
+  return expected === incoming;
+}
+
+function verifyNotikHash(reqUrl: string, secret: string, incoming: string | null): boolean {
+  if (!incoming) return false;
+  const hashMarker = "&hash=";
+  const markerIndex = reqUrl.indexOf(hashMarker);
+  if (markerIndex < 0) return false;
+  const urlWithoutHash = reqUrl.slice(0, markerIndex);
+  const expected = createHmac("sha1", secret).update(urlWithoutHash).digest("hex");
   return expected === incoming;
 }
 
@@ -87,7 +97,16 @@ async function handlePostback(req: NextRequest, slug: string): Promise<Response>
   // 3. Auth — hash-format or simple secret
   const hashFormat = (provider.hash_format as string | null) ?? null;
 
-  if (hashFormat) {
+  const customCfg = (provider.custom_config as Record<string, unknown> | null) ?? {};
+  const notikHmac = customCfg.hash_algorithm === "hmac-sha1-url";
+
+  if (notikHmac) {
+    if (!verifyNotikHash(req.url, provider.postback_secret, hash)) {
+      console.warn(`[postback/${slug}] Notik HMAC mismatch`);
+      await writeLog(admin, slug, Object.fromEntries(q.entries()), "hash_invalid", false, "Notik HMAC mismatch");
+      return new Response("Forbidden", { status: 403 });
+    }
+  } else if (hashFormat) {
     const templateVars: Record<string, string> = {
       user_id:  userId  ?? "",
       trans_id: transId ?? "",
@@ -146,7 +165,6 @@ async function handlePostback(req: NextRequest, slug: string): Promise<Response>
 
   // 6. Skip non-credit statuses
   // Some providers (e.g. ClixWall) send "Credit" instead of "1" — configurable via credit_status_value
-  const customCfg       = (provider.custom_config as Record<string, unknown> | null) ?? {};
   const creditStatusValue = (customCfg.credit_status_value as string | null) ?? "1";
   if (status && status !== creditStatusValue) {
     await writeLog(admin, slug, { user_id: userId, trans_id: transId, amount, status, type }, "debug_ignored", hashFormat ? true : null);

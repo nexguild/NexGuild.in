@@ -490,7 +490,7 @@ The following are priority integrations based on global reach, reliability, and 
 *Providers are enabled/disabled per admin configuration. Not all providers will be live at launch.*
 
 ### 13.4 Revenue Share Configuration
-- Admin sets a per-provider payout percentage (e.g., pass 70% of offerwall revenue to contributor, retain 30%).
+- Admin sets a per-provider payout percentage (the current standard is 66% to the contributor, with the remaining share retained by NexGuild and commissions).
 - Contributors see the payout displayed in the offerwall itself (provider-controlled UI).
 - Actual NexGuild share is an accounting entry — contributors do not see the gross provider payment.
 

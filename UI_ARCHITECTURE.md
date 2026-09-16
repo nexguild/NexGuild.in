@@ -889,7 +889,7 @@ The admin dashboard uses a wider sidebar (260px) and a denser data-forward layou
 │  PROVIDER LIST                                       │
 │  Provider | Status | Revenue Share | Earnings | Edit │
 │  ──────────────────────────────────────────────────  │
-│  CPX Research | Enabled | 70% to contributor | $X   │
+│  CPX Research | Enabled | 66% to contributor | $X   │
 │  Lootably     | Disabled| —               | —       │
 └──────────────────────────────────────────────────────┘
 ```

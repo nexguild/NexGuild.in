@@ -726,7 +726,7 @@ These tables are required for the offerwall integration, platform configuration,
 | `name` | `TEXT` | NOT NULL | — | Provider display name (e.g., "CPX Research", "Lootably"). Shown in contributor Offerwall Hub tabs. |
 | `slug` | `TEXT` | NOT NULL | — | Machine-readable identifier (e.g., `cpx_research`, `lootably`). Unique. Used in postback URL routing. |
 | `is_active` | `BOOLEAN` | NOT NULL | `false` | Whether this provider is live and visible to contributors. |
-| `contributor_share_percent` | `NUMERIC(5,2)` | NOT NULL | `70.00` | Percentage of provider payout passed to the contributor (0–100). Remainder is NexGuild revenue. |
+| `contributor_share_percent` | `NUMERIC(5,2)` | NOT NULL | `66.00` | Percentage of provider payout passed to the contributor (0–100). Remainder is NexGuild revenue. |
 | `api_key` | `TEXT` | NULL | `NULL` | Provider-issued API key. Stored in database; should be encrypted at rest via Supabase Vault in production. |
 | `postback_secret` | `TEXT` | NULL | `NULL` | Secret token used to validate incoming postbacks from the provider. Must be treated as sensitive. |
 | `embed_url_template` | `TEXT` | NULL | `NULL` | URL template for the provider's iframe embed. May include `{user_id}` or similar tokens to be substituted at render time. |

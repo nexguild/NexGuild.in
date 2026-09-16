@@ -105,7 +105,7 @@ function SecretField({ value, label }: { value: string; label: string }) {
 
 const EMPTY_FORM: ConfigForm = {
   name: "", api_key: "", postback_secret: "", embed_url_template: "",
-  contributor_share_pct: "70", notes: "", integration_type: "iframe",
+  contributor_share_pct: "66", notes: "", integration_type: "iframe",
   logo_url: "", description: "", hash_format: "",
   postback_param_map: "", custom_config: "", is_active: true, display_order: "0",
   feature_tags: "", available_countries: "",
@@ -127,7 +127,7 @@ export default function AdminOfferwallsPage() {
   const [showAdd, setShowAdd]       = useState(false);
   const [addForm, setAddForm]       = useState<AddForm>({
     name: "", slug: "", is_ad_network: false, integration_type: "iframe",
-    contributor_share_pct: "70", description: "",
+    contributor_share_pct: "66", description: "",
   });
   const [adding, setAdding]         = useState(false);
   const [addError, setAddError]     = useState<string | null>(null);
@@ -265,7 +265,7 @@ export default function AdminOfferwallsPage() {
         slug:                  addForm.slug.trim(),
         is_ad_network:         addForm.is_ad_network,
         integration_type:      addForm.integration_type,
-        contributor_share_pct: parseFloat(addForm.contributor_share_pct) || 70,
+        contributor_share_pct: parseFloat(addForm.contributor_share_pct) || 66,
         description:           addForm.description.trim(),
       }),
     });
@@ -273,7 +273,7 @@ export default function AdminOfferwallsPage() {
       const { provider } = await res.json() as { provider: Provider };
       setProviders((prev) => [...prev, provider].sort((a, b) => a.display_order - b.display_order || a.name.localeCompare(b.name)));
       setShowAdd(false);
-      setAddForm({ name: "", slug: "", is_ad_network: false, integration_type: "iframe", contributor_share_pct: "70", description: "" });
+      setAddForm({ name: "", slug: "", is_ad_network: false, integration_type: "iframe", contributor_share_pct: "66", description: "" });
     } else {
       const { error } = await res.json() as { error: string };
       setAddError(error ?? "Failed to create provider.");
