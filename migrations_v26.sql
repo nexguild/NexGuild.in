@@ -22,7 +22,7 @@ INSERT INTO offerwall_providers (
   '{"trans_id": "txn_id"}',
   100,
   '{
-    "app_id": "N1A6qKCgr",
+    "app_id": "Nt1A6qKCgr",
     "publisher_id": "UEoeUU",
     "hash_algorithm": "hmac-sha1-url",
     "rate_is_user_share": true,
