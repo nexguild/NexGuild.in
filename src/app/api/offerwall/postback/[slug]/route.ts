@@ -102,7 +102,7 @@ async function handlePostback(req: NextRequest, slug: string): Promise<Response>
 
   const customCfg = (provider.custom_config as Record<string, unknown> | null) ?? {};
   const notikHmac = customCfg.hash_algorithm === "hmac-sha1-url";
-  const contributorId = notikHmac ? (s1 ?? userId) : userId;
+  const contributorId = notikHmac ? (s1?.trim() || userId) : userId;
   const notikConversionRate = Number(customCfg.conversion_rate ?? 660) || 660;
   const creditedAmount = notikHmac && amount <= 0 && payout > 0
     ? Math.round(payout * notikConversionRate)
