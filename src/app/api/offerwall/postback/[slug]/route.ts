@@ -17,6 +17,7 @@ function extractParams(q: URLSearchParams, body: Record<string, unknown>, paramM
     userId:         get("user_id"),
     transId:        get("trans_id") ?? get("transaction_id"),
     amount:         parseFloat(get("amount") ?? "0") || 0,
+    payout:         parseFloat(get("payout") ?? "0") || 0,
     status:         get("status"),
     type:           get("type"),
     hash:           get("hash"),
@@ -94,7 +95,7 @@ async function handlePostback(req: NextRequest, slug: string): Promise<Response>
   }
 
   const paramMap: ParamMap = (provider.postback_param_map as ParamMap | null) ?? {};
-  const { userId, transId, amount, status, type, hash, s1, rewardedTxnId, incomingSecret } = extractParams(q, bodyObj, paramMap);
+  const { userId, transId, amount, payout, status, type, hash, s1, rewardedTxnId, incomingSecret } = extractParams(q, bodyObj, paramMap);
 
   // 3. Auth — hash-format or simple secret
   const hashFormat = (provider.hash_format as string | null) ?? null;
@@ -102,6 +103,10 @@ async function handlePostback(req: NextRequest, slug: string): Promise<Response>
   const customCfg = (provider.custom_config as Record<string, unknown> | null) ?? {};
   const notikHmac = customCfg.hash_algorithm === "hmac-sha1-url";
   const contributorId = notikHmac ? (s1 ?? userId) : userId;
+  const notikConversionRate = Number(customCfg.conversion_rate ?? 660) || 660;
+  const creditedAmount = notikHmac && amount <= 0 && payout > 0
+    ? Math.round(payout * notikConversionRate)
+    : amount;
 
   if (notikHmac) {
     if (!verifyNotikHash(req.url, provider.postback_secret, hash)) {
@@ -133,12 +138,13 @@ async function handlePostback(req: NextRequest, slug: string): Promise<Response>
   // 4. Validate required fields
   if (!contributorId || !transId) {
     console.warn(`[postback/${slug}] missing contributor ID or trans_id`, { userId, s1, transId });
+    await writeLog(admin, slug, Object.fromEntries(q.entries()), "error", notikHmac || !!hashFormat ? true : null, "Missing user_id or transaction ID");
     return new Response("Bad Request", { status: 400 });
   }
 
   // 5. Notik chargebacks use a negative amount and the original transaction ID.
   // Some providers instead use status=2, so support both formats.
-  if (status === "2" || (notikHmac && amount < 0 && !!rewardedTxnId)) {
+  if (status === "2" || (notikHmac && creditedAmount < 0 && !!rewardedTxnId)) {
     const reversalTxnId = rewardedTxnId ?? transId;
     const { data: existing } = await admin
       .from("offerwall_transactions")
@@ -187,22 +193,23 @@ async function handlePostback(req: NextRequest, slug: string): Promise<Response>
   //  S2 — rate_is_user_share=false (default, e.g. CPAGrip, sends USD):
   //       userCoins = amount × payoutMult × 0.66
   //       Exchange rate in CPAGrip dashboard must be set to 660 so widget matches.
-  if (amount <= 0) {
+  if (creditedAmount <= 0) {
     console.warn(`[postback/${slug}] zero amount tx ${transId}`);
+    await writeLog(admin, slug, { user_id: contributorId, notik_user_id: userId, s1, trans_id: transId, amount, payout, status }, "error", notikHmac || !!hashFormat ? true : null, "Missing or zero reward amount");
     return new Response("Bad Request", { status: 400 });
   }
   const payoutMult      = Number(customCfg.payout_multiplier ?? 1) || 1;
   const rateIsUserShare = customCfg.rate_is_user_share === true;
   const userCoins       = rateIsUserShare
-    ? Math.max(1, Math.round(amount * payoutMult))
-    : Math.max(1, Math.round(amount * payoutMult * 0.66));
+    ? Math.max(1, Math.round(creditedAmount * payoutMult))
+    : Math.max(1, Math.round(creditedAmount * payoutMult * 0.66));
 
   // 8. Insert transaction (UNIQUE guard prevents double-credit)
   const { error: insertErr } = await admin.from("offerwall_transactions").insert({
     provider_id:             provider.id,
     contributor_id:          contributorId,
     provider_transaction_id: transId,
-    gross_amount:            amount,
+    gross_amount:            creditedAmount,
     nexcoins_awarded:        userCoins,
     status:                  "credited",
     raw_payload:             { query: Object.fromEntries(q.entries()), body: rawBody.slice(0, 2000) },
