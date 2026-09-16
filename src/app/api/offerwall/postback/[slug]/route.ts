@@ -20,6 +20,7 @@ function extractParams(q: URLSearchParams, body: Record<string, unknown>, paramM
     status:         get("status"),
     type:           get("type"),
     hash:           get("hash"),
+    rewardedTxnId:  get("rewarded_txn_id"),
     incomingSecret: get("secret") ?? get("api_key"),
   };
 }
@@ -92,7 +93,7 @@ async function handlePostback(req: NextRequest, slug: string): Promise<Response>
   }
 
   const paramMap: ParamMap = (provider.postback_param_map as ParamMap | null) ?? {};
-  const { userId, transId, amount, status, type, hash, incomingSecret } = extractParams(q, bodyObj, paramMap);
+  const { userId, transId, amount, status, type, hash, rewardedTxnId, incomingSecret } = extractParams(q, bodyObj, paramMap);
 
   // 3. Auth — hash-format or simple secret
   const hashFormat = (provider.hash_format as string | null) ?? null;
@@ -133,13 +134,15 @@ async function handlePostback(req: NextRequest, slug: string): Promise<Response>
     return new Response("Bad Request", { status: 400 });
   }
 
-  // 5. status=2 → fraud reversal
-  if (status === "2") {
+  // 5. Notik chargebacks use a negative amount and the original transaction ID.
+  // Some providers instead use status=2, so support both formats.
+  if (status === "2" || (notikHmac && amount < 0 && !!rewardedTxnId)) {
+    const reversalTxnId = rewardedTxnId ?? transId;
     const { data: existing } = await admin
       .from("offerwall_transactions")
       .select("id, nexcoins_awarded, contributor_id, status")
       .eq("provider_id", provider.id)
-      .eq("provider_transaction_id", transId)
+      .eq("provider_transaction_id", reversalTxnId)
       .single();
 
     if (!existing || existing.status === "reversed") {
@@ -159,7 +162,7 @@ async function handlePostback(req: NextRequest, slug: string): Promise<Response>
       source:         "offerwall",
       description:    `${provider.name} fraud reversal (tx: ${transId})`,
     });
-    await writeLog(admin, slug, { user_id: userId, trans_id: transId, amount, status }, "reversed", hashFormat ? true : null);
+    await writeLog(admin, slug, { user_id: userId, trans_id: transId, rewarded_txn_id: rewardedTxnId, amount, status }, "reversed", notikHmac || !!hashFormat ? true : null);
     return new Response("OK", { status: 200 });
   }
 
@@ -167,11 +170,11 @@ async function handlePostback(req: NextRequest, slug: string): Promise<Response>
   // Some providers (e.g. ClixWall) send "Credit" instead of "1" — configurable via credit_status_value
   const creditStatusValue = (customCfg.credit_status_value as string | null) ?? "1";
   if (status && status !== creditStatusValue) {
-    await writeLog(admin, slug, { user_id: userId, trans_id: transId, amount, status, type }, "debug_ignored", hashFormat ? true : null);
+    await writeLog(admin, slug, { user_id: userId, trans_id: transId, amount, status, type }, "debug_ignored", notikHmac || !!hashFormat ? true : null);
     return new Response("OK", { status: 200 });
   }
   if (type === "out") {
-    await writeLog(admin, slug, { user_id: userId, trans_id: transId, amount, status, type }, "debug_ignored", hashFormat ? true : null);
+    await writeLog(admin, slug, { user_id: userId, trans_id: transId, amount, status, type }, "debug_ignored", notikHmac || !!hashFormat ? true : null);
     return new Response("OK", { status: 200 });
   }
 
@@ -206,11 +209,11 @@ async function handlePostback(req: NextRequest, slug: string): Promise<Response>
   if (insertErr) {
     if (insertErr.code === "23505") {
       console.log(`[postback/${slug}] duplicate tx ${transId} — skipping`);
-      await writeLog(admin, slug, { user_id: userId, trans_id: transId, amount, status }, "duplicate", hashFormat ? true : null);
+      await writeLog(admin, slug, { user_id: userId, trans_id: transId, amount, status }, "duplicate", notikHmac || !!hashFormat ? true : null);
       return new Response("OK", { status: 200 });
     }
     console.error(`[postback/${slug}] insert error:`, insertErr.message);
-    await writeLog(admin, slug, { user_id: userId, trans_id: transId, amount, status }, "error", hashFormat ? true : null, insertErr.message);
+    await writeLog(admin, slug, { user_id: userId, trans_id: transId, amount, status }, "error", notikHmac || !!hashFormat ? true : null, insertErr.message);
     return new Response("Internal Server Error", { status: 500 });
   }
 
@@ -247,7 +250,7 @@ async function handlePostback(req: NextRequest, slug: string): Promise<Response>
     type:    "bonus_coins",
   });
 
-  await writeLog(admin, slug, { user_id: userId, trans_id: transId, amount, status, coins_credited: contributorCredit }, "credited", hashFormat ? true : null);
+  await writeLog(admin, slug, { user_id: userId, trans_id: transId, amount, status, coins_credited: contributorCredit }, "credited", notikHmac || !!hashFormat ? true : null);
   console.log(`[postback/${slug}] credited ${contributorCredit} coins → ${userId} (tx=${transId})`);
   return new Response("OK", { status: 200 });
 }
