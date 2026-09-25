@@ -330,6 +330,7 @@ export default function DashboardHome() {
   const [dailyBonus, setDailyBonus]         = useState(10);
   const [day7Bonus, setDay7Bonus]           = useState(50);
   const [tasksRequired, setTasksRequired]   = useState(5);
+  const [nexcoinPerUsd, setNexcoinPerUsd]   = useState(1000);
   const [claimingDay, setClaimingDay]       = useState(false);
   const [claimResult, setClaimResult]       = useState<{ awarded: number; is_day7_bonus: boolean } | null>(null);
   const [claimError, setClaimError]         = useState<string | null>(null);
@@ -371,7 +372,7 @@ export default function DashboardHome() {
         supabase.from("submissions").select("*", { count: "exact", head: true }).eq("contributor_id", user.id).in("status", ["approved", "rejected"]),
         supabase.from("coin_transactions").select("amount, created_at, source").eq("contributor_id", user.id).eq("type", "earned").gte("created_at", sevenDaysAgo + "T00:00:00"),
         supabase.from("notifications").select("id, title, message, type, created_at").eq("user_id", user.id).order("created_at", { ascending: false }).limit(8),
-        supabase.from("platform_settings").select("key, value").in("key", ["streak_daily_bonus", "streak_day7_bonus", "streak_tasks_required_per_day"]),
+        supabase.from("platform_settings").select("key, value").in("key", ["streak_daily_bonus", "streak_day7_bonus", "streak_tasks_required_per_day", "nexcoin_per_usd"]),
         supabase.from("streak_days").select("day_date, tasks_completed, target_met, reward_claimed, reward_amount").eq("contributor_id", user.id).in("day_date", datesToFetch),
         fetch("/api/leaderboard?limit=5", { headers: { Authorization: `Bearer ${session?.access_token}` } }),
         fetch("/api/offerwalls", { headers: { Authorization: `Bearer ${session?.access_token}` } }),
@@ -398,6 +399,7 @@ export default function DashboardHome() {
       setDailyBonus(parseInt(settingsRows.find(r => r.key === "streak_daily_bonus")?.value ?? "10") || 10);
       setDay7Bonus(parseInt(settingsRows.find(r => r.key === "streak_day7_bonus")?.value ?? "50") || 50);
       setTasksRequired(parseInt(settingsRows.find(r => r.key === "streak_tasks_required_per_day")?.value ?? "5") || 5);
+      setNexcoinPerUsd(parseFloat(settingsRows.find(r => r.key === "nexcoin_per_usd")?.value ?? "1000") || 1000);
 
       const metaMap: Record<string, SubmissionMeta> = {};
       for (const s of (mySubmissions ?? []) as { task_id: string; status: string; feedback: string | null }[]) {
@@ -522,6 +524,7 @@ export default function DashboardHome() {
   const countCoins  = useCountUp(profile?.nexcoins ?? 0);
   const countEarned = useCountUp(totalEarned);
   const countDone   = useCountUp(tasksDone);
+  const estimatedUsd = (profile?.nexcoins ?? 0) / nexcoinPerUsd;
 
   const notifTypeIcon: Record<string, string> = {
     submission_approved: "✅", submission_rejected: "❌", assignment_approved: "✅",
@@ -577,6 +580,7 @@ export default function DashboardHome() {
                   <div>
                     <p className="text-white/60 text-xs font-medium">NexCoins Balance</p>
                     <p className="text-white font-bold text-2xl leading-tight">{countCoins.toLocaleString()}</p>
+                    <p className="text-white/70 text-xs mt-0.5">(${estimatedUsd.toFixed(2)} estimated value)</p>
                   </div>
                 </div>
                 {/* Level badge */}
@@ -649,6 +653,29 @@ export default function DashboardHome() {
           <span>👑</span><span>NexLeader Hub</span>
         </Link>
       </div>
+
+      {/* ── OFFERWALL SPOTLIGHT ───────────────────────────────────── */}
+      {!loading && liveOfferwalls.length > 0 && (
+        <div className="animate-fade-slide-up relative overflow-hidden rounded-2xl border border-teal-200 bg-gradient-to-r from-teal-600 via-cyan-600 to-indigo-600 p-5 text-white shadow-md" style={{ animationDelay: "140ms" }}>
+          <div className="absolute -right-10 -top-12 h-40 w-40 rounded-full bg-white/10" />
+          <div className="absolute -bottom-20 right-24 h-48 w-48 rounded-full bg-white/10" />
+          <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="max-w-2xl">
+              <div className="mb-1 flex items-center gap-2">
+                <span className="text-xl">🎁</span>
+                <p className="text-xs font-bold uppercase tracking-[0.18em] text-white/75">More ways to earn</p>
+              </div>
+              <h2 className="text-xl font-extrabold sm:text-2xl">Earn NexCoins with offers and surveys</h2>
+              <p className="mt-1 text-sm text-white/80">
+                {liveOfferwalls.length} offerwall{liveOfferwalls.length === 1 ? "" : "s"} available now. Complete surveys, app installs, and offers at your convenience.
+              </p>
+            </div>
+            <Link href="/dashboard/offerwalls" className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-bold text-teal-700 shadow-sm transition hover:-translate-y-0.5 hover:bg-teal-50">
+              View offerwalls <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
+        </div>
+      )}
 
       {/* ── DAILY LOGIN REWARD ──────────────────────────────────────── */}
       {!loading && loginRewardClaimed !== null && (
