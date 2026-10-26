@@ -11,7 +11,7 @@ function redactSensitiveParams(params: Record<string, unknown>): Record<string, 
   );
 }
 
-function extractParams(q: URLSearchParams, body: Record<string, unknown>, paramMap: ParamMap) {
+function extractParams(q: URLSearchParams, body: Record<string, unknown>, paramMap: ParamMap, slug: string) {
   function get(internalKey: string): string | null {
     const providerKey = paramMap[internalKey] ?? internalKey;
     const fromQuery = (q.get(providerKey) ?? q.get(internalKey) ?? "").trim();
@@ -20,11 +20,12 @@ function extractParams(q: URLSearchParams, body: Record<string, unknown>, paramM
     return fromBody || null;
   }
   return {
-    userId:         get("user_id"),
+    userId:         get("user_id") ?? (slug === "clixwall" ? get("u") : null),
     transId:        get("trans_id") ?? get("transaction_id"),
-    amount:         parseFloat(get("amount") ?? "0") || 0,
+    amount:         parseFloat(get("amount") ?? get("user_payout") ?? "0") || 0,
+    userPayoutUsd:  parseFloat(get("user_payout_usd") ?? "0") || 0,
     payout:         parseFloat(get("payout") ?? "0") || 0,
-    status:         get("status"),
+    status:         get("status") ?? (slug === "clixwall" ? get("s") : null),
     type:           get("type"),
     hash:           get("hash"),
     s1:             get("s1"),
@@ -101,7 +102,7 @@ async function handlePostback(req: NextRequest, slug: string): Promise<Response>
   }
 
   const paramMap: ParamMap = (provider.postback_param_map as ParamMap | null) ?? {};
-  const { userId, transId, amount, payout, status, type, hash, s1, rewardedTxnId, incomingSecret } = extractParams(q, bodyObj, paramMap);
+  const { userId, transId, amount, userPayoutUsd, payout, status, type, hash, s1, rewardedTxnId, incomingSecret } = extractParams(q, bodyObj, paramMap, slug);
   const safeRawParams = {
     ...redactSensitiveParams(Object.fromEntries(q.entries())),
     ...redactSensitiveParams(bodyObj),
@@ -116,6 +117,8 @@ async function handlePostback(req: NextRequest, slug: string): Promise<Response>
   const notikConversionRate = Number(customCfg.conversion_rate ?? 660) || 660;
   const creditedAmount = notikHmac && amount <= 0 && payout > 0
     ? Math.round(payout * notikConversionRate)
+    : slug === "clixwall" && amount <= 0 && userPayoutUsd > 0
+    ? Math.round(userPayoutUsd * (Number(customCfg.currency_conversion_rate ?? 1000) || 1000))
     : amount;
   const normalizedStatus = status?.trim().toLowerCase() ?? "";
   const isReversalStatus = normalizedStatus === "2"
@@ -191,7 +194,9 @@ async function handlePostback(req: NextRequest, slug: string): Promise<Response>
   // Some providers (e.g. ClixWall) send "Credit" instead of "1" — configurable via credit_status_value
   const creditStatusValue = (customCfg.credit_status_value as string | null)
     ?? (slug === "clixwall" ? "Credit" : "1");
-  if (status && normalizedStatus !== creditStatusValue.trim().toLowerCase()) {
+  const isClixwallCreditStatus = slug === "clixwall"
+    && ["credit", "1"].includes(normalizedStatus);
+  if (status && normalizedStatus !== creditStatusValue.trim().toLowerCase() && !isClixwallCreditStatus) {
     await writeLog(admin, slug, { user_id: userId, trans_id: transId, amount, status, type }, "debug_ignored", notikHmac || !!hashFormat ? true : null);
     return new Response("OK", { status: 200 });
   }
