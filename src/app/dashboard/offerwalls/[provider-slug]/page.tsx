@@ -268,12 +268,13 @@ function renderWidget(
   }
 
   if (provider.integration_type === "script_tag") {
-    const widgetDivId = provider.slug === "cpx_research" ? "fullscreen" : `${provider.slug.replace(/_/g, "-")}-widget`;
+    const isCpxResearch = provider.slug === "cpx_research";
+    const widgetDivId = isCpxResearch ? "fullscreen" : `${provider.slug.replace(/_/g, "-")}-widget`;
     return (
       <div
         id={widgetDivId}
-        className="w-full"
-        style={{ height: widgetH, overflowY: "auto", overflowX: "hidden" }}
+        className={isCpxResearch ? "min-h-0 w-full flex-1" : "w-full"}
+        style={{ height: widgetH, minHeight: isCpxResearch ? 0 : undefined, overflowY: "auto", overflowX: "hidden" }}
       />
     );
   }

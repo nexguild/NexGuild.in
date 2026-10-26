@@ -112,13 +112,13 @@ SET
     "script_url": "https://cdn.cpx-research.com/assets/js/script_tag_v2.0.js",
     "app_id_env": "NEXT_PUBLIC_CPX_APP_ID",
     "widget_configs": [
-      {"div_id": "fullscreen",    "theme_style": 1, "order_by": 2, "limit_surveys": 7},
+      {"div_id": "fullscreen",    "theme_style": 1, "order_by": 2},
       {"div_id": "notification",  "theme_style": 4, "position": 4, "text": "", "link": "", "newtab": true}
     ],
     "style_config": {
       "text_color": "#0F172A",
       "survey_box": {
-        "topbar_background_color": "#02b491",
+        "topbar_background_color": "#FFAD1F",
         "box_background_color":    "#FFFFFF",
         "rounded_borders":         true,
         "stars_filled":            "#0F172A"
