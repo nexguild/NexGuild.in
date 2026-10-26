@@ -72,12 +72,6 @@ async function handlePostback(req: NextRequest): Promise<Response> {
     return new Response("OK", { status: 200 });
   }
 
-  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userId)) {
-    console.warn("[postback/clickwall] invalid user_id; expected a NexGuild UUID", rawParams);
-    await logPostback(rawParams, true, "error", "invalid user_id; configure ClickWall to substitute the user's NexGuild ID");
-    return new Response("OK", { status: 200 });
-  }
-
   if (amount <= 0) {
     console.warn(`[postback/clickwall] zero amount (tx=${txId})`);
     await logPostback(rawParams, true, "error", "zero amount");
