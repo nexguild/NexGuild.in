@@ -5,6 +5,12 @@ import { creditOfferwallUserShare } from "@/lib/nexleader-commission";
 
 type ParamMap = Record<string, string>;
 
+function redactSensitiveParams(params: Record<string, unknown>): Record<string, unknown> {
+  return Object.fromEntries(
+    Object.entries(params).filter(([key]) => !["secret", "pwd", "api_key", "hash"].includes(key.toLowerCase())),
+  );
+}
+
 function extractParams(q: URLSearchParams, body: Record<string, unknown>, paramMap: ParamMap) {
   function get(internalKey: string): string | null {
     const providerKey = paramMap[internalKey] ?? internalKey;
@@ -23,7 +29,7 @@ function extractParams(q: URLSearchParams, body: Record<string, unknown>, paramM
     hash:           get("hash"),
     s1:             get("s1"),
     rewardedTxnId:  get("rewarded_txn_id"),
-    incomingSecret: get("secret") ?? get("api_key"),
+    incomingSecret: get("secret") ?? get("pwd") ?? get("api_key"),
   };
 }
 
@@ -56,7 +62,7 @@ async function writeLog(
 ) {
   await admin.from("postback_logs").insert({
     provider,
-    raw_params:    rawParams,
+    raw_params:    redactSensitiveParams(rawParams),
     action_taken:  action,
     hash_valid:    hashValid,
     error_message: errorMessage,
@@ -107,6 +113,9 @@ async function handlePostback(req: NextRequest, slug: string): Promise<Response>
   const creditedAmount = notikHmac && amount <= 0 && payout > 0
     ? Math.round(payout * notikConversionRate)
     : amount;
+  const normalizedStatus = status?.trim().toLowerCase() ?? "";
+  const isReversalStatus = normalizedStatus === "2"
+    || (slug === "clixwall" && ["reversal", "reversed", "chargeback"].includes(normalizedStatus));
 
   if (notikHmac) {
     if (!verifyNotikHash(req.url, provider.postback_secret, hash)) {
@@ -144,7 +153,7 @@ async function handlePostback(req: NextRequest, slug: string): Promise<Response>
 
   // 5. Notik chargebacks use a negative amount and the original transaction ID.
   // Some providers instead use status=2, so support both formats.
-  if (status === "2" || (notikHmac && creditedAmount < 0 && !!rewardedTxnId)) {
+  if (isReversalStatus || (notikHmac && creditedAmount < 0 && !!rewardedTxnId)) {
     const reversalTxnId = rewardedTxnId ?? transId;
     const { data: existing } = await admin
       .from("offerwall_transactions")
@@ -176,8 +185,9 @@ async function handlePostback(req: NextRequest, slug: string): Promise<Response>
 
   // 6. Skip non-credit statuses
   // Some providers (e.g. ClixWall) send "Credit" instead of "1" — configurable via credit_status_value
-  const creditStatusValue = (customCfg.credit_status_value as string | null) ?? "1";
-  if (status && status !== creditStatusValue) {
+  const creditStatusValue = (customCfg.credit_status_value as string | null)
+    ?? (slug === "clixwall" ? "Credit" : "1");
+  if (status && normalizedStatus !== creditStatusValue.trim().toLowerCase()) {
     await writeLog(admin, slug, { user_id: userId, trans_id: transId, amount, status, type }, "debug_ignored", notikHmac || !!hashFormat ? true : null);
     return new Response("OK", { status: 200 });
   }
@@ -198,8 +208,8 @@ async function handlePostback(req: NextRequest, slug: string): Promise<Response>
     await writeLog(admin, slug, { user_id: contributorId, notik_user_id: userId, s1, trans_id: transId, amount, payout, status }, "error", notikHmac || !!hashFormat ? true : null, "Missing or zero reward amount");
     return new Response("Bad Request", { status: 400 });
   }
-  const payoutMult      = Number(customCfg.payout_multiplier ?? 1) || 1;
-  const rateIsUserShare = customCfg.rate_is_user_share === true;
+  const payoutMult      = slug === "clixwall" ? 1 : Number(customCfg.payout_multiplier ?? 1) || 1;
+  const rateIsUserShare = slug === "clixwall" || customCfg.rate_is_user_share === true;
   const userCoins       = rateIsUserShare
     ? Math.max(1, Math.round(creditedAmount * payoutMult))
     : Math.max(1, Math.round(creditedAmount * payoutMult * 0.66));
@@ -212,7 +222,10 @@ async function handlePostback(req: NextRequest, slug: string): Promise<Response>
     gross_amount:            creditedAmount,
     nexcoins_awarded:        userCoins,
     status:                  "credited",
-    raw_payload:             { query: Object.fromEntries(q.entries()), body: rawBody.slice(0, 2000) },
+    raw_payload:             {
+      query: redactSensitiveParams(Object.fromEntries(q.entries())),
+      body: redactSensitiveParams(bodyObj),
+    },
   });
 
   if (insertErr) {
