@@ -29,6 +29,21 @@ export default function SignupPage() {
       if (data.session) window.location.replace("/dashboard");
     });
 
+    fetch("/api/auth/signup-domains")
+      .then(async (response) => {
+        const data = await response.json() as { allowedDomains?: unknown; error?: string };
+        if (!response.ok) throw new Error(data.error ?? "Could not load allowed signup domains.");
+        if (!Array.isArray(data.allowedDomains) || data.allowedDomains.length === 0
+          || data.allowedDomains.some((domain) => typeof domain !== "string")) {
+          throw new Error("Signup domain settings are invalid.");
+        }
+        setSignupDomains(data.allowedDomains.map((domain: string) => domain.trim().toLowerCase()));
+      })
+      .catch((err: unknown) => {
+        setSignupDomainsError(err instanceof Error ? err.message : "Could not load allowed signup domains.");
+      })
+      .finally(() => setSignupDomainsLoading(false));
+
     const params = new URLSearchParams(window.location.search);
     const ref = params.get("ref");
     if (ref) setReferralCode(ref.toUpperCase());
@@ -38,6 +53,9 @@ export default function SignupPage() {
   const [showPassword, setShowPassword]       = useState(false);
   const [error, setError]                     = useState("");
   const [loading, setLoading]                 = useState(false);
+  const [signupDomains, setSignupDomains]     = useState<string[]>([]);
+  const [signupDomainsLoading, setSignupDomainsLoading] = useState(true);
+  const [signupDomainsError, setSignupDomainsError] = useState("");
 
   // invisible = Pro trial (no visible challenge); visible = free tier fallback
   const [captchaMode, setCaptchaMode]   = useState<"invisible" | "visible">("invisible");
@@ -57,9 +75,9 @@ export default function SignupPage() {
       setError("Password must be at least 8 characters and include uppercase, lowercase, and a number.");
       return false;
     }
-    const domain = email.toLowerCase().split("@")[1];
-    if (!["gmail.com", "outlook.com"].includes(domain)) {
-      setError("Please sign up with a Gmail or Outlook email address.");
+    const domain = email.trim().toLowerCase().split("@").pop();
+    if (!domain || !signupDomains.includes(domain)) {
+      setError(`Please use an email address from: ${signupDomains.map((item) => `@${item}`).join(", ")}.`);
       return false;
     }
     if (!termsChecked) {
@@ -110,8 +128,8 @@ export default function SignupPage() {
       setError(
         authError.message.includes("already registered")
           ? "An account with this email already exists."
-          : authError.message.includes("SIGNUP_DOMAIN_NOT_ALLOWED") || authError.message.includes("Database error")
-          ? "Please sign up with a Gmail or Outlook email address."
+          : authError.message.includes("SIGNUP_DOMAIN_NOT_ALLOWED")
+          ? `Please use an email address from: ${signupDomains.map((item) => `@${item}`).join(", ")}.`
           : authError.message.toLowerCase().includes("password") || authError.message.toLowerCase().includes("character")
           ? "Password must be at least 8 characters and include uppercase, lowercase, and a number."
           : authError.message
@@ -140,6 +158,8 @@ export default function SignupPage() {
 
   const submitDisabled =
     loading ||
+    signupDomainsLoading ||
+    !!signupDomainsError ||
     !termsChecked ||
     (captchaMode === "visible" && !captchaToken);
 
@@ -185,6 +205,11 @@ export default function SignupPage() {
                   {error}
                 </div>
               )}
+              {signupDomainsError && (
+                <div className="rounded-lg px-4 py-3 text-sm text-red-600" style={{ backgroundColor: "#fef2f2", border: "1px solid #fecaca" }}>
+                  {signupDomainsError}
+                </div>
+              )}
 
               {/* Full Name */}
               <div>
@@ -197,6 +222,11 @@ export default function SignupPage() {
                   style={{ background: "rgba(255,255,255,0.7)", borderColor: "rgba(13,148,136,0.25)" }}
                   className="w-full h-10 px-3 rounded-lg border text-stone-800 text-sm placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-[#0D9488] focus:border-transparent transition-all"
                 />
+                <p className="text-xs text-stone-400 mt-1.5">
+                  {signupDomainsLoading
+                    ? "Loading allowed email domains..."
+                    : `Allowed domains: ${signupDomains.map((domain) => `@${domain}`).join(", ")}`}
+                </p>
               </div>
 
               {/* Email */}
