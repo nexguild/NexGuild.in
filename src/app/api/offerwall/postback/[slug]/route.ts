@@ -14,9 +14,9 @@ function redactSensitiveParams(params: Record<string, unknown>): Record<string, 
 function extractParams(q: URLSearchParams, body: Record<string, unknown>, paramMap: ParamMap) {
   function get(internalKey: string): string | null {
     const providerKey = paramMap[internalKey] ?? internalKey;
-    const fromQuery = q.get(providerKey) ?? q.get(internalKey);
-    if (fromQuery !== null) return fromQuery;
-    const fromBody = String((body[providerKey] ?? body[internalKey]) ?? "").trim();
+    const fromQuery = (q.get(providerKey) ?? q.get(internalKey) ?? "").trim();
+    if (fromQuery) return fromQuery;
+    const fromBody = String(body[providerKey] ?? body[internalKey] ?? "").trim();
     return fromBody || null;
   }
   return {
@@ -102,6 +102,10 @@ async function handlePostback(req: NextRequest, slug: string): Promise<Response>
 
   const paramMap: ParamMap = (provider.postback_param_map as ParamMap | null) ?? {};
   const { userId, transId, amount, payout, status, type, hash, s1, rewardedTxnId, incomingSecret } = extractParams(q, bodyObj, paramMap);
+  const safeRawParams = {
+    ...redactSensitiveParams(Object.fromEntries(q.entries())),
+    ...redactSensitiveParams(bodyObj),
+  };
 
   // 3. Auth — hash-format or simple secret
   const hashFormat = (provider.hash_format as string | null) ?? null;
@@ -139,7 +143,7 @@ async function handlePostback(req: NextRequest, slug: string): Promise<Response>
   } else {
     if (incomingSecret !== provider.postback_secret) {
       console.warn(`[postback/${slug}] invalid secret`);
-      await writeLog(admin, slug, Object.fromEntries(q.entries()), "hash_invalid", false, "Invalid secret");
+      await writeLog(admin, slug, safeRawParams, "hash_invalid", false, "Invalid secret");
       return new Response("Forbidden", { status: 403 });
     }
   }
