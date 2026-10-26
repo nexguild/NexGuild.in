@@ -159,6 +159,13 @@ async function handlePostback(req: NextRequest, slug: string): Promise<Response>
       return new Response("Forbidden", { status: 403 });
     }
   } else if (gemiadHash) {
+    const isUnsignedGemiadTest = transId?.startsWith("Test_")
+      && !offerId
+      && !hash;
+    if (isUnsignedGemiadTest) {
+      await writeLog(admin, slug, safeRawParams, "debug_ignored", null, "GemiAd test callback received without a signature; no credit issued");
+      return new Response("Test callback received; no credit issued", { status: 200 });
+    }
     if (!userId || !offerId || !transId || !hash) {
       await writeLog(admin, slug, safeRawParams, "error", false, "Missing GemiAd signature fields");
       return new Response("Bad Request", { status: 400 });
