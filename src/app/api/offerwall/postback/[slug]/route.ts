@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { createHash, createHmac } from "crypto";
+import { createHash, createHmac, timingSafeEqual } from "crypto";
 import { createServerClient } from "@/lib/supabase-server";
 import { creditOfferwallUserShare } from "@/lib/nexleader-commission";
 
@@ -22,16 +22,22 @@ function extractParams(q: URLSearchParams, body: Record<string, unknown>, paramM
   return {
     userId:         get("user_id") ?? (slug === "clixwall" ? get("u") : null),
     transId:        get("trans_id") ?? get("transaction_id"),
-    amount:         parseFloat(get("amount") ?? get("user_payout") ?? "0") || 0,
+    amount:         parseFloat(get("amount") ?? get("user_payout") ?? get("reward") ?? "0") || 0,
     userPayoutUsd:  parseFloat(get("user_payout_usd") ?? "0") || 0,
     payout:         parseFloat(get("payout") ?? "0") || 0,
     status:         get("status") ?? (slug === "clixwall" ? get("s") : null),
+    offerId:        get("offer_id"),
     type:           get("type"),
     hash:           get("hash"),
     s1:             get("s1"),
     rewardedTxnId:  get("rewarded_txn_id"),
     incomingSecret: get("secret") ?? get("pwd") ?? get("api_key"),
   };
+}
+
+function secureHashEquals(expected: string, incoming: string | null): boolean {
+  if (!incoming || expected.length !== incoming.length) return false;
+  return timingSafeEqual(Buffer.from(expected, "utf8"), Buffer.from(incoming, "utf8"));
 }
 
 function verifyByHashFormat(hashFormat: string, secret: string, vars: Record<string, string>, incoming: string | null): boolean {
@@ -102,7 +108,9 @@ async function handlePostback(req: NextRequest, slug: string): Promise<Response>
   }
 
   const paramMap: ParamMap = (provider.postback_param_map as ParamMap | null) ?? {};
-  const { userId, transId, amount, userPayoutUsd, payout, status, type, hash, s1, rewardedTxnId, incomingSecret } = extractParams(q, bodyObj, paramMap, slug);
+  const customCfg = (provider.custom_config as Record<string, unknown> | null) ?? {};
+  const gemiadHash = slug === "gemiad" && customCfg.hash_algorithm === "sha256-user-offer-tx-secret";
+  const { userId, transId, amount, userPayoutUsd, payout, status, offerId, type, hash, s1, rewardedTxnId, incomingSecret } = extractParams(q, bodyObj, paramMap, slug);
   const safeRawParams = {
     ...redactSensitiveParams(Object.fromEntries(q.entries())),
     ...redactSensitiveParams(bodyObj),
@@ -117,8 +125,8 @@ async function handlePostback(req: NextRequest, slug: string): Promise<Response>
   // 3. Auth — hash-format or simple secret
   const hashFormat = (provider.hash_format as string | null) ?? null;
 
-  const customCfg = (provider.custom_config as Record<string, unknown> | null) ?? {};
   const notikHmac = customCfg.hash_algorithm === "hmac-sha1-url";
+  const hashAuthenticated = notikHmac || !!hashFormat || gemiadHash;
   const contributorId = notikHmac ? (s1?.trim() || userId) : userId;
   const notikConversionRate = Number(customCfg.conversion_rate ?? 660) || 660;
   const creditedAmount = notikHmac && amount <= 0 && payout > 0
@@ -128,6 +136,7 @@ async function handlePostback(req: NextRequest, slug: string): Promise<Response>
     : amount;
   const normalizedStatus = status?.trim().toLowerCase() ?? "";
   const isReversalStatus = normalizedStatus === "2"
+    || (gemiadHash && normalizedStatus === "rejected")
     || (slug === "clixwall" && ["reversal", "reversed", "chargeback"].includes(normalizedStatus));
 
   if (notikHmac) {
@@ -149,6 +158,19 @@ async function handlePostback(req: NextRequest, slug: string): Promise<Response>
       await writeLog(admin, slug, Object.fromEntries(q.entries()), "hash_invalid", false, "Hash mismatch");
       return new Response("Forbidden", { status: 403 });
     }
+  } else if (gemiadHash) {
+    if (!userId || !offerId || !transId || !hash) {
+      await writeLog(admin, slug, safeRawParams, "error", false, "Missing GemiAd signature fields");
+      return new Response("Bad Request", { status: 400 });
+    }
+    const expectedHash = createHash("sha256")
+      .update(`${userId}${offerId}${transId}${provider.postback_secret}`)
+      .digest("hex");
+    if (!secureHashEquals(expectedHash, hash.toLowerCase())) {
+      console.warn(`[postback/${slug}] SHA-256 signature mismatch`);
+      await writeLog(admin, slug, safeRawParams, "hash_invalid", false, "Invalid GemiAd signature");
+      return new Response("Forbidden", { status: 403 });
+    }
   } else {
     if (incomingSecret !== provider.postback_secret) {
       console.warn(`[postback/${slug}] invalid secret`);
@@ -164,7 +186,7 @@ async function handlePostback(req: NextRequest, slug: string): Promise<Response>
   // 4. Validate required fields
   if (!contributorId || !transId) {
     console.warn(`[postback/${slug}] missing contributor ID or trans_id`, { userId, s1, transId });
-    await writeLog(admin, slug, Object.fromEntries(q.entries()), "error", notikHmac || !!hashFormat ? true : null, "Missing user_id or transaction ID");
+    await writeLog(admin, slug, Object.fromEntries(q.entries()), "error", hashAuthenticated ? true : null, "Missing user_id or transaction ID");
     return new Response("Bad Request", { status: 400 });
   }
 
@@ -196,7 +218,7 @@ async function handlePostback(req: NextRequest, slug: string): Promise<Response>
       source:         "offerwall",
       description:    `${provider.name} fraud reversal (tx: ${transId})`,
     });
-    await writeLog(admin, slug, { user_id: userId, trans_id: transId, rewarded_txn_id: rewardedTxnId, amount, status }, "reversed", notikHmac || !!hashFormat ? true : null);
+    await writeLog(admin, slug, { user_id: userId, trans_id: transId, rewarded_txn_id: rewardedTxnId, amount, status }, "reversed", hashAuthenticated ? true : null);
     return new Response("OK", { status: 200 });
   }
 
@@ -206,12 +228,13 @@ async function handlePostback(req: NextRequest, slug: string): Promise<Response>
     ?? (slug === "clixwall" ? "Credit" : "1");
   const isClixwallCreditStatus = slug === "clixwall"
     && ["credit", "1", "completed"].includes(normalizedStatus);
-  if (status && normalizedStatus !== creditStatusValue.trim().toLowerCase() && !isClixwallCreditStatus) {
-    await writeLog(admin, slug, { user_id: userId, trans_id: transId, amount, status, type }, "debug_ignored", notikHmac || !!hashFormat ? true : null);
+  const isGemiadCreditStatus = gemiadHash && normalizedStatus === "completed";
+  if (status && normalizedStatus !== creditStatusValue.trim().toLowerCase() && !isClixwallCreditStatus && !isGemiadCreditStatus) {
+    await writeLog(admin, slug, { user_id: userId, trans_id: transId, amount, status, type }, "debug_ignored", hashAuthenticated ? true : null);
     return new Response("OK", { status: 200 });
   }
   if (type === "out") {
-    await writeLog(admin, slug, { user_id: userId, trans_id: transId, amount, status, type }, "debug_ignored", notikHmac || !!hashFormat ? true : null);
+    await writeLog(admin, slug, { user_id: userId, trans_id: transId, amount, status, type }, "debug_ignored", hashAuthenticated ? true : null);
     return new Response("OK", { status: 200 });
   }
 
@@ -224,11 +247,11 @@ async function handlePostback(req: NextRequest, slug: string): Promise<Response>
   //       Exchange rate in CPAGrip dashboard must be set to 660 so widget matches.
   if (creditedAmount <= 0) {
     console.warn(`[postback/${slug}] zero amount tx ${transId}`);
-    await writeLog(admin, slug, { user_id: contributorId, notik_user_id: userId, s1, trans_id: transId, amount, payout, status }, "error", notikHmac || !!hashFormat ? true : null, "Missing or zero reward amount");
+    await writeLog(admin, slug, { user_id: contributorId, notik_user_id: userId, s1, trans_id: transId, amount, payout, status }, "error", hashAuthenticated ? true : null, "Missing or zero reward amount");
     return new Response("Bad Request", { status: 400 });
   }
-  const payoutMult      = slug === "clixwall" ? 1 : Number(customCfg.payout_multiplier ?? 1) || 1;
-  const rateIsUserShare = slug === "clixwall" || customCfg.rate_is_user_share === true;
+  const payoutMult      = slug === "clixwall" || gemiadHash ? 1 : Number(customCfg.payout_multiplier ?? 1) || 1;
+  const rateIsUserShare = slug === "clixwall" || gemiadHash || customCfg.rate_is_user_share === true;
   const userCoins       = rateIsUserShare
     ? Math.max(1, Math.round(creditedAmount * payoutMult))
     : Math.max(1, Math.round(creditedAmount * payoutMult * 0.66));
@@ -250,11 +273,11 @@ async function handlePostback(req: NextRequest, slug: string): Promise<Response>
   if (insertErr) {
     if (insertErr.code === "23505") {
       console.log(`[postback/${slug}] duplicate tx ${transId} — skipping`);
-      await writeLog(admin, slug, { user_id: userId, trans_id: transId, amount, status }, "duplicate", notikHmac || !!hashFormat ? true : null);
+      await writeLog(admin, slug, { user_id: userId, trans_id: transId, amount, status }, "duplicate", hashAuthenticated ? true : null);
       return new Response("OK", { status: 200 });
     }
     console.error(`[postback/${slug}] insert error:`, insertErr.message);
-    await writeLog(admin, slug, { user_id: userId, trans_id: transId, amount, status }, "error", notikHmac || !!hashFormat ? true : null, insertErr.message);
+    await writeLog(admin, slug, { user_id: userId, trans_id: transId, amount, status }, "error", hashAuthenticated ? true : null, insertErr.message);
     return new Response("Internal Server Error", { status: 500 });
   }
 
@@ -291,7 +314,7 @@ async function handlePostback(req: NextRequest, slug: string): Promise<Response>
     type:    "bonus_coins",
   });
 
-  await writeLog(admin, slug, { user_id: contributorId, notik_user_id: userId, s1, trans_id: transId, amount, status, coins_credited: contributorCredit }, "credited", notikHmac || !!hashFormat ? true : null);
+  await writeLog(admin, slug, { user_id: contributorId, notik_user_id: userId, s1, trans_id: transId, amount, status, coins_credited: contributorCredit }, "credited", hashAuthenticated ? true : null);
   console.log(`[postback/${slug}] credited ${contributorCredit} coins → ${contributorId} (tx=${transId})`);
   return new Response("OK", { status: 200 });
 }
