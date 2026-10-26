@@ -205,7 +205,7 @@ async function handlePostback(req: NextRequest, slug: string): Promise<Response>
   const creditStatusValue = (customCfg.credit_status_value as string | null)
     ?? (slug === "clixwall" ? "Credit" : "1");
   const isClixwallCreditStatus = slug === "clixwall"
-    && ["credit", "1"].includes(normalizedStatus);
+    && ["credit", "1", "completed"].includes(normalizedStatus);
   if (status && normalizedStatus !== creditStatusValue.trim().toLowerCase() && !isClixwallCreditStatus) {
     await writeLog(admin, slug, { user_id: userId, trans_id: transId, amount, status, type }, "debug_ignored", notikHmac || !!hashFormat ? true : null);
     return new Response("OK", { status: 200 });
