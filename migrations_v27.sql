@@ -1,5 +1,4 @@
--- Let CPX Research show its full available survey inventory and use the
--- orange survey header seen in its standard offerwall presentation.
+-- Let CPX Research show its full available survey inventory.
 WITH current_config AS (
   SELECT id, COALESCE(custom_config, '{}'::jsonb) AS config
   FROM public.offerwall_providers
@@ -36,7 +35,7 @@ SET custom_config = jsonb_set(
     jsonb_build_object(
       'survey_box',
       COALESCE(updated_widgets.config->'style_config'->'survey_box', '{}'::jsonb) ||
-        jsonb_build_object('topbar_background_color', '#FFAD1F')
+        jsonb_build_object('topbar_background_color', '#14b8a6')
     ),
   true
 )

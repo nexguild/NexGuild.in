@@ -118,7 +118,7 @@ SET
     "style_config": {
       "text_color": "#0F172A",
       "survey_box": {
-        "topbar_background_color": "#FFAD1F",
+        "topbar_background_color": "#14b8a6",
         "box_background_color":    "#FFFFFF",
         "rounded_borders":         true,
         "stars_filled":            "#0F172A"
