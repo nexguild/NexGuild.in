@@ -159,7 +159,8 @@ async function handlePostback(req: NextRequest, slug: string): Promise<Response>
       return new Response("Forbidden", { status: 403 });
     }
   } else if (gemiadHash) {
-    const isUnsignedGemiadTest = transId?.startsWith("Test_")
+    const isUnsignedGemiadTest = (transId?.startsWith("Test_") || userId === customCfg.test_user_id)
+      && normalizedStatus === "completed"
       && !offerId
       && !hash;
     if (isUnsignedGemiadTest) {
