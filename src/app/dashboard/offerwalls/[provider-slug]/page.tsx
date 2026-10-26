@@ -44,6 +44,8 @@ export default function ProviderExperiencePage({
   // blocking innerHTML calls on Android, and to support proper viewport meta.
   const [cpagripFrameUrl, setCpagripFrameUrl] = useState<string | null>(null);
   const [notikFrameUrl, setNotikFrameUrl] = useState<string | null>(null);
+  const [clixwallFrameUrl, setClixwallFrameUrl] = useState<string | null>(null);
+  const [clixwallFrameError, setClixwallFrameError] = useState<string | null>(null);
 
   useEffect(() => {
     async function init() {
@@ -98,6 +100,26 @@ export default function ProviderExperiencePage({
       })
       .then(({ iframeUrl }) => setNotikFrameUrl(iframeUrl ?? null))
       .catch(() => setNotikFrameUrl(null));
+  }, [provider?.slug, token]);
+
+  useEffect(() => {
+    if (provider?.slug !== "clixwall" || !token) return;
+    setClixwallFrameUrl(null);
+    setClixwallFrameError(null);
+    fetch("/api/offerwall/clixwall/wall-url", {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((response) => {
+        return response.json().then((data: { wallUrl?: string; error?: string }) => {
+          if (!response.ok) throw new Error(data.error ?? "Unable to load ClixWall");
+          return data;
+        });
+      })
+      .then(({ wallUrl }) => setClixwallFrameUrl(wallUrl ?? null))
+      .catch((error: unknown) => {
+        console.error("[offerwall/clixwall] wall URL request failed:", error);
+        setClixwallFrameError(error instanceof Error ? error.message : "Unable to load ClixWall");
+      });
   }, [provider?.slug, token]);
 
   // script_tag providers: inject widget script after mount.
@@ -194,7 +216,7 @@ export default function ProviderExperiencePage({
 
       {/* Widget — fills remaining height */}
       <div className="flex-1 flex flex-col">
-        {renderWidget(provider, trIframeUrl, trIframeLoading, buildEmbedUrl(), cpagripFrameUrl, notikFrameUrl, token)}
+        {renderWidget(provider, trIframeUrl, trIframeLoading, buildEmbedUrl(), cpagripFrameUrl, notikFrameUrl, clixwallFrameUrl, clixwallFrameError, token)}
       </div>
     </div>
   );
@@ -207,6 +229,8 @@ function renderWidget(
   embedUrl: string | null,
   cpagripFrameUrl: string | null,
   notikFrameUrl: string | null,
+  clixwallFrameUrl: string | null,
+  clixwallFrameError: string | null,
   token: string | null,
 ) {
   const widgetH = "calc(100vh - 112px)";
@@ -245,6 +269,29 @@ function renderWidget(
       return <div className="flex-1 flex items-center justify-center"><Loader2 className="h-6 w-6 animate-spin text-indigo-500" /></div>;
     }
     return <iframe src={notikFrameUrl} className="flex-1 w-full border-0" style={{ minHeight: widgetH }} title="Notik Offerwall" />;
+  }
+
+  if (provider.slug === "clixwall") {
+    if (clixwallFrameError) {
+      return (
+        <div className="flex-1 flex flex-col items-center justify-center gap-2 p-8 text-center">
+          <p className="font-semibold text-slate-700">ClixWall is unavailable</p>
+          <p className="max-w-md text-sm text-slate-500">{clixwallFrameError}</p>
+        </div>
+      );
+    }
+    if (!clixwallFrameUrl) {
+      return <div className="flex-1 flex items-center justify-center"><Loader2 className="h-6 w-6 animate-spin text-indigo-500" /></div>;
+    }
+    return (
+      <iframe
+        src={clixwallFrameUrl}
+        className="flex-1 w-full border-0"
+        style={{ minHeight: widgetH }}
+        title="ClixWall Offers"
+        allow="clipboard-write"
+      />
+    );
   }
 
   // CPAGrip: load from a real API-served HTML page so viewport meta and innerHTML
