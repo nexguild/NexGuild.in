@@ -107,6 +107,12 @@ async function handlePostback(req: NextRequest, slug: string): Promise<Response>
     ...redactSensitiveParams(Object.fromEntries(q.entries())),
     ...redactSensitiveParams(bodyObj),
   };
+  const secretParameter = ["secret", "pwd", "api_key"].find((key) =>
+    Boolean(
+      (q.get(paramMap[key] ?? key) ?? q.get(key) ?? "").trim()
+      || String(bodyObj[paramMap[key] ?? key] ?? bodyObj[key] ?? "").trim(),
+    ),
+  ) ?? "missing";
 
   // 3. Auth — hash-format or simple secret
   const hashFormat = (provider.hash_format as string | null) ?? null;
@@ -146,7 +152,11 @@ async function handlePostback(req: NextRequest, slug: string): Promise<Response>
   } else {
     if (incomingSecret !== provider.postback_secret) {
       console.warn(`[postback/${slug}] invalid secret`);
-      await writeLog(admin, slug, safeRawParams, "hash_invalid", false, "Invalid secret");
+      await writeLog(admin, slug, {
+        ...safeRawParams,
+        secret_parameter: secretParameter,
+        incoming_secret_matches_saved: false,
+      }, "hash_invalid", false, "Invalid secret");
       return new Response("Forbidden", { status: 403 });
     }
   }
