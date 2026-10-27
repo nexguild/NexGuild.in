@@ -64,6 +64,7 @@ export function AdminSidebar({ open, onClose }: AdminSidebarProps) {
     { label: "Submissions",      href: "/admin/submissions",     icon: ClipboardCheck,  badge: submissionCount },
     { label: "Assignments",      href: "/admin/assignments",     icon: GraduationCap,   badge: assignmentCount },
     { label: "Offerwalls",       href: "/admin/offerwalls",      icon: Layers,          badge: 0 },
+    { label: "CPX Bonus Report", href: "/admin/cpx-campaign",    icon: Gift,            badge: 0 },
     { label: "Vouchers",         href: "/admin/vouchers",        icon: Gift,            badge: withdrawalCount },
     { label: "Binance Redemptions", href: "/admin/binance-redemptions", icon: WalletCards, badge: binanceRedemptionCount },
     { label: "Voucher Catalog",  href: "/admin/voucher-catalog", icon: Tag,             badge: 0 },
