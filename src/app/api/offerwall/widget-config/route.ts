@@ -58,7 +58,12 @@ export async function GET(req: NextRequest) {
       ?? (p.slug === "cpx_research" ? process.env.NEXT_PUBLIC_CPX_APP_ID ?? null : null);
 
     let secureHash: string | null = null;
-    if (p.hash_format && p.postback_secret) {
+    if (p.slug === "cpx_research") {
+      const appSecureHash = process.env.CPX_APP_SECURE_HASH || p.postback_secret;
+      if (appSecureHash) {
+        secureHash = createHash("md5").update(`${user.id}-${appSecureHash}`).digest("hex");
+      }
+    } else if (p.hash_format && p.postback_secret) {
       secureHash = computeHash(p.hash_format, p.postback_secret, user.id);
     }
 

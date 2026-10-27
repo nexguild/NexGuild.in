@@ -18,6 +18,7 @@ const logAdmin = createClient(
 );
 
 const CPX_IPS = new Set(["188.40.3.73", "157.90.97.92"]);
+const CPX_COINS_PER_USD = 660;
 
 function verifyHash(transId: string, incoming: string): { ok: boolean; detail: string } {
   const secret = process.env.CPX_APP_SECURE_HASH;
@@ -166,12 +167,14 @@ async function handleCpxPostback(req: NextRequest): Promise<Response> {
   // ─── STATUS 1: Completion ─────────────────────────────────────────────────
   if (status === "1") {
     if (type === "out") {
-      console.log(`[postback/cpx_research] screen-out user=${userId} offer=${offerId}`);
-      await logPostback(rawParams, hashValid, "error", `screen-out (offer: ${offerId})`);
-      return new Response("OK", { status: 200 });
+      if (amountLocal <= 0 && amountUsd <= 0) {
+        console.log(`[postback/cpx_research] screen-out without a reward user=${userId} offer=${offerId}`);
+        await logPostback(rawParams, hashValid, "screenout_no_reward", `screen-out without reward (offer: ${offerId})`);
+        return new Response("OK", { status: 200 });
+      }
     }
 
-    if (type !== "complete" && type !== "bonus") {
+    if (type !== "complete" && type !== "bonus" && type !== "out") {
       console.log(`[postback/cpx_research] unhandled type=${type} — returning OK`);
       await logPostback(rawParams, hashValid, "error", `unhandled type: ${type}`);
       return new Response("OK", { status: 200 });
@@ -189,8 +192,13 @@ async function handleCpxPostback(req: NextRequest): Promise<Response> {
       return new Response("OK", { status: 200 });
     }
 
-    // Exchange rate in CPX publisher dashboard = 660, so amountLocal IS the user's coin amount
-    const gross     = amountLocal > 0 ? amountLocal : amountUsd;
+    // Prefer CPX's local-currency payout; use its configured 660:1 USD rate as fallback.
+    const gross     = amountLocal > 0 ? amountLocal : amountUsd * CPX_COINS_PER_USD;
+    if (gross <= 0) {
+      console.warn(`[postback/cpx_research] zero reward amount for ${type} (trans=${transId})`);
+      await logPostback(rawParams, hashValid, "error", `zero reward amount for ${type}`);
+      return new Response("OK", { status: 200 });
+    }
     const userCoins = Math.max(1, Math.floor(gross));
 
     console.log("[postback/cpx_research] crediting", {

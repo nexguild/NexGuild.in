@@ -108,6 +108,7 @@ export default function ProviderExperiencePage({
           app_id: cpxConfig.appId,
           ext_user_id: cpxConfig.userId,
         });
+        if (cpxConfig.secureHash) params.set("secure_hash", cpxConfig.secureHash);
         setCpxFrameUrl(`https://offers.cpx-research.com/index.php?${params.toString()}`);
       })
       .catch((error: unknown) => {
