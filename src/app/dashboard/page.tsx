@@ -118,6 +118,8 @@ function ProgressRing({ value, max, label, sub }: { value: number; max: number; 
 
 /* ─── Streak helpers ─────────────────────────────────────────────── */
 const STREAK_DAY_NAMES = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+const CPX_CAMPAIGN_START = new Date("2026-10-27T18:30:00.000Z").getTime();
+const CPX_CAMPAIGN_END = new Date("2026-10-31T18:29:59.999Z").getTime();
 
 function getISTDate(daysOffset = 0): string {
   const d = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
@@ -337,6 +339,23 @@ export default function DashboardHome() {
   const [loginRewardClaimed, setLoginRewardClaimed] = useState<boolean | null>(null);
   const [claimingLogin, setClaimingLogin]           = useState(false);
   const [loginRewardAmount, setLoginRewardAmount]   = useState<number | null>(null);
+  const [showCpxCampaignPromo, setShowCpxCampaignPromo] = useState(false);
+  const [cpxCampaignLive, setCpxCampaignLive] = useState(false);
+
+  useEffect(() => {
+    const updateCampaignVisibility = () => {
+      const now = Date.now();
+      setShowCpxCampaignPromo(now <= CPX_CAMPAIGN_END);
+      setCpxCampaignLive(now >= CPX_CAMPAIGN_START);
+    };
+    updateCampaignVisibility();
+    const startTimer = window.setTimeout(updateCampaignVisibility, Math.max(0, CPX_CAMPAIGN_START - Date.now()));
+    const endTimer = window.setTimeout(updateCampaignVisibility, Math.max(0, CPX_CAMPAIGN_END - Date.now() + 1));
+    return () => {
+      window.clearTimeout(startTimer);
+      window.clearTimeout(endTimer);
+    };
+  }, []);
 
   useEffect(() => {
     async function fetchData() {
@@ -637,6 +656,34 @@ export default function DashboardHome() {
           )}
         </div>
       </div>
+
+      {showCpxCampaignPromo && (
+        <div
+          className="animate-fade-slide-up relative overflow-hidden rounded-2xl border border-amber-200 bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 p-5 text-white shadow-md sm:p-6"
+          style={{ animationDelay: "70ms" }}
+        >
+          <div aria-hidden className="pointer-events-none absolute -right-8 -top-12 h-40 w-40 rounded-full bg-white/15" />
+          <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="max-w-2xl">
+              <p className="mb-1 text-xs font-bold uppercase tracking-[0.18em] text-white/80">
+                🔥 CPX Research Bonus Campaign · {cpxCampaignLive ? "Now live" : "Starts 28 October"}
+              </p>
+              <h2 className="text-xl font-extrabold sm:text-2xl">
+                Earn 1,000 bonus NexCoins for every 5,000 NC
+              </h2>
+              <p className="mt-1 text-sm text-white/90">
+                Complete CPX Research surveys from 28–31 October. Only credited completed-survey rewards count; bonus eligibility will be verified by the NexGuild team.
+              </p>
+            </div>
+            <Link
+              href="/dashboard/offerwalls/cpx_research"
+              className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-bold text-orange-700 shadow-sm transition hover:-translate-y-0.5 hover:bg-amber-50"
+            >
+              Open CPX Research <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
+        </div>
+      )}
 
       {/* ── QUICK ACTIONS GRID ──────────────────────────────────────── */}
       <div className="animate-fade-slide-up grid grid-cols-2 sm:grid-cols-4 gap-3" style={{ animationDelay: "100ms" }}>
