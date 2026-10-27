@@ -166,7 +166,7 @@ async function handleCpxPostback(req: NextRequest): Promise<Response> {
 
   // ─── STATUS 1: Completion ─────────────────────────────────────────────────
   if (status === "1") {
-    if (type === "out") {
+    if (type === "out" || type === "out_quality") {
       if (amountLocal <= 0 && amountUsd <= 0) {
         console.log(`[postback/cpx_research] screen-out without a reward user=${userId} offer=${offerId}`);
         await logPostback(rawParams, hashValid, "screenout_no_reward", `screen-out without reward (offer: ${offerId})`);
@@ -174,7 +174,7 @@ async function handleCpxPostback(req: NextRequest): Promise<Response> {
       }
     }
 
-    if (type !== "complete" && type !== "bonus" && type !== "out") {
+    if (type !== "complete" && type !== "bonus" && type !== "out" && type !== "out_quality") {
       console.log(`[postback/cpx_research] unhandled type=${type} — returning OK`);
       await logPostback(rawParams, hashValid, "error", `unhandled type: ${type}`);
       return new Response("OK", { status: 200 });
