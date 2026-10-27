@@ -555,6 +555,69 @@ export default function DashboardHome() {
   const PULSE_STYLE = `
     @media (prefers-reduced-motion: reduce) {
       .animate-pulse { animation: none !important; }
+      .cpx-campaign-banner,
+      .cpx-campaign-banner::before,
+      .cpx-campaign-orb,
+      .cpx-campaign-sparkle,
+      .cpx-campaign-cta {
+        animation: none !important;
+      }
+    }
+
+    .cpx-campaign-banner {
+      background-size: 220% 220%;
+      animation: cpx-campaign-gradient 10s ease infinite;
+      box-shadow: 0 12px 30px rgba(124, 58, 237, 0.2);
+    }
+
+    .cpx-campaign-banner::before {
+      content: "";
+      position: absolute;
+      inset: -80% auto -80% -35%;
+      width: 30%;
+      transform: rotate(22deg);
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+      animation: cpx-campaign-shine 6s ease-in-out infinite;
+      pointer-events: none;
+    }
+
+    .cpx-campaign-orb {
+      animation: cpx-campaign-float 5s ease-in-out infinite;
+    }
+
+    .cpx-campaign-sparkle {
+      animation: cpx-campaign-sparkle 2.4s ease-in-out infinite;
+    }
+
+    .cpx-campaign-cta {
+      box-shadow: 0 5px 18px rgba(255,255,255,0.22);
+      animation: cpx-campaign-cta 2.8s ease-in-out infinite;
+    }
+
+    @keyframes cpx-campaign-gradient {
+      0%, 100% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+    }
+
+    @keyframes cpx-campaign-shine {
+      0%, 18% { left: -35%; opacity: 0; }
+      30% { opacity: 1; }
+      55%, 100% { left: 120%; opacity: 0; }
+    }
+
+    @keyframes cpx-campaign-float {
+      0%, 100% { transform: translateY(0) rotate(0deg); }
+      50% { transform: translateY(-10px) rotate(8deg); }
+    }
+
+    @keyframes cpx-campaign-sparkle {
+      0%, 100% { transform: scale(1); opacity: 0.75; }
+      50% { transform: scale(1.2); opacity: 1; }
+    }
+
+    @keyframes cpx-campaign-cta {
+      0%, 100% { box-shadow: 0 5px 18px rgba(255,255,255,0.2); }
+      50% { box-shadow: 0 7px 25px rgba(255,255,255,0.4); }
     }
   `;
 
@@ -659,27 +722,30 @@ export default function DashboardHome() {
 
       {showCpxCampaignPromo && (
         <div
-          className="animate-fade-slide-up relative overflow-hidden rounded-2xl border border-amber-200 bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 p-5 text-white shadow-md sm:p-6"
+          className="cpx-campaign-banner animate-fade-slide-up relative isolate overflow-hidden rounded-2xl border border-white/35 bg-[linear-gradient(115deg,#4f46e5_0%,#9333ea_35%,#ec4899_68%,#f97316_100%)] p-5 text-white sm:p-6"
           style={{ animationDelay: "70ms" }}
         >
-          <div aria-hidden className="pointer-events-none absolute -right-8 -top-12 h-40 w-40 rounded-full bg-white/15" />
-          <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div aria-hidden className="cpx-campaign-orb pointer-events-none absolute -right-8 -top-14 h-44 w-44 rounded-full border border-white/20 bg-white/10" />
+          <div aria-hidden className="cpx-campaign-orb pointer-events-none absolute bottom-[-4rem] right-40 h-32 w-32 rounded-full bg-fuchsia-200/15" style={{ animationDelay: "1.2s" }} />
+          <span aria-hidden className="cpx-campaign-sparkle pointer-events-none absolute right-[37%] top-5 hidden text-2xl text-yellow-100/90 sm:block">✦</span>
+          <div className="relative z-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="max-w-2xl">
-              <p className="mb-1 text-xs font-bold uppercase tracking-[0.18em] text-white/80">
-                🔥 CPX Research Bonus Campaign · {cpxCampaignLive ? "Now live" : "Starts 28 October"}
+              <p className="mb-2 inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/15 px-3 py-1 text-[10px] font-extrabold uppercase tracking-[0.17em] text-white shadow-sm backdrop-blur-sm sm:text-xs">
+                <span className="cpx-campaign-sparkle" aria-hidden>✦</span>
+                CPX Research Bonus · {cpxCampaignLive ? "Now live" : "Starts 28 October"}
               </p>
-              <h2 className="text-xl font-extrabold sm:text-2xl">
-                Earn 1,000 bonus NexCoins for every 5,000 NC
+              <h2 className="text-xl font-black leading-tight drop-shadow-sm sm:text-2xl">
+                <span className="text-yellow-200">+1,000 NC</span> bonus for every 5,000 NC
               </h2>
-              <p className="mt-1 text-sm text-white/90">
-                Complete CPX Research surveys from 28–31 October. Only credited completed-survey rewards count; bonus eligibility will be verified by the NexGuild team.
+              <p className="mt-1.5 max-w-xl text-xs leading-relaxed text-white/90 sm:text-sm">
+                Complete CPX Research surveys from 28–31 October and get 20% extra at each milestone. Only credited completed-survey rewards count; eligibility is verified by NexGuild.
               </p>
             </div>
             <Link
               href="/dashboard/offerwalls/cpx_research"
-              className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-bold text-orange-700 shadow-sm transition hover:-translate-y-0.5 hover:bg-amber-50"
+              className="cpx-campaign-cta group inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-extrabold text-indigo-700 transition hover:-translate-y-1 hover:bg-yellow-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
             >
-              Open CPX Research <ArrowRight className="h-4 w-4" />
+              <span aria-hidden>🚀</span> Open CPX Research <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
             </Link>
           </div>
         </div>
