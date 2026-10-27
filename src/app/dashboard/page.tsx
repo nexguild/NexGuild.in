@@ -738,15 +738,25 @@ export default function DashboardHome() {
                 <span className="text-yellow-200">+1,000 NC</span> bonus for every 5,000 NC
               </h2>
               <p className="mt-1.5 max-w-xl text-xs leading-relaxed text-white/90 sm:text-sm">
-                Complete CPX Research surveys from 28–31 October and get 20% extra at each milestone. Only credited completed-survey rewards count; eligibility is verified by NexGuild.
+                Earn 1,000 bonus NC per 5,000 eligible NC from completed CPX surveys, during 28–31 October (IST). Submit the claim form; all rewards are verified by NexGuild and are subject to approval.
               </p>
             </div>
-            <Link
-              href="/dashboard/offerwalls/cpx_research"
-              className="cpx-campaign-cta group inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-extrabold text-indigo-700 transition hover:-translate-y-1 hover:bg-yellow-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
-            >
-              <span aria-hidden>🚀</span> Open CPX Research <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-            </Link>
+            <div className="flex shrink-0 flex-col gap-2 sm:min-w-[190px]">
+              <a
+                href="https://forms.gle/DTYcZV3BYCQCUBmY7"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="cpx-campaign-cta group inline-flex items-center justify-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-extrabold text-indigo-700 transition hover:-translate-y-1 hover:bg-yellow-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+              >
+                <span aria-hidden>🎁</span> Claim your bonus <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+              </a>
+              <Link
+                href="/dashboard/offerwalls/cpx_research"
+                className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/40 bg-white/15 px-5 py-2.5 text-sm font-bold text-white backdrop-blur-sm transition hover:bg-white/25 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+              >
+                🚀 Open CPX Research
+              </Link>
+            </div>
           </div>
         </div>
       )}
