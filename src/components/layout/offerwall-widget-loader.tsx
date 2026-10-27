@@ -24,6 +24,8 @@ export function OfferwallWidgetLoader() {
 
       for (const w of widgets) {
         if (!w.scriptUrl) continue;
+        // CPX is rendered as a full wall on its provider page, not as a floating widget.
+        if (w.slug === "cpx_research") continue;
         const configKey = applyWidgetConfig(w);
         // Don't force-inject here: the offerwalls page owns injection timing
         // for fullscreen widgets so the #fullscreen div exists first.

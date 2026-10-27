@@ -46,6 +46,8 @@ export default function ProviderExperiencePage({
   const [notikFrameUrl, setNotikFrameUrl] = useState<string | null>(null);
   const [clixwallFrameUrl, setClixwallFrameUrl] = useState<string | null>(null);
   const [clixwallFrameError, setClixwallFrameError] = useState<string | null>(null);
+  const [cpxFrameUrl, setCpxFrameUrl] = useState<string | null>(null);
+  const [cpxFrameError, setCpxFrameError] = useState<string | null>(null);
 
   useEffect(() => {
     async function init() {
@@ -91,6 +93,28 @@ export default function ProviderExperiencePage({
   }, [provider?.slug, token]);
 
   useEffect(() => {
+    if (provider?.slug !== "cpx_research" || !token) return;
+    setCpxFrameUrl(null);
+    setCpxFrameError(null);
+    fetch("/api/offerwall/cpx-research/frame-url", {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then(async (response) => {
+        const data = await response.json() as { iframeUrl?: string; error?: string };
+        if (!response.ok) throw new Error(data.error ?? "Unable to load CPX Research");
+        return data;
+      })
+      .then(({ iframeUrl }) => {
+        if (!iframeUrl) throw new Error("CPX Research did not return a survey wall URL");
+        setCpxFrameUrl(iframeUrl);
+      })
+      .catch((error: unknown) => {
+        console.error("[offerwall/cpx_research] frame URL request failed:", error);
+        setCpxFrameError(error instanceof Error ? error.message : "Unable to load CPX Research");
+      });
+  }, [provider?.slug, token]);
+
+  useEffect(() => {
     if (provider?.slug !== "notik" || !token) return;
     setNotikFrameUrl(null);
     fetch(`/api/offerwall/notik-frame?token=${encodeURIComponent(token)}`)
@@ -127,6 +151,7 @@ export default function ProviderExperiencePage({
   // instead we build a srcdoc HTML string and render it inside an <iframe>.
   useEffect(() => {
     if (!provider || provider.integration_type !== "script_tag") return;
+    if (provider.slug === "cpx_research") return;
     async function inject() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.access_token) return;
@@ -194,8 +219,8 @@ export default function ProviderExperiencePage({
 
   return (
     <div
-      className="-m-4 sm:-m-6 flex flex-col"
-      style={{ height: "calc(100vh - 64px)", overflow: "hidden" }}
+      className="-m-4 flex min-h-0 flex-col overflow-hidden sm:-m-6"
+      style={{ height: "calc(100vh - 64px)" }}
     >
       {/* Breadcrumb bar */}
       <div className="flex items-center gap-2 px-4 sm:px-6 h-12 border-b border-slate-100 bg-white flex-shrink-0">
@@ -215,8 +240,8 @@ export default function ProviderExperiencePage({
       </div>
 
       {/* Widget — fills remaining height */}
-      <div className="flex-1 flex flex-col">
-        {renderWidget(provider, trIframeUrl, trIframeLoading, buildEmbedUrl(), cpagripFrameUrl, notikFrameUrl, clixwallFrameUrl, clixwallFrameError, token)}
+      <div className="flex min-h-0 flex-1 flex-col">
+        {renderWidget(provider, trIframeUrl, trIframeLoading, buildEmbedUrl(), cpagripFrameUrl, notikFrameUrl, clixwallFrameUrl, clixwallFrameError, cpxFrameUrl, cpxFrameError, token)}
       </div>
     </div>
   );
@@ -231,9 +256,37 @@ function renderWidget(
   notikFrameUrl: string | null,
   clixwallFrameUrl: string | null,
   clixwallFrameError: string | null,
+  cpxFrameUrl: string | null,
+  cpxFrameError: string | null,
   token: string | null,
 ) {
   const widgetH = "calc(100vh - 112px)";
+  if (provider.slug === "cpx_research") {
+    if (cpxFrameError) {
+      return (
+        <div className="flex flex-1 flex-col items-center justify-center gap-3 p-6 text-center">
+          <p className="font-semibold text-slate-800">CPX Research is unavailable</p>
+          <p className="max-w-md text-sm text-slate-500">{cpxFrameError}</p>
+        </div>
+      );
+    }
+    if (!cpxFrameUrl) {
+      return (
+        <div className="flex min-h-0 flex-1 items-center justify-center">
+          <Loader2 className="h-6 w-6 animate-spin text-teal-600" />
+        </div>
+      );
+    }
+    return (
+      <iframe
+        src={cpxFrameUrl}
+        className="h-full min-h-0 w-full flex-1 border-0"
+        title="CPX Research Surveys"
+        allow="clipboard-write"
+      />
+    );
+  }
+
   if (provider.slug === "theoremreach") {
     if (trIframeLoading) {
       return (
@@ -315,13 +368,12 @@ function renderWidget(
   }
 
   if (provider.integration_type === "script_tag") {
-    const isCpxResearch = provider.slug === "cpx_research";
-    const widgetDivId = isCpxResearch ? "fullscreen" : `${provider.slug.replace(/_/g, "-")}-widget`;
+    const widgetDivId = `${provider.slug.replace(/_/g, "-")}-widget`;
     return (
       <div
         id={widgetDivId}
-        className={isCpxResearch ? "min-h-0 w-full flex-1" : "w-full"}
-        style={{ height: widgetH, minHeight: isCpxResearch ? 0 : undefined, overflowY: "auto", overflowX: "hidden" }}
+        className="w-full"
+        style={{ height: widgetH, overflowY: "auto", overflowX: "hidden" }}
       />
     );
   }
