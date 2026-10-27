@@ -28,7 +28,7 @@ export async function GET(req: NextRequest) {
     transaction_id:         transactionId,
     currency_name_plural:   "NexCoins",
     currency_name_singular: "NexCoin",
-    exchange_rate:          "700",
+    exchange_rate:          "660",
     external_id:            user.id,
     partner_id:             partnerId,
   });

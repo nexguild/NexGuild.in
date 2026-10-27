@@ -154,8 +154,8 @@ export async function creditWithCommission(
  *   S2 — Exchange-rate providers (e.g. CPX, TheoremReach, MyLead): set exchange rate = 660.
  *        Postback sends 660 per $1 = exactly what user receives.
  *
- * NexLeader gets (userCoins × 10/66) on top. Platform keeps (userCoins × 24/66).
- * Total minted = userCoins + NexLeader + Platform (proportions stay 66/10/24).
+ * The backing gross is rounded up from the user's 66% share; NexLeader receives
+ * 10% of that gross and the platform retains the remaining 24%, with integer rounding.
  */
 export async function creditOfferwallUserShare(
   supabaseAdmin: SupabaseClient,
@@ -163,25 +163,10 @@ export async function creditOfferwallUserShare(
   userCoins:     number,
   description:   string,
 ): Promise<CommissionResult> {
-  const todayStart = new Date();
-  todayStart.setHours(0, 0, 0, 0);
-  const { data: todayTxns } = await supabaseAdmin
-    .from("coin_transactions")
-    .select("amount")
-    .eq("contributor_id", contributorId)
-    .eq("type", "earned")
-    .gte("created_at", todayStart.toISOString());
-  const earnedToday = (todayTxns ?? []).reduce((s, t) => s + ((t as { amount: number }).amount ?? 0), 0);
-
-  if (earnedToday >= DAILY_CAP) {
-    console.log(`[nexleader-commission] daily cap hit for ${contributorId} (earned today: ${earnedToday})`);
-    return { contributorCredit: 0, nexleaderCredit: 0, platformCut: userCoins };
-  }
-
-  const contributorCredit = Math.min(userCoins, DAILY_CAP - earnedToday);
-  const nexleaderCredit   = Math.floor(contributorCredit * 10 / 66);
-  const platformCut       = Math.floor(contributorCredit * 24 / 66);
-  const impliedGross      = contributorCredit + nexleaderCredit + platformCut;
+  const contributorCredit = userCoins;
+  const impliedGross      = Math.ceil(contributorCredit * 100 / 66);
+  const nexleaderCredit   = Math.floor(impliedGross * 10 / 100);
+  const platformCut       = impliedGross - contributorCredit - nexleaderCredit;
 
   const { data: profile } = await supabaseAdmin
     .from("profiles")

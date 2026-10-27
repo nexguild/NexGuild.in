@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createHmac } from "crypto";
 import { createServerClient } from "@/lib/supabase-server";
 
-const EXCHANGE_RATE = 700; // $1 = 700 NexCoins
+const EXCHANGE_RATE = 660; // $1 = 660 NexCoins
 
 function getClientIp(req: NextRequest): string {
   return (
@@ -117,7 +117,7 @@ export async function GET(req: NextRequest) {
       rank:           s.rank,
       average_rating: s.average_rating,
       rating_count:   s.rating_count,
-      nexcoins:       Math.floor(s.cpi * EXCHANGE_RATE),
+      nexcoins:       Math.ceil(s.cpi * EXCHANGE_RATE),
       entry_link:     `${entryUrl}&hash=${entryHash}`,
     };
   });
