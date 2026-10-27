@@ -96,20 +96,22 @@ export default function ProviderExperiencePage({
     if (provider?.slug !== "cpx_research" || !token) return;
     setCpxFrameUrl(null);
     setCpxFrameError(null);
-    fetch("/api/offerwall/cpx-research/frame-url", {
+    fetch("/api/offerwall/widget-config", {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then(async (response) => {
-        const data = await response.json() as { iframeUrl?: string; error?: string };
-        if (!response.ok) throw new Error(data.error ?? "Unable to load CPX Research");
-        return data;
-      })
-      .then(({ iframeUrl }) => {
-        if (!iframeUrl) throw new Error("CPX Research did not return a survey wall URL");
-        setCpxFrameUrl(iframeUrl);
+        const data = await response.json() as { widgets?: WidgetInitConfig[]; error?: string };
+        if (!response.ok) throw new Error(data.error ?? "Unable to load CPX Research configuration");
+        const cpxConfig = data.widgets?.find((widget) => widget.slug === "cpx_research");
+        if (!cpxConfig?.appId) throw new Error("CPX Research app ID is not configured");
+        const params = new URLSearchParams({
+          app_id: cpxConfig.appId,
+          ext_user_id: cpxConfig.userId,
+        });
+        setCpxFrameUrl(`https://offers.cpx-research.com/index.php?${params.toString()}`);
       })
       .catch((error: unknown) => {
-        console.error("[offerwall/cpx_research] frame URL request failed:", error);
+        console.error("[offerwall/cpx_research] frame configuration request failed:", error);
         setCpxFrameError(error instanceof Error ? error.message : "Unable to load CPX Research");
       });
   }, [provider?.slug, token]);
