@@ -124,7 +124,7 @@ SET
         "stars_filled":            "#0F172A"
       }
     },
-    "use_iframe":      true,
+    "use_iframe":      false,
     "iframe_position": 1
   }'::jsonb
 WHERE slug = 'cpx_research';

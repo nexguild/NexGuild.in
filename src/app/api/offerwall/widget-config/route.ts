@@ -54,7 +54,8 @@ export async function GET(req: NextRequest) {
     const debug            = cfg.debug === true;
     // app_id stored directly in custom_config (not via env var — Next.js can't resolve
     // dynamic process.env keys at runtime on the client side)
-    const appId            = (cfg.app_id as string | null) ?? null;
+    const appId            = (cfg.app_id as string | null)
+      ?? (p.slug === "cpx_research" ? process.env.NEXT_PUBLIC_CPX_APP_ID ?? null : null);
 
     let secureHash: string | null = null;
     if (p.hash_format && p.postback_secret) {

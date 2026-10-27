@@ -3,7 +3,7 @@
 import { useEffect, useState, use } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ChevronLeft, Layers, Loader2, X } from "lucide-react";
+import { ChevronLeft, Layers, Loader2 } from "lucide-react";
 import { NexCoinIcon } from "@/components/ui/nexcoin-icon";
 import { supabase } from "@/lib/supabase";
 import { applyWidgetConfig, buildScriptUrl, injectScript, type WidgetInitConfig } from "@/lib/offerwall-widget-inject";
@@ -46,8 +46,6 @@ export default function ProviderExperiencePage({
   const [notikFrameUrl, setNotikFrameUrl] = useState<string | null>(null);
   const [clixwallFrameUrl, setClixwallFrameUrl] = useState<string | null>(null);
   const [clixwallFrameError, setClixwallFrameError] = useState<string | null>(null);
-  const [cpxFrameUrl, setCpxFrameUrl] = useState<string | null>(null);
-  const [cpxFrameError, setCpxFrameError] = useState<string | null>(null);
 
   useEffect(() => {
     async function init() {
@@ -93,25 +91,6 @@ export default function ProviderExperiencePage({
   }, [provider?.slug, token]);
 
   useEffect(() => {
-    if (provider?.slug !== "cpx_research" || !token) return;
-    setCpxFrameUrl(null);
-    setCpxFrameError(null);
-    fetch("/api/offerwall/cpx-research/frame-url", {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then(async (response) => {
-        const data = await response.json() as { iframeUrl?: string; error?: string };
-        if (!response.ok) throw new Error(data.error ?? "Unable to load CPX Research");
-        return data;
-      })
-      .then(({ iframeUrl }) => setCpxFrameUrl(iframeUrl ?? null))
-      .catch((error: unknown) => {
-        console.error("[offerwall/cpx_research] frame URL request failed:", error);
-        setCpxFrameError(error instanceof Error ? error.message : "Unable to load CPX Research");
-      });
-  }, [provider?.slug, token]);
-
-  useEffect(() => {
     if (provider?.slug !== "notik" || !token) return;
     setNotikFrameUrl(null);
     fetch(`/api/offerwall/notik-frame?token=${encodeURIComponent(token)}`)
@@ -148,7 +127,6 @@ export default function ProviderExperiencePage({
   // instead we build a srcdoc HTML string and render it inside an <iframe>.
   useEffect(() => {
     if (!provider || provider.integration_type !== "script_tag") return;
-    if (provider.slug === "cpx_research") return;
     async function inject() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.access_token) return;
@@ -213,47 +191,6 @@ export default function ProviderExperiencePage({
   }
 
   if (!provider) return null;
-
-  if (provider.slug === "cpx_research") {
-    return (
-      <div className="fixed inset-0 z-[60] bg-white">
-        {cpxFrameError ? (
-          <div className="flex h-full flex-col items-center justify-center gap-3 p-6 text-center">
-            <p className="font-semibold text-slate-800">CPX Research is unavailable</p>
-            <p className="max-w-md text-sm text-slate-500">{cpxFrameError}</p>
-            <button
-              type="button"
-              onClick={() => router.push("/dashboard/offerwalls")}
-              className="mt-2 rounded-lg bg-teal-600 px-4 py-2 text-sm font-semibold text-white hover:bg-teal-700"
-            >
-              Back to Offerwall Hub
-            </button>
-          </div>
-        ) : cpxFrameUrl ? (
-          <iframe
-            src={cpxFrameUrl}
-            className="h-full w-full border-0"
-            title="CPX Research Surveys"
-            allow="clipboard-write"
-          />
-        ) : (
-          <div className="flex h-full items-center justify-center">
-            <Loader2 className="h-6 w-6 animate-spin text-teal-600" />
-          </div>
-        )}
-        {!cpxFrameError && (
-          <button
-            type="button"
-            onClick={() => router.push("/dashboard/offerwalls")}
-            aria-label="Close CPX Research"
-            className="absolute right-3 top-3 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-slate-700 shadow-md ring-1 ring-slate-200 transition hover:bg-white"
-          >
-            <X className="h-5 w-5" />
-          </button>
-        )}
-      </div>
-    );
-  }
 
   return (
     <div
