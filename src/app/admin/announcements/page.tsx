@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Bell, Plus, Loader2, CheckCircle2, Megaphone } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { DashboardPromotionEditor } from "@/components/admin/dashboard-promotion-editor";
 import { supabase } from "@/lib/supabase";
 import { usePageGuard } from "@/components/layout/admin-auth-guard";
 import { ADMIN_ROLES } from "@/lib/admin-permissions";
@@ -91,8 +92,10 @@ export default function AdminAnnouncementsPage() {
     <div className="space-y-8 max-w-3xl">
       <div>
         <h1 className="text-2xl font-bold text-[var(--text-primary)]">Announcements</h1>
-        <p className="text-sm text-[var(--text-secondary)]">Send announcements to all contributors or specific groups.</p>
+        <p className="text-sm text-[var(--text-secondary)]">Manage dashboard promotions and send announcements to contributors.</p>
       </div>
+
+      <DashboardPromotionEditor />
 
       {/* New Announcement Form */}
       <section className="rounded-lg border border-[var(--border-default)] bg-[var(--surface-card)] p-6 space-y-5">

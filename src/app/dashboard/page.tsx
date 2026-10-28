@@ -9,6 +9,9 @@ import Link from "next/link";
 import { NexCoinIcon } from "@/components/ui/nexcoin-icon";
 import { supabase } from "@/lib/supabase";
 import { BlogTipCard } from "@/components/dashboard/BlogTipCard";
+import {
+  type DashboardPromotion,
+} from "@/lib/dashboard-promotion";
 
 /* ─── Types ─────────────────────────────────────────────────────── */
 interface Profile {
@@ -118,8 +121,6 @@ function ProgressRing({ value, max, label, sub }: { value: number; max: number; 
 
 /* ─── Streak helpers ─────────────────────────────────────────────── */
 const STREAK_DAY_NAMES = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-const CPX_CAMPAIGN_START = new Date("2026-10-27T18:30:00.000Z").getTime();
-const CPX_CAMPAIGN_END = new Date("2026-10-31T18:29:59.999Z").getTime();
 
 function getISTDate(daysOffset = 0): string {
   const d = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
@@ -339,22 +340,58 @@ export default function DashboardHome() {
   const [loginRewardClaimed, setLoginRewardClaimed] = useState<boolean | null>(null);
   const [claimingLogin, setClaimingLogin]           = useState(false);
   const [loginRewardAmount, setLoginRewardAmount]   = useState<number | null>(null);
-  const [showCpxCampaignPromo, setShowCpxCampaignPromo] = useState(false);
-  const [cpxCampaignLive, setCpxCampaignLive] = useState(false);
+  const [promotion, setPromotion] = useState<DashboardPromotion | null>(null);
+  const [showDashboardPromotion, setShowDashboardPromotion] = useState(false);
 
   useEffect(() => {
-    const updateCampaignVisibility = () => {
+    if (!promotion) {
+      setShowDashboardPromotion(false);
+      return;
+    }
+
+    const timers: number[] = [];
+    const updatePromotionVisibility = () => {
       const now = Date.now();
-      setShowCpxCampaignPromo(now <= CPX_CAMPAIGN_END);
-      setCpxCampaignLive(now >= CPX_CAMPAIGN_START);
+      const start = promotion.startsAt ? Date.parse(promotion.startsAt) : null;
+      const end = promotion.endsAt ? Date.parse(promotion.endsAt) : null;
+      setShowDashboardPromotion(
+        promotion.enabled &&
+        (start === null || now >= start) &&
+        (end === null || now <= end)
+      );
     };
-    updateCampaignVisibility();
-    const startTimer = window.setTimeout(updateCampaignVisibility, Math.max(0, CPX_CAMPAIGN_START - Date.now()));
-    const endTimer = window.setTimeout(updateCampaignVisibility, Math.max(0, CPX_CAMPAIGN_END - Date.now() + 1));
-    return () => {
-      window.clearTimeout(startTimer);
-      window.clearTimeout(endTimer);
+    const scheduleUpdate = (timestamp: number) => {
+      const timer = window.setTimeout(() => {
+        updatePromotionVisibility();
+        if (Date.now() < timestamp) scheduleUpdate(timestamp);
+      }, Math.min(Math.max(0, timestamp - Date.now()), 2_147_483_647));
+      timers.push(timer);
     };
+    updatePromotionVisibility();
+
+    const start = promotion.startsAt ? Date.parse(promotion.startsAt) : null;
+    const end = promotion.endsAt ? Date.parse(promotion.endsAt) : null;
+    if (start !== null && start > Date.now()) {
+      scheduleUpdate(start);
+    }
+    if (end !== null && end >= Date.now()) {
+      scheduleUpdate(end + 1);
+    }
+    return () => timers.forEach((timer) => window.clearTimeout(timer));
+  }, [promotion]);
+
+  useEffect(() => {
+    fetch("/api/dashboard-promotion", { cache: "no-store" })
+      .then(async (res) => {
+        const data = await res.json() as DashboardPromotion | { error?: string };
+        if (!res.ok) {
+          throw new Error("error" in data ? data.error ?? "Could not load dashboard announcement." : "Could not load dashboard announcement.");
+        }
+        setPromotion(data as DashboardPromotion);
+      })
+      .catch((cause: unknown) => {
+        console.error("[dashboard] promotion load failed:", cause);
+      });
   }, []);
 
   useEffect(() => {
@@ -626,10 +663,9 @@ export default function DashboardHome() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/20 space-y-5 pb-8">
       <style>{PULSE_STYLE}</style>
 
-      {showCpxCampaignPromo && (
+      {showDashboardPromotion && promotion && (
         <div
           className="cpx-campaign-banner relative isolate overflow-hidden rounded-2xl border border-white/35 bg-[linear-gradient(115deg,#4f46e5_0%,#9333ea_35%,#ec4899_68%,#f97316_100%)] p-5 text-white sm:p-6"
-          style={{ animationDelay: "70ms" }}
         >
           <div aria-hidden className="cpx-campaign-orb pointer-events-none absolute -right-8 -top-14 h-44 w-44 rounded-full border border-white/20 bg-white/10" />
           <div aria-hidden className="cpx-campaign-orb pointer-events-none absolute bottom-[-4rem] right-40 h-32 w-32 rounded-full bg-fuchsia-200/15" style={{ animationDelay: "1.2s" }} />
@@ -638,30 +674,34 @@ export default function DashboardHome() {
             <div className="max-w-2xl">
               <p className="mb-2 inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/15 px-3 py-1 text-[10px] font-extrabold uppercase tracking-[0.17em] text-white shadow-sm backdrop-blur-sm sm:text-xs">
                 <span className="cpx-campaign-sparkle" aria-hidden>✦</span>
-                CPX Research Bonus · {cpxCampaignLive ? "Now live" : "Starts 28 October"}
+                {promotion.label}
               </p>
               <h2 className="text-xl font-black leading-tight drop-shadow-sm sm:text-2xl">
-                <span className="text-yellow-200">+1,000 NC</span> bonus for every 5,000 NC
+                {promotion.headline}
               </h2>
-              <p className="mt-1.5 max-w-xl text-xs leading-relaxed text-white/90 sm:text-sm">
-                Earn 1,000 bonus NC per 5,000 eligible NC from completed CPX surveys, during 28–31 October (IST). Submit the claim form; all rewards are verified by NexGuild and are subject to approval.
+              <p className="mt-1.5 max-w-xl whitespace-pre-line text-xs leading-relaxed text-white/90 sm:text-sm">
+                {promotion.message}
               </p>
             </div>
             <div className="flex shrink-0 flex-col gap-2 sm:min-w-[190px]">
               <a
-                href="https://forms.gle/DTYcZV3BYCQCUBmY7"
-                target="_blank"
-                rel="noopener noreferrer"
+                href={promotion.primaryUrl}
+                target={promotion.primaryUrl.startsWith("https://") ? "_blank" : undefined}
+                rel={promotion.primaryUrl.startsWith("https://") ? "noopener noreferrer" : undefined}
                 className="cpx-campaign-cta group inline-flex items-center justify-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-extrabold text-indigo-700 transition hover:-translate-y-1 hover:bg-yellow-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
               >
-                <span aria-hidden>🎁</span> Claim your bonus <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                {promotion.primaryLabel} <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
               </a>
-              <Link
-                href="/dashboard/offerwalls/cpx_research"
+              {promotion.secondaryLabel && promotion.secondaryUrl && (
+                <a
+                href={promotion.secondaryUrl}
+                target={promotion.secondaryUrl.startsWith("https://") ? "_blank" : undefined}
+                rel={promotion.secondaryUrl.startsWith("https://") ? "noopener noreferrer" : undefined}
                 className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/40 bg-white/15 px-5 py-2.5 text-sm font-bold text-white backdrop-blur-sm transition hover:bg-white/25 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
-              >
-                🚀 Open CPX Research
-              </Link>
+                >
+                  {promotion.secondaryLabel}
+                </a>
+              )}
             </div>
           </div>
         </div>
