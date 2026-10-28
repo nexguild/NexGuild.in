@@ -79,7 +79,7 @@ export default function TermsPage() {
               NexCoins are proprietary virtual reward points used exclusively within the NexGuild ecosystem. You explicitly acknowledge that NexCoins <strong>do not constitute real currency, digital assets, or legal tender</strong>, and they carry no intrinsic cash value outside the Platform. NexCoins cannot be transferred between users or sold.
             </p>
             <p>
-              NexCoins may only be redeemed for gift vouchers (such as Amazon, Flipkart, Paytm, or PhonePe) available in the official Store dashboard, subject to availability. Voucher delivery is typically processed within 48 to 72 business hours after redemption approval. NexGuild reserves the right to audit accounts prior to distributing rewards and may cancel redemptions if suspicious activity is found.
+              NexCoins may only be redeemed for rewards listed in the official Store dashboard. Available brands, voucher values, and redemption options vary by country and partner availability. Voucher delivery is typically processed within 48 to 72 business hours after redemption approval. NexGuild reserves the right to audit accounts prior to distributing rewards and may cancel redemptions if suspicious activity is found.
             </p>
           </div>
 

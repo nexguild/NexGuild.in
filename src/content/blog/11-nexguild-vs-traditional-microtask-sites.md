@@ -33,7 +33,7 @@ This model has real strengths. It typically offers high task volume, since reque
 
 **NexCoins and voucher redemption instead of direct cash.** This is one of the more significant differences. Traditional microtask platforms generally pay in USD through PayPal or bank transfer. NexGuild uses an in-platform currency (NexCoins) redeemable for vouchers — Amazon, Flipkart, Google Play, Zomato — rather than direct cash withdrawal. This trade-off was made deliberately to keep the platform fast and simple, without the complexity of handling direct monetary payouts.
 
-**India-first task design and support.** NexGuild is built and operated specifically for the Indian market, rather than being a global platform with India as one region among many. Task types, reward options, and platform decisions are made with Indian contributors specifically in mind.
+**A global contributor platform.** NexGuild welcomes contributors worldwide, while task eligibility and reward options vary by country and partner requirements. Check your dashboard to see what is currently available in your region.
 
 **Daily streak and engagement rewards.** NexGuild includes a daily streak system — completing approved tasks consistently unlocks bonus NexCoins, with a larger reward on day seven — a gamification layer not typically present on more traditional, utilitarian microtask platforms.
 
@@ -43,7 +43,7 @@ In the interest of a genuinely honest comparison:
 
 **Task volume.** Platforms like Clickworker or Microworkers, having operated for years with large established client bases, generally offer more consistently available task volume at any given moment than a newer platform can match immediately. NexGuild's task volume is actively growing, but it won't yet match platforms with years of accumulated client relationships.
 
-**Global task variety.** Established global platforms often integrate with multiple external task pipelines (like UHRS-style systems feeding from major tech companies), giving access to a wider breadth of specialized task categories than a single regional platform currently offers.
+**Task variety and availability.** Established global platforms often integrate with multiple external task pipelines (like UHRS-style systems feeding from major tech companies), giving access to a wider breadth of specialized task categories than a newer platform currently offers.
 
 **Track record and scale.** Years of operation and millions of completed tasks build a kind of trust and predictability that's simply a function of time — something no newer platform can shortcut, regardless of how well-designed it is.
 
@@ -54,8 +54,8 @@ In the interest of a genuinely honest comparison:
 
 ## Who Should Consider NexGuild Specifically
 
-NexGuild makes the most sense if you:
-- Are based in India and want a platform built around that context specifically
+NexGuild may suit you if you:
+- Want to explore a global platform with opportunities and rewards that depend on your location
 - Prefer structured, step-by-step tasks over a loose open feed
 - Are comfortable with voucher-based rewards rather than needing direct cash
 - Like the idea of a level/trust system that opens up better opportunities as you build a track record
@@ -67,4 +67,4 @@ These platforms aren't mutually exclusive. Many contributors use an established 
 
 ## Final Thoughts
 
-NexGuild isn't trying to be a direct clone of established microtask platforms — it's built around a different set of priorities: clear structure, a trust-based level system, India-first design, and a voucher-based reward model. Whether that fits better than a traditional platform depends on what you value most: raw task volume and direct cash, or structure, clarity, and rewards tailored to Indian contributors. For many people, the honest answer is using both.
+NexGuild isn't trying to be a direct clone of established microtask platforms — it's built around a different set of priorities: clear structure, a trust-based level system, a global contributor community, and a voucher-based reward model. Whether that fits better than a traditional platform depends on what you value most: raw task volume and direct cash, or structure, clarity, and reward options available in your region. For many people, the honest answer is using both.

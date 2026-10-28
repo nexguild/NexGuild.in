@@ -35,7 +35,7 @@ export function TealFooter() {
               />
             </div>
             <p className="text-sm text-white/40 leading-relaxed mb-5">
-              India&apos;s contributor community. Complete real tasks from your phone, earn NexCoins, and redeem for Amazon, Flipkart, and more.
+              A global contributor community. Complete real tasks from your phone, earn NexCoins, and redeem for rewards available in your region.
             </p>
             <div className="flex items-center gap-3">
               <a

@@ -45,7 +45,7 @@ Micro-tasks are small, repetitive digital jobs: labelling images, transcribing s
 
 **Best platforms for Indian students:**
 - **Clickworker**: international platform, pays via PayPal (~$3–$6/hour)
-- **NexGuild**: India-friendly platform with tasks, offerwalls, and surveys in one place; voucher redemptions
+- **NexGuild**: global platform available to Indian contributors, with tasks, offerwalls, and surveys in one place; reward options vary by region
 - **Appen**: higher pay ($9–$15/hour) but project availability fluctuates
 
 **Realistic earning**: ₹1,500–₹4,000/month with 45 minutes/day
@@ -114,5 +114,5 @@ During exams: drop everything except surveys (lowest mental effort, can be done 
 4. If you have a skill → set up a Fiverr profile in parallel
 
 > 💡 **All micro-task methods in one place**
-> NexGuild combines tasks, CPX Research surveys, and offerwalls so Indian students earn from one account without managing multiple withdrawals and platforms.
+> NexGuild combines tasks, CPX Research surveys, and offerwalls so students can use one account for opportunities available in their region, without managing multiple platforms.
 > 👉 **[Start Earning on NexGuild — Free to Join](https://www.nexguild.in/auth/register)**

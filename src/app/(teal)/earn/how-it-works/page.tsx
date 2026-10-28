@@ -5,15 +5,15 @@ import { AdSlot } from "@/components/ui/ad-slot";
 import { ChevronDown } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "How It Works — Earn Online India | NexGuild",
+  title: "How It Works — Earn Online with NexGuild",
   description:
-    "Learn how NexGuild works: sign up free, pick tasks, complete them from home, earn NexCoins, and redeem for Amazon, Flipkart, Google Play vouchers.",
+    "Learn how NexGuild works: sign up, find tasks available in your region, earn NexCoins, and explore rewards listed in your Store.",
   keywords: [
-    "how to earn online India",
+    "how to earn online",
     "NexGuild how it works",
     "earn NexCoins guide",
-    "online tasks guide India",
-    "earn gift vouchers India",
+    "online tasks guide",
+    "earn rewards online",
   ],
   alternates: { canonical: "https://www.nexguild.in/earn/how-it-works" },
   openGraph: {
@@ -56,9 +56,9 @@ const STEPS = [
   {
     num: "05",
     icon: "🎁",
-    title: "Redeem for Vouchers",
-    body: "Once you have enough NexCoins, visit the Store in your dashboard and redeem for gift vouchers from Amazon, Flipkart, Paytm, and more.",
-    tip: "Amazon and Flipkart vouchers have the broadest acceptance across India.",
+    title: "Redeem for Rewards",
+    body: "Once you have enough NexCoins, visit the Store in your dashboard to see the rewards available in your region.",
+    tip: "Reward brands, denominations, and availability vary by country. Check the Store in your dashboard.",
   },
 ];
 
@@ -66,9 +66,9 @@ const FAQS = [
   { q: "Is there a fee to join NexGuild?",           a: "No. Signing up is completely free. NexGuild earns through service fees from organizations — contributors keep what they earn from tasks." },
   { q: "How long does it take to get approved?",     a: "Approval times vary by task type. Micro-tasks may be reviewed within 24 hours. Audio, content, and survey tasks typically take 1–3 business days." },
   { q: "What happens if my submission is rejected?", a: "You will receive a notification with feedback explaining the reason. Depending on the task, you may be able to revise and resubmit." },
-  { q: "How quickly are vouchers delivered?",        a: "Vouchers are delivered to your registered email within 48 hours of your redemption request being processed." },
-  { q: "Which countries can join?",                  a: "NexGuild is open globally. Most tasks are available to contributors in India. Some tasks may restrict participation by country based on organization requirements." },
-  { q: "How do I redeem NexCoins?",                  a: "Visit the Store in your dashboard and choose from Amazon, Flipkart, Paytm, PhonePe, and other gift vouchers. Select a voucher and confirm your redemption." },
+  { q: "How quickly are vouchers delivered?",        a: "Delivery times depend on the reward provider and redemption approval. Check the Store and redemption details for current estimates." },
+  { q: "Which countries can join?",                  a: "NexGuild welcomes contributors worldwide. Task eligibility and availability depend on each organization's requirements and your location." },
+  { q: "How do I redeem NexCoins?",                  a: "Visit the Store in your dashboard to see the rewards available in your region. Options vary by country and provider." },
 ];
 
 const VOUCHERS = [
@@ -106,12 +106,12 @@ export default function HowItWorksPage() {
           <FadeIn delay={80}>
             <h1 className="text-4xl sm:text-6xl font-black text-[#0F3D36] tracking-tight mb-5"
               style={{ fontFamily: "'Instrument Serif', serif", textWrap: "balance" }}>
-              Five Steps to Your<br className="hidden sm:block" /> First Voucher
+              Five Steps to Your<br className="hidden sm:block" /> First Reward
             </h1>
           </FadeIn>
           <FadeIn delay={160}>
             <p className="text-base sm:text-lg text-stone-600 max-w-xl mx-auto leading-relaxed">
-              From sign-up to redeeming your first Amazon or Flipkart gift card — everything you need to know.
+              From signing up to redeeming your first available reward — everything you need to know.
             </p>
           </FadeIn>
           <FadeIn delay={240}>
@@ -205,7 +205,7 @@ export default function HowItWorksPage() {
             <div className="text-center mb-12">
               <p className="text-xs font-bold uppercase tracking-widest text-[#0D9488] mb-2">The Reward System</p>
               <h2 className="text-3xl sm:text-4xl font-black text-[#0F3D36]" style={{ fontFamily: "'Instrument Serif', serif" }}>
-                NexCoins → Real Vouchers
+                NexCoins → Real Rewards
               </h2>
             </div>
           </FadeIn>
@@ -214,8 +214,8 @@ export default function HowItWorksPage() {
               {[
                 { label: "Complete Task", sub: "Submit quality work", icon: "📤", bg: "rgba(13,148,136,0.08)", border: "rgba(13,148,136,0.2)" },
                 { label: "Earn NexCoins", sub: "After approval",      icon: "🪙", bg: "rgba(234,179,8,0.08)",  border: "rgba(234,179,8,0.2)"  },
-                { label: "Visit Store",   sub: "Pick a voucher",      icon: "🛍️", bg: "rgba(59,130,246,0.07)", border: "rgba(59,130,246,0.18)" },
-                { label: "Get Voucher",   sub: "Emailed in 48 hrs",   icon: "🎁", bg: "rgba(16,185,129,0.08)", border: "rgba(16,185,129,0.2)"  },
+                { label: "Visit Store",   sub: "See available rewards", icon: "🛍️", bg: "rgba(59,130,246,0.07)", border: "rgba(59,130,246,0.18)" },
+                { label: "Get Reward",    sub: "Delivery varies by provider", icon: "🎁", bg: "rgba(16,185,129,0.08)", border: "rgba(16,185,129,0.2)"  },
               ].map((node, i) => (
                 <div key={node.label} className="flex items-center gap-3">
                   <div className="text-center">
@@ -235,7 +235,7 @@ export default function HowItWorksPage() {
           </FadeIn>
           <FadeIn delay={160}>
             <div className="text-center">
-              <p className="text-xs font-bold uppercase tracking-widest text-stone-400 mb-5">Redeem at</p>
+              <p className="text-xs font-bold uppercase tracking-widest text-stone-400 mb-5">Example reward partners</p>
               <div className="flex flex-wrap items-center justify-center gap-3">
                 {VOUCHERS.map((v) => (
                   <div key={v.name}
@@ -246,6 +246,9 @@ export default function HowItWorksPage() {
                   </div>
                 ))}
               </div>
+              <p className="text-xs text-stone-400 mt-4">
+                Available partners and reward options vary by country. Check your dashboard Store for current options.
+              </p>
             </div>
           </FadeIn>
         </div>
@@ -294,7 +297,7 @@ export default function HowItWorksPage() {
                 Ready to Start Earning?
               </h2>
               <p className="text-sm sm:text-base text-stone-600 mb-10 max-w-md mx-auto">
-                Join contributors across India. Sign up free, complete your first task today.
+                Join contributors around the world. Sign up free and explore opportunities available in your region.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
                 <Link href="/signup"

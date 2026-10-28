@@ -9,19 +9,19 @@ export const revalidate = 86400; // rebuild daily so scheduled posts appear on t
 export const metadata: Metadata = {
   title: "Blog — Earning Guides, Remote Work Tips & NexGuild Updates",
   description:
-    "Practical guides on remote work, online earning, micro-tasks, and making the most of NexGuild. Written for Indian contributors and digital workers.",
+    "Practical guides on remote work, online earning, micro-tasks, and making the most of NexGuild for contributors worldwide.",
   alternates: { canonical: "https://www.nexguild.in/earn/blog" },
   openGraph: {
     title: "NexGuild Blog — Earning Guides & Remote Work Tips",
     description:
-      "Practical guides on online earning, micro-tasks, offerwalls, and remote work for Indian contributors.",
+      "Practical guides on online earning, micro-tasks, offerwalls, and remote work for a global community.",
     url:  "https://www.nexguild.in/earn/blog",
     type: "website",
   },
   twitter: {
     card:        "summary_large_image",
     title:       "NexGuild Blog — Earning Guides & Remote Work Tips",
-    description: "Practical guides on online earning, micro-tasks, and remote work for Indian contributors.",
+    description: "Practical guides on online earning, micro-tasks, and remote work for contributors worldwide.",
   },
 };
 

@@ -13,7 +13,7 @@ faqs:
   - q: "Can I earn gift vouchers online without any investment?"
     a: "Yes. Legitimate earning platforms do not require any upfront payment. The rewards are funded by advertisers and research clients who pay platforms for your attention and completed actions — not by you paying anything to participate."
   - q: "What is the best gift card earning website in India?"
-    a: "NexGuild is one of the few Indian-focused platforms offering voucher redemption for Amazon, Flipkart, Google Play, and Zomato — with earnings available through tasks, multiple survey networks (CPX Research, TheoremReach), and offerwalls (ClixWall, MyLead) all in one place. The combined methods make it easier to accumulate balance toward a redemption than single-method platforms."
+    a: "NexGuild is a global contributor platform offering tasks, multiple survey networks (CPX Research, TheoremReach), and offerwalls (ClixWall, MyLead) in one place. Contributors in India can redeem NexCoins for region-specific voucher options such as Amazon, Flipkart, Google Play, and Zomato; available rewards vary by country. Combining methods can make it easier to accumulate a balance than using single-method platforms."
   - q: "How long does it take to earn a voucher on NexGuild?"
     a: "It depends on time invested and which earning methods you use. Active users completing a mix of tasks and offerwall surveys daily can typically accumulate enough NexCoins for a modest voucher redemption within a few weeks. Survey and offerwall earnings credit quickly; task earnings credit after the review step, usually within a day or two."
 ---
@@ -54,7 +54,7 @@ You don't sign up for these networks directly — access them through an earning
 
 Micro-tasks are small, well-defined pieces of work — writing short descriptions, verifying information, categorising images, transcribing audio — that companies need done at volume. They pay per completed task.
 
-**NexGuild's task marketplace** connects Indian contributors with verified tasks for NexCoin rewards. Unlike surveys, tasks don't involve disqualification — you see the task, you complete it, it gets reviewed, and it credits. The review step adds a short delay (usually a day or two), but completion rates are much higher than surveys.
+**NexGuild's task marketplace** offers verified tasks for NexCoin rewards to contributors where available, including in India. Unlike surveys, tasks don't involve disqualification — you see the task, you complete it, it gets reviewed, and it credits. The review step adds a short delay (usually a day or two), but completion rates are much higher than surveys.
 
 Tasks range from quick 5-minute writes to more involved multi-step work. NexCoins from tasks go into the same balance as offerwall earnings — you redeem everything from one place.
 

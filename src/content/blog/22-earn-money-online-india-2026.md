@@ -9,7 +9,7 @@ faqs:
   - q: "How can I earn money online in India without investment?"
     a: "You can earn online in India without any investment by completing tasks on platforms like NexGuild, taking surveys via CPX Research and TheoremReach, and doing offerwall activities (app installs, sign-ups). These platforms are free to join — the rewards are funded by advertisers and research clients, not by you."
   - q: "Which online earning platform in India pays via UPI?"
-    a: "Many Indian earning platforms offer UPI or Paytm cashout above a threshold. NexGuild is one of the few platforms focused on the Indian market that offers voucher redemption for Amazon, Flipkart, Google Play, and Zomato — often accessible at lower minimums than UPI cash transfers, making it easier to actually claim your earnings."
+    a: "Many Indian earning platforms offer UPI or Paytm cashout above a threshold. NexGuild is a global contributor platform with reward options that vary by region; contributors in India can find voucher options such as Amazon, Flipkart, Google Play, and Zomato. Check the Store for current availability and redemption minimums."
   - q: "Are online earning websites in India legitimate?"
     a: "Yes, legitimate online earning platforms exist and pay real rewards — but they require genuine effort and deliver modest amounts, not thousands per day. Platforms that integrate established survey networks (CPX Research, TheoremReach) and have a verifiable task marketplace are among the most reliable for Indian users."
   - q: "What is the best way to earn online in India as a student?"
@@ -42,7 +42,7 @@ These tasks don't require specialized skills. They require accuracy, attention t
 
 **Why tasks are underestimated:** Unlike surveys, tasks don't involve disqualification. You see the task, you do it, it gets reviewed (usually within a day or two), and you get paid if it meets the standard. Completion rates for careful work are high, and the per-task earnings tend to be more predictable than surveys.
 
-**NexGuild's task marketplace** connects Indian contributors with verified work. NexCoins earned from tasks go into the same balance as offerwall and survey earnings — you redeem everything together.
+**NexGuild's task marketplace** offers verified work to contributors where available, including in India. NexCoins earned from tasks go into the same balance as offerwall and survey earnings — you redeem everything together.
 
 ### 2. Surveys
 

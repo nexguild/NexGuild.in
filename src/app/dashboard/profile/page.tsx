@@ -21,12 +21,6 @@ interface Profile {
   is_nexleader: boolean | null;
 }
 
-const COUNTRIES = [
-  "India", "United States", "United Kingdom", "Canada", "Australia",
-  "Germany", "France", "Singapore", "UAE", "Bangladesh", "Pakistan",
-  "Sri Lanka", "Nepal", "Philippines", "Other",
-];
-
 const SUGGESTED_SKILLS = [
   "Transcription", "Data Entry", "Data Annotation", "App Testing",
   "Game Testing", "Web Research", "Audio Recording", "Survey Completion",
@@ -549,14 +543,15 @@ export default function ProfilePage() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1.5">Country</label>
-                <select
+                <input
+                  type="text"
                   value={editCountry}
                   onChange={(e) => setEditCountry(e.target.value)}
+                  autoComplete="country-name"
+                  maxLength={100}
+                  placeholder="Enter your country or territory"
                   className="w-full h-10 px-3 rounded-lg border border-slate-200 bg-slate-50 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent"
-                >
-                  <option value="">Select country</option>
-                  {COUNTRIES.map((c) => <option key={c}>{c}</option>)}
-                </select>
+                />
               </div>
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1.5">
@@ -566,7 +561,7 @@ export default function ProfilePage() {
                   type="tel"
                   value={editPhone}
                   onChange={(e) => setEditPhone(e.target.value)}
-                  placeholder="+91 99999 00000"
+                  placeholder="Include country code, e.g. +1 555 0100"
                   className="w-full h-10 px-3 rounded-lg border border-slate-200 bg-slate-50 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent"
                 />
               </div>

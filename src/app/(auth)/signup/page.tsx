@@ -7,12 +7,6 @@ import { Eye, EyeOff } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import HCaptcha from "@hcaptcha/react-hcaptcha";
 
-const COUNTRIES = [
-  "India", "United States", "United Kingdom", "Canada", "Australia",
-  "Germany", "France", "Brazil", "Nigeria", "Philippines",
-  "Bangladesh", "Pakistan", "Indonesia", "Mexico", "South Africa", "Other",
-];
-
 export default function SignupPage() {
   const captchaRef = useRef<HCaptcha>(null);
 
@@ -20,7 +14,7 @@ export default function SignupPage() {
   const [email, setEmail]                     = useState("");
   const [password, setPassword]               = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [country, setCountry]                 = useState("India");
+  const [country, setCountry]                 = useState("");
   const [referralCode, setReferralCode]       = useState("");
   const [signedUp, setSignedUp]               = useState(false);
 
@@ -283,13 +277,12 @@ export default function SignupPage() {
                 <label className="block text-sm font-semibold text-[#0F3D36] mb-1.5">
                   Country <span className="text-red-500">*</span>
                 </label>
-                <select required value={country} onChange={(e) => setCountry(e.target.value)}
+                <input required value={country} onChange={(e) => setCountry(e.target.value)}
+                  autoComplete="country-name"
+                  maxLength={100}
+                  placeholder="Enter your country or territory"
                   style={{ background: "rgba(255,255,255,0.7)", borderColor: "rgba(13,148,136,0.25)" }}
-                  className="w-full h-10 px-3 rounded-lg border text-stone-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#0D9488] focus:border-transparent transition-all cursor-pointer">
-                  {COUNTRIES.map((c) => (
-                    <option key={c} value={c} className="bg-white text-stone-800">{c}</option>
-                  ))}
-                </select>
+                  className="w-full h-10 px-3 rounded-lg border text-stone-800 text-sm placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-[#0D9488] focus:border-transparent transition-all" />
               </div>
 
               {/* Referral Code */}

@@ -52,7 +52,7 @@ interface FormData {
 }
 
 const DEFAULT: FormData = {
-  title: "", company: "", company_logo_url: "", location: "India",
+  title: "", company: "", company_logo_url: "", location: "",
   work_type: "remote", job_type: "full-time", category: "Customer Service",
   description: "", requirements: "", salary_range: "",
   apply_url: "", apply_via_nexguild: false,
@@ -195,12 +195,12 @@ export default function AdminJobsNewPage() {
                 {JOB_TYPES.map((t) => <option key={t}>{t}</option>)}
               </select>
             </Field>
-            <Field label="Location">
-              <input value={form.location} onChange={(e) => set("location", e.target.value)} className={inputCls()} />
+            <Field label="Location" hint="Include the eligible countries or regions, or specify worldwide.">
+              <input value={form.location} onChange={(e) => set("location", e.target.value)} placeholder="e.g. Worldwide, US & Canada, or London, UK" className={inputCls()} />
             </Field>
           </div>
 
-          <Field label="Salary / CTC Range" hint="e.g. ₹15,000–₹25,000/month or ₹3–5 LPA">
+          <Field label="Salary / Compensation" hint="Include the currency and pay period, e.g. USD 3,000/month.">
             <input value={form.salary_range} onChange={(e) => set("salary_range", e.target.value)} className={inputCls()} />
           </Field>
 

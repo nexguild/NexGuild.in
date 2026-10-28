@@ -8,7 +8,7 @@ export const metadata: Metadata = {
     "NexGuild is a community where anyone can earn real money by completing simple tasks — audio recording, transcription, app testing, and more. Free to join.",
   openGraph: {
     title: "About NexGuild — For Contributors",
-    description: "Join India's contributor community. Complete tasks, earn NexCoins, redeem for real rewards.",
+    description: "Join NexGuild's global contributor community. Complete tasks, earn NexCoins, and explore rewards available in your region.",
     url: "https://nexguild.in/earn/about",
   },
 };
@@ -24,7 +24,7 @@ const VALUES = [
   },
   {
     title: "Real Rewards",
-    desc: "NexCoins redeem directly for Amazon, Flipkart, Google Play, and Zomato vouchers. No points that expire useless.",
+    desc: "Redeem NexCoins for available rewards in the Store. Voucher brands and options vary by country.",
   },
   {
     title: "Fair Quality Review",
@@ -63,7 +63,7 @@ export default function ContributorAboutPage() {
               Every task on NexGuild is real work — audio recordings for AI training, transcription, app reviews, web research. Organisations actually pay for this work, and we pass a fair share directly to contributors as NexCoins.
             </p>
             <p className="text-[var(--text-secondary)] leading-relaxed">
-              We are India-based and built for Indian contributors. NexCoins redeem for vouchers you can actually use — Amazon, Flipkart, Zomato, Google Play.
+              Founded in India and built for contributors worldwide, NexGuild makes it easier to find meaningful tasks wherever you are. Task eligibility and reward options vary by country.
             </p>
           </FadeIn>
         </div>

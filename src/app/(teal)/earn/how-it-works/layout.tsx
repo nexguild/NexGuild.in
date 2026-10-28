@@ -3,13 +3,13 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "How It Works — Earn with NexGuild | NexGuild",
   description:
-    "Learn how NexGuild works: sign up free, complete tasks from your phone, earn NexCoins, and redeem for Amazon, Flipkart & Google Play gift vouchers. Step-by-step guide.",
+    "Learn how NexGuild works: join from anywhere, complete eligible tasks, earn NexCoins, and explore rewards available in your region.",
   keywords: [
-    "how to earn online India",
+    "how to earn online",
     "NexGuild how it works",
     "NexCoins explained",
-    "earn gift vouchers India",
-    "online tasks guide India",
+    "earn rewards online",
+    "online tasks guide",
     "work from home earning guide",
   ],
   alternates: { canonical: "https://www.nexguild.in/earn/how-it-works" },

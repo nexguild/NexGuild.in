@@ -41,19 +41,19 @@ These combine surveys, app installs, watching videos, and offerwall-style activi
 ### 4. India-Specific Task & Reward Platforms
 **Examples:** Roz Dhan, TaskBucks, and newer entrants like NexGuild
 
-This category has grown specifically to serve Indian users with India-relevant payout methods and India-relevant task types — things shaped around the realities of the Indian gig economy, student schedules, and regional payment preferences.
+This category includes platforms designed around the task types and reward options available in a particular market — things shaped by local work patterns and regional payment preferences.
 
 ## Where NexGuild Fits
 
-NexGuild is built specifically for this fourth category, with a few deliberate differences from the broader field:
+NexGuild is a global contributor platform with a few deliberate differences from the broader field. Task eligibility and reward options vary by country and partner:
 
 **Structured, step-by-step tasks.** Rather than a loose feed of mixed task types, NexGuild tasks are built around clear sequential steps with explicit instructions at each stage — closer to the structured approach of platforms like Clickworker than the more freeform offer-wall model.
 
-**NexCoins-to-voucher model.** Instead of direct cash payouts, NexGuild uses an in-platform coin system redeemable for vouchers from brands like Amazon, Flipkart, Google Play, and Zomato. This is a deliberate trade-off — it means no direct cash withdrawal, but it also means simpler, faster, more predictable redemption without payment gateway delays or minimum cash-out thresholds that can lock up small earnings.
+**NexCoins-to-reward model.** Instead of direct cash payouts, NexGuild uses an in-platform coin system redeemable for the rewards listed in each contributor's Store. Available brands and options depend on region and provider. This is a deliberate trade-off — it means no direct cash withdrawal, but it also means simpler redemption without payment gateway delays or minimum cash-out thresholds that can lock up small earnings.
 
 **A level and trust system.** As you complete more approved tasks, you level up and gain access to higher-value, higher-trust opportunities — a structure not all platforms in this space implement.
 
-**India-first design.** Built and operated in India, with task types, support, and platform decisions made with Indian contributors specifically in mind, rather than a global platform with India treated as one region among many.
+**Global access with regional availability.** Contributors can join from around the world, while individual tasks and reward options depend on location and partner requirements.
 
 ## What NexGuild Isn't (Yet)
 
@@ -70,8 +70,8 @@ In the interest of an honest comparison: NexGuild is newer than most platforms o
 
 **Want the widest variety of established microtask work?** Clickworker or Microworkers offer more task volume today, with the trade-off of USD-based payouts not always optimized for India.
 
-**Want simple, beginner-friendly tasks with no skill requirement, built specifically for Indian users, with a clean voucher-based reward system?** This is exactly where NexGuild is positioned — and as a newer platform, it's actively expanding its task volume and opportunities.
+**Want simple, beginner-friendly tasks with a clear reward system?** Explore NexGuild and check your dashboard for opportunities and rewards currently available in your region.
 
 ## Final Thoughts
 
-There's no single best earning app — the right choice depends on your skills, your time, and what kind of payout works for you. Many people use more than one platform simultaneously: a freelance marketplace for skill-based income, a global microtask site for task variety, and an India-specific platform like NexGuild for vouchers and rewards tailored to local needs. Compare based on what you actually need, not just which name shows up first in search results.
+There's no single best earning app — the right choice depends on your skills, your time, and what kind of payout works for you. Many people use more than one platform simultaneously: a freelance marketplace for skill-based income, a global microtask site for task variety, and a contributor platform like NexGuild for structured tasks and region-dependent rewards. Compare based on what you actually need, not just which name shows up first in search results.

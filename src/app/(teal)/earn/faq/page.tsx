@@ -21,7 +21,7 @@ const FAQ_SECTIONS = [
     section: "Getting Started",
     faqs: [
       { q: "Is it free to join NexGuild?",         a: "Yes, completely free. There are no joining fees, subscription charges, or hidden costs. You sign up, complete tasks, and get paid." },
-      { q: "What countries can join?",              a: "NexGuild is open globally. Most tasks are available worldwide. Some tasks may be restricted by country based on the organization's requirements. India-based contributors have access to the most tasks." },
+      { q: "What countries can join?",              a: "NexGuild welcomes contributors worldwide. Task and survey availability depends on each organization's country and profile requirements, so the opportunities available to you may vary by location." },
       { q: "Do I need any experience?",             a: "No. Most tasks on NexGuild require no prior experience. Instructions are provided for each task. Some higher-level tasks (content writing, advanced annotation) may prefer experience, but it is not mandatory to start." },
       { q: "How do I create an account?",           a: "Visit nexguild.in/signup, enter your name, email, password, and country. Agree to the Terms of Service and click Create Account. You can start browsing tasks immediately." },
     ],
@@ -39,9 +39,9 @@ const FAQ_SECTIONS = [
     section: "NexCoins & Vouchers",
     faqs: [
       { q: "How does my NexCoins balance work?",             a: "Your NexCoins balance shows confirmed coins ready to redeem. Coins from tasks still under review are shown as pending and cannot be redeemed yet." },
-      { q: "What can I redeem NexCoins for?",                a: "You can redeem NexCoins for Amazon, Flipkart, Paytm, PhonePe, Swiggy, Zomato, and Google Play gift vouchers. Visit the Store in your dashboard." },
+      { q: "What can I redeem NexCoins for?",                a: "Available rewards depend on your country and are listed in the Store in your dashboard. Voucher brands and options may differ by region." },
       { q: "Is there a minimum NexCoins requirement?",       a: "Each voucher has a fixed NexCoins cost shown in the Store. There is no separate minimum — just choose a voucher your balance covers." },
-      { q: "How long does voucher delivery take?",           a: "Vouchers are delivered to your registered email within 48 hours after your redemption request is processed by our team." },
+      { q: "How long does voucher delivery take?",           a: "Delivery typically takes 48 to 72 business hours after approval. Timing may vary by reward provider and region." },
     ],
   },
   {

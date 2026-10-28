@@ -1,23 +1,23 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Browse Tasks — Earn Online India | NexGuild",
+  title: "Browse Online Tasks Worldwide | NexGuild",
   description:
     "Browse all 12 task categories on NexGuild — audio recording, transcription, data annotation, app testing, surveys, offerwalls, remote jobs and more. Work from phone, earn NexCoins.",
   keywords: [
-    "online tasks India",
-    "earn from phone India",
+    "online tasks worldwide",
+    "earn from your phone",
     "audio recording tasks",
-    "transcription jobs India",
+    "transcription tasks",
     "data annotation tasks",
-    "app testing jobs India",
-    "survey tasks India",
+    "app testing tasks",
+    "online survey tasks",
     "NexGuild tasks",
   ],
   alternates: { canonical: "https://www.nexguild.in/earn/tasks" },
   openGraph: {
     title: "Browse All Earning Tasks — NexGuild",
-    description: "12 categories of paid tasks. Work from your phone. Earn NexCoins and redeem for gift vouchers.",
+    description: "Explore task categories, earn NexCoins, and check opportunities available in your region.",
     url: "https://www.nexguild.in/earn/tasks",
     type: "website",
   },

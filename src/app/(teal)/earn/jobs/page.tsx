@@ -511,14 +511,14 @@ export default function JobsPage() {
                     <label className="block text-xs font-medium text-slate-700 mb-1">Current CTC</label>
                     <input value={applyForm.current_ctc}
                       onChange={(e) => setApplyForm(f => ({ ...f, current_ctc: e.target.value }))}
-                      placeholder="e.g. ₹3 LPA or ₹25,000/mo"
+                      placeholder="e.g. 60,000/year (include currency)"
                       className="w-full h-9 px-3 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0D9488]/30 focus:border-[#0D9488]" />
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-slate-700 mb-1">Expected CTC</label>
                     <input value={applyForm.expected_ctc}
                       onChange={(e) => setApplyForm(f => ({ ...f, expected_ctc: e.target.value }))}
-                      placeholder="e.g. ₹4 LPA or ₹35,000/mo"
+                      placeholder="e.g. 75,000/year (include currency)"
                       className="w-full h-9 px-3 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0D9488]/30 focus:border-[#0D9488]" />
                   </div>
                 </div>

@@ -56,7 +56,7 @@ const WHY_JOIN = [
   { accent: "#0D9488", icon: "📱", title: "Work From Your Phone",    desc: "No laptop needed. Most tasks complete entirely from your smartphone — anytime, anywhere." },
   { accent: "#F59E0B", icon: "💰", title: "Multiple Income Streams", desc: "Earn from Tasks, Offerwalls, Jobs, and Referrals — all tracked in one dashboard." },
   { accent: "#8B5CF6", icon: "🏆", title: "Skill-Based Levels",      desc: "Grow from Beginner to Expert. Higher levels unlock better-paying task batches." },
-  { accent: "#10B981", icon: "⚡", title: "Vouchers in 48 Hours",    desc: "Redeem NexCoins and receive Amazon, Flipkart, or Paytm vouchers by email within 48 hrs." },
+  { accent: "#10B981", icon: "⚡", title: "Rewards by Email",         desc: "Approved redemptions are delivered by email. Available rewards and delivery times vary by country and provider." },
 ];
 
 const STEPS = [
@@ -244,7 +244,7 @@ export default function EarnPage() {
 
           <FadeIn delay={140}>
             <p className="text-sm sm:text-base leading-relaxed max-w-xl mx-auto mb-7 text-stone-500 text-balance">
-              Complete simple tasks from your phone — recording, testing, transcribing — and redeem NexCoins for Amazon, Flipkart &amp; more.
+              Complete tasks from your phone — recording, testing, transcribing — and redeem NexCoins for rewards available in your region.
             </p>
           </FadeIn>
 
@@ -482,7 +482,7 @@ export default function EarnPage() {
       <section className="py-10 px-6" style={{ background: "rgba(13,148,136,0.04)", borderTop: "1px solid rgba(13,148,136,0.08)", borderBottom: "1px solid rgba(13,148,136,0.08)" }}>
         <div className="mx-auto max-w-container text-center">
           <FadeIn>
-            <p className="text-xs font-bold uppercase tracking-widest text-stone-400 mb-5">Redeem your NexCoins at</p>
+            <p className="text-xs font-bold uppercase tracking-widest text-stone-400 mb-5">Example reward partners</p>
             <div className="flex flex-wrap items-center justify-center gap-2.5">
               {VOUCHERS.map((v) => (
                 <div key={v.name}
@@ -493,7 +493,7 @@ export default function EarnPage() {
                 </div>
               ))}
             </div>
-            <p className="text-xs text-stone-400 mt-4">Gift vouchers delivered to your email within 48 hours of redemption.</p>
+            <p className="text-xs text-stone-400 mt-4">Available reward partners and delivery times vary by country and provider.</p>
           </FadeIn>
         </div>
       </section>
@@ -523,7 +523,7 @@ export default function EarnPage() {
                   </div>
                 </div>
                 <p className="text-sm text-stone-600 leading-relaxed">
-                  &ldquo;I built NexGuild because I wanted to create a platform where anyone can earn real rewards in their free time — honestly and transparently, without fake promises. NexGuild is built and run from India, and I personally review every feature before it goes live.&rdquo;
+                  &ldquo;I built NexGuild because I wanted to create a platform where anyone can earn real rewards in their free time — honestly and transparently, without fake promises. Founded in India and built for contributors worldwide, NexGuild is a community I personally work to improve every day.&rdquo;
                 </p>
                 <p className="text-sm font-semibold text-[#0F3D36] italic">— Somen, Founder &amp; Builder</p>
               </div>

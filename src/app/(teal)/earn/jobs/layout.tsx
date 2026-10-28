@@ -1,30 +1,30 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Remote & WFH Jobs in India — NexGuild Jobs",
+  title: "Remote Jobs & Work Opportunities | NexGuild",
   description:
-    "Browse remote, work-from-home, and office jobs from top companies like Telus, Appen, and Lionbridge. Apply via NexGuild or direct — curated for Indian job seekers.",
+    "Explore remote and work-from-home roles from employers worldwide. Review each listing for its location, eligibility, and application details.",
   keywords: [
-    "remote jobs India",
-    "work from home jobs India",
+    "remote jobs worldwide",
+    "work from home jobs",
     "WFH jobs",
-    "Telus jobs India",
+    "international remote jobs",
     "Appen jobs",
     "Lionbridge jobs",
-    "online jobs India",
+    "online jobs",
     "NexGuild jobs",
   ],
   alternates: { canonical: "https://www.nexguild.in/earn/jobs" },
   openGraph: {
-    title: "Remote & WFH Jobs in India — NexGuild",
-    description: "Browse remote and work-from-home jobs from top companies. Curated for Indian job seekers.",
+    title: "Remote Jobs & Work Opportunities | NexGuild",
+    description: "Explore remote roles from employers worldwide. Location and eligibility vary by listing.",
     url: "https://www.nexguild.in/earn/jobs",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Remote & WFH Jobs in India — NexGuild",
-    description: "Browse remote and WFH jobs curated for Indian job seekers.",
+    title: "Remote Jobs & Work Opportunities | NexGuild",
+    description: "Explore remote roles from employers worldwide. Location and eligibility vary by listing.",
   },
 };
 

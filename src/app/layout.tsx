@@ -13,10 +13,10 @@ export const metadata: Metadata = {
   description:
     "NexGuild is a community-driven contributor platform connecting skilled individuals with paid micro-tasks, surveys, content work, and managed projects.",
   keywords: [
-    "earn money online India",
+    "global contributor platform",
     "micro tasks",
-    "paid surveys India",
-    "work from home India",
+    "paid surveys online",
+    "remote work opportunities",
     "online earning platform",
     "NexGuild",
     "contributor platform",
@@ -32,12 +32,11 @@ export const metadata: Metadata = {
   },
   openGraph: {
     type: "website",
-    locale: "en_IN",
     url: "https://www.nexguild.in",
     siteName: "NexGuild",
     title: "NexGuild — Earn by Contributing. Grow by Participating.",
     description:
-      "Join NexGuild to earn NexCoins by completing micro-tasks, surveys, and content work. Redeem for Amazon, Flipkart, Paytm vouchers and more.",
+      "Join contributors worldwide to earn NexCoins by completing micro-tasks, surveys, and content work. Available tasks and rewards vary by region.",
   },
   twitter: {
     card: "summary_large_image",
