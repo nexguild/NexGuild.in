@@ -628,7 +628,7 @@ export default function DashboardHome() {
 
       {showCpxCampaignPromo && (
         <div
-          className="cpx-campaign-banner animate-fade-slide-up relative isolate overflow-hidden rounded-2xl border border-white/35 bg-[linear-gradient(115deg,#4f46e5_0%,#9333ea_35%,#ec4899_68%,#f97316_100%)] p-5 text-white sm:p-6"
+          className="cpx-campaign-banner relative isolate overflow-hidden rounded-2xl border border-white/35 bg-[linear-gradient(115deg,#4f46e5_0%,#9333ea_35%,#ec4899_68%,#f97316_100%)] p-5 text-white sm:p-6"
           style={{ animationDelay: "70ms" }}
         >
           <div aria-hidden className="cpx-campaign-orb pointer-events-none absolute -right-8 -top-14 h-44 w-44 rounded-full border border-white/20 bg-white/10" />
