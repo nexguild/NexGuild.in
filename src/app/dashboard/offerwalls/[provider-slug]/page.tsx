@@ -29,6 +29,8 @@ export default function ProviderExperiencePage({
 }) {
   const { "provider-slug": providerSlug } = use(params);
   const router = useRouter();
+  const [returnTo, setReturnTo] = useState("/dashboard/surveys");
+  const returnLabel = returnTo === "/dashboard/surveys" ? "Surveys & Offers" : "Offerwall Hub";
 
   const [provider, setProvider] = useState<Provider | null>(null);
   const [userId, setUserId]     = useState<string | null>(null);
@@ -48,6 +50,20 @@ export default function ProviderExperiencePage({
   const [clixwallFrameError, setClixwallFrameError] = useState<string | null>(null);
   const [cpxFrameUrl, setCpxFrameUrl] = useState<string | null>(null);
   const [cpxFrameError, setCpxFrameError] = useState<string | null>(null);
+
+  useEffect(() => {
+    try {
+      const savedReturn = sessionStorage.getItem("nexguild:offerwall-return");
+      if (!savedReturn) return;
+      sessionStorage.removeItem("nexguild:offerwall-return");
+      const parsed = JSON.parse(savedReturn) as { slug?: unknown; path?: unknown };
+      if (parsed.slug === providerSlug && parsed.path === "/dashboard/surveys") {
+        setReturnTo("/dashboard/surveys");
+      }
+    } catch {
+      return;
+    }
+  }, [providerSlug]);
 
   useEffect(() => {
     async function init() {
@@ -70,7 +86,7 @@ export default function ProviderExperiencePage({
       const { providers } = await res.json() as { providers: Provider[] };
       const found = providers.find((p) => p.slug === providerSlug && !p.is_ad_network);
       if (!found) { setNotFound(true); setLoading(false); return; }
-      if (!found.isLive) { router.replace("/dashboard/offerwalls"); return; }
+      if (!found.isLive) { router.replace("/dashboard/surveys"); return; }
       setProvider(found);
       setLoading(false);
     }
@@ -208,11 +224,11 @@ export default function ProviderExperiencePage({
           <p className="text-sm text-slate-500">This offerwall provider doesn&apos;t exist or isn&apos;t active yet.</p>
         </div>
         <Link
-          href="/dashboard/offerwalls"
+          href={returnTo}
           className="mt-2 inline-flex items-center gap-1.5 h-9 px-5 rounded-xl text-sm font-semibold text-white"
           style={{ background: "linear-gradient(135deg, #6366f1 0%, #14b8a6 100%)" }}
         >
-          Back to Offerwall Hub
+          Back to {returnLabel}
         </Link>
       </div>
     );
@@ -228,11 +244,11 @@ export default function ProviderExperiencePage({
       {/* Breadcrumb bar */}
       <div className="flex items-center gap-2 px-4 sm:px-6 h-12 border-b border-slate-100 bg-white flex-shrink-0">
         <Link
-          href="/dashboard/offerwalls"
+          href={returnTo}
           className="flex items-center gap-1 text-sm text-slate-500 hover:text-indigo-600 transition-colors font-medium"
         >
           <ChevronLeft className="h-4 w-4" />
-          Offerwall Hub
+          {returnLabel}
         </Link>
         <span className="text-slate-300">/</span>
         <span className="text-sm text-slate-700 font-semibold">{provider.name}</span>

@@ -10,8 +10,9 @@ import { supabase } from "@/lib/supabase";
 const PAGE_TITLES: Record<string, string> = {
   "/dashboard":               "Dashboard",
   "/dashboard/opportunities": "Opportunities",
+  "/dashboard/surveys":       "Surveys & Offers",
   "/dashboard/tasks":         "My Tasks",
-  "/dashboard/offerwalls":    "Offerwall Hub",
+  "/dashboard/offerwalls":    "Surveys & Offers",
   "/dashboard/earnings":      "Earnings",
   "/dashboard/wallet":        "NexCoins",
   "/dashboard/store":         "NexStore",

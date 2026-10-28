@@ -320,7 +320,7 @@ export default function OpportunitiesPage() {
           <p className="text-lg font-bold text-slate-800 mt-1">No tasks found</p>
           <p className="text-sm text-slate-500">Try adjusting your filters or check back soon.</p>
           <a
-            href="/dashboard/offerwalls"
+            href="/dashboard/surveys"
             className="mt-2 inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-teal-500 to-teal-600 px-5 py-2.5 text-sm font-semibold text-white transition-all hover:from-teal-600 hover:to-teal-700"
           >
             Browse Offerwalls →

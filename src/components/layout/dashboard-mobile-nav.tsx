@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  LayoutDashboard, Search, ClipboardList, ShoppingBag, MoreHorizontal,
+  LayoutDashboard, Search, ClipboardList, ShoppingBag, Sparkles, MoreHorizontal,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -12,6 +12,7 @@ const TABS = [
   { label: "Opportunities", href: "/dashboard/opportunities",  icon: Search },
   { label: "Tasks",         href: "/dashboard/tasks",          icon: ClipboardList },
   { label: "Store",         href: "/dashboard/store",          icon: ShoppingBag },
+  { label: "Surveys",       href: "/dashboard/surveys",        icon: Sparkles },
   { label: "More",          href: "/dashboard/profile",        icon: MoreHorizontal },
 ];
 

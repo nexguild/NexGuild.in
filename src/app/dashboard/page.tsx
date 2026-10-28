@@ -803,7 +803,7 @@ export default function DashboardHome() {
 
       {/* ── QUICK ACTIONS GRID ──────────────────────────────────────── */}
       <div className="animate-fade-slide-up grid grid-cols-2 sm:grid-cols-4 gap-3" style={{ animationDelay: "100ms" }}>
-        <Link href="/dashboard/offerwalls" className="rounded-2xl px-4 py-3 text-sm font-semibold flex items-center gap-2 w-full justify-center transition-all duration-200 hover:-translate-y-0.5 bg-gradient-to-r from-teal-500 to-teal-600 text-white shadow-md hover:shadow-lg">
+        <Link href="/dashboard/surveys" className="rounded-2xl px-4 py-3 text-sm font-semibold flex items-center gap-2 w-full justify-center transition-all duration-200 hover:-translate-y-0.5 bg-gradient-to-r from-teal-500 to-teal-600 text-white shadow-md hover:shadow-lg">
           <span>🎯</span><span>Complete a Survey</span>
         </Link>
         <Link href="/dashboard/opportunities" className="rounded-2xl px-4 py-3 text-sm font-semibold flex items-center gap-2 w-full justify-center transition-all duration-200 hover:-translate-y-0.5 bg-gradient-to-r from-indigo-500 to-indigo-600 text-white shadow-md hover:shadow-lg">
@@ -833,7 +833,7 @@ export default function DashboardHome() {
                 {liveOfferwalls.length} offerwall{liveOfferwalls.length === 1 ? "" : "s"} available now. Complete surveys, app installs, and offers at your convenience.
               </p>
             </div>
-            <Link href="/dashboard/offerwalls" className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-bold text-teal-700 shadow-sm transition hover:-translate-y-0.5 hover:bg-teal-50">
+            <Link href="/dashboard/surveys" className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-bold text-teal-700 shadow-sm transition hover:-translate-y-0.5 hover:bg-teal-50">
               View offerwalls <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
@@ -1039,7 +1039,7 @@ export default function DashboardHome() {
                   </div>
                   <div className="space-y-2">
                     {liveOfferwalls.map((p) => (
-                      <Link key={p.id} href="/dashboard/offerwalls"
+                      <Link key={p.id} href="/dashboard/surveys"
                         className="group flex items-stretch overflow-hidden rounded-xl border border-indigo-100 bg-white shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200">
                         <div className="w-1 bg-indigo-400 self-stretch flex-shrink-0" />
                         <div className="flex items-center gap-3 p-3 flex-1 min-w-0">

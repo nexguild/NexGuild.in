@@ -3,8 +3,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  LayoutDashboard, Search, ClipboardList, Layers,
-  TrendingUp, ShoppingBag, Gift, Users, Megaphone, Headphones,
+  LayoutDashboard, Search, ClipboardList,
+  TrendingUp, ShoppingBag, Gift, Users, Megaphone, Headphones, Sparkles,
   User, Settings, LogOut, X, Wallet, Crown,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -19,8 +19,8 @@ interface DashboardSidebarProps {
 const NAV_ITEMS = [
   { label: "Dashboard",      href: "/dashboard",               icon: LayoutDashboard },
   { label: "Opportunities",  href: "/dashboard/opportunities",  icon: Search },
+  { label: "Surveys & Offers", href: "/dashboard/surveys",     icon: Sparkles },
   { label: "My Tasks",       href: "/dashboard/tasks",          icon: ClipboardList },
-  { label: "Offerwall Hub",  href: "/dashboard/offerwalls",     icon: Layers },
   { label: "Earnings",       href: "/dashboard/earnings",       icon: TrendingUp },
   { label: "NexCoins",       href: "/dashboard/wallet",         icon: Wallet },
   { label: "NexStore",       href: "/dashboard/store",          icon: ShoppingBag },

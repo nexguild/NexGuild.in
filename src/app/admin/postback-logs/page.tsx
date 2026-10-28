@@ -100,6 +100,28 @@ export default function PostbackLogsPage() {
     return new Date(ts).toLocaleString("en-IN", { dateStyle: "short", timeStyle: "medium" });
   }
 
+  function getActivity(log: PostbackLog) {
+    const params = log.raw_params ?? {};
+    const offerId = params.offer_id ?? "";
+    const isCpxSurvey = log.provider === "cpx_research";
+    const isOffer = !isCpxSurvey && (
+      params.offer === "true" ||
+      params.offer === "1" ||
+      Boolean(params.offer_name || params.event_name) ||
+      offerId.startsWith("campaign_") ||
+      (log.provider !== "theoremreach" && Boolean(offerId))
+    );
+    const title = isOffer
+      ? params.offer_name || params.event_name || (offerId ? `Offer ${offerId}` : "Offer completion")
+      : log.provider === "theoremreach"
+        ? "Survey completion"
+        : "Survey activity";
+    const eventName = isOffer && params.event_name && params.event_name !== title
+      ? params.event_name
+      : null;
+    return { label: isOffer ? "Offer" : "Survey", title, eventName };
+  }
+
   const hashInvalidCount = logs.filter(l => l.action_taken === "hash_invalid").length;
 
   return (
@@ -109,7 +131,7 @@ export default function PostbackLogsPage() {
         <div>
           <h1 className="text-2xl font-bold text-[var(--text-primary)]">Postback Logs</h1>
           <p className="text-sm text-[var(--text-secondary)] mt-0.5">
-            Audit trail of every offerwall postback received — last 200 entries
+            Audit trail of survey completions, offer milestones, reversals, and errors — last 200 entries
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -191,6 +213,7 @@ export default function PostbackLogsPage() {
                 <tr className="border-b border-[var(--border-default)] bg-[var(--surface-subtle)]">
                   <th className="text-left px-4 py-3 font-medium text-[var(--text-muted)] text-xs whitespace-nowrap">Time</th>
                   <th className="text-left px-4 py-3 font-medium text-[var(--text-muted)] text-xs">Provider</th>
+                  <th className="text-left px-4 py-3 font-medium text-[var(--text-muted)] text-xs">Activity</th>
                   <th className="text-left px-4 py-3 font-medium text-[var(--text-muted)] text-xs">Action</th>
                   <th className="text-left px-4 py-3 font-medium text-[var(--text-muted)] text-xs">Hash</th>
                   <th className="text-left px-4 py-3 font-medium text-[var(--text-muted)] text-xs">User ID / TX ID</th>
@@ -202,8 +225,10 @@ export default function PostbackLogsPage() {
                 {logs.map((log) => {
                   const isAlert  = log.action_taken === "hash_invalid" || log.action_taken === "error";
                   const expanded = expandedId === log.id;
-                  const userId   = log.raw_params?.user_id ?? "";
-                  const txId     = log.raw_params?.tx_id ?? log.raw_params?.trans_id ?? "";
+                  const params   = log.raw_params ?? {};
+                  const userId   = params.user_id ?? params.uid ?? params.publisher_user_id ?? "";
+                  const txId     = params.tx_id ?? params.trans_id ?? params.transaction_id ?? params.tid ?? params.offer_transaction_id ?? "";
+                  const activity = getActivity(log);
 
                   return (
                     <React.Fragment key={log.id}>
@@ -223,6 +248,15 @@ export default function PostbackLogsPage() {
                         {/* Provider */}
                         <td className="px-4 py-3">
                           <span className="text-xs font-mono text-[var(--text-secondary)]">{log.provider}</span>
+                        </td>
+
+                        {/* Survey or offer event */}
+                        <td className="px-4 py-3">
+                          <span className={`inline-flex rounded-full border px-2 py-0.5 text-[10px] font-bold ${activity.label === "Offer" ? "border-orange-500/20 bg-orange-500/10 text-orange-300" : "border-indigo-500/20 bg-indigo-500/10 text-indigo-300"}`}>
+                            {activity.label}
+                          </span>
+                          <p className="mt-1 max-w-[190px] truncate text-xs text-[var(--text-secondary)]" title={activity.title}>{activity.title}</p>
+                          {activity.eventName && <p className="max-w-[190px] truncate text-[10px] text-[var(--text-muted)]" title={activity.eventName}>{activity.eventName}</p>}
                         </td>
 
                         {/* Action */}
