@@ -626,6 +626,47 @@ export default function DashboardHome() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/20 space-y-5 pb-8">
       <style>{PULSE_STYLE}</style>
 
+      {showCpxCampaignPromo && (
+        <div
+          className="cpx-campaign-banner animate-fade-slide-up relative isolate overflow-hidden rounded-2xl border border-white/35 bg-[linear-gradient(115deg,#4f46e5_0%,#9333ea_35%,#ec4899_68%,#f97316_100%)] p-5 text-white sm:p-6"
+          style={{ animationDelay: "70ms" }}
+        >
+          <div aria-hidden className="cpx-campaign-orb pointer-events-none absolute -right-8 -top-14 h-44 w-44 rounded-full border border-white/20 bg-white/10" />
+          <div aria-hidden className="cpx-campaign-orb pointer-events-none absolute bottom-[-4rem] right-40 h-32 w-32 rounded-full bg-fuchsia-200/15" style={{ animationDelay: "1.2s" }} />
+          <span aria-hidden className="cpx-campaign-sparkle pointer-events-none absolute right-[37%] top-5 hidden text-2xl text-yellow-100/90 sm:block">✦</span>
+          <div className="relative z-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="max-w-2xl">
+              <p className="mb-2 inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/15 px-3 py-1 text-[10px] font-extrabold uppercase tracking-[0.17em] text-white shadow-sm backdrop-blur-sm sm:text-xs">
+                <span className="cpx-campaign-sparkle" aria-hidden>✦</span>
+                CPX Research Bonus · {cpxCampaignLive ? "Now live" : "Starts 28 October"}
+              </p>
+              <h2 className="text-xl font-black leading-tight drop-shadow-sm sm:text-2xl">
+                <span className="text-yellow-200">+1,000 NC</span> bonus for every 5,000 NC
+              </h2>
+              <p className="mt-1.5 max-w-xl text-xs leading-relaxed text-white/90 sm:text-sm">
+                Earn 1,000 bonus NC per 5,000 eligible NC from completed CPX surveys, during 28–31 October (IST). Submit the claim form; all rewards are verified by NexGuild and are subject to approval.
+              </p>
+            </div>
+            <div className="flex shrink-0 flex-col gap-2 sm:min-w-[190px]">
+              <a
+                href="https://forms.gle/DTYcZV3BYCQCUBmY7"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="cpx-campaign-cta group inline-flex items-center justify-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-extrabold text-indigo-700 transition hover:-translate-y-1 hover:bg-yellow-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+              >
+                <span aria-hidden>🎁</span> Claim your bonus <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+              </a>
+              <Link
+                href="/dashboard/offerwalls/cpx_research"
+                className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/40 bg-white/15 px-5 py-2.5 text-sm font-bold text-white backdrop-blur-sm transition hover:bg-white/25 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+              >
+                🚀 Open CPX Research
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ── FIX 1: HERO BANNER ──────────────────────────────────────── */}
       <div
         className="animate-fade-slide-up relative rounded-2xl overflow-hidden"
@@ -719,47 +760,6 @@ export default function DashboardHome() {
           )}
         </div>
       </div>
-
-      {showCpxCampaignPromo && (
-        <div
-          className="cpx-campaign-banner animate-fade-slide-up relative isolate overflow-hidden rounded-2xl border border-white/35 bg-[linear-gradient(115deg,#4f46e5_0%,#9333ea_35%,#ec4899_68%,#f97316_100%)] p-5 text-white sm:p-6"
-          style={{ animationDelay: "70ms" }}
-        >
-          <div aria-hidden className="cpx-campaign-orb pointer-events-none absolute -right-8 -top-14 h-44 w-44 rounded-full border border-white/20 bg-white/10" />
-          <div aria-hidden className="cpx-campaign-orb pointer-events-none absolute bottom-[-4rem] right-40 h-32 w-32 rounded-full bg-fuchsia-200/15" style={{ animationDelay: "1.2s" }} />
-          <span aria-hidden className="cpx-campaign-sparkle pointer-events-none absolute right-[37%] top-5 hidden text-2xl text-yellow-100/90 sm:block">✦</span>
-          <div className="relative z-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="max-w-2xl">
-              <p className="mb-2 inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/15 px-3 py-1 text-[10px] font-extrabold uppercase tracking-[0.17em] text-white shadow-sm backdrop-blur-sm sm:text-xs">
-                <span className="cpx-campaign-sparkle" aria-hidden>✦</span>
-                CPX Research Bonus · {cpxCampaignLive ? "Now live" : "Starts 28 October"}
-              </p>
-              <h2 className="text-xl font-black leading-tight drop-shadow-sm sm:text-2xl">
-                <span className="text-yellow-200">+1,000 NC</span> bonus for every 5,000 NC
-              </h2>
-              <p className="mt-1.5 max-w-xl text-xs leading-relaxed text-white/90 sm:text-sm">
-                Earn 1,000 bonus NC per 5,000 eligible NC from completed CPX surveys, during 28–31 October (IST). Submit the claim form; all rewards are verified by NexGuild and are subject to approval.
-              </p>
-            </div>
-            <div className="flex shrink-0 flex-col gap-2 sm:min-w-[190px]">
-              <a
-                href="https://forms.gle/DTYcZV3BYCQCUBmY7"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="cpx-campaign-cta group inline-flex items-center justify-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-extrabold text-indigo-700 transition hover:-translate-y-1 hover:bg-yellow-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
-              >
-                <span aria-hidden>🎁</span> Claim your bonus <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-              </a>
-              <Link
-                href="/dashboard/offerwalls/cpx_research"
-                className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/40 bg-white/15 px-5 py-2.5 text-sm font-bold text-white backdrop-blur-sm transition hover:bg-white/25 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
-              >
-                🚀 Open CPX Research
-              </Link>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* ── QUICK ACTIONS GRID ──────────────────────────────────────── */}
       <div className="animate-fade-slide-up grid grid-cols-2 sm:grid-cols-4 gap-3" style={{ animationDelay: "100ms" }}>
