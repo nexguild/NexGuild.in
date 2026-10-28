@@ -12,7 +12,7 @@ NexGuild tasks are structured assignments — data entry, research, content work
 
 > 🎯 **Ready to Complete Your First NexGuild Task?**
 > Browse available tasks in your dashboard — pick one, complete it, submit it, and earn NexCoins when approved.
-> 👉 **[Start Your First Task — Join NexGuild Free](https://www.nexguild.in/auth/register)**
+> 👉 **[Start Your First Task — Join NexGuild Free](/signup)**
 
 <figure>
   <img src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&auto=format&fit=crop&q=80" alt="person working on laptop from home" width="800" height="450" />

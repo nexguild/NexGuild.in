@@ -101,4 +101,4 @@ If you're starting from zero with no accounts:
 
 > 💡 **All three methods in one place**
 > NexGuild combines micro-tasks, CPX Research surveys, and offerwalls. Instead of managing three separate accounts, everything earns toward one balance redeemable for vouchers.
-> 👉 **[Start Your First Task on NexGuild](https://www.nexguild.in/auth/register)**
+> 👉 **[Start Your First Task on NexGuild](/signup)**

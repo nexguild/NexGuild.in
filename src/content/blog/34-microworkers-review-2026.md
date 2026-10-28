@@ -21,7 +21,7 @@ Microworkers is legitimate and has been paying since 2009, but it has the lowest
 > 💸 **Microworkers Tasks Paying Too Little for Your Time?**
 > Standard Microworkers tasks pay $0.10–$1.00 each — hourly rates rarely exceed $4 for most contributors.
 > Inside our **NexGuild dashboard**, contributor tasks are reviewed for fair time-to-reward before going live.
-> 👉 **[Try NexGuild — Join Free in 60 Seconds](https://www.nexguild.in/auth/register)**
+> 👉 **[Try NexGuild — Join Free in 60 Seconds](/signup)**
 
 <figure>
   <img src="https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?w=800&auto=format&fit=crop&q=80" alt="Person completing micro-tasks on a smartphone from home" width="800" height="450" />

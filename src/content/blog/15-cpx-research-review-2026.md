@@ -23,7 +23,7 @@ CPX Research is legitimate, safe, and worth using — full stop. If you're getti
 
 > 🚀 **Access CPX Research Surveys Inside Our Dashboard**
 > We've integrated CPX Research directly into NexGuild. Every survey shows your reward before you start — NexCoins you earn redeem directly for gift vouchers — no hidden conversion, no minimum balance. Coins credit the instant you finish.
-> 👉 **[Create a Free NexGuild Account — Takes 60 Seconds](https://www.nexguild.in/auth/register)**
+> 👉 **[Create a Free NexGuild Account — Takes 60 Seconds](/signup)**
 
 <figure>
   <img src="https://images.unsplash.com/photo-1484807352052-23338990c6c6?w=800&auto=format&fit=crop&q=80" alt="person working at a desk on a laptop completing surveys online" width="800" height="450" />
@@ -83,7 +83,7 @@ Yes. CPX Research is a legitimate, established market research company operating
 
 **Is CPX Research safe?**
 
-Yes, CPX Research is safe. Because you access CPX Research through NexGuild — our [secure microtask gateway](https://www.nexguild.in/auth/register) — you never share payment details or sensitive information with CPX Research itself. The surveys are standard market research questionnaires with no financial risk.
+Yes, CPX Research is safe. Because you access CPX Research through NexGuild — our [secure microtask gateway](/signup) — you never share payment details or sensitive information with CPX Research itself. The surveys are standard market research questionnaires with no financial risk.
 
 **Why didn't my CPX Research survey credit?**
 

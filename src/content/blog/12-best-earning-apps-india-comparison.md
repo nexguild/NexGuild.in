@@ -12,7 +12,7 @@ The best legitimate earning apps in 2026 fall into four categories — AI traini
 
 > 📱 **Looking for a Reliable Earning App You Can Start Today?**
 > Our **NexGuild app** has tasks, CPX Research surveys, and offerwalls — all in one dashboard with no minimum payout.
-> 👉 **[Download and Start Earning — Join NexGuild Free](https://www.nexguild.in/auth/register)**
+> 👉 **[Download and Start Earning — Join NexGuild Free](/signup)**
 
 <figure>
   <img src="https://images.unsplash.com/photo-1565728744382-61accd4aa148?w=800&auto=format&fit=crop&q=80" alt="remote worker with headphones completing tasks online" width="800" height="450" />

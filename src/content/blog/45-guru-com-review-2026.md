@@ -21,7 +21,7 @@ Guru.com is legitimate and has been paying freelancers since 1998. Its biggest a
 > 💼 **Struggling to Land Your First Guru.com Project?**
 > Guru.com has fewer active clients than Upwork — the early months can be slow while building reviews.
 > Inside our **NexGuild dashboard**, contributor tasks are available immediately with no bidding or waiting on client responses.
-> 👉 **[Earn While You Build Your Freelancing Profile](https://www.nexguild.in/auth/register)**
+> 👉 **[Earn While You Build Your Freelancing Profile](/signup)**
 
 <figure>
   <img src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&auto=format&fit=crop&q=80" alt="Freelancer working at a desk on a laptop with multiple client projects open" width="800" height="450" />

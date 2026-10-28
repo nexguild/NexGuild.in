@@ -21,7 +21,7 @@ Amazon Mechanical Turk (MTurk) is legitimate — operated by Amazon since 2005 �
 > 🌍 **MTurk Not Paying Cash to Your Country?**
 > Non-US contributors receive Amazon gift cards only — no PayPal, no bank transfer.
 > Inside our **NexGuild dashboard**, contributors worldwide earn NexCoins redeemable for vouchers with no regional payment restrictions.
-> 👉 **[Join NexGuild — Earn Globally](https://www.nexguild.in/auth/register)**
+> 👉 **[Join NexGuild — Earn Globally](/signup)**
 
 <figure>
   <img src="https://images.unsplash.com/photo-1523474253046-8cd2748b5fd2?w=800&auto=format&fit=crop&q=80" alt="Amazon logo and e-commerce technology representing the Mechanical Turk platform" width="800" height="450" />

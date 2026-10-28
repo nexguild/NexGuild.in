@@ -96,4 +96,4 @@ Rater Labs sits comfortably in the top tier of micro-task pay rates. If you're e
 
 > 💡 **Earn while your Rater Labs application is being reviewed**
 > Evaluation platform applications take 1–3 weeks. NexGuild tasks are available the same day you sign up.
-> 👉 **[Start Earning on NexGuild Today](https://www.nexguild.in/auth/register)**
+> 👉 **[Start Earning on NexGuild Today](/signup)**

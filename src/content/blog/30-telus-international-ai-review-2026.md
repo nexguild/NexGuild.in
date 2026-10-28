@@ -21,7 +21,7 @@ Telus International AI is legitimate — a publicly traded Canadian company that
 > ⏳ **Tired of Waiting Weeks for a Telus Application Response?**
 > The Telus qualification exam takes 2–3 days of preparation, and many applicants never hear back.
 > If you want to start earning for AI microtasks **today with zero waiting**, our NexGuild dashboard has tasks available right now — no exam, no invite required.
-> 👉 **[Try NexGuild — Zero Waiting Period](https://www.nexguild.in/auth/register)**
+> 👉 **[Try NexGuild — Zero Waiting Period](/signup)**
 
 <figure>
   <img src="https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?w=800&auto=format&fit=crop&q=80" alt="Person working on a laptop from home completing search quality rating tasks" width="800" height="450" />

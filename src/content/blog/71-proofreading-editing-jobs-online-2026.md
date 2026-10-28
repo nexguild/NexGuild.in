@@ -96,7 +96,7 @@ The chicken-and-egg problem: clients want samples, but you have no clients.
 
 > 💡 **Earn while building your proofreading portfolio**
 > Building a client base takes months. Micro-tasks on NexGuild pay immediately — useful income while your freelance business gets started.
-> 👉 **[Start Earning on NexGuild Today](https://www.nexguild.in/auth/register)**
+> 👉 **[Start Earning on NexGuild Today](/signup)**
 
 ## The Bottom Line
 

@@ -12,7 +12,7 @@ Getting your first Fiverr order typically takes 2–8 weeks — not days. The pl
 > ⏳ **Waiting Weeks for Your First Fiverr Order?**
 > The Fiverr algorithm favors established sellers — new gigs can take weeks to appear in search results.
 > Inside our **NexGuild dashboard**, contributor tasks and surveys start paying on day one — no queue, no waiting.
-> 👉 **[Earn While You Build Your Fiverr Profile](https://www.nexguild.in/auth/register)**
+> 👉 **[Earn While You Build Your Fiverr Profile](/signup)**
 
 <figure>
   <img src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&auto=format&fit=crop&q=80" alt="Freelancer working on a laptop from home" width="800" height="450" />

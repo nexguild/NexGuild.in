@@ -21,7 +21,7 @@ Scribie is legitimate and the easiest transcription platform to start on — no 
 > ⏳ **Stuck on the Scribie Waiting List?**
 > Scribie is legitimate — but file availability is inconsistent and the base pay is low ($2–$5/hr for most contributors).
 > If you want to start earning for microtasks, data entry, and surveys right now — **NexGuild** gives you instant account approval with no tests or waiting lists.
-> 👉 **[Create a Free NexGuild Account](https://www.nexguild.in/auth/register)**
+> 👉 **[Create a Free NexGuild Account](/signup)**
 
 <figure>
   <img src="https://images.unsplash.com/photo-1484480974693-6ca0a78fb36b?w=800&auto=format&fit=crop&q=80" alt="Laptop on a desk with headphones for transcription work" width="800" height="450" />

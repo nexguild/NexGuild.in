@@ -21,7 +21,7 @@ Rev.com is legitimate and still paying transcriptionists in 2026 — but realist
 > ⏳ **Struggling to Pass the Rev Transcription Test?**
 > Rev's style guide exam trips up most first-time applicants — formatting errors, not poor audio comprehension, cause most failures. Failed applicants must wait 24 hours before reapplying.
 > NexGuild gives you instant account approval with no test or waiting period — start earning for microtasks on your first day.
-> 👉 **[Start Earning on NexGuild — No Test Required](https://www.nexguild.in/auth/register)**
+> 👉 **[Start Earning on NexGuild — No Test Required](/signup)**
 
 <figure>
   <img src="https://images.unsplash.com/photo-1478737270239-2f02b77fc618?w=800&auto=format&fit=crop&q=80" alt="Headphones on a desk next to a laptop for audio transcription work" width="800" height="450" />

@@ -20,7 +20,7 @@ Virtual assistant jobs with no experience are real and available — entry-level
 
 > ⏳ **Building VA Profiles but Waiting for Your First Client?**
 > First Fiverr or Upwork clients can take weeks. Our **NexGuild dashboard** pays for micro-tasks daily — no client pitching required.
-> 👉 **[Earn While You Build Your VA Profile — Join Free](https://www.nexguild.in/auth/register)**
+> 👉 **[Earn While You Build Your VA Profile — Join Free](/signup)**
 
 <figure>
   <img src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&auto=format&fit=crop&q=80" alt="Virtual assistant working on a laptop from a home office" width="800" height="450" />

@@ -23,7 +23,7 @@ ChatGPT makes money when you use it as a multiplier — producing faster freelan
 > 🤖 **Using ChatGPT to Find Micro-Tasks to Earn From?**
 > AI tools help you work faster — but you still need tasks to complete.
 > Inside our **NexGuild dashboard**, contributor tasks and surveys pay NexCoins you redeem for gift vouchers, with no minimum threshold.
-> 👉 **[Start Earning With AI Efficiency — Join NexGuild Free](https://www.nexguild.in/auth/register)**
+> 👉 **[Start Earning With AI Efficiency — Join NexGuild Free](/signup)**
 
 <figure>
   <img src="https://images.unsplash.com/photo-1555255707-c07966088b7b?w=800&auto=format&fit=crop&q=80" alt="developer reviewing code on a computer screen" width="800" height="450" />

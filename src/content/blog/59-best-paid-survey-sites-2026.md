@@ -98,7 +98,7 @@ Attapoll's major advantage is the £1 minimum payout — you reach it quickly ev
 
 > 💡 **Earning beyond surveys**
 > Surveys pay in bursts — some days the queue is empty. Pairing surveys with micro-tasks and offerwalls keeps earnings consistent. NexGuild combines all three in one place.
-> 👉 **[Start Earning on NexGuild — Tasks, Surveys & Offerwalls](https://www.nexguild.in/auth/register)**
+> 👉 **[Start Earning on NexGuild — Tasks, Surveys & Offerwalls](/signup)**
 
 ## Bottom Line
 

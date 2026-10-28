@@ -20,7 +20,7 @@ Appen qualification tests have one secret: read the guidelines before you open t
 
 > ⏳ **Still Waiting for Your First Appen Project Invitation?**
 > Studying Appen's guidelines takes days. Project invitations can take weeks — or never arrive. Inside our **NexGuild dashboard**, AI data tasks and CPX Research surveys are available right now with no qualification exam required.
-> 👉 **[Earn While You Wait — Join NexGuild Free](https://www.nexguild.in/auth/register)**
+> 👉 **[Earn While You Wait — Join NexGuild Free](/signup)**
 
 <figure>
   <img src="https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=800&auto=format&fit=crop&q=80" alt="Person studying documents and guidelines at a desk before an online assessment" width="800" height="450" />

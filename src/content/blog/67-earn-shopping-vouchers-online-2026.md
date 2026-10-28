@@ -102,4 +102,4 @@ Combined, this generates enough points for a ₹500 Amazon voucher every 3–5 d
 
 > 💡 **Vouchers redeemable directly from NexGuild**
 > NexGuild combines micro-tasks, offerwalls, and CPX Research surveys. Earnings convert to NexCoins redeemable for Amazon.in, Flipkart, and other vouchers directly in your dashboard.
-> 👉 **[Start Earning Vouchers on NexGuild](https://www.nexguild.in/auth/register)**
+> 👉 **[Start Earning Vouchers on NexGuild](/signup)**

@@ -11,7 +11,7 @@ You can start earning online with zero investment today — surveys pay within 2
 
 > ✅ **Ready to Earn Online With No Investment?**
 > NexGuild is free to join — complete tasks and surveys, earn NexCoins, redeem for gift vouchers with no minimum balance.
-> 👉 **[Start Earning Today — Zero Investment Required](https://www.nexguild.in/auth/register)**
+> 👉 **[Start Earning Today — Zero Investment Required](/signup)**
 
 <figure>
   <img src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&auto=format&fit=crop&q=80" alt="person working on laptop from home" width="800" height="450" />

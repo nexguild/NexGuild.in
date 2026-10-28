@@ -21,7 +21,7 @@ Toptal accepts approximately 3% of applicants — and that number defines everyt
 > ⏳ **Toptal Screening Taking Weeks With No Update?**
 > Toptal's 5-stage process can take 4–6 weeks — with no guaranteed project placement after passing.
 > Inside our **NexGuild dashboard**, contributor tasks earn daily income while you build and strengthen your freelancing profile.
-> 👉 **[Earn While You Prepare — Join NexGuild Free](https://www.nexguild.in/auth/register)**
+> 👉 **[Earn While You Prepare — Join NexGuild Free](/signup)**
 
 <figure>
   <img src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&auto=format&fit=crop&q=80" alt="Professional freelancer working remotely on a laptop with high-quality client work" width="800" height="450" />

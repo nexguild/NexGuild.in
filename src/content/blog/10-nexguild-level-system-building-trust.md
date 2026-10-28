@@ -12,7 +12,7 @@ Higher levels on NexGuild unlock higher-paying tasks and priority access to limi
 
 > 🏆 **Want to Reach Higher Levels Faster on NexGuild?**
 > Consistent, quality submissions are the only path — and every approved task moves you closer to Level 2 and beyond.
-> 👉 **[Start Building Your Level — Join NexGuild Free](https://www.nexguild.in/auth/register)**
+> 👉 **[Start Building Your Level — Join NexGuild Free](/signup)**
 
 <figure>
   <img src="https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?w=800&auto=format&fit=crop&q=80" alt="focused person working independently on a laptop" width="800" height="450" />

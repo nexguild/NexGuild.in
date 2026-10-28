@@ -22,7 +22,7 @@ The best ways to earn gift vouchers online in 2026 — surveys, offerwalls, and 
 > 🎁 **Earning NexCoins and Ready to Redeem for a Gift Voucher?**
 > Our NexStore has Amazon, Steam, Google Play vouchers with no minimum balance required.
 > Surveys and tasks on our **NexGuild dashboard** top up your balance daily.
-> 👉 **[Start Redeeming — Join NexGuild Free](https://www.nexguild.in/auth/register)**
+> 👉 **[Start Redeeming — Join NexGuild Free](/signup)**
 
 <figure>
   <img src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&auto=format&fit=crop&q=80" alt="analytics and data charts on a laptop screen" width="800" height="450" />

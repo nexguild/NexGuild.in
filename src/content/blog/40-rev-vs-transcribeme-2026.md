@@ -21,7 +21,7 @@ TranscribeMe is the better starting platform; Rev.com pays more for fast, experi
 > ⏳ **Both Platforms Running Low on Files Today?**
 > Task availability on Rev and TranscribeMe fluctuates — some days the queue is empty for your tier on both.
 > Inside our **NexGuild dashboard**, contributor tasks and surveys are available daily without a transcription test.
-> 👉 **[Earn While You Wait — Join NexGuild Free](https://www.nexguild.in/auth/register)**
+> 👉 **[Earn While You Wait — Join NexGuild Free](/signup)**
 
 <figure>
   <img src="https://images.unsplash.com/photo-1590602847861-f357a9332bbc?w=800&auto=format&fit=crop&q=80" alt="Headphones on a desk with audio recording equipment for professional transcription" width="800" height="450" />

@@ -12,7 +12,7 @@ The best crowdsourcing platforms in 2026 — Appen, Telus International AI, Clic
 > ⏳ **Platform Applications Taking Weeks Before You See Any Tasks?**
 > Most crowdsourcing platforms have qualification exams and long review timelines before first earnings.
 > Inside our **NexGuild dashboard**, contributor tasks are available immediately — no exam, no waiting period.
-> 👉 **[Start Earning Today — Join NexGuild Free](https://www.nexguild.in/auth/register)**
+> 👉 **[Start Earning Today — Join NexGuild Free](/signup)**
 
 <figure>
   <img src="https://images.unsplash.com/photo-1521737711867-e3b97375f902?w=800&auto=format&fit=crop&q=80" alt="Remote workers completing tasks on computers from home" width="800" height="450" />

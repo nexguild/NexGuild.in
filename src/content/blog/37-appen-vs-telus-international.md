@@ -21,7 +21,7 @@ Appen is easier to get started with; Telus International AI pays more once you'r
 > 🤔 **Not Sure Whether to Apply to Appen or Telus International First?**
 > Project availability and onboarding timelines shift frequently between the two platforms — making it hard to know where to invest your application time first.
 > NexGuild offers daily microtasks and surveys with instant account approval and no qualification exam.
-> 👉 **[Start Earning on NexGuild — No Exam Required](https://www.nexguild.in/auth/register)**
+> 👉 **[Start Earning on NexGuild — No Exam Required](/signup)**
 
 <figure>
   <img src="https://images.unsplash.com/photo-1551434678-e076c223a692?w=800&auto=format&fit=crop&q=80" alt="Person working on a laptop conducting research and evaluation work from home" width="800" height="450" />

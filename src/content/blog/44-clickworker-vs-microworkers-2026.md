@@ -21,7 +21,7 @@ Clickworker pays more and has more consistent task availability than Microworker
 > 💸 **Both Platforms Running Low on Tasks at the Same Time?**
 > Micro-task availability fluctuates on both platforms — slow days with nothing available are common.
 > Inside our **NexGuild dashboard**, tasks and surveys are restocked daily without requester campaign cycles.
-> 👉 **[Fill the Gap — Join NexGuild Free](https://www.nexguild.in/auth/register)**
+> 👉 **[Fill the Gap — Join NexGuild Free](/signup)**
 
 <figure>
   <img src="https://images.unsplash.com/photo-1499750310107-5fef28a66643?w=800&auto=format&fit=crop&q=80" alt="Person working on a laptop completing micro-tasks and online data entry work" width="800" height="450" />

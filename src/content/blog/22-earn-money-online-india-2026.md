@@ -25,7 +25,7 @@ The three methods that consistently produce real online earnings in 2026 — sur
 
 > 💰 **Want to Start Earning Online Today With No Investment?**
 > Our **NexGuild dashboard** has tasks, surveys, and offerwalls available immediately — free to join, no minimum balance to redeem.
-> 👉 **[Start Earning Today — Join NexGuild Free](https://www.nexguild.in/auth/register)**
+> 👉 **[Start Earning Today — Join NexGuild Free](/signup)**
 
 <figure>
   <img src="https://images.unsplash.com/photo-1521737711867-e3b97375f902?w=800&auto=format&fit=crop&q=80" alt="remote workers collaborating on computers" width="800" height="450" />

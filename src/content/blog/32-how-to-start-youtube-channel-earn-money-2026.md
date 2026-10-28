@@ -21,7 +21,7 @@ The first check from YouTube typically arrives 12–18 months after you upload y
 > 🎬 **Building Your YouTube Channel but Waiting 12+ Months to Monetize?**
 > New channels face a long wait before YouTube pays — most earn nothing in their first year.
 > Inside our **NexGuild dashboard**, tasks and surveys pay gift vouchers starting day one with no subscriber count required.
-> 👉 **[Earn While You Grow Your Channel — Join NexGuild Free](https://www.nexguild.in/auth/register)**
+> 👉 **[Earn While You Grow Your Channel — Join NexGuild Free](/signup)**
 
 <figure>
   <img src="https://images.unsplash.com/photo-1536240478700-b869ad10e128?w=800&auto=format&fit=crop&q=80" alt="Video camera and recording setup for creating YouTube content" width="800" height="450" />

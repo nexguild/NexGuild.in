@@ -20,7 +20,7 @@ Online proofreading jobs pay $15–$25/hr for beginners and are genuinely access
 
 > ⏳ **Building a Proofreading Profile but Waiting for First Clients?**
 > New proofreading gigs take weeks to gain traction. Our **NexGuild dashboard** pays daily through tasks and surveys — no waiting for client orders.
-> 👉 **[Earn While You Build Your Proofreading Profile — Join Free](https://www.nexguild.in/auth/register)**
+> 👉 **[Earn While You Build Your Proofreading Profile — Join Free](/signup)**
 
 <figure>
   <img src="https://images.unsplash.com/photo-1455390582262-044cdead277a?w=800&auto=format&fit=crop&q=80" alt="Person reviewing and editing a document carefully at a desk with a laptop" width="800" height="450" />

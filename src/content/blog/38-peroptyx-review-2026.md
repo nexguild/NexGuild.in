@@ -23,7 +23,7 @@ Peroptyx is a legitimate search evaluation company paying $12–$17/hr for the s
 > ⏳ **Appen or Telus Running Low on Project Hours?**
 > Search evaluation project availability fluctuates based on client contracts — quiet weeks affect income fast.
 > Inside our **NexGuild dashboard**, contributor tasks are available daily without qualification exams or project cycles.
-> 👉 **[Earn Daily on NexGuild — Join Free](https://www.nexguild.in/auth/register)**
+> 👉 **[Earn Daily on NexGuild — Join Free](/signup)**
 
 <figure>
   <img src="https://images.unsplash.com/photo-1499750310107-5fef28a66643?w=800&auto=format&fit=crop&q=80" alt="Person working on a laptop doing research and web evaluation from home" width="800" height="450" />

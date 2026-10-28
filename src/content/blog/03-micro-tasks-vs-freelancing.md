@@ -12,7 +12,7 @@ Micro-tasks pay immediately with no skill requirement — typically $0.10–$5 p
 
 > ⚡ **Want to Start Earning While Building Freelancing Skills?**
 > Our **NexGuild dashboard** pays for micro-tasks and surveys from day one — no portfolio or client proposals required.
-> 👉 **[Earn While You Build Skills — Join NexGuild Free](https://www.nexguild.in/auth/register)**
+> 👉 **[Earn While You Build Skills — Join NexGuild Free](/signup)**
 
 <figure>
   <img src="https://images.unsplash.com/photo-1521737711867-e3b97375f902?w=800&auto=format&fit=crop&q=80" alt="remote workers collaborating on computers" width="800" height="450" />

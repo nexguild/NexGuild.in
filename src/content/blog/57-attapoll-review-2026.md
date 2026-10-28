@@ -83,7 +83,7 @@ If you're looking for higher earnings from the same effort, micro-task platforms
 
 > 💡 **Want faster earnings without disqualification?**
 > Micro-task platforms don't screen you out mid-task the way surveys do. NexGuild lets you start completing tasks immediately after signing up — no demographic qualification required.
-> 👉 **[Start Earning on NexGuild — No Qualification Screen](https://www.nexguild.in/auth/register)**
+> 👉 **[Start Earning on NexGuild — No Qualification Screen](/signup)**
 
 ## The Bottom Line
 

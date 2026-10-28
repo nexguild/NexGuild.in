@@ -117,4 +117,4 @@ If you're starting fresh: **Prolific** for immediate high-rate surveys + **Click
 
 > 💡 **Tasks available from day one**
 > NexGuild combines micro-tasks with offerwalls and surveys — no qualification exam required to start. Useful while you wait for Appen and Clickworker applications to process.
-> 👉 **[Start on NexGuild While You Apply](https://www.nexguild.in/auth/register)**
+> 👉 **[Start on NexGuild While You Apply](/signup)**

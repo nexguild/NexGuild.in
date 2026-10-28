@@ -21,7 +21,7 @@ TranscribeMe is legitimate, has been paying since 2011, and has a more forgiving
 > ⏳ **Stuck on the TranscribeMe Audio Exam?**
 > TranscribeMe's entry test trips up most first-time applicants on formatting rules — not audio comprehension — and failed applicants must wait before reapplying.
 > NexGuild gives you instant account approval with no entry test — start earning for microtasks and surveys on your first day.
-> 👉 **[Start Earning on NexGuild — No Test Required](https://www.nexguild.in/auth/register)**
+> 👉 **[Start Earning on NexGuild — No Test Required](/signup)**
 
 <figure>
   <img src="https://images.unsplash.com/photo-1590602847861-f357a9332bbc?w=800&auto=format&fit=crop&q=80" alt="Headphones on a desk ready for audio transcription work" width="800" height="450" />

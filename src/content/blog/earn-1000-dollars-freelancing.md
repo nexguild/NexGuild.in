@@ -11,7 +11,7 @@ Earning your first $1,000 online is achievable within 30–90 days depending on 
 
 > 💰 **Need Income While Building Up to $1,000?**
 > Our **NexGuild dashboard** pays daily through tasks and surveys — small amounts that compound quickly when you stay consistent.
-> 👉 **[Start Accumulating Today — Join NexGuild Free](https://www.nexguild.in/auth/register)**
+> 👉 **[Start Accumulating Today — Join NexGuild Free](/signup)**
 
 <figure>
   <img src="https://images.unsplash.com/photo-1553877522-43269d4ea984?w=800&auto=format&fit=crop&q=80" alt="person reviewing documents and making notes" width="800" height="450" />

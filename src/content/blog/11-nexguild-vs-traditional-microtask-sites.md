@@ -12,7 +12,7 @@ NexGuild differs from traditional microtask platforms like Clickworker and Micro
 
 > 💡 **Running Both NexGuild and Clickworker?**
 > That's the right call — they complement each other. NexGuild for higher-value tasks; Clickworker for volume on slow days.
-> 👉 **[Add NexGuild to Your Rotation — Join Free](https://www.nexguild.in/auth/register)**
+> 👉 **[Add NexGuild to Your Rotation — Join Free](/signup)**
 
 <figure>
   <img src="https://images.unsplash.com/photo-1551434678-e076c223a692?w=800&auto=format&fit=crop&q=80" alt="professionals working at laptops in an office" width="800" height="450" />

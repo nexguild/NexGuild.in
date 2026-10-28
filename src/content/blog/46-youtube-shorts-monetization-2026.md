@@ -21,7 +21,7 @@ YouTube Shorts pays $0.03–$0.07 per 1,000 views — roughly $3–$7 RPM. That'
 > 🎬 **Growing Your Shorts Channel But Waiting to Monetize?**
 > You need 1,000 subscribers and 4,000 watch hours before YouTube pays you a cent — that can take months.
 > Inside our **NexGuild dashboard**, surveys and tasks pay gift vouchers starting day one with no follower requirements.
-> 👉 **[Earn While You Build Your Channel — Join NexGuild Free](https://www.nexguild.in/auth/register)**
+> 👉 **[Earn While You Build Your Channel — Join NexGuild Free](/signup)**
 
 <figure>
   <img src="https://images.unsplash.com/photo-1542744173-8e7e53415bb0?w=800&auto=format&fit=crop&q=80" alt="Person reviewing content performance analytics on a laptop screen" width="800" height="450" />

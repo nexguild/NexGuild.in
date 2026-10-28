@@ -23,7 +23,7 @@ Earning free gift vouchers online in 2026 is genuinely practical — surveys pay
 
 > 🎁 **Ready to Earn Your First Gift Voucher?**
 > Our **NexGuild dashboard** combines tasks, CPX Research surveys, and offerwalls — all pooling into one NexCoin balance you redeem for Amazon, Steam, or Google Play.
-> 👉 **[Earn Your First Voucher — Join NexGuild Free](https://www.nexguild.in/auth/register)**
+> 👉 **[Earn Your First Voucher — Join NexGuild Free](/signup)**
 
 <figure>
   <img src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&auto=format&fit=crop&q=80" alt="person working on laptop from home" width="800" height="450" />

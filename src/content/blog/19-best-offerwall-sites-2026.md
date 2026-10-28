@@ -24,7 +24,7 @@ The best offerwall networks in 2026 are CPX Research, TheoremReach, ClixWall, an
 > 💰 **Want Access to All 4 Major Offerwall Networks in One Dashboard?**
 > NexGuild integrates CPX Research, TheoremReach, ClixWall, and MyLead — no separate signups required.
 > Earnings from all networks pool into the same NexCoin balance you redeem for gift vouchers.
-> 👉 **[Access All Offerwalls — Join NexGuild Free](https://www.nexguild.in/auth/register)**
+> 👉 **[Access All Offerwalls — Join NexGuild Free](/signup)**
 
 <figure>
   <img src="https://images.unsplash.com/photo-1551434678-e076c223a692?w=800&auto=format&fit=crop&q=80" alt="professionals working at laptops in an office" width="800" height="450" />

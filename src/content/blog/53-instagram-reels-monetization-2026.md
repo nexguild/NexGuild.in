@@ -20,7 +20,7 @@ Instagram Reels pays $10–$50 per million views through platform programs — f
 
 > 📱 **Building Your Instagram Audience but Waiting to Monetize?**
 > You need 10,000+ followers before most Instagram programs activate. Our **NexGuild dashboard** pays gift vouchers starting day one with zero follower count.
-> 👉 **[Earn While You Build Your Instagram — Join Free](https://www.nexguild.in/auth/register)**
+> 👉 **[Earn While You Build Your Instagram — Join Free](/signup)**
 
 <figure>
   <img src="https://images.unsplash.com/photo-1611605698335-8b1569810432?w=800&auto=format&fit=crop&q=80" alt="Person filming a short video for Instagram Reels on a smartphone" width="800" height="450" />

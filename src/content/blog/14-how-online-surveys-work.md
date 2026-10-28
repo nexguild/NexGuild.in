@@ -12,7 +12,7 @@ Online surveys pay $0.50–$5.00 per completion because brands pay market resear
 
 > 📊 **Looking for a Survey Platform That Pre-Screens You to Reduce Wasted Attempts?**
 > Our **NexGuild dashboard** profiles you once and matches you to CPX Research and TheoremReach surveys that fit your demographic.
-> 👉 **[Complete Surveys That Match You — Join NexGuild Free](https://www.nexguild.in/auth/register)**
+> 👉 **[Complete Surveys That Match You — Join NexGuild Free](/signup)**
 
 <figure>
   <img src="https://images.unsplash.com/photo-1553877522-43269d4ea984?w=800&auto=format&fit=crop&q=80" alt="person reviewing documents and making notes" width="800" height="450" />

@@ -21,7 +21,7 @@ The biggest mistake on offerwalls is clicking every offer you see. High earners 
 > 🚀 **5 Offerwall Networks, One NexGuild Dashboard**
 > Most earners waste time jumping between separate sites, losing streaks and resetting their matching score each time.
 > Inside our **NexGuild dashboard**, CPX Research, TheoremReach, ClixWall, and more are integrated in one session — no separate accounts needed.
-> 👉 **[Join NexGuild Free — Takes 60 Seconds](https://www.nexguild.in/auth/register)**
+> 👉 **[Join NexGuild Free — Takes 60 Seconds](/signup)**
 
 <figure>
   <img src="https://images.unsplash.com/photo-1551434678-e076c223a692?w=800&auto=format&fit=crop&q=80" alt="professionals working at laptops in an office" width="800" height="450" />

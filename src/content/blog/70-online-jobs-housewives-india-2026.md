@@ -112,4 +112,4 @@ Start with one method, not five. The most common mistake is creating accounts ev
 
 > 💡 **Start with tasks you can do between household responsibilities**
 > NexGuild has micro-tasks available any time — complete 3 tasks during a 15-minute break. No shift, no boss, no minimum daily commitment.
-> 👉 **[Register on NexGuild — Free, No Investment](https://www.nexguild.in/auth/register)**
+> 👉 **[Register on NexGuild — Free, No Investment](/signup)**

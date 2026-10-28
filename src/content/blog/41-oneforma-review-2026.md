@@ -21,7 +21,7 @@ OneForma is legitimate, operated by Centific — a major language services compa
 > ⏳ **OneForma Application Still Being Reviewed After Weeks?**
 > Application timelines at OneForma can stretch to weeks with no guarantee of task availability after passing.
 > Inside our **NexGuild dashboard**, you can start earning contributor tasks immediately after signup — no waiting period.
-> 👉 **[Start Earning Today — Join NexGuild Free](https://www.nexguild.in/auth/register)**
+> 👉 **[Start Earning Today — Join NexGuild Free](/signup)**
 
 <figure>
   <img src="https://images.unsplash.com/photo-1551434678-e076c223a692?w=800&auto=format&fit=crop&q=80" alt="Person working on a laptop completing AI training and data evaluation tasks remotely" width="800" height="450" />

@@ -23,10 +23,11 @@ faqs:
 
 CPX Research is a B2B market research company that powers the survey section inside earning apps — you won't find it as a standalone website you sign up to directly. When you see "CPX Research" inside an app or rewards platform, it means that platform has integrated CPX's survey network, and the surveys you see are real market research studies from brands paying for consumer opinions. This guide explains how CPX Research works, what surveys pay, and how to get the most from them.
 
-> 📊 **Looking for CPX Research Surveys to Complete?**
-> CPX Research surveys are available inside our **NexGuild dashboard** — no separate account needed.
-> Complete surveys, earn NexCoins, and redeem for gift vouchers with no minimum balance.
-> 👉 **[Access CPX Research Surveys — Join NexGuild Free](https://www.nexguild.in/auth/register)**
+> **Want to try CPX Research on NexGuild?**
+>
+> Create your free account, then open **Offerwalls → CPX Research** in your dashboard. Survey availability and rewards vary by region.
+>
+> [Create a free account →](/signup)
 
 <figure>
   <img src="https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=800&auto=format&fit=crop&q=80" alt="Person reviewing data and research results on a laptop at a desk" width="800" height="450" />

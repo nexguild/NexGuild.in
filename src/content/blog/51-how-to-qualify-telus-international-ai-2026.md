@@ -20,7 +20,7 @@ The Telus International AI qualification exam is passable — but only if you've
 
 > ⏳ **In the Telus International AI Qualification Queue?**
 > The full process takes 2–6 weeks. Inside our **NexGuild dashboard**, contributor tasks and surveys pay daily while you wait.
-> 👉 **[Earn While You Qualify — Join NexGuild Free](https://www.nexguild.in/auth/register)**
+> 👉 **[Earn While You Qualify — Join NexGuild Free](/signup)**
 
 <figure>
   <img src="https://images.unsplash.com/photo-1551434678-e076c223a692?w=800&auto=format&fit=crop&q=80" alt="Person studying and reviewing guidelines at a laptop for remote work qualification" width="800" height="450" />

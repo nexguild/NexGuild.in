@@ -20,7 +20,7 @@ The single most effective way to get more tasks on Clickworker is to qualify for
 
 > 💸 **Clickworker Queue Still Empty After UHRS?**
 > Even UHRS has slow days. Inside our **NexGuild dashboard**, tasks and surveys are available daily — earn NexCoins and redeem for gift vouchers with no minimum balance.
-> 👉 **[Fill the Gap — Join NexGuild Free](https://www.nexguild.in/auth/register)**
+> 👉 **[Fill the Gap — Join NexGuild Free](/signup)**
 
 <figure>
   <img src="https://images.unsplash.com/photo-1499750310107-5fef28a66643?w=800&auto=format&fit=crop&q=80" alt="Person working on a laptop completing online tasks at a home desk" width="800" height="450" />

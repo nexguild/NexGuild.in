@@ -105,4 +105,4 @@ Active income finances the runway while passive income builds in the background.
 
 > 💡 **Build your active income while setting up passive streams**
 > NexGuild tasks and offerwalls generate consistent daily income — useful cash while your long-term passive income strategies mature.
-> 👉 **[Start Earning on NexGuild Today](https://www.nexguild.in/auth/register)**
+> 👉 **[Start Earning on NexGuild Today](/signup)**

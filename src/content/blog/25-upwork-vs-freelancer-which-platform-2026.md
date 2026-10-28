@@ -12,7 +12,7 @@ Upwork is better than Freelancer.com for most freelancers in 2026 — higher-bud
 > 💼 **Profiles on Both Platforms but No Contracts Yet?**
 > Building freelancing traction takes weeks — proposals get ignored until you have reviews.
 > Inside our **NexGuild dashboard**, contributor tasks pay NexCoins immediately, with no bidding or proposal required.
-> 👉 **[Earn While You Build Freelancing Traction — Join Free](https://www.nexguild.in/auth/register)**
+> 👉 **[Earn While You Build Freelancing Traction — Join Free](/signup)**
 
 <figure>
   <img src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&auto=format&fit=crop&q=80" alt="Freelancer comparing platforms on laptop and notebook" width="800" height="450" />

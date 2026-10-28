@@ -105,4 +105,4 @@ Website testing is not a daily income source — tests aren't always available w
 
 > 💡 **Daily earning without waiting for tests**
 > Website testing is high-paying but inconsistent — sometimes a week passes with no tests. Micro-tasks and offerwalls on NexGuild are available every day to fill the gaps.
-> 👉 **[Start Earning Daily on NexGuild](https://www.nexguild.in/auth/register)**
+> 👉 **[Start Earning Daily on NexGuild](/signup)**

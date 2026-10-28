@@ -11,7 +11,7 @@ Clickworker is legitimate — founded in Germany in 2005 and paying contractors 
 
 > 🚀 **Clickworker Queue Empty Today?**
 > Task availability on Clickworker varies day to day. Inside our **NexGuild dashboard**, tasks and CPX Research surveys are available daily — earn NexCoins and withdraw as Amazon, Flipkart, or Google Play vouchers.
-> 👉 **[Create a Free NexGuild Account](https://www.nexguild.in/auth/register)**
+> 👉 **[Create a Free NexGuild Account](/signup)**
 
 <figure>
   <img src="https://images.unsplash.com/photo-1484807352052-23338990c6c6?w=800&auto=format&fit=crop&q=80" alt="Person working at a desk on a laptop completing microtasks online" width="800" height="450" />

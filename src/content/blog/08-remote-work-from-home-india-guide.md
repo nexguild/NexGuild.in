@@ -12,7 +12,7 @@ Remote work from home falls into three very different categories — full-time r
 
 > 🏠 **Looking for Remote Work You Can Start Today?**
 > Our **NexGuild dashboard** has micro-tasks and surveys available immediately — no job application or interview required.
-> 👉 **[Start Remote Earning Today — Join NexGuild Free](https://www.nexguild.in/auth/register)**
+> 👉 **[Start Remote Earning Today — Join NexGuild Free](/signup)**
 
 <figure>
   <img src="https://images.unsplash.com/photo-1521737711867-e3b97375f902?w=800&auto=format&fit=crop&q=80" alt="remote workers collaborating on computers" width="800" height="450" />

@@ -12,7 +12,7 @@ UPI cash payouts from earning apps typically require ₹500–₹2,000 minimum b
 
 > 💳 **Want Earnings You Can Actually Use Before Hitting ₹500?**
 > NexGuild lets you redeem for vouchers at any balance — no UPI minimum, instant digital delivery.
-> 👉 **[Earn and Redeem Faster — Join NexGuild Free](https://www.nexguild.in/auth/register)**
+> 👉 **[Earn and Redeem Faster — Join NexGuild Free](/signup)**
 
 <figure>
   <img src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&auto=format&fit=crop&q=80" alt="person working on laptop from home" width="800" height="450" />

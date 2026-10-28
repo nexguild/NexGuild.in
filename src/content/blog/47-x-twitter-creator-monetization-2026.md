@@ -21,7 +21,7 @@ X creator monetization pays $1–$8 per million impressions — and you need to 
 > 📊 **5 Million Impressions Away From X Monetization?**
 > X's threshold is high, and many creators wait months meeting requirements before seeing any payout.
 > Inside our **NexGuild dashboard**, surveys and tasks pay NexCoins from day one — no follower count required.
-> 👉 **[Earn While You Build Your X Audience — Join NexGuild Free](https://www.nexguild.in/auth/register)**
+> 👉 **[Earn While You Build Your X Audience — Join NexGuild Free](/signup)**
 
 <figure>
   <img src="https://images.unsplash.com/photo-1611605698335-8b1569810432?w=800&auto=format&fit=crop&q=80" alt="Person using social media on a smartphone at a desk with a laptop open" width="800" height="450" />

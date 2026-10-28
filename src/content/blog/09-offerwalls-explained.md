@@ -24,7 +24,7 @@ An **offerwall** is a curated hub of third-party tasks — surveys, app installs
 > 🚀 **5 Offerwall Networks in One NexGuild Dashboard**
 > Most platforms lock you into a single provider — thin inventory, slow sessions when it runs dry.
 > Inside our **NexGuild dashboard**, CPX Research, TheoremReach, ClixWall, and MyLead all run in one panel with one balance.
-> 👉 **[Explore NexGuild Offerwalls — Free Account](https://www.nexguild.in/auth/register)**
+> 👉 **[Explore NexGuild Offerwalls — Free Account](/signup)**
 
 ## What Is an Offerwall?
 

@@ -12,7 +12,7 @@ Appen is legitimate — one of the most established AI training platforms in the
 > ⏳ **Need Earnings While You Wait for Appen to Respond?**
 > Appen's qualification takes days. Monthly payments mean waiting 4–6 weeks for your first dollar.
 > Inside our **NexGuild dashboard**, you can start earning today — complete tasks, access CPX Research surveys, and withdraw as gift vouchers the same day.
-> 👉 **[Start Earning on NexGuild — Free Account](https://www.nexguild.in/auth/register)**
+> 👉 **[Start Earning on NexGuild — Free Account](/signup)**
 
 <figure>
   <img src="https://images.unsplash.com/photo-1551434678-e076c223a692?w=800&auto=format&fit=crop&q=80" alt="Person working on a laptop completing AI training tasks from home" width="800" height="450" />

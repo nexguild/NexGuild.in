@@ -103,4 +103,4 @@ Before and after. If an offer doesn't credit and you need to contact support, a 
 
 > 💡 **Multiple offerwalls in one place**
 > NexGuild integrates CPX Research, ClixWall, TheoremReach, and MyLead offerwalls — more offers visible in one dashboard than a single-network platform.
-> 👉 **[Browse Today's Offerwall Offers on NexGuild](https://www.nexguild.in/auth/register)**
+> 👉 **[Browse Today's Offerwall Offers on NexGuild](/signup)**

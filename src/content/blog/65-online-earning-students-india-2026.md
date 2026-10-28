@@ -115,4 +115,4 @@ During exams: drop everything except surveys (lowest mental effort, can be done 
 
 > 💡 **All micro-task methods in one place**
 > NexGuild combines tasks, CPX Research surveys, and offerwalls so students can use one account for opportunities available in their region, without managing multiple platforms.
-> 👉 **[Start Earning on NexGuild — Free to Join](https://www.nexguild.in/auth/register)**
+> 👉 **[Start Earning on NexGuild — Free to Join](/signup)**

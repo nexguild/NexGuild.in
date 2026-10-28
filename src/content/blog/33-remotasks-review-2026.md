@@ -21,7 +21,7 @@ Remotasks is legitimate — backed by Scale AI, one of the world's most valuable
 > 🔒 **Remotasks Training Taking Too Long to Complete?**
 > Training is unpaid — and task availability after qualifying can still be inconsistent by region.
 > Inside our **NexGuild dashboard**, contributor tasks credit immediately with no unpaid training period.
-> 👉 **[Earn While You Train — Join NexGuild Free](https://www.nexguild.in/auth/register)**
+> 👉 **[Earn While You Train — Join NexGuild Free](/signup)**
 
 <figure>
   <img src="https://images.unsplash.com/photo-1531746790731-6c087fecd65a?w=800&auto=format&fit=crop&q=80" alt="Person working on AI data tasks on a digital device from home" width="800" height="450" />

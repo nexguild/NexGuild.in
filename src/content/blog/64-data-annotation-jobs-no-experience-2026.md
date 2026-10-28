@@ -83,7 +83,7 @@ A few weeks of Remotasks history makes your application more credible. DataAnnot
 
 > 💡 **Start earning while you build your annotation profile**
 > Annotation applications take 1–4 weeks to process. NexGuild tasks are available immediately after signup — no application review required.
-> 👉 **[Start on NexGuild While You Apply Elsewhere](https://www.nexguild.in/auth/register)**
+> 👉 **[Start on NexGuild While You Apply Elsewhere](/signup)**
 
 ## The Bottom Line
 

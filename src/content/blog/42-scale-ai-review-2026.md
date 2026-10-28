@@ -21,7 +21,7 @@ Scale AI is legitimate and one of the highest-paying AI training platforms — $
 > ⏳ **Scale AI Screening Process Taking Too Long?**
 > Scale AI's screening is thorough — acceptance timelines and task availability after joining are unpredictable.
 > Inside our **NexGuild dashboard**, contributor tasks are available immediately after signup with no AI expertise required.
-> 👉 **[Earn While You Apply — Join NexGuild Free](https://www.nexguild.in/auth/register)**
+> 👉 **[Earn While You Apply — Join NexGuild Free](/signup)**
 
 <figure>
   <img src="https://images.unsplash.com/photo-1677442135703-1787eea5ce01?w=800&auto=format&fit=crop&q=80" alt="AI neural network visualization representing machine learning training data work" width="800" height="450" />

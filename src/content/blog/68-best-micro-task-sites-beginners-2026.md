@@ -109,4 +109,4 @@ MTurk was the original micro-task platform. In 2026, it has problems: low pay ra
 
 > 💡 **Start earning today while applications process**
 > Appen and Clickworker applications take days to weeks. NexGuild tasks are available immediately after signup — no waiting.
-> 👉 **[Start on NexGuild Today](https://www.nexguild.in/auth/register)**
+> 👉 **[Start on NexGuild Today](/signup)**

@@ -12,7 +12,7 @@ Students can realistically earn $50–$300/month online without a retail job, a 
 
 > 📚 **Need Side Income That Works Around Your Classes?**
 > Our **NexGuild dashboard** has tasks and surveys you complete in spare minutes — between lectures, late at night, whenever you have time.
-> 👉 **[Start Earning as a Student — Join Free](https://www.nexguild.in/auth/register)**
+> 👉 **[Start Earning as a Student — Join Free](/signup)**
 
 <figure>
   <img src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&auto=format&fit=crop&q=80" alt="person working on laptop from home" width="800" height="450" />

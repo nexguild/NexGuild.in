@@ -21,7 +21,7 @@ Survey disqualification happens because every study targets a specific demograph
 
 > 📊 **Getting Screened Out of Surveys Too Often?**
 > Our **NexGuild dashboard** pre-matches you to CPX Research surveys based on your profile before you start — fewer wasted attempts.
-> 👉 **[Get Better Survey Matches — Join NexGuild Free](https://www.nexguild.in/auth/register)**
+> 👉 **[Get Better Survey Matches — Join NexGuild Free](/signup)**
 
 <figure>
   <img src="https://images.unsplash.com/photo-1484807352052-23338990c6c6?w=800&auto=format&fit=crop&q=80" alt="person working at a clean home office desk" width="800" height="450" />

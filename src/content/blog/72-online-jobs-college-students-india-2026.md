@@ -123,4 +123,4 @@ If you know Canva, Photoshop, Premiere, or DaVinci Resolve, the market for remot
 
 > 💡 **Start earning today while building your freelance profile**
 > Freelancing takes months to establish. NexGuild tasks and offerwalls are available from day one — no application wait, no minimum experience.
-> 👉 **[Start on NexGuild — Free for Students](https://www.nexguild.in/auth/register)**
+> 👉 **[Start on NexGuild — Free for Students](/signup)**

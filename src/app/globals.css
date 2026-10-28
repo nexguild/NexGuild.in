@@ -398,16 +398,53 @@
   font-style: normal;
   margin: 1.5em 0;
 }
+.blog-prose blockquote:has(a[href="/signup"]) {
+  border: 1px solid rgba(13,148,136,0.18);
+  border-left: 4px solid #0D9488;
+  background: linear-gradient(120deg, #F0FDFA 0%, #ECFDF5 100%);
+  border-radius: 0.875rem;
+  padding: 1.25rem 1.5rem;
+  box-shadow: 0 8px 24px rgba(15,61,54,0.07);
+}
 .blog-prose blockquote::before {
   content: '💡';
   display: block;
   font-size: 1em;
   margin-bottom: 0.35em;
 }
+.blog-prose blockquote:has(a[href="/signup"])::before {
+  content: none;
+  display: none;
+}
 .blog-prose blockquote p {
   margin: 0;
   font-size: 0.9375rem;
   line-height: 1.7;
+}
+.blog-prose blockquote:has(a[href="/signup"]) p + p {
+  margin-top: 0.75rem;
+}
+.blog-prose blockquote:has(a[href="/signup"]) a {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 0.625rem;
+  background: linear-gradient(135deg, #0F766E 0%, #0D9488 100%);
+  padding: 0.65rem 1rem;
+  color: #fff;
+  font-size: 0.875rem;
+  font-weight: 700;
+  text-decoration: none;
+  box-shadow: 0 4px 12px rgba(13,148,136,0.2);
+  transition: transform 160ms ease, box-shadow 160ms ease;
+}
+.blog-prose blockquote:has(a[href="/signup"]) a:hover {
+  color: #fff;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(13,148,136,0.28);
+}
+.blog-prose blockquote:has(a[href="/signup"]) a:focus-visible {
+  outline: 3px solid rgba(13,148,136,0.4);
+  outline-offset: 3px;
 }
 .blog-prose code {
   background: rgba(13,148,136,0.07);

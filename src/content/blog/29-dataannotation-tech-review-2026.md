@@ -11,7 +11,7 @@ DataAnnotation.tech pays $20–$40 per hour for AI training tasks — and unlike
 
 > 🚀 **DataAnnotation Application Taking Too Long?**
 > Their acceptance backlog can stretch weeks. Inside our **NexGuild dashboard**, you can start earning AI microtasks today — no waitlist, no application exam, no identity verification to begin.
-> 👉 **[Start Earning on NexGuild — Free](https://www.nexguild.in/auth/register)**
+> 👉 **[Start Earning on NexGuild — Free](/signup)**
 
 <figure>
   <img src="https://images.unsplash.com/photo-1555255707-c07966088b7b?w=800&auto=format&fit=crop&q=80" alt="Developer reviewing code on a laptop screen for AI training tasks" width="800" height="450" />

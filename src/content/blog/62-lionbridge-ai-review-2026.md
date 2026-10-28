@@ -82,7 +82,7 @@ This makes Lionbridge best as a high-quality supplement to other income, not a s
 
 > 💡 **Want tasks available daily without a qualification exam?**
 > Lionbridge requires significant upfront preparation and has variable availability once you're in. NexGuild offers tasks and offerwalls you can start on your first day, no exam required.
-> 👉 **[Start Earning on NexGuild Today](https://www.nexguild.in/auth/register)**
+> 👉 **[Start Earning on NexGuild Today](/signup)**
 
 ## Bottom Line
 

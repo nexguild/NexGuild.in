@@ -20,7 +20,7 @@ The best faceless YouTube channels in 2026 earn $2,000–$10,000+/month from AdS
 
 > 🎬 **Starting a Faceless Channel but Need Income During the Growth Phase?**
 > Most channels take 12–18 months to monetize. Our **NexGuild dashboard** pays daily through tasks and surveys while your channel grows.
-> 👉 **[Earn While You Build Your Channel — Join NexGuild Free](https://www.nexguild.in/auth/register)**
+> 👉 **[Earn While You Build Your Channel — Join NexGuild Free](/signup)**
 
 <figure>
   <img src="https://images.unsplash.com/photo-1536240478700-b869ad10e128?w=800&auto=format&fit=crop&q=80" alt="Video editing setup with multiple screens showing footage and timeline" width="800" height="450" />

@@ -75,7 +75,7 @@ Clickworker pays UHRS earnings the same way as regular tasks — via PayPal or S
 
 > 💡 **Looking for consistent daily tasks without qualification tests?**
 > UHRS work is high-paying but unpredictable — some days the queue is empty. NexGuild offers micro-tasks and offerwalls available every day with no HitApp-style assessment required.
-> 👉 **[Start Earning on NexGuild — Tasks Available Daily](https://www.nexguild.in/auth/register)**
+> 👉 **[Start Earning on NexGuild — Tasks Available Daily](/signup)**
 
 ## Bottom Line
 

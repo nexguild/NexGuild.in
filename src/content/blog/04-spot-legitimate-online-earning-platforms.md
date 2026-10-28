@@ -12,7 +12,7 @@ Legitimate online earning platforms never ask you to pay to start earning — th
 
 > ✅ **Not Sure If a Platform Is Legitimate?**
 > NexGuild is free to join, pays within 48 hours of task approval, and has zero minimum balance for voucher redemptions.
-> 👉 **[Join a Platform You Can Trust — NexGuild Free](https://www.nexguild.in/auth/register)**
+> 👉 **[Join a Platform You Can Trust — NexGuild Free](/signup)**
 
 <figure>
   <img src="https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?w=800&auto=format&fit=crop&q=80" alt="focused person working independently on a laptop" width="800" height="450" />

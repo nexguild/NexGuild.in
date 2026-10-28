@@ -116,4 +116,4 @@ For most people, combining 2–3 of the apps above generates ₹300–₹1,000/m
 
 > 💡 **Tasks + Offerwalls Together**
 > NexGuild combines micro-tasks, offerwalls, and CPX Research surveys in one platform, with voucher redemptions starting at ₹1. No UPI yet, but Amazon.in and other vouchers are available.
-> 👉 **[Explore NexGuild Earning Methods](https://www.nexguild.in/auth/register)**
+> 👉 **[Explore NexGuild Earning Methods](/signup)**

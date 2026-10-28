@@ -11,7 +11,7 @@ The fastest way to maximize NexGuild earnings is to use all three income streams
 
 > 🚀 **Not Using All Three Income Streams on NexGuild Yet?**
 > Tasks, surveys, and offerwalls are all live in your dashboard right now — each pays separately into the same NexCoin balance.
-> 👉 **[Maximize Your NexGuild Earnings — Login or Join Free](https://www.nexguild.in/auth/register)**
+> 👉 **[Maximize Your NexGuild Earnings — Login or Join Free](/signup)**
 
 <figure>
   <img src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&auto=format&fit=crop&q=80" alt="person working on laptop from home" width="800" height="450" />

@@ -20,7 +20,7 @@ The best online data entry platforms in 2026 are Clickworker ($7–$12/hr, start
 
 > ✅ **Want Data Entry Work That Starts Paying Today?**
 > Our **NexGuild dashboard** includes structured tasks — data verification, content tasks, research — that pay NexCoins on approval.
-> 👉 **[Start Earning With Tasks — Join NexGuild Free](https://www.nexguild.in/auth/register)**
+> 👉 **[Start Earning With Tasks — Join NexGuild Free](/signup)**
 
 <figure>
   <img src="https://images.unsplash.com/photo-1484807352052-23338990c6c6?w=800&auto=format&fit=crop&q=80" alt="Person doing careful data entry work on a laptop at a clean desk" width="800" height="450" />

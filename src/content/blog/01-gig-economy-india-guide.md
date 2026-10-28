@@ -12,7 +12,7 @@ The gig economy is any work arrangement where you're paid per task or project ra
 > 💼 **Ready to Earn Your First Gig Economy Income?**
 > NexGuild's task dashboard gives you structured micro-work immediately — no application, no waiting for clients to respond.
 > Earn NexCoins and redeem for Amazon, Steam, Google Play vouchers directly in NexStore.
-> 👉 **[Start Your First Gig — Join NexGuild Free](https://www.nexguild.in/auth/register)**
+> 👉 **[Start Your First Gig — Join NexGuild Free](/signup)**
 
 <figure>
   <img src="https://images.unsplash.com/photo-1521737711867-e3b97375f902?w=800&auto=format&fit=crop&q=80" alt="remote workers collaborating on computers" width="800" height="450" />

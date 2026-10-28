@@ -12,7 +12,7 @@ NexCoins you earn redeem directly for gift vouchers in NexStore — Amazon, Stea
 
 > 🎁 **Have NexCoins Ready to Redeem?**
 > Head to NexStore in your dashboard and pick your voucher — Amazon, Steam, Google Play, and more available now.
-> 👉 **[Redeem Your NexCoins — Join NexGuild Free](https://www.nexguild.in/auth/register)**
+> 👉 **[Redeem Your NexCoins — Join NexGuild Free](/signup)**
 
 <figure>
   <img src="https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?w=800&auto=format&fit=crop&q=80" alt="focused person working independently on a laptop" width="800" height="450" />

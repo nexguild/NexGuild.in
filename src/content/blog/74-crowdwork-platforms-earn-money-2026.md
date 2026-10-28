@@ -104,4 +104,4 @@ The practical approach: start earning on an accessible platform immediately whil
 
 > 💡 **Start earning today**
 > NexGuild combines micro-tasks, offerwalls, and surveys — all accessible from the day you register with no application queue.
-> 👉 **[Join NexGuild — Free](https://www.nexguild.in/auth/register)**
+> 👉 **[Join NexGuild — Free](/signup)**

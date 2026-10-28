@@ -12,7 +12,7 @@ Most task rejections on NexGuild come down to five avoidable mistakes — and fi
 
 > ✅ **Getting Tasks Rejected on NexGuild?**
 > The tips below resolve 90% of rejection causes — read them once and apply them to every submission going forward.
-> 👉 **[Complete Tasks That Get Approved — Join NexGuild Free](https://www.nexguild.in/auth/register)**
+> 👉 **[Complete Tasks That Get Approved — Join NexGuild Free](/signup)**
 
 <figure>
   <img src="https://images.unsplash.com/photo-1484807352052-23338990c6c6?w=800&auto=format&fit=crop&q=80" alt="person working at a clean home office desk" width="800" height="450" />

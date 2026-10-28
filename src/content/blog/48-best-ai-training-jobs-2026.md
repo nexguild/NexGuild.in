@@ -21,7 +21,7 @@ The best AI training jobs in 2026 pay $10–$75/hr and are available globally wi
 > 🤖 **Applied to AI Training Platforms but Still Waiting on Qualification Results?**
 > Appen, Scale AI, and Telus can take weeks to approve before you see your first task.
 > Inside our **NexGuild dashboard**, tasks and surveys are available immediately with no qualification exam.
-> 👉 **[Start Earning While You Wait — Join NexGuild Free](https://www.nexguild.in/auth/register)**
+> 👉 **[Start Earning While You Wait — Join NexGuild Free](/signup)**
 
 <figure>
   <img src="https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=800&auto=format&fit=crop&q=80" alt="Person working on a computer reviewing and analyzing data outputs on screen" width="800" height="450" />
