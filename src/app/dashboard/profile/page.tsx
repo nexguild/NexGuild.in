@@ -6,10 +6,13 @@ import { Camera, X, Loader2, Plus, Star, Copy, CheckCheck, Crown, CheckCircle2, 
 import { NexCoinIcon } from "@/components/ui/nexcoin-icon";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
+import { CountrySelect } from "@/components/forms/CountrySelect";
+import { getCountryName } from "@/lib/countries";
 
 interface Profile {
   full_name: string | null;
   country: string | null;
+  country_code: string | null;
   phone: string | null;
   joined_at: string | null;
   nexcoins: number;
@@ -49,10 +52,12 @@ export default function ProfilePage() {
   const [langInput, setLangInput]     = useState("");
   const [langSaving, setLangSaving]   = useState(false);
   const [editName, setEditName]       = useState("");
-  const [editCountry, setEditCountry] = useState("");
   const [editPhone, setEditPhone]     = useState("");
   const [saving, setSaving]           = useState(false);
   const [saveError, setSaveError]     = useState<string | null>(null);
+  const [countryChoice, setCountryChoice] = useState("");
+  const [countrySaving, setCountrySaving] = useState(false);
+  const [countryError, setCountryError] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchProfile() {
@@ -69,7 +74,7 @@ export default function ProfilePage() {
       ] = await Promise.all([
         supabase
           .from("profiles")
-          .select("full_name, country, phone, joined_at, nexcoins, xp, level, skills, languages, avatar_url, is_nexleader")
+          .select("full_name, country, country_code, phone, joined_at, nexcoins, xp, level, skills, languages, avatar_url, is_nexleader")
           .eq("id", user.id)
           .single(),
         supabase
@@ -95,7 +100,8 @@ export default function ProfilePage() {
       setApprovalRate(reviewed > 0 ? Math.round((approved / reviewed) * 100) : null);
       setTotalEarned((txnData ?? []).reduce((s: number, t: { amount: number }) => s + (t.amount ?? 0), 0));
 
-      setProfile(data ?? { full_name: null, country: null, phone: null, joined_at: null, nexcoins: 0, xp: 0, level: 1, skills: [], languages: [], avatar_url: null, is_nexleader: null });
+      setProfile(data ?? { full_name: null, country: null, country_code: null, phone: null, joined_at: null, nexcoins: 0, xp: 0, level: 1, skills: [], languages: [], avatar_url: null, is_nexleader: null });
+      setCountryChoice((data as Profile | null)?.country_code ?? "");
       setLoading(false);
     }
     fetchProfile();
@@ -141,7 +147,6 @@ export default function ProfilePage() {
 
   function openEdit() {
     setEditName(profile?.full_name ?? "");
-    setEditCountry(profile?.country ?? "");
     setEditPhone(profile?.phone ?? "");
     setSaveError(null);
     setShowEdit(true);
@@ -154,13 +159,33 @@ export default function ProfilePage() {
     setSaveError(null);
     const { error } = await supabase.from("profiles").update({
       full_name: editName.trim() || null,
-      country: editCountry || null,
       phone: editPhone.trim() || null,
     }).eq("id", userId);
     if (error) { setSaveError("Failed to save. Please try again."); setSaving(false); return; }
-    setProfile((prev) => prev ? { ...prev, full_name: editName.trim() || null, country: editCountry || null, phone: editPhone.trim() || null } : prev);
+    setProfile((prev) => prev ? { ...prev, full_name: editName.trim() || null, phone: editPhone.trim() || null } : prev);
     setSaving(false);
     setShowEdit(false);
+  }
+
+  async function saveCountry() {
+    if (!userId || !countryChoice || profile?.country_code) return;
+    setCountrySaving(true);
+    setCountryError(null);
+    const countryName = getCountryName(countryChoice);
+    const { data, error } = await supabase
+      .from("profiles")
+      .update({ country: countryName, country_code: countryChoice })
+      .eq("id", userId)
+      .is("country_code", null)
+      .select("country_code")
+      .maybeSingle();
+    if (error || !data) {
+      setCountryError(error?.message ?? "Country was already saved. Refresh your profile to see the saved value.");
+      setCountrySaving(false);
+      return;
+    }
+    setProfile((prev) => prev ? { ...prev, country: countryName, country_code: countryChoice } : prev);
+    setCountrySaving(false);
   }
 
   async function addSkill(e: React.FormEvent) {
@@ -352,7 +377,7 @@ export default function ProfilePage() {
               {[
                 { label: "Full Name",    value: loading ? "Loading…" : (profile?.full_name ?? "Not set") },
                 { label: "Email",        value: loading ? "Loading…" : (email ?? "—") },
-                { label: "Country",      value: loading ? "Loading…" : (profile?.country ?? "Not set") },
+                { label: "Country",      value: loading ? "Loading…" : (profile?.country_code ? getCountryName(profile.country_code) : (profile?.country ?? "Not set")) },
                 { label: "Phone",        value: loading ? "Loading…" : (profile?.phone ?? "Not set") },
                 { label: "Member Since", value: loading ? "Loading…" : joinedDate },
               ].map((row) => (
@@ -361,6 +386,28 @@ export default function ProfilePage() {
                   <p className="text-sm text-slate-800 font-medium text-right">{row.value}</p>
                 </div>
               ))}
+              {!loading && userId && !profile?.country_code && (
+                <div className="space-y-2 py-4">
+                  <p className="text-xs leading-relaxed text-amber-700">
+                    Confirm your country once to see tasks targeted to your region. This choice cannot be changed later.
+                  </p>
+                  <div className="flex flex-col gap-2 sm:flex-row">
+                    <CountrySelect
+                      value={countryChoice}
+                      onChange={setCountryChoice}
+                      required
+                      className="h-10 min-w-0 flex-1 rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm text-slate-800 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                    />
+                    <Button type="button" onClick={() => void saveCountry()} disabled={!countryChoice || countrySaving}>
+                      {countrySaving ? <><Loader2 className="h-4 w-4 animate-spin" /> Saving…</> : "Save country once"}
+                    </Button>
+                  </div>
+                  {countryError && <p role="alert" className="text-xs text-red-600">{countryError}</p>}
+                </div>
+              )}
+              {!loading && profile?.country_code && (
+                <p className="py-3 text-xs text-slate-400">Country is permanently saved and used for country-targeted tasks.</p>
+              )}
               {!loading && userId && (
                 <div className="flex items-center justify-between py-3">
                   <p className="text-sm text-slate-400 w-32 flex-shrink-0">Contributor ID</p>
@@ -539,18 +586,6 @@ export default function ProfilePage() {
                   onChange={(e) => setEditName(e.target.value)}
                   placeholder="Your full name"
                   className="w-full h-10 px-3 rounded-lg border border-slate-200 bg-slate-50 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1.5">Country</label>
-                <input
-                  type="text"
-                  value={editCountry}
-                  onChange={(e) => setEditCountry(e.target.value)}
-                  autoComplete="country-name"
-                  maxLength={100}
-                  placeholder="Enter your country or territory"
-                  className="w-full h-10 px-3 rounded-lg border border-slate-200 bg-slate-50 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent"
                 />
               </div>
               <div>

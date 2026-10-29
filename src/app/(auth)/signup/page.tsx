@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Eye, EyeOff } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import HCaptcha from "@hcaptcha/react-hcaptcha";
+import { CountrySelect } from "@/components/forms/CountrySelect";
+import { getCountryName } from "@/lib/countries";
 
 export default function SignupPage() {
   const captchaRef = useRef<HCaptcha>(null);
@@ -14,7 +16,7 @@ export default function SignupPage() {
   const [email, setEmail]                     = useState("");
   const [password, setPassword]               = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [country, setCountry]                 = useState("");
+  const [countryCode, setCountryCode]         = useState("");
   const [referralCode, setReferralCode]       = useState("");
   const [signedUp, setSignedUp]               = useState(false);
 
@@ -78,6 +80,10 @@ export default function SignupPage() {
       setError("Please accept the Terms of Service and Privacy Policy.");
       return false;
     }
+    if (!countryCode) {
+      setError("Please select your country.");
+      return false;
+    }
     return true;
   }
 
@@ -107,7 +113,8 @@ export default function SignupPage() {
         captchaToken: token,
         data: {
           full_name:          fullName,
-          country,
+          country: getCountryName(countryCode),
+          country_code: countryCode,
           referral_code_used: referralCode || null,
           terms_accepted_at:  new Date().toISOString(),
         },
@@ -277,12 +284,13 @@ export default function SignupPage() {
                 <label className="block text-sm font-semibold text-[#0F3D36] mb-1.5">
                   Country <span className="text-red-500">*</span>
                 </label>
-                <input required value={country} onChange={(e) => setCountry(e.target.value)}
-                  autoComplete="country-name"
-                  maxLength={100}
-                  placeholder="Enter your country or territory"
-                  style={{ background: "rgba(255,255,255,0.7)", borderColor: "rgba(13,148,136,0.25)" }}
-                  className="w-full h-10 px-3 rounded-lg border text-stone-800 text-sm placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-[#0D9488] focus:border-transparent transition-all" />
+                <CountrySelect
+                  required
+                  value={countryCode}
+                  onChange={setCountryCode}
+                  className="w-full h-10 px-3 rounded-lg border text-stone-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#0D9488] focus:border-transparent transition-all"
+                />
+                <p className="mt-1.5 text-xs text-stone-400">Country is saved to your account and cannot be changed later.</p>
               </div>
 
               {/* Referral Code */}

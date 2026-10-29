@@ -3,6 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 import { newTaskHtml } from "@/lib/email";
 import { isBrevoConfigured, sendBrevoEmails } from "@/lib/brevo";
 import { createDriveResourcesForTask, isDriveConfigured } from "@/lib/google-drive";
+import { isCountryCode } from "@/lib/countries";
 
 export async function POST(req: NextRequest) {
   const admin = createClient(
@@ -38,6 +39,7 @@ export async function POST(req: NextRequest) {
       required_level, xp_reward,
       status, project_id, pay_per_task_inr,
       required_task_ids, excluded_task_ids,
+      target_countries,
       external_tool_url, external_tool_name, external_tool_instructions, external_proof_type,
       allows_partial_payment, unit_name, total_units, pay_per_unit_inr, pay_per_unit_nc,
     } = body as {
@@ -68,6 +70,7 @@ export async function POST(req: NextRequest) {
       project_id?: string;
       required_task_ids?: string[];
       excluded_task_ids?: string[];
+      target_countries?: string[];
       external_tool_url?: string | null;
       external_tool_name?: string | null;
       external_tool_instructions?: string | null;
@@ -81,6 +84,10 @@ export async function POST(req: NextRequest) {
 
     if (!title?.trim() || !task_type || !description?.trim()) {
       return NextResponse.json({ error: "title, task_type, and description are required." }, { status: 400 });
+    }
+    if (target_countries !== undefined
+      && (!Array.isArray(target_countries) || target_countries.some((country) => !isCountryCode(country)))) {
+      return NextResponse.json({ error: "Task target countries must use valid ISO country codes." }, { status: 400 });
     }
 
     // ── Insert task ───────────────────────────────────────────────────────────
@@ -114,6 +121,7 @@ export async function POST(req: NextRequest) {
         project_id: project_id || null,
         required_task_ids: required_task_ids ?? [],
         excluded_task_ids: excluded_task_ids ?? [],
+        target_countries: target_countries ?? [],
         external_tool_url: external_tool_url ?? null,
         external_tool_name: external_tool_name ?? null,
         external_tool_instructions: external_tool_instructions ?? null,
@@ -124,7 +132,7 @@ export async function POST(req: NextRequest) {
         pay_per_unit_inr: pay_per_unit_inr ?? null,
         pay_per_unit_nc: pay_per_unit_nc ?? null,
       })
-      .select("id, title, task_type, pay_per_task, total_slots, is_private, steps")
+      .select("id, title, task_type, pay_per_task, total_slots, is_private, steps, target_countries")
       .single();
 
     if (insertErr || !task) {
@@ -183,16 +191,20 @@ function makeAdmin() {
 
 async function sendNewTaskEmails(
   _unused: unknown,
-  task: { id: string; title: string; task_type: string | null; pay_per_task: number | null; total_slots: number | null },
+  task: { id: string; title: string; task_type: string | null; pay_per_task: number | null; total_slots: number | null; target_countries?: string[] | null },
 ) {
   const admin = makeAdmin();
   if (!isBrevoConfigured()) return;
 
-  const { data: contributors } = await admin
+  let contributorsQuery = admin
     .from("profiles")
     .select("full_name, email")
     .eq("role", "contributor")
     .not("email", "is", null);
+  if (task.target_countries?.length) {
+    contributorsQuery.in("country_code", task.target_countries);
+  }
+  const { data: contributors } = await contributorsQuery;
 
   const profiles = (contributors ?? []) as { full_name: string | null; email: string }[];
   if (profiles.length === 0) return;

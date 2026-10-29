@@ -567,7 +567,7 @@ export async function GET(req: NextRequest) {
   const notikProvider = providerRows.find((provider) => provider.slug === "notik");
   const { data: profile, error: profileError } = await admin
     .from("profiles")
-    .select("country")
+    .select("country_code")
     .eq("id", user.id)
     .maybeSingle();
   if (profileError) console.error("[api/surveys] Profile lookup failed:", profileError.message);
@@ -577,11 +577,11 @@ export async function GET(req: NextRequest) {
       (surveys) => ({ surveys, error: null as string | null }),
       (error: unknown) => ({ surveys: [] as Survey[], error: error instanceof Error ? error.message : "Unable to load CPX Research surveys" }),
     ),
-    getTheoremReachSurveys(req, user.id, profile?.country ?? null, theoremReachProvider).then(
+    getTheoremReachSurveys(req, user.id, profile?.country_code ?? null, theoremReachProvider).then(
       (surveys) => ({ surveys, error: null as string | null }),
       (error: unknown) => ({ surveys: [] as Survey[], error: error instanceof Error ? error.message : "Unable to load TheoremReach surveys" }),
     ),
-    getTheoremReachOffers(req, user.id, profile?.country ?? null, theoremReachProvider).then(
+    getTheoremReachOffers(req, user.id, profile?.country_code ?? null, theoremReachProvider).then(
       (offers) => ({ offers, error: null as string | null }),
       (error: unknown) => ({ offers: [] as Offer[], error: error instanceof Error ? error.message : "Unable to load TheoremReach offers" }),
     ),

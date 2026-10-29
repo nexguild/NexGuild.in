@@ -12,6 +12,7 @@ import { usePageGuard } from "@/components/layout/admin-auth-guard";
 import { ADMIN_ROLES } from "@/lib/admin-permissions";
 import { PayoutBreakdown } from "@/components/admin/PayoutBreakdown";
 import { EligibilityRulesPicker } from "@/components/admin/EligibilityRulesPicker";
+import { CountryMultiSelect } from "@/components/forms/CountrySelect";
 
 const TASK_TYPES = [
   "Audio Recording", "Transcription", "Data Annotation", "App Testing",
@@ -113,6 +114,7 @@ export default function EditTaskPage() {
 
   // Targeting
   const [requiredLanguage, setRequiredLanguage] = useState("Any");
+  const [targetCountries, setTargetCountries] = useState<string[]>([]);
   const [skillInput, setSkillInput]             = useState("");
   const [requiredSkills, setRequiredSkills]     = useState<string[]>([]);
 
@@ -223,6 +225,7 @@ export default function EditTaskPage() {
       }
       setPassingScore(data.assignment_passing_score != null ? String(data.assignment_passing_score) : "70");
       setRequiredLanguage(data.required_language ?? "Any");
+      setTargetCountries(Array.isArray(data.target_countries) ? data.target_countries as string[] : []);
       setRequiredSkills(Array.isArray(data.required_skills) ? (data.required_skills as string[]) : []);
       setIsPrivate(data.is_private ?? false);
       setIsFeatured(data.is_featured ?? false);
@@ -311,6 +314,7 @@ export default function EditTaskPage() {
       assignment_questions:     assignmentReq && assignmentType === "quiz" ? questionsPayload : [],
       assignment_passing_score: assignmentReq && assignmentType === "quiz" ? parseInt(passingScore) || 70 : 70,
       required_language:        requiredLanguage,
+      target_countries:         targetCountries,
       required_skills:          requiredSkills,
       is_private:               isPrivate,
       is_featured:              isFeatured,
@@ -737,6 +741,18 @@ export default function EditTaskPage() {
             <select value={requiredLanguage} onChange={(e) => setRequiredLanguage(e.target.value)} className={inputClass}>
               {LANGUAGES.map((l) => <option key={l} value={l}>{l}</option>)}
             </select>
+          </div>
+
+          <div>
+            <label className={labelClass}>Target Countries <span className="text-[var(--text-muted)] font-normal">(optional)</span></label>
+            <CountryMultiSelect
+              value={targetCountries}
+              onChange={setTargetCountries}
+              className={inputClass}
+            />
+            <p className="mt-1 text-xs text-[var(--text-muted)]">
+              Leave empty to show worldwide. Selected countries are matched to each contributor&apos;s permanently saved profile country.
+            </p>
           </div>
 
           <div>

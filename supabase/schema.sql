@@ -11,6 +11,7 @@ CREATE TABLE profiles (
   email          TEXT,
   phone          TEXT,
   country        TEXT DEFAULT 'India',
+  country_code   TEXT,
   role           TEXT DEFAULT 'contributor',   -- 'contributor' | 'owner' | 'admin' | 'reviewer' | 'finance' | 'support' | 'moderator'
   status         TEXT DEFAULT 'active',        -- 'active' | 'suspended' | 'banned'
   kyc_status     TEXT DEFAULT 'pending',       -- 'pending' | 'verified' | 'rejected'
@@ -35,6 +36,7 @@ CREATE TABLE tasks (
   status              TEXT DEFAULT 'active',   -- 'active' | 'paused' | 'draft' | 'archived'
   assignment_required BOOLEAN DEFAULT false,
   assignment_type     TEXT,
+  target_countries    TEXT[] NOT NULL DEFAULT '{}',
   created_at          TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -87,6 +89,35 @@ CREATE POLICY "Users can update own profile"
   USING (auth.uid() = id)
   WITH CHECK (auth.uid() = id);
 
+CREATE OR REPLACE FUNCTION public.prevent_profile_country_change()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  IF OLD.country_code IS NOT NULL AND (
+    NEW.country_code IS DISTINCT FROM OLD.country_code
+    OR NEW.country IS DISTINCT FROM OLD.country
+  ) THEN
+    RAISE EXCEPTION 'Country is locked after it has been selected.';
+  END IF;
+
+  IF NEW.country_code IS NOT NULL AND NEW.country_code !~ '^[A-Z]{2}$' THEN
+    RAISE EXCEPTION 'Country code must be a valid two-letter uppercase code.';
+  END IF;
+
+  IF NEW.country_code IS NOT NULL AND NULLIF(trim(NEW.country), '') IS NULL THEN
+    RAISE EXCEPTION 'Country name is required when setting a country code.';
+  END IF;
+
+  RETURN NEW;
+END;
+$$;
+
+CREATE TRIGGER prevent_profile_country_change
+  BEFORE UPDATE OF country, country_code ON profiles
+  FOR EACH ROW
+  EXECUTE FUNCTION public.prevent_profile_country_change();
+
 CREATE POLICY "Admins can view all profiles"
   ON profiles FOR SELECT
   USING (
@@ -97,9 +128,38 @@ CREATE POLICY "Admins can view all profiles"
   );
 
 -- tasks (active tasks readable by any logged-in user)
+CREATE OR REPLACE FUNCTION public.user_can_access_task(
+  p_task_id UUID,
+  p_user_id UUID
+)
+RETURNS BOOLEAN
+LANGUAGE SQL
+STABLE
+SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
+  SELECT EXISTS (
+    SELECT 1
+    FROM public.tasks t
+    JOIN public.profiles p ON p.id = p_user_id
+    WHERE t.id = p_task_id
+      AND (auth.uid() = p_user_id OR auth.role() = 'service_role')
+      AND (
+        cardinality(COALESCE(t.target_countries, '{}'::TEXT[])) = 0
+        OR p.country_code = ANY(t.target_countries)
+      )
+  );
+$$;
+
+GRANT EXECUTE ON FUNCTION public.user_can_access_task(UUID, UUID) TO authenticated, service_role;
+
 CREATE POLICY "Tasks are viewable by authenticated users"
   ON tasks FOR SELECT
-  USING (auth.role() = 'authenticated' AND status = 'active');
+  USING (
+    auth.role() = 'authenticated'
+    AND status = 'active'
+    AND public.user_can_access_task(id, auth.uid())
+  );
 
 CREATE POLICY "Admins can manage tasks"
   ON tasks FOR ALL
@@ -192,6 +252,7 @@ BEGIN
     email,
     full_name,
     country,
+    country_code,
     role,
     referral_code
   ) VALUES (
@@ -199,6 +260,7 @@ BEGIN
     NEW.email,
     NEW.raw_user_meta_data->>'full_name',
     COALESCE(NEW.raw_user_meta_data->>'country', 'India'),
+    NULLIF(upper(NEW.raw_user_meta_data->>'country_code'), ''),
     'contributor',
     new_referral_code
   );
@@ -396,9 +458,14 @@ ALTER TABLE assignments ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Users can view own assignments"
   ON assignments FOR SELECT USING (auth.uid() = contributor_id);
 CREATE POLICY "Users can insert own assignment"
-  ON assignments FOR INSERT WITH CHECK (auth.uid() = contributor_id);
+  ON assignments FOR INSERT WITH CHECK (
+    auth.uid() = contributor_id
+    AND public.user_can_access_task(task_id, contributor_id)
+  );
 CREATE POLICY "Users can update own assignment"
-  ON assignments FOR UPDATE USING (auth.uid() = contributor_id);
+  ON assignments FOR UPDATE
+  USING (auth.uid() = contributor_id AND public.user_can_access_task(task_id, contributor_id))
+  WITH CHECK (auth.uid() = contributor_id AND public.user_can_access_task(task_id, contributor_id));
 CREATE POLICY "Admins can manage all assignments"
   ON assignments FOR ALL
   USING (EXISTS (SELECT 1 FROM profiles p WHERE p.id = auth.uid() AND p.role = 'admin'));
@@ -437,9 +504,14 @@ ALTER TABLE submissions ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Users can view own submissions"
   ON submissions FOR SELECT USING (auth.uid() = contributor_id);
 CREATE POLICY "Users can insert own submission"
-  ON submissions FOR INSERT WITH CHECK (auth.uid() = contributor_id);
+  ON submissions FOR INSERT WITH CHECK (
+    auth.uid() = contributor_id
+    AND public.user_can_access_task(task_id, contributor_id)
+  );
 CREATE POLICY "Users can update own submission"
-  ON submissions FOR UPDATE USING (auth.uid() = contributor_id);
+  ON submissions FOR UPDATE
+  USING (auth.uid() = contributor_id AND public.user_can_access_task(task_id, contributor_id))
+  WITH CHECK (auth.uid() = contributor_id AND public.user_can_access_task(task_id, contributor_id));
 CREATE POLICY "Admins can manage all submissions"
   ON submissions FOR ALL
   USING (EXISTS (SELECT 1 FROM profiles p WHERE p.id = auth.uid() AND p.role = 'admin'));

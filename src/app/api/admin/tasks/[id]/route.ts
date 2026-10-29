@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { newTaskHtml } from "@/lib/email";
 import { isBrevoConfigured, sendBrevoEmails } from "@/lib/brevo";
+import { isCountryCode } from "@/lib/countries";
 
 const admin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -32,9 +33,15 @@ export async function PATCH(
     status?: string; project_id?: string | null;
     pay_per_task?: number | null; pay_per_task_inr?: number | null;
     required_task_ids?: string[]; excluded_task_ids?: string[];
+    target_countries?: string[];
   };
 
-  const ALLOWED_KEYS = ["status", "project_id", "pay_per_task", "pay_per_task_inr", "required_task_ids", "excluded_task_ids", "external_tool_url", "external_tool_name", "external_tool_instructions", "external_proof_type", "allows_partial_payment", "unit_name", "total_units", "pay_per_unit_inr", "pay_per_unit_nc"];
+  if (body.target_countries !== undefined
+    && (!Array.isArray(body.target_countries) || body.target_countries.some((country) => !isCountryCode(country)))) {
+    return NextResponse.json({ error: "Task target countries must use valid ISO country codes." }, { status: 400 });
+  }
+
+  const ALLOWED_KEYS = ["status", "project_id", "pay_per_task", "pay_per_task_inr", "required_task_ids", "excluded_task_ids", "target_countries", "external_tool_url", "external_tool_name", "external_tool_instructions", "external_proof_type", "allows_partial_payment", "unit_name", "total_units", "pay_per_unit_inr", "pay_per_unit_nc"];
   const updates: Record<string, unknown> = {};
   for (const key of ALLOWED_KEYS) {
     if (key in body) updates[key] = body[key as keyof typeof body];
@@ -43,14 +50,14 @@ export async function PATCH(
     return NextResponse.json({ error: "No valid fields to update." }, { status: 400 });
   }
 
-  type TaskRow = { id: string; title: string; task_type: string | null; pay_per_task: number | null; total_slots: number | null; status: string; is_private: boolean | null };
+  type TaskRow = { id: string; title: string; task_type: string | null; pay_per_task: number | null; total_slots: number | null; status: string; is_private: boolean | null; target_countries: string[] | null };
 
   // Need current task state only when status changes (for email blast logic)
   let prevTask: TaskRow | null = null;
   if ("status" in updates) {
     const { data } = await admin
       .from("tasks")
-      .select("id, title, task_type, pay_per_task, total_slots, status, is_private")
+      .select("id, title, task_type, pay_per_task, total_slots, status, is_private, target_countries")
       .eq("id", taskId)
       .is("deleted_at", null)
       .single();
@@ -93,15 +100,19 @@ export async function DELETE(
 }
 
 async function sendNewTaskEmails(
-  task: { id: string; title: string; task_type: string | null; pay_per_task: number | null; total_slots: number | null },
+  task: { id: string; title: string; task_type: string | null; pay_per_task: number | null; total_slots: number | null; target_countries: string[] | null },
 ) {
   if (!isBrevoConfigured()) return;
 
-  const { data: contributors } = await admin
+  let contributorsQuery = admin
     .from("profiles")
     .select("full_name, email")
     .eq("role", "contributor")
     .not("email", "is", null);
+  if (task.target_countries?.length) {
+    contributorsQuery = contributorsQuery.in("country_code", task.target_countries);
+  }
+  const { data: contributors } = await contributorsQuery;
 
   const profiles = (contributors ?? []) as { full_name: string | null; email: string }[];
   if (profiles.length === 0) return;
