@@ -2,9 +2,6 @@ import { NextRequest } from "next/server";
 import { createHmac } from "crypto";
 import { createClient } from "@supabase/supabase-js";
 import { createServerClient } from "@/lib/supabase-server";
-import { creditOfferwallUserShare } from "@/lib/nexleader-commission";
-
-type AdminClient = ReturnType<typeof createServerClient>;
 
 // Dedicated service-role client for postback_logs writes — guaranteed to bypass RLS
 const logAdmin = createClient(
@@ -164,43 +161,38 @@ async function handlePostback(req: NextRequest): Promise<Response> {
 
   // ─── Reversal ─────────────────────────────────────────────────────────────
   if (isReversal) {
-    const { data: existing } = await admin
-      .from("offerwall_transactions")
-      .select("id, nexcoins_awarded, contributor_id, status")
-      .eq("provider_transaction_id", txId)
+    const { data: provider, error: providerError } = await admin
+      .from("offerwall_providers")
+      .select("id")
+      .eq("slug", "theoremreach")
       .single();
+    if (providerError || !provider) {
+      await logPostback(rawParams, hashValid, "error", providerError?.message ?? "provider not found");
+      return new Response("Internal Server Error", { status: 500 });
+    }
 
-    if (!existing || existing.status !== "credited") {
-      console.log(`[postback/theoremreach] reversal: tx ${txId} not found or already reversed`);
-      await logPostback(rawParams, hashValid, "reversed", `tx not found or already reversed: ${txId}`);
+    const { data: reversed, error: reversalError } = await admin.rpc("reverse_offerwall_conversion", {
+      p_provider_id: provider.id,
+      p_provider_transaction_id: txId,
+    });
+    if (reversalError) {
+      console.error("[postback/theoremreach] atomic reversal failed:", reversalError.message);
+      await logPostback(rawParams, hashValid, "error", reversalError.message);
+      return new Response("Internal Server Error", { status: 500 });
+    }
+    if (!reversed) {
+      await logPostback(rawParams, hashValid, "reversal_ignored", `tx not found or already reversed: ${txId}`);
       return new Response("OK", { status: 200 });
     }
 
-    const coinsToReverse = existing.nexcoins_awarded as number;
-    const contributorId  = existing.contributor_id  as string;
-
-    await admin.from("offerwall_transactions").update({ status: "reversed" }).eq("id", existing.id);
-
-    const { data: profile } = await admin.from("profiles").select("nexcoins").eq("id", contributorId).single();
-    const cur = (profile as { nexcoins: number | null } | null)?.nexcoins ?? 0;
-    await admin.from("profiles").update({ nexcoins: Math.max(0, cur - coinsToReverse) }).eq("id", contributorId);
-
-    await admin.from("coin_transactions").insert({
-      contributor_id: contributorId,
-      amount:         -coinsToReverse,
-      type:           "reversed",
-      source:         "offerwall",
-      description:    `TheoremReach reversal (tx: ${txId})`,
-    });
-
     await admin.from("notifications").insert({
-      user_id: contributorId,
+      user_id: userId,
       title:   "Earning Reversed",
-      message: `A TheoremReach reward of ${coinsToReverse} NexCoins was reversed.`,
+      message: "A TheoremReach reward was reversed.",
       type:    "system",
     });
 
-    console.log(`[postback/theoremreach] reversed ${coinsToReverse} coins from ${contributorId} (tx=${txId})`);
+    console.log(`[postback/theoremreach] reversed tx=${txId}`);
     await logPostback(rawParams, hashValid, "reversed");
     return new Response("OK", { status: 200 });
   }
@@ -214,7 +206,7 @@ async function handlePostback(req: NextRequest): Promise<Response> {
 
   const { data: provider, error: provErr } = await admin
     .from("offerwall_providers")
-    .select("id")
+    .select("id, name")
     .eq("slug", "theoremreach")
     .single();
 
@@ -227,41 +219,28 @@ async function handlePostback(req: NextRequest): Promise<Response> {
   // Exchange rate in TheoremReach dashboard = 660, so reward IS the user's coin amount
   const userCoins = Math.max(1, reward);
 
-  // Idempotent insert — unique constraint on provider_transaction_id
-  const { error: insertErr } = await admin.from("offerwall_transactions").insert({
-    provider_id:             provider.id,
-    contributor_id:          userId,
-    provider_transaction_id: txId,
-    gross_amount:            reward,
-    nexcoins_awarded:        userCoins,
-    status:                  "credited",
-    raw_payload: {
+  const { data: credited, error: creditError } = await admin.rpc("credit_offerwall_conversion", {
+    p_provider_id: provider.id,
+    p_contributor_id: userId,
+    p_provider_transaction_id: txId,
+    p_gross_amount: reward,
+    p_nexcoins_awarded: userCoins,
+    p_raw_payload: {
       query: rawParams,
       screenout,
     },
+    p_provider_name: provider.name,
   });
-
-  if (insertErr) {
-    if (insertErr.code === "23505") {
-      console.log(`[postback/theoremreach] duplicate tx ${txId} — skipping`);
-      await logPostback(rawParams, hashValid, "duplicate");
-      return new Response("OK", { status: 200 });
-    }
-    console.error("[postback/theoremreach] insert error:", insertErr.message);
-    await logPostback(rawParams, hashValid, "error", `tx insert failed: ${insertErr.message}`);
+  if (creditError) {
+    console.error("[postback/theoremreach] atomic credit failed:", creditError.message);
+    await logPostback(rawParams, hashValid, "error", creditError.message);
+    return new Response("Internal Server Error", { status: 500 });
+  }
+  if (!credited) {
+    await logPostback(rawParams, hashValid, "duplicate");
     return new Response("OK", { status: 200 });
   }
-
-  // Credit user their exact share; NexLeader gets 10/66 on top automatically
-  const { contributorCredit } = await creditOfferwallUserShare(
-    admin as unknown as AdminClient,
-    userId,
-    userCoins,
-    `TheoremReach${screenout ? " (screenout)" : ""} (tx: ${txId})`,
-  ).catch((err) => {
-    console.error("[postback/theoremreach] creditOfferwallUserShare failed:", err);
-    return { contributorCredit: userCoins };
-  });
+  const contributorCredit = userCoins;
 
   // Increment daily streak counter
   {

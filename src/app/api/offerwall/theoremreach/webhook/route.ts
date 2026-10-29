@@ -46,47 +46,34 @@ export async function POST(req: NextRequest) {
   }
 
   const admin = createServerClient();
+  const { data: provider, error: providerError } = await admin
+    .from("offerwall_providers")
+    .select("id")
+    .eq("slug", "theoremreach")
+    .single();
+  if (providerError || !provider) {
+    console.error("[webhook/theoremreach] provider lookup failed:", providerError?.message);
+    return NextResponse.json({ error: "Provider configuration unavailable" }, { status: 500 });
+  }
 
   for (const reversal of reversals) {
     const txId = reversal.transaction_id;
     if (!txId) continue;
 
-    const { data: existing } = await admin
-      .from("offerwall_transactions")
-      .select("id, nexcoins_awarded, contributor_id, status")
-      .eq("provider_transaction_id", txId)
-      .single();
-
-    if (!existing || existing.status !== "credited") {
+    const { data: reversed, error: reversalError } = await admin.rpc("reverse_offerwall_conversion", {
+      p_provider_id: provider.id,
+      p_provider_transaction_id: txId,
+    });
+    if (reversalError) {
+      console.error("[webhook/theoremreach] atomic reversal failed:", reversalError.message);
+      return NextResponse.json({ error: "Unable to apply reversal" }, { status: 500 });
+    }
+    if (!reversed) {
       console.log(`[webhook/theoremreach] tx ${txId} not found or already reversed`);
       continue;
     }
 
-    const coinsToReverse = existing.nexcoins_awarded as number;
-    const contributorId  = existing.contributor_id  as string;
-
-    await admin.from("offerwall_transactions").update({ status: "reversed" }).eq("id", existing.id);
-
-    const { data: profile } = await admin.from("profiles").select("nexcoins").eq("id", contributorId).single();
-    const cur = (profile as { nexcoins: number | null } | null)?.nexcoins ?? 0;
-    await admin.from("profiles").update({ nexcoins: Math.max(0, cur - coinsToReverse) }).eq("id", contributorId);
-
-    await admin.from("coin_transactions").insert({
-      contributor_id: contributorId,
-      amount:         -coinsToReverse,
-      type:           "reversed",
-      source:         "offerwall",
-      description:    `TheoremReach ${eventType} reversal (tx: ${txId})`,
-    });
-
-    await admin.from("notifications").insert({
-      user_id: contributorId,
-      title:   "Earning Reversed",
-      message: `A TheoremReach reward of ${coinsToReverse} NexCoins was reversed.`,
-      type:    "system",
-    });
-
-    console.log(`[webhook/theoremreach] reversed ${coinsToReverse} coins from ${contributorId} (tx=${txId})`);
+    console.log(`[webhook/theoremreach] reversed tx=${txId}`);
   }
 
   return NextResponse.json({ ok: true });

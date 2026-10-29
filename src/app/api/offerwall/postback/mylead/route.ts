@@ -2,9 +2,6 @@ import { NextRequest } from "next/server";
 import { createHmac } from "crypto";
 import { createClient } from "@supabase/supabase-js";
 import { createServerClient } from "@/lib/supabase-server";
-import { creditOfferwallUserShare } from "@/lib/nexleader-commission";
-
-type AdminClient = ReturnType<typeof createServerClient>;
 
 const logAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -89,44 +86,28 @@ async function handlePostback(req: NextRequest): Promise<Response> {
 
   // Rejected → reverse any prior credit
   if (status === "rejected") {
-    const { data: existing } = await admin
-      .from("offerwall_transactions")
-      .select("id, nexcoins_awarded, contributor_id, status")
-      .eq("provider_id", provider.id)
-      .eq("provider_transaction_id", txId)
-      .single();
-
-    if (!existing || existing.status === "reversed") {
-      console.log(`[postback/mylead] rejection: tx ${txId} not found or already reversed`);
-      await logPostback(rawParams, hashValid, "reversed", "tx not found or already reversed");
+    const { data: reversed, error: reversalError } = await admin.rpc("reverse_offerwall_conversion", {
+      p_provider_id: provider.id,
+      p_provider_transaction_id: txId,
+    });
+    if (reversalError) {
+      console.error("[postback/mylead] atomic reversal failed:", reversalError.message);
+      await logPostback(rawParams, hashValid, "error", reversalError.message);
+      return new Response("Internal Server Error", { status: 500 });
+    }
+    if (!reversed) {
+      await logPostback(rawParams, hashValid, "reversal_ignored", "tx not found or already reversed");
       return new Response("OK", { status: 200 });
     }
 
-    const tx = existing as { id: string; nexcoins_awarded: number; contributor_id: string; status: string };
-    await admin.from("offerwall_transactions").update({ status: "reversed" }).eq("id", tx.id);
-
-    const { data: p } = await admin.from("profiles").select("nexcoins").eq("id", tx.contributor_id).single();
-    const cur = (p as { nexcoins: number | null } | null)?.nexcoins ?? 0;
-    await admin.from("profiles")
-      .update({ nexcoins: Math.max(0, cur - tx.nexcoins_awarded) })
-      .eq("id", tx.contributor_id);
-
-    await admin.from("coin_transactions").insert({
-      contributor_id: tx.contributor_id,
-      amount:         -tx.nexcoins_awarded,
-      type:           "reversed",
-      source:         "offerwall",
-      description:    `MyLead rejection (tx: ${txId})`,
-    });
-
     await admin.from("notifications").insert({
-      user_id: tx.contributor_id,
+      user_id: userId,
       title:   "Earning Reversed",
-      message: `A MyLead reward of ${tx.nexcoins_awarded} NexCoins was reversed.`,
+      message: "A MyLead reward was reversed.",
       type:    "system",
     });
 
-    console.log(`[postback/mylead] reversed ${tx.nexcoins_awarded} coins ← ${tx.contributor_id} (tx=${txId})`);
+    console.log(`[postback/mylead] reversed tx=${txId}`);
     await logPostback(rawParams, hashValid, "reversed");
     return new Response("OK", { status: 200 });
   }
@@ -147,37 +128,25 @@ async function handlePostback(req: NextRequest): Promise<Response> {
   // Currency Multiplier in MyLead dashboard = 660, so amount IS the user's coin amount
   const userCoins = Math.max(1, Math.floor(amount));
 
-  const { error: insertErr } = await admin.from("offerwall_transactions").insert({
-    provider_id:             provider.id,
-    contributor_id:          userId,
-    provider_transaction_id: txId,
-    gross_amount:            amount,
-    nexcoins_awarded:        userCoins,
-    status:                  "credited",
-    raw_payload:             { query: rawParams },
+  const { data: credited, error: creditError } = await admin.rpc("credit_offerwall_conversion", {
+    p_provider_id: provider.id,
+    p_contributor_id: userId,
+    p_provider_transaction_id: txId,
+    p_gross_amount: Math.round(amount),
+    p_nexcoins_awarded: userCoins,
+    p_raw_payload: { query: rawParams },
+    p_provider_name: provider.name,
   });
-
-  if (insertErr) {
-    if (insertErr.code === "23505") {
-      console.log(`[postback/mylead] duplicate tx ${txId} — skipping`);
-      await logPostback(rawParams, hashValid, "duplicate");
-      return new Response("OK", { status: 200 });
-    }
-    console.error("[postback/mylead] insert error:", insertErr.message);
-    await logPostback(rawParams, hashValid, "error", `tx insert failed: ${insertErr.message}`);
+  if (creditError) {
+    console.error("[postback/mylead] atomic credit failed:", creditError.message);
+    await logPostback(rawParams, hashValid, "error", creditError.message);
+    return new Response("Internal Server Error", { status: 500 });
+  }
+  if (!credited) {
+    await logPostback(rawParams, hashValid, "duplicate");
     return new Response("OK", { status: 200 });
   }
-
-  // Credit user their exact share; NexLeader gets 10/66 on top automatically
-  const { contributorCredit } = await creditOfferwallUserShare(
-    admin as unknown as AdminClient,
-    userId,
-    userCoins,
-    `MyLead offer completed (tx: ${txId})`,
-  ).catch((err) => {
-    console.error("[postback/mylead] creditOfferwallUserShare failed:", err);
-    return { contributorCredit: userCoins };
-  });
+  const contributorCredit = userCoins;
 
   // Streak
   const todayIST = new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" });

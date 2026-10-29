@@ -40,6 +40,13 @@ export async function GET(req: NextRequest) {
       ? !!p.postback_secret?.trim()
         && typeof p.custom_config?.offerwall_id === "string"
         && /^[a-zA-Z0-9_-]{8,100}$/.test(p.custom_config.offerwall_id)
+      : p.slug === "notik"
+      ? !!p.api_key?.trim()
+        && !!p.postback_secret?.trim()
+        && typeof p.custom_config?.app_id === "string"
+        && !!p.custom_config.app_id.trim()
+        && typeof p.custom_config?.publisher_id === "string"
+        && !!p.custom_config.publisher_id.trim()
       : !!(p.api_key && p.api_key.trim().length > 0) || !!(p.embed_url_template && p.embed_url_template.trim().length > 0),
   }));
 

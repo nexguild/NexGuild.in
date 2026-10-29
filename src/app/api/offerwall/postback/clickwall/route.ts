@@ -1,9 +1,6 @@
 import { NextRequest } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { createServerClient } from "@/lib/supabase-server";
-import { creditOfferwallUserShare } from "@/lib/nexleader-commission";
-
-type AdminClient = ReturnType<typeof createServerClient>;
 
 const logAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -81,37 +78,25 @@ async function handlePostback(req: NextRequest): Promise<Response> {
   // ClickWall exchange rate 660 → {amount} is payout × 660 = user's NexCoins directly
   const userCoins = Math.max(1, Math.floor(amount));
 
-  const { error: insertErr } = await admin.from("offerwall_transactions").insert({
-    provider_id:             provider.id,
-    contributor_id:          userId,
-    provider_transaction_id: txId,
-    gross_amount:            amount,
-    nexcoins_awarded:        userCoins,
-    status:                  "credited",
-    raw_payload:             { query: rawParams },
+  const { data: credited, error: creditError } = await admin.rpc("credit_offerwall_conversion", {
+    p_provider_id: provider.id,
+    p_contributor_id: userId,
+    p_provider_transaction_id: txId,
+    p_gross_amount: Math.round(amount),
+    p_nexcoins_awarded: userCoins,
+    p_raw_payload: { query: rawParams },
+    p_provider_name: provider.name,
   });
-
-  if (insertErr) {
-    if (insertErr.code === "23505") {
-      console.log(`[postback/clickwall] duplicate tx ${txId} — skipping`);
-      await logPostback(rawParams, true, "duplicate");
-      return new Response("OK", { status: 200 });
-    }
-    console.error("[postback/clickwall] insert error:", insertErr.message);
-    await logPostback(rawParams, true, "error", `tx insert failed: ${insertErr.message}`);
+  if (creditError) {
+    console.error("[postback/clickwall] atomic credit failed:", creditError.message);
+    await logPostback(rawParams, true, "error", creditError.message);
+    return new Response("Internal Server Error", { status: 500 });
+  }
+  if (!credited) {
+    await logPostback(rawParams, true, "duplicate");
     return new Response("OK", { status: 200 });
   }
-
-  // Credit user their exact share; NexLeader gets 10/66 on top automatically
-  const { contributorCredit } = await creditOfferwallUserShare(
-    admin as unknown as AdminClient,
-    userId,
-    userCoins,
-    `ClickWall offer completed (tx: ${txId})`,
-  ).catch((err) => {
-    console.error("[postback/clickwall] creditOfferwallUserShare failed:", err);
-    return { contributorCredit: userCoins };
-  });
+  const contributorCredit = userCoins;
 
   // Streak
   const todayIST = new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" });

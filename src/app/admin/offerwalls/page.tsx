@@ -67,11 +67,18 @@ const INTEGRATION_TYPES = [
 function isLive(p: Provider) {
   const hasCredentials = !!(p.api_key && p.api_key.trim().length > 0);
   const hasEmbedUrl    = !!(p.embed_url_template && p.embed_url_template.trim().length > 0);
+  const hasNotikConfig = p.slug === "notik"
+    && hasCredentials
+    && !!p.postback_secret?.trim()
+    && typeof p.custom_config?.app_id === "string"
+    && !!p.custom_config.app_id.trim()
+    && typeof p.custom_config?.publisher_id === "string"
+    && !!p.custom_config.publisher_id.trim();
   const hasTapRainWall = p.slug === "taprain"
     && !!p.postback_secret?.trim()
     && typeof p.custom_config?.offerwall_id === "string"
     && /^[a-zA-Z0-9_-]{8,100}$/.test(p.custom_config.offerwall_id);
-  return (hasCredentials || hasEmbedUrl || hasTapRainWall) && p.is_active;
+  return (hasNotikConfig || (p.slug !== "notik" && (hasCredentials || hasEmbedUrl)) || hasTapRainWall) && p.is_active;
 }
 
 function PostbackUrlCell({ slug }: { slug: string }) {

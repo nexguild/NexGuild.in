@@ -2,13 +2,10 @@ import { NextRequest } from "next/server";
 import { createHash } from "crypto";
 import { createClient } from "@supabase/supabase-js";
 import { createServerClient } from "@/lib/supabase-server";
-import { creditOfferwallUserShare } from "@/lib/nexleader-commission";
 
 // Set CPX_POSTBACK_DEBUG=true in Vercel env vars to bypass hash validation
 // and confirm the rest of the pipeline works. Remove after debugging.
 const DEBUG = process.env.CPX_POSTBACK_DEBUG === "true";
-
-type AdminClient = ReturnType<typeof createServerClient>;
 
 // Dedicated service-role client for postback_logs writes — guaranteed to bypass RLS
 const logAdmin = createClient(
@@ -123,43 +120,38 @@ async function handleCpxPostback(req: NextRequest): Promise<Response> {
 
   // ─── STATUS 2: Fraud reversal ────────────────────────────────────────────
   if (status === "2") {
-    const { data: existing } = await admin
-      .from("offerwall_transactions")
-      .select("id, nexcoins_awarded, contributor_id, status")
-      .eq("provider_transaction_id", transId)
+    const { data: provider, error: providerError } = await admin
+      .from("offerwall_providers")
+      .select("id")
+      .eq("slug", "cpx_research")
       .single();
+    if (providerError || !provider) {
+      await logPostback(rawParams, hashValid, "error", providerError?.message ?? "provider not found");
+      return new Response("Internal Server Error", { status: 500 });
+    }
 
-    if (!existing || existing.status !== "credited") {
-      console.log(`[postback/cpx_research] reversal for unknown/already-reversed trans ${transId}`);
-      await logPostback(rawParams, hashValid, "reversed", `trans not found or already reversed: ${transId}`);
+    const { data: reversed, error: reversalError } = await admin.rpc("reverse_offerwall_conversion", {
+      p_provider_id: provider.id,
+      p_provider_transaction_id: transId,
+    });
+    if (reversalError) {
+      console.error("[postback/cpx_research] atomic reversal failed:", reversalError.message);
+      await logPostback(rawParams, hashValid, "error", reversalError.message);
+      return new Response("Internal Server Error", { status: 500 });
+    }
+    if (!reversed) {
+      await logPostback(rawParams, hashValid, "reversal_ignored", `trans not found or already reversed: ${transId}`);
       return new Response("OK", { status: 200 });
     }
 
-    const coinsToReverse = existing.nexcoins_awarded as number;
-    const contributorId  = existing.contributor_id as string;
-
-    await admin.from("offerwall_transactions").update({ status: "reversed" }).eq("id", existing.id);
-
-    const { data: profile } = await admin.from("profiles").select("nexcoins").eq("id", contributorId).single();
-    const currentBalance = (profile as { nexcoins: number | null } | null)?.nexcoins ?? 0;
-    await admin.from("profiles").update({ nexcoins: Math.max(0, currentBalance - coinsToReverse) }).eq("id", contributorId);
-
-    await admin.from("coin_transactions").insert({
-      contributor_id: contributorId,
-      amount:         -coinsToReverse,
-      type:           "reversed",
-      source:         "offerwall",
-      description:    `CPX Research fraud reversal (trans: ${transId})`,
-    });
-
     await admin.from("notifications").insert({
-      user_id: contributorId,
+      user_id: userId,
       title:   "Earning Reversed",
-      message: `A CPX Research survey reward of ${coinsToReverse} NexCoins was reversed due to quality flags.`,
+      message: "A CPX Research reward was reversed due to quality flags.",
       type:    "system",
     });
 
-    console.log(`[postback/cpx_research] reversed ${coinsToReverse} coins from ${contributorId}`);
+    console.log(`[postback/cpx_research] reversed trans=${transId}`);
     await logPostback(rawParams, hashValid, "reversed");
     return new Response("OK", { status: 200 });
   }
@@ -206,14 +198,13 @@ async function handleCpxPostback(req: NextRequest): Promise<Response> {
       gross, user_coins: userCoins,
     });
 
-    const { error: insertErr } = await admin.from("offerwall_transactions").insert({
-      provider_id:             provider.id,
-      contributor_id:          userId,
-      provider_transaction_id: transId,
-      gross_amount:            gross,
-      nexcoins_awarded:        userCoins,
-      status:                  "credited",
-      raw_payload: {
+    const { data: credited, error: creditError } = await admin.rpc("credit_offerwall_conversion", {
+      p_provider_id: provider.id,
+      p_contributor_id: userId,
+      p_provider_transaction_id: transId,
+      p_gross_amount: Math.round(gross),
+      p_nexcoins_awarded: userCoins,
+      p_raw_payload: {
         query:      rawParams,
         subid_1:    subid1,
         subid_2:    subid2,
@@ -222,29 +213,19 @@ async function handleCpxPostback(req: NextRequest): Promise<Response> {
         amount_usd: amountUsd,
         debug:      DEBUG,
       },
+      p_provider_name: provider.name,
     });
 
-    if (insertErr) {
-      if (insertErr.code === "23505") {
-        console.log(`[postback/cpx_research] duplicate trans ${transId} — skipping`);
-        await logPostback(rawParams, hashValid, "duplicate");
-        return new Response("OK", { status: 200 });
-      }
-      console.error("[postback/cpx_research] insert error:", insertErr.message);
-      await logPostback(rawParams, hashValid, "error", `tx insert failed: ${insertErr.message}`);
+    if (creditError) {
+      console.error("[postback/cpx_research] atomic credit failed:", creditError.message);
+      await logPostback(rawParams, hashValid, "error", creditError.message);
+      return new Response("Internal Server Error", { status: 500 });
+    }
+    if (!credited) {
+      await logPostback(rawParams, hashValid, "duplicate");
       return new Response("OK", { status: 200 });
     }
-
-    // Credit user their exact share; NexLeader gets 10/66 on top automatically
-    const { contributorCredit } = await creditOfferwallUserShare(
-      admin,
-      userId,
-      userCoins,
-      `CPX Research ${type} (trans: ${transId})`,
-    ).catch((err) => {
-      console.error("[postback/cpx_research] creditOfferwallUserShare failed:", err);
-      return { contributorCredit: userCoins };
-    });
+    const contributorCredit = userCoins;
 
     // Increment daily streak counter (status=2 reversals and screen-outs returned early above)
     {
