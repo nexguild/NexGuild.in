@@ -183,7 +183,7 @@ export default function SurveysPage() {
   const featuredOffer = offers[0];
   const otherOffers = offers.slice(1);
   const featuredOffersSection = (
-    <section aria-labelledby="featured-offers-heading" className="order-1 space-y-3">
+    <section aria-labelledby="featured-offers-heading" className="order-3 space-y-3">
       <div className="flex flex-wrap items-end justify-between gap-2">
         <div>
           <p className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.14em] text-teal-700 sm:text-xs"><Flame className="h-3.5 w-3.5" /> Picked for you</p>
@@ -323,7 +323,7 @@ export default function SurveysPage() {
 
       {featuredOffersSection}
 
-      <section aria-labelledby="offerwall-partners-heading" className="relative order-3 overflow-hidden rounded-2xl border border-[#1e3a5f] bg-gradient-to-br from-[#0A1628] via-[#0d1f38] to-[#0d514d] p-3.5 shadow-[0_12px_30px_rgba(10,22,40,0.18)] sm:rounded-3xl sm:p-5">
+      <section aria-labelledby="offerwall-partners-heading" className="relative order-2 overflow-hidden rounded-2xl border border-[#1e3a5f] bg-gradient-to-br from-[#0A1628] via-[#0d1f38] to-[#0d514d] p-3.5 shadow-[0_12px_30px_rgba(10,22,40,0.18)] sm:rounded-3xl sm:p-5">
         <div className="relative mb-3 flex items-start gap-3 sm:mb-4 sm:gap-3.5">
           <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-teal-200/20 bg-teal-300/10 text-teal-200 sm:h-11 sm:w-11">
             <Layers className="h-4 w-4 sm:h-5 sm:w-5" />
@@ -392,7 +392,7 @@ export default function SurveysPage() {
         )}
       </section>
 
-      <section aria-labelledby="featured-heading" className="order-2 space-y-3">
+      <section aria-labelledby="featured-heading" className="order-1 space-y-3">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
             <p className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.14em] text-teal-700 sm:text-xs">
