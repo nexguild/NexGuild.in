@@ -64,6 +64,13 @@ function getCountryCode(req: NextRequest, profileCountry: string | null): string
   return null;
 }
 
+function getTheoremReachDevice(userAgent: string | null): "ios" | "android" | "web" {
+  if (!userAgent) return "web";
+  if (/iPhone|iPad|iPod/i.test(userAgent)) return "ios";
+  if (/Android/i.test(userAgent)) return "android";
+  return "web";
+}
+
 function getHttpsUrl(value: unknown, providerDomain: string): URL | null {
   if (typeof value !== "string") return null;
   try {
@@ -120,6 +127,38 @@ function interleaveOffers(first: Offer[], second: Offer[]): Offer[] {
     if (second[index]) offers.push(second[index]);
   }
   return offers;
+}
+
+async function isTheoremReachOfferEligible(
+  apiKey: string,
+  secretKey: string,
+  userId: string,
+  ip: string,
+  offerId: string,
+  device: "ios" | "android" | "web",
+): Promise<boolean> {
+  const params = new URLSearchParams({
+    api_key: apiKey,
+    user_id: userId,
+    ip,
+    offer_id: offerId,
+    device,
+  });
+  const unsignedUrl = `https://api.theoremreach.com/api/publishers/v1/user_eligibility?${params}`;
+  const requestHash = createHmac("sha1", secretKey).update(unsignedUrl).digest("base64url");
+  const response = await fetch(`${unsignedUrl}&hash=${encodeURIComponent(requestHash)}`, {
+    headers: { Accept: "application/json" },
+    signal: AbortSignal.timeout(12_000),
+    cache: "no-store",
+  });
+  if (!response.ok) {
+    throw new Error(`TheoremReach offer eligibility check returned HTTP ${response.status}`);
+  }
+  const result = await response.json() as { eligible?: boolean };
+  if (typeof result.eligible !== "boolean") {
+    throw new Error("TheoremReach returned an invalid offer eligibility response");
+  }
+  return result.eligible;
 }
 
 async function getCpxSurveys(
@@ -293,12 +332,13 @@ async function getTheoremReachOffers(
 
   const ip = getClientIp(req);
   if (!ip) throw new Error("Survey request is missing the user's IP address");
+  const device = getTheoremReachDevice(req.headers.get("user-agent"));
 
   const params = new URLSearchParams({
     api_key: apiKey,
     user_id: userId,
     ip,
-    device: "web",
+    device,
     max_result_count: String(SURVEY_LIMIT),
   });
   const countryCode = getCountryCode(req, profileCountry);
@@ -329,13 +369,25 @@ async function getTheoremReachOffers(
       payout?: number | string;
       terms?: string;
       confirmation_time?: string;
+      devices?: string[] | null;
       events?: Array<{ name?: string; payout?: number | string }>;
       entry_link?: string;
     }>;
   };
   if (!Array.isArray(result.offers)) throw new Error("TheoremReach returned an invalid offer list");
 
-  return result.offers.flatMap((item): Offer[] => {
+  const eligibleOffers = await Promise.all(result.offers.map(async (item) => {
+    if (Array.isArray(item.devices) && !item.devices.includes(device)) return null;
+    if (item.type === "network") return item;
+    const id = item.offer_id === undefined ? "" : String(item.offer_id);
+    if (!id) return null;
+    return await isTheoremReachOfferEligible(apiKey, secretKey, userId, ip, id, device)
+      ? item
+      : null;
+  }));
+
+  return eligibleOffers.flatMap((item): Offer[] => {
+    if (!item) return [];
     const entryUrl = getHttpsUrl(item.entry_link, "theoremreach.com");
     const payout = toPositiveNumber(item.payout);
     const id = item.offer_id === undefined ? "" : String(item.offer_id);
