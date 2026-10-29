@@ -3,7 +3,7 @@
 import { useEffect, useState, use } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ChevronLeft, Layers, Loader2 } from "lucide-react";
+import { ChevronLeft, ExternalLink, Layers, Loader2, RefreshCw } from "lucide-react";
 import { NexCoinIcon } from "@/components/ui/nexcoin-icon";
 import { supabase } from "@/lib/supabase";
 import { applyWidgetConfig, buildScriptUrl, injectScript, type WidgetInitConfig } from "@/lib/offerwall-widget-inject";
@@ -20,6 +20,20 @@ interface Provider {
   feature_tags: string[];
   available_countries: string[];
   isLive: boolean;
+}
+
+interface TapRainOffer {
+  id: string;
+  name: string;
+  description: string | null;
+  imageUrl: string | null;
+  estimatedRewardCoins: number;
+  entryUrl: string;
+}
+
+interface TapRainOffersResponse {
+  title: string;
+  offers: TapRainOffer[];
 }
 
 export default function ProviderExperiencePage({
@@ -48,6 +62,10 @@ export default function ProviderExperiencePage({
   const [notikFrameUrl, setNotikFrameUrl] = useState<string | null>(null);
   const [clixwallFrameUrl, setClixwallFrameUrl] = useState<string | null>(null);
   const [clixwallFrameError, setClixwallFrameError] = useState<string | null>(null);
+  const [tapRainOffers, setTapRainOffers] = useState<TapRainOffer[]>([]);
+  const [tapRainTitle, setTapRainTitle] = useState("TapRain offers");
+  const [tapRainLoading, setTapRainLoading] = useState(false);
+  const [tapRainError, setTapRainError] = useState<string | null>(null);
   const [cpxFrameUrl, setCpxFrameUrl] = useState<string | null>(null);
   const [cpxFrameError, setCpxFrameError] = useState<string | null>(null);
 
@@ -165,6 +183,34 @@ export default function ProviderExperiencePage({
       });
   }, [provider?.slug, token]);
 
+  useEffect(() => {
+    if (provider?.slug !== "taprain" || !token) return;
+    const controller = new AbortController();
+    setTapRainLoading(true);
+    setTapRainError(null);
+    fetch("/api/offerwall/taprain/offers", {
+      headers: { Authorization: `Bearer ${token}` },
+      cache: "no-store",
+      signal: controller.signal,
+    })
+      .then(async (response) => {
+        const data = await response.json() as TapRainOffersResponse & { error?: string };
+        if (!response.ok) throw new Error(data.error ?? "Unable to load TapRain offers");
+        if (!Array.isArray(data.offers)) throw new Error("TapRain returned an invalid offer list");
+        setTapRainTitle(data.title || "TapRain offers");
+        setTapRainOffers(data.offers);
+      })
+      .catch((error: unknown) => {
+        if (error instanceof DOMException && error.name === "AbortError") return;
+        console.error("[offerwall/taprain] offer feed request failed:", error);
+        setTapRainError(error instanceof Error ? error.message : "Unable to load TapRain offers");
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setTapRainLoading(false);
+      });
+    return () => controller.abort();
+  }, [provider?.slug, token]);
+
   // script_tag providers: inject widget script after mount.
   // Exception: CPAGrip uses document.write which is blocked in async scripts —
   // instead we build a srcdoc HTML string and render it inside an <iframe>.
@@ -260,7 +306,7 @@ export default function ProviderExperiencePage({
 
       {/* Widget — fills remaining height */}
       <div className="flex min-h-0 flex-1 flex-col">
-        {renderWidget(provider, trIframeUrl, trIframeLoading, buildEmbedUrl(), cpagripFrameUrl, notikFrameUrl, clixwallFrameUrl, clixwallFrameError, cpxFrameUrl, cpxFrameError, token)}
+        {renderWidget(provider, trIframeUrl, trIframeLoading, buildEmbedUrl(), cpagripFrameUrl, notikFrameUrl, clixwallFrameUrl, clixwallFrameError, tapRainOffers, tapRainTitle, tapRainLoading, tapRainError, cpxFrameUrl, cpxFrameError, token)}
       </div>
     </div>
   );
@@ -275,6 +321,10 @@ function renderWidget(
   notikFrameUrl: string | null,
   clixwallFrameUrl: string | null,
   clixwallFrameError: string | null,
+  tapRainOffers: TapRainOffer[],
+  tapRainTitle: string,
+  tapRainLoading: boolean,
+  tapRainError: string | null,
   cpxFrameUrl: string | null,
   cpxFrameError: string | null,
   token: string | null,
@@ -363,6 +413,63 @@ function renderWidget(
         title="ClixWall Offers"
         allow="clipboard-write"
       />
+    );
+  }
+
+  if (provider.slug === "taprain") {
+    if (tapRainLoading) {
+      return <div className="flex-1 flex items-center justify-center"><Loader2 className="h-6 w-6 animate-spin text-indigo-500" /></div>;
+    }
+    if (tapRainError) {
+      return (
+        <div role="alert" className="flex-1 flex flex-col items-center justify-center gap-3 p-6 text-center">
+          <p className="font-semibold text-slate-700">TapRain offers are unavailable</p>
+          <p className="max-w-md text-sm text-slate-500">{tapRainError}</p>
+          <button type="button" onClick={() => window.location.reload()} className="inline-flex min-h-9 items-center gap-2 rounded-lg bg-indigo-600 px-3 text-xs font-bold text-white hover:bg-indigo-700">
+            <RefreshCw className="h-3.5 w-3.5" /> Try again
+          </button>
+        </div>
+      );
+    }
+    return (
+      <div className="min-h-0 flex-1 overflow-y-auto bg-slate-50 p-3 sm:p-6">
+        <div className="mx-auto max-w-6xl">
+          <div className="mb-3 flex items-end justify-between gap-3 sm:mb-5">
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-indigo-600 sm:text-xs">Personalized offers</p>
+              <h1 className="mt-1 text-lg font-black text-slate-900 sm:text-2xl">{tapRainTitle}</h1>
+              <p className="mt-1 text-xs text-slate-500 sm:text-sm">Estimated NexCoins are based on the offer payout. Final rewards depend on provider confirmation.</p>
+            </div>
+            <span className="shrink-0 rounded-full bg-white px-2.5 py-1 text-[10px] font-semibold text-slate-500 shadow-sm sm:text-xs">{tapRainOffers.length} offers</span>
+          </div>
+          {tapRainOffers.length ? (
+            <div className="grid gap-2.5 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
+              {tapRainOffers.map((offer) => (
+                <article key={offer.id} className="flex min-w-0 flex-row overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm sm:flex-col sm:rounded-2xl">
+                  {offer.imageUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={offer.imageUrl} alt="" className="h-20 w-20 shrink-0 self-stretch bg-slate-100 object-cover sm:h-28 sm:w-full sm:self-auto" loading="lazy" />
+                  ) : (
+                    <div className="flex h-20 w-20 shrink-0 items-center justify-center bg-gradient-to-br from-indigo-500 to-teal-500 text-xl font-black text-white sm:h-28 sm:w-full sm:text-3xl">{offer.name.slice(0, 1)}</div>
+                  )}
+                  <div className="flex min-w-0 flex-1 flex-col p-2.5 sm:p-4">
+                    <div className="flex items-start justify-between gap-2">
+                      <h2 className="line-clamp-2 text-xs font-extrabold leading-snug text-slate-900 sm:text-sm">{offer.name}</h2>
+                      <span className="inline-flex shrink-0 items-center gap-1 text-[10px] font-bold text-teal-700 sm:text-xs"><NexCoinIcon size={12} /> {new Intl.NumberFormat("en").format(offer.estimatedRewardCoins)}</span>
+                    </div>
+                    {offer.description && <p className="mt-1 line-clamp-2 text-[10px] leading-snug text-slate-500 sm:text-xs">{offer.description}</p>}
+                    <a href={offer.entryUrl} target="_blank" rel="noopener noreferrer" className="mt-auto inline-flex min-h-9 items-center justify-center gap-1.5 rounded-lg bg-indigo-600 px-3 text-[10px] font-extrabold text-white hover:bg-indigo-700 sm:mt-3 sm:text-xs">
+                      Start offer <ExternalLink className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                    </a>
+                  </div>
+                </article>
+              ))}
+            </div>
+          ) : (
+            <p className="rounded-xl border border-dashed border-slate-300 bg-white px-4 py-8 text-center text-sm text-slate-500">No matching TapRain offers are available right now.</p>
+          )}
+        </div>
+      </div>
     );
   }
 

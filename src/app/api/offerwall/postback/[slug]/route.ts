@@ -1,13 +1,12 @@
 import { NextRequest } from "next/server";
 import { createHash, createHmac, timingSafeEqual } from "crypto";
 import { createServerClient } from "@/lib/supabase-server";
-import { creditOfferwallUserShare } from "@/lib/nexleader-commission";
 
 type ParamMap = Record<string, string>;
 
 function redactSensitiveParams(params: Record<string, unknown>): Record<string, unknown> {
   return Object.fromEntries(
-    Object.entries(params).filter(([key]) => !["secret", "pwd", "api_key", "hash"].includes(key.toLowerCase())),
+    Object.entries(params).filter(([key]) => !["secret", "pwd", "api_key", "key", "hash"].includes(key.toLowerCase())),
   );
 }
 
@@ -31,13 +30,16 @@ function extractParams(q: URLSearchParams, body: Record<string, unknown>, paramM
     hash:           get("hash"),
     s1:             get("s1"),
     rewardedTxnId:  get("rewarded_txn_id"),
-    incomingSecret: get("secret") ?? get("pwd") ?? get("api_key"),
+    incomingSecret: get("secret") ?? get("pwd") ?? get("api_key") ?? get("key"),
   };
 }
 
 function secureHashEquals(expected: string, incoming: string | null): boolean {
-  if (!incoming || expected.length !== incoming.length) return false;
-  return timingSafeEqual(Buffer.from(expected, "utf8"), Buffer.from(incoming, "utf8"));
+  if (!incoming) return false;
+  const expectedBuffer = Buffer.from(expected, "utf8");
+  const incomingBuffer = Buffer.from(incoming, "utf8");
+  if (expectedBuffer.length !== incomingBuffer.length) return false;
+  return timingSafeEqual(expectedBuffer, incomingBuffer);
 }
 
 function verifyByHashFormat(hashFormat: string, secret: string, vars: Record<string, string>, incoming: string | null): boolean {
@@ -115,7 +117,7 @@ async function handlePostback(req: NextRequest, slug: string): Promise<Response>
     ...redactSensitiveParams(Object.fromEntries(q.entries())),
     ...redactSensitiveParams(bodyObj),
   };
-  const secretParameter = ["secret", "pwd", "api_key"].find((key) =>
+  const secretParameter = ["secret", "pwd", "api_key", "key"].find((key) =>
     Boolean(
       (q.get(paramMap[key] ?? key) ?? q.get(key) ?? "").trim()
       || String(bodyObj[paramMap[key] ?? key] ?? bodyObj[key] ?? "").trim(),
@@ -129,10 +131,14 @@ async function handlePostback(req: NextRequest, slug: string): Promise<Response>
   const hashAuthenticated = notikHmac || !!hashFormat || gemiadHash;
   const contributorId = notikHmac ? (s1?.trim() || userId) : userId;
   const notikConversionRate = Number(customCfg.conversion_rate ?? 660) || 660;
+  const tapRainConversionRate = Number(customCfg.currency_conversion_rate ?? 1000);
+  const tapRainPayoutMultiplier = Number(customCfg.payout_multiplier ?? 1);
   const creditedAmount = notikHmac && amount <= 0 && payout > 0
     ? Math.round(payout * notikConversionRate)
     : slug === "clixwall" && amount <= 0 && userPayoutUsd > 0
     ? Math.round(userPayoutUsd * (Number(customCfg.currency_conversion_rate ?? 1000) || 1000))
+    : slug === "taprain"
+    ? Math.round(amount * tapRainConversionRate)
     : amount;
   const normalizedStatus = status?.trim().toLowerCase() ?? "";
   const isReversalStatus = normalizedStatus === "2"
@@ -180,7 +186,7 @@ async function handlePostback(req: NextRequest, slug: string): Promise<Response>
       return new Response("Forbidden", { status: 403 });
     }
   } else {
-    if (incomingSecret !== provider.postback_secret) {
+    if (!secureHashEquals(provider.postback_secret, incomingSecret)) {
       console.warn(`[postback/${slug}] invalid secret`);
       await writeLog(admin, slug, {
         ...safeRawParams,
@@ -198,34 +204,35 @@ async function handlePostback(req: NextRequest, slug: string): Promise<Response>
     return new Response("Bad Request", { status: 400 });
   }
 
+  if (slug === "taprain" && !status) {
+    await writeLog(admin, slug, safeRawParams, "error", hashAuthenticated ? true : null, "Missing TapRain conversion status");
+    return new Response("Bad Request", { status: 400 });
+  }
+  if (slug === "taprain" && (!Number.isFinite(tapRainConversionRate) || tapRainConversionRate <= 0
+    || !Number.isFinite(tapRainPayoutMultiplier) || tapRainPayoutMultiplier <= 0)) {
+    await writeLog(admin, slug, safeRawParams, "error", true, "Invalid TapRain reward conversion configuration");
+    return new Response("Internal Server Error", { status: 500 });
+  }
+
   // 5. Notik chargebacks use a negative amount and the original transaction ID.
   // Some providers instead use status=2, so support both formats.
   if (isReversalStatus || (notikHmac && creditedAmount < 0 && !!rewardedTxnId)) {
     const reversalTxnId = rewardedTxnId ?? transId;
-    const { data: existing } = await admin
-      .from("offerwall_transactions")
-      .select("id, nexcoins_awarded, contributor_id, status")
-      .eq("provider_id", provider.id)
-      .eq("provider_transaction_id", reversalTxnId)
-      .single();
+    const { data: reversed, error: reversalError } = await admin.rpc("reverse_offerwall_conversion", {
+      p_provider_id: provider.id,
+      p_provider_transaction_id: reversalTxnId,
+    });
+    if (reversalError) {
+      console.error(`[postback/${slug}] reversal failed:`, reversalError.message);
+      await writeLog(admin, slug, safeRawParams, "error", hashAuthenticated ? true : null, reversalError.message);
+      return new Response("Internal Server Error", { status: 500 });
+    }
 
-    if (!existing || existing.status === "reversed") {
+    if (!reversed) {
+      await writeLog(admin, slug, safeRawParams, "reversal_ignored", hashAuthenticated ? true : null, "Conversion not found or already reversed");
       return new Response("OK", { status: 200 });
     }
 
-    const tx = existing as { id: string; nexcoins_awarded: number; contributor_id: string; status: string };
-    await admin.from("offerwall_transactions").update({ status: "reversed" }).eq("id", tx.id);
-
-    const { data: p } = await admin.from("profiles").select("nexcoins").eq("id", tx.contributor_id).single();
-    const cur = (p as { nexcoins: number | null } | null)?.nexcoins ?? 0;
-    await admin.from("profiles").update({ nexcoins: Math.max(0, cur - tx.nexcoins_awarded) }).eq("id", tx.contributor_id);
-    await admin.from("coin_transactions").insert({
-      contributor_id: tx.contributor_id,
-      amount:         -tx.nexcoins_awarded,
-      type:           "reversed",
-      source:         "offerwall",
-      description:    `${provider.name} fraud reversal (tx: ${transId})`,
-    });
     await writeLog(admin, slug, { user_id: userId, trans_id: transId, rewarded_txn_id: rewardedTxnId, amount, status }, "reversed", hashAuthenticated ? true : null);
     return new Response("OK", { status: 200 });
   }
@@ -258,48 +265,56 @@ async function handlePostback(req: NextRequest, slug: string): Promise<Response>
     await writeLog(admin, slug, { user_id: contributorId, notik_user_id: userId, s1, trans_id: transId, amount, payout, status }, "error", hashAuthenticated ? true : null, "Missing or zero reward amount");
     return new Response("Bad Request", { status: 400 });
   }
-  const payoutMult      = slug === "clixwall" || gemiadHash ? 1 : Number(customCfg.payout_multiplier ?? 1) || 1;
+  const payoutMult      = slug === "clixwall" || gemiadHash
+    ? 1
+    : slug === "taprain"
+    ? tapRainPayoutMultiplier
+    : Number(customCfg.payout_multiplier ?? 1) || 1;
   const rateIsUserShare = slug === "clixwall" || gemiadHash || customCfg.rate_is_user_share === true;
-  const userCoins       = rateIsUserShare
+  const contributorShare = slug === "taprain"
+    ? Number(provider.contributor_share_pct ?? 66) / 100
+    : 0.66;
+  if (slug === "taprain" && (!Number.isFinite(contributorShare) || contributorShare < 0 || contributorShare > 1)) {
+    await writeLog(admin, slug, safeRawParams, "error", true, "Invalid TapRain contributor share");
+    return new Response("Internal Server Error", { status: 500 });
+  }
+  const userCoins       = slug === "taprain"
+    ? Math.max(1, Math.round(creditedAmount * payoutMult * contributorShare))
+    : rateIsUserShare
     ? Math.max(1, Math.round(creditedAmount * payoutMult))
-    : Math.max(1, Math.round(creditedAmount * payoutMult * 0.66));
+    : Math.max(1, Math.round(creditedAmount * payoutMult * contributorShare));
 
-  // 8. Insert transaction (UNIQUE guard prevents double-credit)
-  const { error: insertErr } = await admin.from("offerwall_transactions").insert({
-    provider_id:             provider.id,
-    contributor_id:          contributorId,
-    provider_transaction_id: transId,
-    gross_amount:            creditedAmount,
-    nexcoins_awarded:        userCoins,
-    status:                  "credited",
-    raw_payload:             {
+  if (!Number.isSafeInteger(creditedAmount) || !Number.isSafeInteger(userCoins)) {
+    await writeLog(admin, slug, safeRawParams, "error", hashAuthenticated ? true : null, "Reward amount exceeds supported integer range");
+    return new Response("Bad Request", { status: 400 });
+  }
+
+  // The RPC commits the idempotency record, wallet balance, ledger, and
+  // NexLeader commission together; failed writes remain retryable by provider.
+  const { data: credited, error: creditError } = await admin.rpc("credit_offerwall_conversion", {
+    p_provider_id: provider.id,
+    p_contributor_id: contributorId,
+    p_provider_transaction_id: transId,
+    p_gross_amount: creditedAmount,
+    p_nexcoins_awarded: userCoins,
+    p_raw_payload: {
       query: redactSensitiveParams(Object.fromEntries(q.entries())),
       body: redactSensitiveParams(bodyObj),
     },
+    p_provider_name: provider.name,
   });
 
-  if (insertErr) {
-    if (insertErr.code === "23505") {
-      console.log(`[postback/${slug}] duplicate tx ${transId} — skipping`);
-      await writeLog(admin, slug, { user_id: userId, trans_id: transId, amount, status }, "duplicate", hashAuthenticated ? true : null);
-      return new Response("OK", { status: 200 });
-    }
-    console.error(`[postback/${slug}] insert error:`, insertErr.message);
-    await writeLog(admin, slug, { user_id: userId, trans_id: transId, amount, status }, "error", hashAuthenticated ? true : null, insertErr.message);
+  if (creditError) {
+    console.error(`[postback/${slug}] atomic credit failed:`, creditError.message);
+    await writeLog(admin, slug, safeRawParams, "error", hashAuthenticated ? true : null, creditError.message);
     return new Response("Internal Server Error", { status: 500 });
   }
-
-  // 9. Credit user their exact share; NexLeader gets 10/66 on top automatically
-  const { contributorCredit } = await creditOfferwallUserShare(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    admin as any,
-    contributorId,
-    userCoins,
-    `${provider.name} offer completed`,
-  ).catch((err) => {
-    console.error(`[postback/${slug}] creditOfferwallUserShare failed:`, err);
-    return { contributorCredit: userCoins };
-  });
+  if (!credited) {
+    console.log(`[postback/${slug}] duplicate tx ${transId} — skipping`);
+    await writeLog(admin, slug, { user_id: userId, trans_id: transId, amount, status }, "duplicate", hashAuthenticated ? true : null);
+    return new Response("OK", { status: 200 });
+  }
+  const contributorCredit = userCoins;
 
   // 10. Streak update
   const today = new Date().toISOString().split("T")[0];

@@ -12,7 +12,7 @@ export async function GET(req: NextRequest) {
   // Select api_key server-side to derive isLive — NEVER return the value to the client
   const { data: providers, error } = await admin
     .from("offerwall_providers")
-    .select("id, name, slug, is_ad_network, embed_url_template, api_key, integration_type, is_active, display_order, description, logo_url, custom_config")
+    .select("id, name, slug, is_ad_network, embed_url_template, api_key, postback_secret, integration_type, is_active, display_order, description, logo_url, custom_config")
     .eq("is_active", true)
     .order("display_order", { ascending: true })
     .order("name", { ascending: true });
@@ -21,7 +21,7 @@ export async function GET(req: NextRequest) {
 
   const safeProviders = (providers ?? []).map((p: {
     id: string; name: string; slug: string; is_ad_network: boolean;
-    embed_url_template: string | null; api_key: string | null;
+    embed_url_template: string | null; api_key: string | null; postback_secret: string | null;
     integration_type: string | null; is_active: boolean;
     display_order: number; description: string | null; logo_url: string | null;
     custom_config: Record<string, unknown> | null;
@@ -36,7 +36,11 @@ export async function GET(req: NextRequest) {
     logo_url:           p.logo_url,
     feature_tags:       Array.isArray(p.custom_config?.feature_tags) ? p.custom_config?.feature_tags as string[] : [],
     available_countries: Array.isArray(p.custom_config?.available_countries) ? p.custom_config?.available_countries as string[] : [],
-    isLive:             !!(p.api_key && p.api_key.trim().length > 0) || !!(p.embed_url_template && p.embed_url_template.trim().length > 0),
+    isLive:             p.slug === "taprain"
+      ? !!p.postback_secret?.trim()
+        && typeof p.custom_config?.offerwall_id === "string"
+        && /^[a-zA-Z0-9_-]{8,100}$/.test(p.custom_config.offerwall_id)
+      : !!(p.api_key && p.api_key.trim().length > 0) || !!(p.embed_url_template && p.embed_url_template.trim().length > 0),
   }));
 
   return NextResponse.json({ providers: safeProviders });
