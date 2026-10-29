@@ -131,12 +131,20 @@ async function handlePostback(req: NextRequest, slug: string): Promise<Response>
   const hashAuthenticated = notikHmac || !!hashFormat || gemiadHash;
   const contributorId = notikHmac ? (s1?.trim() || userId) : userId;
   const notikConversionRate = Number(customCfg.conversion_rate ?? 660) || 660;
+  const clixwallConversionRate = Number(customCfg.currency_conversion_rate ?? 1000) || 1000;
   const tapRainConversionRate = Number(customCfg.currency_conversion_rate ?? 1000);
   const tapRainPayoutMultiplier = Number(customCfg.payout_multiplier ?? 1);
+  const clixwallAmount = slug === "clixwall"
+    ? amount > 0
+      ? Math.max(1, Math.round(amount))
+      : userPayoutUsd > 0
+      ? Math.max(1, Math.round(userPayoutUsd * clixwallConversionRate))
+      : 0
+    : 0;
   const creditedAmount = notikHmac && amount <= 0 && payout > 0
     ? Math.round(payout * notikConversionRate)
-    : slug === "clixwall" && amount <= 0 && userPayoutUsd > 0
-    ? Math.round(userPayoutUsd * (Number(customCfg.currency_conversion_rate ?? 1000) || 1000))
+    : slug === "clixwall"
+    ? clixwallAmount
     : slug === "taprain"
     ? Math.round(amount * tapRainConversionRate)
     : amount;
