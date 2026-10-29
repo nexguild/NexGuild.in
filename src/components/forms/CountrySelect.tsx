@@ -24,10 +24,11 @@ export function CountrySelect({
       required={required}
       disabled={disabled}
       autoComplete="country"
+      style={{ colorScheme: "light" }}
     >
-      <option value="">Select your country</option>
+      <option value="" className="bg-white text-stone-500">Select your country</option>
       {COUNTRY_OPTIONS.map(({ code, name }) => (
-        <option key={code} value={code}>{name}</option>
+        <option key={code} value={code} className="bg-white text-stone-900">{name}</option>
       ))}
     </select>
   );
