@@ -33,7 +33,10 @@ interface Offer {
   id: string;
   name: string;
   description: string | null;
+  terms: string | null;
+  confirmationTime: string | null;
   imageUrl: string | null;
+  sourceName: string;
   providerName: string | null;
   kind: "diy" | "network";
   estimatedRewardCoins: number;
@@ -88,6 +91,35 @@ function getAnyHttpsUrl(value: unknown): URL | null {
 function toPositiveNumber(value: unknown): number | null {
   const number = typeof value === "number" ? value : Number(value);
   return Number.isFinite(number) && number > 0 ? number : null;
+}
+
+function cleanOfferText(value: string): string {
+  return value
+    .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, " ")
+    .replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, " ")
+    .replace(/&lt;br\s*\/?&gt;/gi, "\n")
+    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<\/(?:p|li|div|h[1-6])\s*>/gi, "\n")
+    .replace(/<[^>]*>/g, " ")
+    .replace(/&nbsp;|&#160;/gi, " ")
+    .replace(/&amp;/gi, "&")
+    .replace(/&quot;/gi, "\"")
+    .replace(/&#39;|&apos;/gi, "'")
+    .replace(/&lt;/gi, "<")
+    .replace(/&gt;/gi, ">")
+    .replace(/[ \t]+\n/g, "\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
+
+function interleaveOffers(first: Offer[], second: Offer[]): Offer[] {
+  const offers: Offer[] = [];
+  const count = Math.max(first.length, second.length);
+  for (let index = 0; index < count; index += 1) {
+    if (first[index]) offers.push(first[index]);
+    if (second[index]) offers.push(second[index]);
+  }
+  return offers;
 }
 
 async function getCpxSurveys(
@@ -295,6 +327,8 @@ async function getTheoremReachOffers(
       provider_name?: string;
       rank?: number | string;
       payout?: number | string;
+      terms?: string;
+      confirmation_time?: string;
       events?: Array<{ name?: string; payout?: number | string }>;
       entry_link?: string;
     }>;
@@ -322,16 +356,19 @@ async function getTheoremReachOffers(
       const eventPayout = toPositiveNumber(event.payout);
       if (!event.name || !eventPayout) return [];
       return [{
-        name: event.name,
+        name: cleanOfferText(event.name),
         estimatedRewardCoins: Math.ceil(eventPayout * THEOREMREACH_COINS_PER_USD),
       }];
     });
 
     return [{
       id,
-      name: item.name,
-      description: typeof item.description === "string" ? item.description : null,
+      name: cleanOfferText(item.name),
+      description: typeof item.description === "string" ? cleanOfferText(item.description) : null,
+      terms: typeof item.terms === "string" ? cleanOfferText(item.terms) : null,
+      confirmationTime: typeof item.confirmation_time === "string" ? cleanOfferText(item.confirmation_time) : null,
       imageUrl: imageUrl?.toString() ?? null,
+      sourceName: "TheoremReach",
       providerName: typeof item.provider_name === "string" ? item.provider_name : null,
       kind: item.type === "network" ? "network" : "diy",
       estimatedRewardCoins: Math.ceil(payout * THEOREMREACH_COINS_PER_USD),
@@ -394,6 +431,8 @@ async function getNotikOffers(
       description1?: string | null;
       description2?: string | null;
       description3?: string | null;
+      terms?: string;
+      confirmation_time?: string;
       image_url?: string;
       payout?: number | string;
       click_url?: string;
@@ -418,21 +457,25 @@ async function getNotikOffers(
       : [];
     const description = [item.description1, item.description2, item.description3]
       .filter((part): part is string => typeof part === "string" && !!part.trim())
+      .map(cleanOfferText)
       .join(" ");
     const events = (item.events ?? []).flatMap((event) => {
       const eventPayout = toPositiveNumber(event.payout);
       if (!event.name?.trim() || !eventPayout) return [];
       return [{
-        name: event.name,
+        name: cleanOfferText(event.name),
         estimatedRewardCoins: Math.ceil(eventPayout * conversionRate),
       }];
     });
 
     return [{
       id: `notik-${id}`,
-      name: item.name.trim(),
-      description: description || (categories.length ? categories.join(" · ") : null),
+      name: cleanOfferText(item.name.trim()),
+      description: description || (categories.length ? cleanOfferText(categories.join(" · ")) : null),
+      terms: typeof item.terms === "string" ? cleanOfferText(item.terms) : null,
+      confirmationTime: typeof item.confirmation_time === "string" ? cleanOfferText(item.confirmation_time) : null,
       imageUrl: imageUrl?.toString() ?? null,
+      sourceName: "Notik",
       providerName: "Notik",
       kind: "network",
       estimatedRewardCoins: Math.ceil(payout * conversionRate),
@@ -512,8 +555,10 @@ export async function GET(req: NextRequest) {
   return NextResponse.json(
     {
       surveys,
-      offers: [...notikOffersResult.offers, ...theoremReachOffersResult.offers]
-        .sort((a, b) => b.rankScore - a.rankScore),
+      offers: interleaveOffers(
+        theoremReachOffersResult.offers.sort((a, b) => b.rankScore - a.rankScore),
+        notikOffersResult.offers,
+      ),
       errors,
     },
     { headers: { "Cache-Control": "private, no-store, max-age=0" } },

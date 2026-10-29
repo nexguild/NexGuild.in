@@ -49,10 +49,13 @@ interface FeaturedOffer {
   name: string;
   description: string | null;
   imageUrl: string | null;
+  sourceName: string;
   providerName: string | null;
   kind: "diy" | "network";
   estimatedRewardCoins: number;
   rankScore: number;
+  terms: string | null;
+  confirmationTime: string | null;
   events: { name: string; estimatedRewardCoins: number }[];
   entryUrl: string;
 }
@@ -191,8 +194,8 @@ export default function SurveysPage() {
       </div>
 
       {loading ? (
-        <div className="flex gap-3 overflow-hidden" aria-label="Loading featured offers">
-          {[0, 1, 2, 3].map((item) => <div key={item} className="h-48 w-36 shrink-0 animate-pulse rounded-xl bg-slate-200 sm:w-40" />)}
+        <div className="grid auto-cols-[148px] grid-flow-col grid-rows-2 gap-3 overflow-hidden" aria-label="Loading featured activities">
+          {[0, 1, 2, 3].map((item) => <div key={item} className="h-48 animate-pulse rounded-xl bg-slate-200" />)}
         </div>
       ) : loadError ? (
         <div role="alert" className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-xs text-rose-800">
@@ -208,9 +211,9 @@ export default function SurveysPage() {
               Some tasks could not be loaded. {errors.notik_offers && `Notik: ${errors.notik_offers}. `}{errors.theoremreach_offers && `TheoremReach: ${errors.theoremreach_offers}. `}Other tasks are still available below.
             </p>
           )}
-          <div className="-mx-1 flex snap-x snap-mandatory gap-3 overflow-x-auto px-1 pb-2">
+          <div className="-mx-1 grid auto-cols-[148px] grid-flow-col grid-rows-2 gap-3 overflow-x-auto px-1 pb-2 sm:auto-cols-[168px]">
             {[featuredOffer, ...otherOffers].map((offer) => (
-              <article key={offer.id} className="group flex w-[148px] shrink-0 snap-start flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition hover:border-teal-300 hover:shadow-md sm:w-[168px]">
+              <article key={offer.id} className="group flex min-w-0 flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition hover:border-teal-300 hover:shadow-md">
                 <div className="relative flex h-24 w-full items-center justify-center overflow-hidden bg-gradient-to-br from-[#0A1628] via-[#12314A] to-teal-800 text-teal-100">
                   {offer.imageUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
@@ -220,7 +223,9 @@ export default function SurveysPage() {
                   )}
                   <div aria-hidden className="absolute inset-0 bg-gradient-to-t from-[#071321]/85 via-[#071321]/10 to-black/20" />
                   <span className="absolute left-2 top-2 max-w-[90px] truncate rounded-full border border-white/20 bg-[#071321]/60 px-2 py-0.5 text-[9px] font-bold text-white backdrop-blur-sm">
-                    {offer.providerName || "Partner task"}
+                    {offer.providerName && offer.providerName !== offer.sourceName
+                      ? `${offer.providerName} · ${offer.sourceName}`
+                      : offer.sourceName}
                   </span>
                   <span className="absolute bottom-2 right-2 inline-flex items-center gap-0.5 rounded-full bg-teal-300 px-2 py-0.5 text-[9px] font-extrabold text-slate-950 shadow-sm">
                     <NexCoinIcon size={10} /> {formatCoins(offer.estimatedRewardCoins)}
@@ -228,22 +233,38 @@ export default function SurveysPage() {
                 </div>
                 <div className="flex min-h-[112px] min-w-0 flex-1 flex-col p-2.5">
                   <h3 className="mt-1.5 line-clamp-2 text-xs font-extrabold leading-snug text-slate-900">{offer.name}</h3>
-                  {offer.description && <p className="mt-1 line-clamp-2 text-[10px] leading-snug text-slate-500">{offer.description}</p>}
+                  {offer.description && <p className="mt-1 line-clamp-2 whitespace-pre-line text-[10px] leading-snug text-slate-500">{offer.description}</p>}
                   {offer.events.length > 0 && (
-                    <ul className="mt-1.5 space-y-0.5">
-                      {offer.events.slice(0, 1).map((event) => (
-                        <li key={event.name} className="flex items-center justify-between gap-1 text-[9px] text-slate-500">
-                          <span className="truncate">{event.name}</span>
-                          <span className="inline-flex shrink-0 items-center gap-0.5 font-semibold text-teal-700"><NexCoinIcon size={10} /> ~{formatCoins(event.estimatedRewardCoins)}</span>
-                        </li>
-                      ))}
-                    </ul>
+                    <p className="mt-1 text-[9px] font-semibold text-teal-700">
+                      {offer.events.length} reward {offer.events.length === 1 ? "step" : "steps"}
+                    </p>
+                  )}
+                  {(offer.description || offer.terms || offer.confirmationTime || offer.events.length > 0) && (
+                    <details className="mt-1.5 rounded-md bg-slate-50 px-2 py-1.5 text-[9px] text-slate-600">
+                      <summary className="cursor-pointer font-bold text-teal-800">
+                        {offer.events.length ? `View all ${offer.events.length} steps` : "View activity details"}
+                      </summary>
+                      <div className="mt-1.5 space-y-1.5 whitespace-pre-line leading-snug">
+                        {offer.description && <p>{offer.description}</p>}
+                        {offer.terms && <p><span className="font-bold">Requirements:</span> {offer.terms}</p>}
+                        {offer.confirmationTime && <p><span className="font-bold">Reward timing:</span> {offer.confirmationTime}</p>}
+                        {offer.events.length > 0 && (
+                          <ol className="list-inside list-decimal space-y-1">
+                            {offer.events.map((event, index) => (
+                              <li key={`${event.name}-${index}`}>
+                                {event.name} — <span className="inline-flex items-center gap-0.5 font-semibold text-teal-700"><NexCoinIcon size={9} /> ~{formatCoins(event.estimatedRewardCoins)}</span>
+                              </li>
+                            ))}
+                          </ol>
+                        )}
+                      </div>
+                    </details>
                   )}
                   <div className="mt-auto flex items-center justify-between gap-1 pt-2">
                     <a href={offer.entryUrl} target="_blank" rel="noopener noreferrer" aria-label={`Try activity: ${offer.name}`} className="inline-flex h-7 items-center gap-1 rounded-md bg-teal-600 px-2 text-[9px] font-extrabold text-white transition hover:bg-teal-700">
                       Try task <ExternalLink className="h-3 w-3" />
                     </a>
-                    <span className="text-[9px] font-semibold text-slate-500">{offer.kind === "network" ? "Partner task" : "Featured task"}</span>
+                    <span className="text-[9px] font-semibold text-slate-500">via {offer.sourceName}</span>
                   </div>
                 </div>
               </article>
@@ -257,6 +278,9 @@ export default function SurveysPage() {
           {(errors.theoremreach_offers || errors.notik_offers) && <p role="status" className="mt-2 text-xs text-amber-800">{errors.notik_offers && `Notik: ${errors.notik_offers} `}{errors.theoremreach_offers && `TheoremReach: ${errors.theoremreach_offers}`}</p>}
         </div>
       )}
+      <p className="text-[10px] leading-relaxed text-slate-500">
+        Some activities have country, device, or account requirements. If one says it is unavailable, try another; the partner decides eligibility.
+      </p>
     </section>
   );
 
@@ -316,13 +340,13 @@ export default function SurveysPage() {
           Swipe to explore <ArrowRight className="h-3 w-3" />
         </p>
         {offerwallsLoading ? (
-          <div className="flex gap-3 overflow-hidden" aria-label="Loading partner activities">
-            {Array.from({ length: 4 }).map((_, index) => <div key={index} className="h-40 w-44 shrink-0 animate-pulse rounded-xl bg-white/10" />)}
+          <div className="grid auto-cols-[176px] grid-flow-col grid-rows-2 gap-3 overflow-hidden" aria-label="Loading partner activities">
+            {Array.from({ length: 4 }).map((_, index) => <div key={index} className="h-40 animate-pulse rounded-xl bg-white/10" />)}
           </div>
         ) : offerwallsError ? (
           <p role="alert" className="rounded-xl border border-amber-200/30 bg-amber-200/10 px-3 py-2 text-xs text-amber-100">{offerwallsError}</p>
         ) : offerwalls.length ? (
-          <div className="-mx-1 flex snap-x snap-mandatory gap-3 overflow-x-auto px-1 pb-2">
+          <div className="-mx-1 grid auto-cols-[176px] grid-flow-col grid-rows-2 gap-3 overflow-x-auto px-1 pb-2 sm:auto-cols-[196px]">
             {offerwalls.map((provider) => (
               <Link
                 key={provider.id}
@@ -338,7 +362,7 @@ export default function SurveysPage() {
                   }
                 }}
                 aria-label={`Browse ${provider.name} activities`}
-                className="group flex w-[176px] shrink-0 snap-start flex-col overflow-hidden rounded-xl border border-white/15 bg-white shadow-[0_4px_14px_rgba(0,0,0,0.18)] transition hover:-translate-y-0.5 hover:border-teal-300 hover:shadow-[0_10px_24px_rgba(20,184,166,0.18)] sm:w-[196px]"
+                className="group flex min-w-0 flex-col overflow-hidden rounded-xl border border-white/15 bg-white shadow-[0_4px_14px_rgba(0,0,0,0.18)] transition hover:-translate-y-0.5 hover:border-teal-300 hover:shadow-[0_10px_24px_rgba(20,184,166,0.18)]"
               >
                 <span className="relative flex h-[100px] items-center justify-center overflow-hidden bg-gradient-to-br from-[#0A1628] via-[#12314A] to-[#0d9488] sm:h-28">
                   <span aria-hidden className="absolute -right-8 -top-10 h-32 w-32 rounded-full border-[16px] border-white/10 transition-transform duration-300 group-hover:scale-110" />
@@ -414,13 +438,13 @@ export default function SurveysPage() {
         )}
 
         {loading ? (
-          <div className="flex gap-3 overflow-hidden" aria-label="Loading surveys">
-            {[0, 1, 2, 3].map((item) => <div key={item} className="h-44 w-[148px] shrink-0 animate-pulse rounded-xl bg-slate-200" />)}
+          <div className="grid auto-cols-[148px] grid-flow-col grid-rows-2 gap-3 overflow-hidden" aria-label="Loading questions">
+            {[0, 1, 2, 3].map((item) => <div key={item} className="h-44 animate-pulse rounded-xl bg-slate-200" />)}
           </div>
         ) : visibleSurveys.length ? (
-          <div className="-mx-1 flex snap-x snap-mandatory gap-3 overflow-x-auto px-1 pb-2">
+          <div className="-mx-1 grid auto-cols-[148px] grid-flow-col grid-rows-2 gap-3 overflow-x-auto px-1 pb-2 sm:auto-cols-[168px]">
             {visibleSurveys.map((survey) => (
-              <article key={`${survey.provider}-${survey.id}`} className="group flex w-[148px] shrink-0 snap-start flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition hover:border-teal-300 hover:shadow-md sm:w-[168px]">
+              <article key={`${survey.provider}-${survey.id}`} className="group flex min-w-0 flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition hover:border-teal-300 hover:shadow-md">
                 <div className={`relative h-[70px] overflow-hidden p-2.5 ${survey.provider === "CPX Research" ? "bg-gradient-to-br from-[#322b69] via-indigo-700 to-blue-700" : "bg-gradient-to-br from-[#0A514F] via-teal-700 to-emerald-700"}`}>
                   <div aria-hidden className="absolute -right-4 -top-10 h-24 w-24 rounded-full border-[12px] border-white/10" />
                   <div className="relative flex items-start justify-between gap-1">
