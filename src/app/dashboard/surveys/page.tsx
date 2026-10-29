@@ -3,17 +3,13 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
-  ArrowDownWideNarrow,
   ArrowRight,
   BarChart3,
-  CheckCircle2,
   Clock3,
   ExternalLink,
   Flame,
-  Globe2,
   Info,
   Layers,
-  Loader2,
   RefreshCw,
   Sparkles,
   Star,
@@ -44,6 +40,7 @@ interface SurveyResponse {
     cpx_research: string | null;
     theoremreach: string | null;
     theoremreach_offers: string | null;
+    notik_offers: string | null;
   };
 }
 
@@ -93,6 +90,7 @@ export default function SurveysPage() {
     cpx_research: null,
     theoremreach: null,
     theoremreach_offers: null,
+    notik_offers: null,
   });
   const [sortMode, setSortMode] = useState<SortMode>("Recommended");
   const [providerFilter, setProviderFilter] = useState<ProviderFilter>("All surveys");
@@ -179,155 +177,152 @@ export default function SurveysPage() {
     }
   }, [providerFilter, sortMode, surveys]);
 
-  const featuredSurvey = visibleSurveys[0];
-  const otherSurveys = visibleSurveys.slice(1);
   const featuredOffer = offers[0];
   const otherOffers = offers.slice(1);
   const featuredOffersSection = (
-    <section aria-labelledby="featured-offers-heading" className="rounded-2xl border border-orange-100 bg-gradient-to-br from-orange-50 via-white to-rose-50 p-3 shadow-[0_8px_24px_rgba(190,72,48,0.1)] sm:rounded-3xl sm:p-6 sm:shadow-[0_12px_36px_rgba(190,72,48,0.1)]">
-      <div className="mb-2 flex flex-wrap items-end justify-between gap-1.5 sm:mb-4 sm:gap-2">
+    <section aria-labelledby="featured-offers-heading" className="order-1 space-y-3">
+      <div className="flex flex-wrap items-end justify-between gap-2">
         <div>
-        <p className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-[0.12em] text-orange-600 sm:gap-1.5 sm:text-[11px] sm:tracking-[0.15em]"><Flame className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> Beyond surveys</p>
-        <h2 id="featured-offers-heading" className="mt-0.5 text-base font-extrabold text-slate-900 sm:mt-1 sm:text-xl">Featured offers</h2>
+          <p className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.14em] text-teal-700 sm:text-xs"><Flame className="h-3.5 w-3.5" /> Picked for you</p>
+          <h2 id="featured-offers-heading" className="mt-1 text-lg font-extrabold text-slate-950 sm:text-xl">Featured activities</h2>
+          <p className="mt-1 text-xs text-slate-500">Try apps, play games, or complete other activities to earn.</p>
         </div>
-      <span className="text-[9px] text-slate-500 sm:text-[11px]">TheoremReach · estimated rewards</span>
+        <span className="text-[10px] text-slate-500 sm:text-xs">Estimated NexCoin rewards</span>
       </div>
 
       {loading ? (
-        <div className="grid gap-2.5 sm:grid-cols-2 sm:gap-3 lg:grid-cols-3" aria-label="Loading featured offers">
-          {[0, 1, 2].map((item) => <div key={item} className="h-28 animate-pulse rounded-xl bg-white/80 sm:h-64 sm:rounded-2xl" />)}
+        <div className="flex gap-3 overflow-hidden" aria-label="Loading featured offers">
+          {[0, 1, 2, 3].map((item) => <div key={item} className="h-48 w-36 shrink-0 animate-pulse rounded-xl bg-slate-200 sm:w-40" />)}
         </div>
       ) : loadError ? (
-        <div role="alert" className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-xs text-rose-800 sm:p-4 sm:text-sm">
+        <div role="alert" className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-xs text-rose-800">
           <p>{loadError}</p>
-          <button type="button" onClick={() => void loadSurveys()} className="mt-2 inline-flex min-h-9 items-center gap-1.5 rounded-lg bg-white px-2.5 text-[10px] font-bold text-rose-700 shadow-sm hover:bg-rose-100 sm:mt-3 sm:min-h-10 sm:gap-2 sm:px-3 sm:text-xs">
-            <RefreshCw className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> Try again
+          <button type="button" onClick={() => void loadSurveys()} className="mt-2 inline-flex min-h-9 items-center gap-1.5 rounded-lg bg-white px-3 text-xs font-bold text-rose-700 shadow-sm hover:bg-rose-100">
+            <RefreshCw className="h-3.5 w-3.5" /> Try again
           </button>
         </div>
       ) : featuredOffer ? (
         <>
-          {errors.theoremreach_offers && (
-            <p role="status" className="mb-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[10px] leading-relaxed text-amber-900 sm:mb-3 sm:rounded-xl sm:px-4 sm:py-3 sm:text-xs">
-              Some individual offers could not be loaded: {errors.theoremreach_offers}. You can still browse the <Link href="/dashboard/offerwalls/theoremreach" className="font-bold underline underline-offset-2">TheoremReach offerwall</Link>.
+          {(errors.theoremreach_offers || errors.notik_offers) && (
+            <p role="status" className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[10px] leading-relaxed text-amber-900 sm:text-xs">
+              Some tasks could not be loaded. {errors.notik_offers && `Notik: ${errors.notik_offers}. `}{errors.theoremreach_offers && `TheoremReach: ${errors.theoremreach_offers}. `}Other tasks are still available below.
             </p>
           )}
-          <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 sm:gap-3 lg:grid-cols-3">
-            {[featuredOffer, ...otherOffers.slice(0, 2)].map((offer) => (
-              <article key={offer.id} className="flex min-w-0 flex-row overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition hover:shadow-md sm:flex-col sm:rounded-2xl sm:hover:-translate-y-0.5 sm:hover:shadow-lg">
-                {offer.imageUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={offer.imageUrl} alt="" className="h-auto w-16 shrink-0 self-stretch bg-slate-100 object-cover sm:h-28 sm:w-full" loading="lazy" />
-                ) : (
-                  <div className="flex w-16 shrink-0 items-center justify-center bg-gradient-to-br from-orange-400 via-rose-500 to-violet-600 text-white sm:h-28 sm:w-full"><Sparkles className="h-7 w-7 opacity-75 sm:h-10 sm:w-10" /></div>
-                )}
-                <div className="flex min-w-0 flex-1 flex-col p-2 sm:p-4">
-                  <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
-                    <span className="rounded-full bg-orange-50 px-2 py-0.5 text-[9px] font-bold text-orange-700 sm:px-2.5 sm:py-1 sm:text-[10px]">{offer.kind === "network" ? offer.providerName || "Partner offer" : "Featured offer"}</span>
-                    <span className="inline-flex items-center gap-0.5 text-[10px] font-bold text-slate-600 sm:gap-1 sm:text-xs"><NexCoinIcon size={12} /> Up to {formatCoins(offer.estimatedRewardCoins)}</span>
-                  </div>
-                  <h3 className="mt-1 line-clamp-1 text-xs font-extrabold leading-snug text-slate-900 sm:mt-3 sm:line-clamp-2 sm:text-sm">{offer.name}</h3>
-                  {offer.description && <p className="mt-0.5 line-clamp-1 text-[10px] leading-snug text-slate-500 sm:mt-1 sm:line-clamp-2 sm:text-xs sm:leading-relaxed">{offer.description}</p>}
+          <div className="-mx-1 flex snap-x snap-mandatory gap-3 overflow-x-auto px-1 pb-2">
+            {[featuredOffer, ...otherOffers].map((offer) => (
+              <article key={offer.id} className="group flex w-[148px] shrink-0 snap-start flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition hover:border-teal-300 hover:shadow-md sm:w-[168px]">
+                <div className="relative flex h-24 w-full items-center justify-center overflow-hidden bg-gradient-to-br from-[#0A1628] via-[#12314A] to-teal-800 text-teal-100">
+                  {offer.imageUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={offer.imageUrl} alt="" className="absolute inset-0 h-full w-full object-cover transition duration-300 group-hover:scale-105" loading="lazy" />
+                  ) : (
+                    <Sparkles className="h-8 w-8 opacity-80" />
+                  )}
+                  <div aria-hidden className="absolute inset-0 bg-gradient-to-t from-[#071321]/85 via-[#071321]/10 to-black/20" />
+                  <span className="absolute left-2 top-2 max-w-[90px] truncate rounded-full border border-white/20 bg-[#071321]/60 px-2 py-0.5 text-[9px] font-bold text-white backdrop-blur-sm">
+                    {offer.providerName || "Partner task"}
+                  </span>
+                  <span className="absolute bottom-2 right-2 inline-flex items-center gap-0.5 rounded-full bg-teal-300 px-2 py-0.5 text-[9px] font-extrabold text-slate-950 shadow-sm">
+                    <NexCoinIcon size={10} /> {formatCoins(offer.estimatedRewardCoins)}
+                  </span>
+                </div>
+                <div className="flex min-h-[112px] min-w-0 flex-1 flex-col p-2.5">
+                  <h3 className="mt-1.5 line-clamp-2 text-xs font-extrabold leading-snug text-slate-900">{offer.name}</h3>
+                  {offer.description && <p className="mt-1 line-clamp-2 text-[10px] leading-snug text-slate-500">{offer.description}</p>}
                   {offer.events.length > 0 && (
-                    <ul className="mt-1 space-y-0.5 sm:mt-3 sm:space-y-1">
-                      {offer.events.slice(0, 2).map((event) => (
-                        <li key={event.name} className="flex items-center justify-between gap-1 text-[10px] text-slate-500 sm:gap-2 sm:text-[11px]">
+                    <ul className="mt-1.5 space-y-0.5">
+                      {offer.events.slice(0, 1).map((event) => (
+                        <li key={event.name} className="flex items-center justify-between gap-1 text-[9px] text-slate-500">
                           <span className="truncate">{event.name}</span>
                           <span className="inline-flex shrink-0 items-center gap-0.5 font-semibold text-teal-700"><NexCoinIcon size={10} /> ~{formatCoins(event.estimatedRewardCoins)}</span>
                         </li>
                       ))}
                     </ul>
                   )}
-                  <a href={offer.entryUrl} target="_blank" rel="noopener noreferrer" className="mt-auto inline-flex min-h-9 items-center justify-center gap-1 rounded-md bg-gradient-to-r from-orange-500 to-rose-500 px-2 text-[10px] font-extrabold text-white shadow-sm transition hover:from-orange-600 hover:to-rose-600 sm:mt-4 sm:min-h-10 sm:gap-2 sm:rounded-xl sm:px-3 sm:text-sm sm:hover:-translate-y-0.5">
-                    Start offer <ExternalLink className="h-3 w-3 sm:h-4 sm:w-4" />
-                  </a>
+                  <div className="mt-auto flex items-center justify-between gap-1 pt-2">
+                    <a href={offer.entryUrl} target="_blank" rel="noopener noreferrer" aria-label={`Try activity: ${offer.name}`} className="inline-flex h-7 items-center gap-1 rounded-md bg-teal-600 px-2 text-[9px] font-extrabold text-white transition hover:bg-teal-700">
+                      Try task <ExternalLink className="h-3 w-3" />
+                    </a>
+                    <span className="text-[9px] font-semibold text-slate-500">{offer.kind === "network" ? "Partner task" : "Featured task"}</span>
+                  </div>
                 </div>
               </article>
             ))}
           </div>
         </>
       ) : (
-        <div className="rounded-2xl border border-dashed border-orange-200 bg-white/80 px-4 py-6 text-center">
-          <p className="text-sm font-bold text-slate-800">No featured offers available right now</p>
-          <p className="mt-1 text-xs leading-relaxed text-slate-500">Offers vary by location and partner inventory. Check the partner wall for more earning options.</p>
-          {errors.theoremreach_offers && <p role="status" className="mt-2 text-xs text-amber-800">{errors.theoremreach_offers}</p>}
-          <Link href="/dashboard/offerwalls/theoremreach" className="mt-4 inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-orange-500 px-4 text-sm font-bold text-white transition hover:bg-orange-600">
-            Browse TheoremReach offers <ArrowRight className="h-4 w-4" />
-          </Link>
+        <div className="rounded-xl border border-dashed border-slate-300 bg-white/70 px-4 py-5 text-center">
+          <p className="text-sm font-bold text-slate-800">No featured tasks showing right now</p>
+          <p className="mt-1 text-xs leading-relaxed text-slate-500">Try the partner apps below or check back later for new activities.</p>
+          {(errors.theoremreach_offers || errors.notik_offers) && <p role="status" className="mt-2 text-xs text-amber-800">{errors.notik_offers && `Notik: ${errors.notik_offers} `}{errors.theoremreach_offers && `TheoremReach: ${errors.theoremreach_offers}`}</p>}
         </div>
       )}
     </section>
   );
 
   return (
-    <main className="mx-auto w-full min-w-0 max-w-7xl space-y-4 overflow-x-clip pb-20 text-slate-900 sm:space-y-6 sm:pb-12">
-      <section className="relative isolate overflow-hidden rounded-2xl bg-[#111b38] px-4 py-4 text-white shadow-[0_12px_32px_rgba(22,34,73,0.16)] sm:rounded-[28px] sm:px-8 sm:py-7 sm:shadow-[0_20px_52px_rgba(22,34,73,0.18)]">
-        <div aria-hidden className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_82%_15%,rgba(45,212,191,0.38),transparent_35%),radial-gradient(ellipse_at_100%_100%,rgba(99,102,241,0.48),transparent_44%),linear-gradient(115deg,#101a35_5%,#173a53_62%,#143f4a_100%)]" />
-        <div aria-hidden className="absolute -right-16 -top-24 -z-10 h-72 w-72 rounded-full border border-white/10" />
-        <div className="relative grid gap-3 sm:gap-5 lg:grid-cols-[1fr_auto] lg:items-center">
-          <div className="max-w-2xl">
-            <div className="mb-2 inline-flex items-center gap-1.5 rounded-full border border-teal-200/20 bg-teal-200/10 px-2.5 py-1 text-[10px] font-bold text-teal-100 sm:mb-3 sm:gap-2 sm:px-3 sm:py-1.5 sm:text-xs">
-              <Sparkles className="h-3 w-3 text-teal-300 sm:h-3.5 sm:w-3.5" /> YOUR OPINION HAS VALUE
-            </div>
-            <h1 className="text-2xl font-black leading-tight tracking-tight sm:text-4xl">
-              Make your spare minutes <span className="bg-gradient-to-r from-teal-200 via-cyan-200 to-sky-300 bg-clip-text text-transparent">count.</span>
-            </h1>
-            <p className="mt-2 max-w-xl text-xs leading-5 text-slate-200 sm:mt-3 sm:text-base sm:leading-6">
-              Find available surveys, compare the estimated time and NexCoin reward, and choose what works for you.
+    <main className="mx-auto flex w-full min-w-0 max-w-7xl flex-col gap-6 overflow-x-clip pb-20 text-slate-900 sm:gap-7 sm:pb-12">
+      <header className="relative order-0 isolate overflow-hidden rounded-2xl border border-[#1e3a5f] bg-[#0A1628] px-4 py-4 text-white shadow-[0_8px_24px_rgba(0,0,0,0.2)] sm:rounded-3xl sm:px-6 sm:py-5">
+        <div aria-hidden className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_78%_0%,rgba(20,184,166,0.28),transparent_38%),linear-gradient(115deg,#0A1628_10%,#102d44_72%,#0d514d_100%)]" />
+        <div className="flex items-center justify-between gap-3 sm:gap-5">
+          <div className="min-w-0">
+            <p className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-[0.16em] text-teal-200 sm:text-[10px]">
+              <Sparkles className="h-3.5 w-3.5" /> Your next reward starts here
             </p>
-            <div className="mt-3 flex flex-wrap gap-1.5 text-[10px] font-semibold text-white/90 sm:mt-4 sm:gap-2 sm:text-xs">
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.08] px-2.5 py-1.5 sm:gap-2 sm:px-3 sm:py-2"><Clock3 className="h-3.5 w-3.5 text-teal-200 sm:h-4 sm:w-4" /> Time estimates</span>
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.08] px-2.5 py-1.5 sm:gap-2 sm:px-3 sm:py-2"><Globe2 className="h-3.5 w-3.5 text-cyan-200 sm:h-4 sm:w-4" /> Provider-matched surveys</span>
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.08] px-2.5 py-1.5 sm:gap-2 sm:px-3 sm:py-2"><NexCoinIcon size={14} /> Earn NexCoins</span>
-            </div>
-            <div className="mt-3 flex flex-wrap gap-2 sm:mt-4 sm:gap-3">
-              <Link href="#featured-heading" className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-lg bg-teal-300 px-3.5 text-xs font-extrabold text-slate-950 shadow-md shadow-teal-950/20 transition hover:bg-teal-200 sm:min-h-11 sm:gap-2 sm:rounded-xl sm:px-5 sm:text-sm">
-                Browse surveys <ArrowRight className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+            <h1 className="mt-1.5 text-lg font-black leading-tight tracking-tight sm:text-2xl">Pick a task. Earn NexCoins.</h1>
+            <p className="mt-1 max-w-xl text-[10px] leading-relaxed text-slate-200 sm:text-xs">
+              Answer a few questions, try an app, or complete a quick activity. Rewards arrive after partner confirmation.
+            </p>
+            <div className="mt-2.5 flex flex-wrap gap-2">
+              <Link href="#featured-offers-heading" className="inline-flex h-7 items-center gap-1 rounded-lg bg-teal-300 px-2.5 text-[10px] font-extrabold text-slate-950 transition hover:bg-teal-200 sm:h-8 sm:text-xs">
+                Find activities <ArrowRight className="h-3 w-3" />
               </Link>
-              <Link href="#offerwall-partners-heading" className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-lg border border-white/25 bg-white/10 px-3.5 text-xs font-bold text-white transition hover:bg-white/20 sm:min-h-11 sm:gap-2 sm:rounded-xl sm:px-5 sm:text-sm">
-                Explore offerwalls <ArrowRight className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+              <Link href="#featured-heading" className="inline-flex h-7 items-center gap-1 rounded-lg border border-white/20 bg-white/10 px-2.5 text-[10px] font-bold text-white transition hover:bg-white/15 sm:h-8 sm:text-xs">
+                Answer questions <ArrowRight className="h-3 w-3" />
               </Link>
             </div>
           </div>
-          <div className="flex items-center gap-2.5 rounded-xl border border-white/10 bg-white/[0.08] p-2.5 backdrop-blur-sm sm:gap-3 sm:rounded-2xl sm:p-3.5 lg:min-w-56">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-teal-300/15 text-teal-200 sm:h-10 sm:w-10 sm:rounded-xl"><CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5" /></div>
-            <div>
-              <p className="text-[10px] font-semibold text-slate-300 sm:text-xs">
-                {loading ? "Checking earning options" : surveys.length || offers.length || offerwalls.length ? "Live partner inventory" : "Partner inventory"}
-              </p>
-              <p className="mt-0.5 text-xs font-bold text-white sm:text-sm">
-                {surveys.length || offers.length
-                  ? "Personalized listings ready"
-                  : offerwalls.length
-                    ? `${offerwalls.length} partner offerwalls ready`
-                    : "Availability varies by region"}
-              </p>
-            </div>
+          <div className="relative flex h-[68px] w-[68px] shrink-0 items-center justify-center overflow-hidden rounded-xl border border-white/15 bg-gradient-to-br from-teal-400/20 via-[#12314A] to-[#0d9488] shadow-lg sm:h-24 sm:w-24 sm:rounded-2xl">
+            {featuredOffer?.imageUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={featuredOffer.imageUrl} alt="" className="absolute inset-0 h-full w-full object-cover" />
+            ) : (
+              <Sparkles className="h-7 w-7 text-teal-200 sm:h-9 sm:w-9" />
+            )}
+            <div aria-hidden className="absolute inset-0 bg-gradient-to-t from-[#071321]/65 to-transparent" />
+            <span className="absolute bottom-1 left-0 right-0 text-center text-[7px] font-extrabold uppercase tracking-wide text-white sm:bottom-1.5 sm:text-[8px]">
+              Earn more
+            </span>
           </div>
         </div>
-      </section>
+      </header>
 
       {featuredOffersSection}
 
-      <section aria-labelledby="offerwall-partners-heading" className="relative isolate overflow-hidden rounded-2xl border border-indigo-100 bg-gradient-to-br from-indigo-50 via-white to-teal-50 p-3 shadow-[0_8px_24px_rgba(47,57,99,0.1)] sm:rounded-[28px] sm:p-7 sm:shadow-[0_16px_44px_rgba(47,57,99,0.12)]">
-        <div aria-hidden className="absolute -right-20 -top-24 -z-10 h-64 w-64 rounded-full bg-indigo-200/30 blur-3xl" />
-        <div className="mb-3 flex flex-wrap items-end justify-between gap-2 sm:mb-5 sm:gap-3">
-          <div>
-            <p className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-[0.12em] text-indigo-700 sm:gap-2 sm:text-xs sm:tracking-[0.16em]"><Layers className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> One hub · more ways to earn</p>
-            <h2 id="offerwall-partners-heading" className="mt-1 text-lg font-black tracking-tight text-slate-950 sm:text-3xl">Surveys &amp; offerwalls</h2>
-            <p className="mt-1 text-xs text-slate-600 sm:mt-1.5 sm:text-sm">Jump straight into a partner to find surveys, apps, sign-ups, and other offers.</p>
+      <section aria-labelledby="offerwall-partners-heading" className="relative order-3 overflow-hidden rounded-2xl border border-[#1e3a5f] bg-gradient-to-br from-[#0A1628] via-[#0d1f38] to-[#0d514d] p-3.5 shadow-[0_12px_30px_rgba(10,22,40,0.18)] sm:rounded-3xl sm:p-5">
+        <div className="relative mb-3 flex items-start gap-3 sm:mb-4 sm:gap-3.5">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-teal-200/20 bg-teal-300/10 text-teal-200 sm:h-11 sm:w-11">
+            <Layers className="h-4 w-4 sm:h-5 sm:w-5" />
+          </span>
+          <div className="min-w-0">
+            <p className="text-[9px] font-extrabold uppercase tracking-[0.16em] text-teal-200 sm:text-[10px]">MORE TO EARN</p>
+            <h2 id="offerwall-partners-heading" className="mt-0.5 text-base font-extrabold tracking-tight text-white sm:text-lg">Explore more ways to earn</h2>
+            <p className="mt-1 max-w-2xl text-[10px] leading-relaxed text-slate-300 sm:text-xs">
+              Choose a partner to browse its apps, games, sign-ups, and other activities. Each one has different ways to earn.
+            </p>
           </div>
-          <Link href="#offerwall-partners-heading" className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-indigo-200 bg-white px-2.5 text-[11px] font-bold text-indigo-700 shadow-sm transition hover:border-indigo-300 hover:bg-indigo-50 sm:h-10 sm:gap-2 sm:rounded-xl sm:px-4 sm:text-sm">
-            View all partners <ArrowRight className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-          </Link>
         </div>
+        <p className="mb-1 flex items-center justify-end gap-1 text-[9px] font-semibold text-teal-100 sm:text-[10px]">
+          Swipe to explore <ArrowRight className="h-3 w-3" />
+        </p>
         {offerwallsLoading ? (
-          <div className="grid gap-2.5 sm:grid-cols-2 sm:gap-4 xl:grid-cols-2">
-            {Array.from({ length: 3 }).map((_, index) => <div key={index} className="h-28 animate-pulse rounded-xl bg-white/80 sm:h-44 sm:rounded-2xl" />)}
+          <div className="flex gap-3 overflow-hidden" aria-label="Loading partner activities">
+            {Array.from({ length: 4 }).map((_, index) => <div key={index} className="h-40 w-44 shrink-0 animate-pulse rounded-xl bg-white/10" />)}
           </div>
         ) : offerwallsError ? (
-          <p role="alert" className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">{offerwallsError}</p>
+          <p role="alert" className="rounded-xl border border-amber-200/30 bg-amber-200/10 px-3 py-2 text-xs text-amber-100">{offerwallsError}</p>
         ) : offerwalls.length ? (
-          <div className="grid gap-2.5 sm:grid-cols-2 sm:gap-4 xl:grid-cols-2">
+          <div className="-mx-1 flex snap-x snap-mandatory gap-3 overflow-x-auto px-1 pb-2">
             {offerwalls.map((provider) => (
               <Link
                 key={provider.id}
@@ -342,159 +337,109 @@ export default function SurveysPage() {
                     // The provider page falls back to the Offerwall Hub when storage is unavailable.
                   }
                 }}
-                className="group flex min-h-0 items-start gap-2.5 rounded-xl border border-indigo-200 bg-white p-3 shadow-[0_5px_16px_rgba(49,46,129,0.1)] transition hover:border-indigo-400 hover:shadow-[0_10px_24px_rgba(49,46,129,0.16)] sm:min-h-48 sm:gap-5 sm:rounded-2xl sm:p-6 sm:shadow-[0_8px_24px_rgba(49,46,129,0.12)] sm:hover:-translate-y-1 sm:hover:shadow-[0_16px_34px_rgba(49,46,129,0.2)]"
+                aria-label={`Browse ${provider.name} activities`}
+                className="group flex w-[176px] shrink-0 snap-start flex-col overflow-hidden rounded-xl border border-white/15 bg-white shadow-[0_4px_14px_rgba(0,0,0,0.18)] transition hover:-translate-y-0.5 hover:border-teal-300 hover:shadow-[0_10px_24px_rgba(20,184,166,0.18)] sm:w-[196px]"
               >
-                {provider.logo_url ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={provider.logo_url} alt="" className="h-10 w-10 shrink-0 rounded-xl border border-indigo-100 bg-white object-contain p-1.5 shadow-sm sm:h-16 sm:w-16 sm:rounded-2xl sm:p-2" />
-                ) : (
-                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-600 to-violet-600 text-xs font-black text-white shadow-sm sm:h-16 sm:w-16 sm:rounded-2xl sm:text-base sm:shadow-md">
-                    {provider.name.slice(0, 2).toUpperCase()}
+                <span className="relative flex h-[100px] items-center justify-center overflow-hidden bg-gradient-to-br from-[#0A1628] via-[#12314A] to-[#0d9488] sm:h-28">
+                  <span aria-hidden className="absolute -right-8 -top-10 h-32 w-32 rounded-full border-[16px] border-white/10 transition-transform duration-300 group-hover:scale-110" />
+                  {provider.logo_url ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={provider.logo_url} alt="" className="relative h-14 w-14 rounded-xl bg-white object-contain p-2 shadow-lg sm:h-16 sm:w-16" />
+                  ) : (
+                    <span className="relative flex h-14 w-14 items-center justify-center rounded-xl border border-white/20 bg-white/10 text-base font-black text-white shadow-lg sm:h-16 sm:w-16">
+                      {provider.name.slice(0, 2).toUpperCase()}
+                    </span>
+                  )}
                   </span>
-                )}
-                <span className="flex min-w-0 flex-1 flex-col self-stretch">
-                  <span className="flex items-start justify-between gap-2">
-                    <span className="text-sm font-extrabold leading-tight text-slate-950 sm:text-lg">{provider.name}</span>
+                <span className="flex min-h-[68px] items-center justify-between gap-2 px-3 py-2.5">
+                  <span className="min-w-0">
+                    <span className="block truncate text-xs font-extrabold text-slate-950 sm:text-sm">{provider.name}</span>
+                    <span className="mt-0.5 block truncate text-[9px] text-slate-500">{provider.feature_tags.slice(0, 2).join(" · ") || "Apps, games & more"}</span>
                   </span>
-                  <span className="mt-1 line-clamp-1 text-[10px] leading-snug text-slate-700 sm:mt-2 sm:line-clamp-2 sm:text-sm sm:leading-relaxed">{provider.description || "Browse opportunities from this partner and earn NexCoins after confirmed completion."}</span>
-                  <span className="mt-auto flex flex-wrap gap-1 pt-2 sm:gap-1.5 sm:pt-3">
-                    {(provider.feature_tags.length ? provider.feature_tags.slice(0, 3) : ["Surveys", "Offers"]).map((tag) => (
-                      <span key={tag} className="rounded-full bg-indigo-100 px-2 py-0.5 text-[9px] font-bold text-indigo-800 sm:px-2.5 sm:py-1 sm:text-[11px]">{tag}</span>
-                    ))}
-                    <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[9px] font-extrabold text-emerald-800 sm:px-2.5 sm:py-1 sm:text-[11px]">Available</span>
-                  </span>
-                  <span className="mt-2 inline-flex min-h-8 items-center justify-center gap-1 rounded-lg bg-gradient-to-r from-indigo-600 to-violet-600 px-2.5 text-[10px] font-extrabold text-white shadow-sm shadow-indigo-900/20 transition group-hover:from-indigo-700 group-hover:to-violet-700 sm:mt-3 sm:min-h-9 sm:gap-1.5 sm:px-3 sm:text-xs">
-                    Start earning <ArrowRight className="h-3.5 w-3.5 transition group-hover:translate-x-1 sm:h-4 sm:w-4" />
+                  <span className="inline-flex shrink-0 items-center gap-0.5 rounded-full bg-teal-100 px-2 py-1 text-[9px] font-extrabold text-teal-900 sm:px-2.5 sm:text-[10px]">
+                    Browse <ArrowRight className="h-3 w-3 transition group-hover:translate-x-0.5" />
                   </span>
                 </span>
               </Link>
             ))}
           </div>
         ) : (
-          !loading && <p className="rounded-xl bg-slate-50 px-3 py-2 text-xs text-slate-500">No partner offerwalls are available right now.</p>
+          !loading && <p className="rounded-xl border border-dashed border-white/20 bg-white/5 px-3 py-3 text-xs text-slate-300">No partner activities are available right now.</p>
         )}
       </section>
 
-      <section aria-labelledby="featured-heading">
-        <div className="mb-3 flex flex-col gap-2 sm:mb-4 sm:gap-3 sm:flex-row sm:items-end sm:justify-between">
+      <section aria-labelledby="featured-heading" className="order-2 space-y-3">
+        <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
-            <div className="mb-1 flex items-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-teal-700">
-              <Sparkles className="h-3.5 w-3.5" /> Provider matches
-            </div>
-            <h2 id="featured-heading" className="text-xl font-black tracking-tight sm:text-2xl">Featured survey</h2>
-            <p className="mt-1 text-xs text-slate-500 sm:text-sm">Survey availability and eligibility are confirmed by the provider.</p>
+            <p className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.14em] text-teal-700 sm:text-xs">
+              <Sparkles className="h-3.5 w-3.5" /> Picked for you
+            </p>
+            <h2 id="featured-heading" className="mt-1 text-lg font-extrabold tracking-tight text-slate-950 sm:text-xl">Quick questions</h2>
+            <p className="mt-1 text-xs text-slate-500">Answer a few questions and earn when the partner confirms completion.</p>
           </div>
-          <div className="flex flex-wrap items-center gap-0.5 self-start rounded-lg border border-slate-200 bg-white p-0.5 shadow-sm sm:gap-1 sm:self-auto sm:rounded-xl sm:p-1">
-            <ArrowDownWideNarrow className="ml-1 h-3.5 w-3.5 text-slate-400 sm:ml-2 sm:h-4 sm:w-4" />
-            {SORT_MODES.map((mode) => (
+          <div className="flex flex-wrap gap-1.5">
+            {PROVIDER_FILTERS.map((filter) => (
               <button
-                key={mode}
+                key={filter}
                 type="button"
-                onClick={() => setSortMode(mode)}
-                aria-pressed={sortMode === mode}
-                className={`rounded-md px-1.5 py-1.5 text-[10px] font-semibold transition sm:rounded-lg sm:px-2.5 sm:py-2 sm:text-xs ${sortMode === mode ? "bg-teal-600 text-white shadow-sm" : "text-slate-500 hover:bg-slate-50 hover:text-slate-800"}`}
+                onClick={() => setProviderFilter(filter)}
+                aria-pressed={providerFilter === filter}
+                className={`rounded-full border px-2.5 py-1.5 text-[10px] font-semibold transition ${providerFilter === filter ? "border-teal-700 bg-teal-700 text-white" : "border-slate-200 bg-white text-slate-600 hover:border-teal-300 hover:text-teal-700"}`}
               >
-                {mode}
+                {filter === "All surveys" ? "All questions" : filter}
               </button>
             ))}
+            <label className="sr-only" htmlFor="survey-sort">Sort surveys</label>
+            <select
+              id="survey-sort"
+              value={sortMode}
+              onChange={(event) => {
+                const mode = SORT_MODES.find((option) => option === event.target.value);
+                if (mode) setSortMode(mode);
+              }}
+              className="h-8 rounded-full border border-slate-200 bg-white px-2.5 text-[10px] font-semibold text-slate-700 outline-none transition focus:border-teal-500"
+            >
+              {SORT_MODES.map((mode) => <option key={mode} value={mode}>{mode}</option>)}
+            </select>
           </div>
         </div>
 
         {loadError && (
-          <div role="alert" className="mb-4 flex flex-col gap-3 rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800 sm:flex-row sm:items-center sm:justify-between">
+          <div role="alert" className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-800">
             <span>{loadError}</span>
-            <button type="button" onClick={() => void loadSurveys()} className="inline-flex items-center gap-2 self-start rounded-lg bg-white px-3 py-2 text-xs font-bold text-rose-700 shadow-sm hover:bg-rose-100">
+            <button type="button" onClick={() => void loadSurveys()} className="inline-flex items-center gap-1.5 rounded-lg bg-white px-2.5 py-1.5 font-bold text-rose-700 shadow-sm hover:bg-rose-100">
               <RefreshCw className="h-3.5 w-3.5" /> Try again
             </button>
           </div>
         )}
 
         {loading ? (
-          <div className="flex min-h-36 items-center justify-center rounded-2xl border border-slate-200 bg-white sm:min-h-52 sm:rounded-3xl">
-            <Loader2 className="h-6 w-6 animate-spin text-teal-600 sm:h-7 sm:w-7" aria-label="Loading surveys" />
+          <div className="flex gap-3 overflow-hidden" aria-label="Loading surveys">
+            {[0, 1, 2, 3].map((item) => <div key={item} className="h-44 w-[148px] shrink-0 animate-pulse rounded-xl bg-slate-200" />)}
           </div>
-        ) : featuredSurvey ? (
-          <article className="relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-3.5 shadow-[0_8px_24px_rgba(31,52,84,0.08)] sm:rounded-3xl sm:p-7 sm:shadow-[0_16px_44px_rgba(31,52,84,0.09)]">
-            <div aria-hidden className={`absolute inset-y-0 left-0 w-2 ${featuredSurvey.provider === "CPX Research" ? "bg-gradient-to-b from-violet-500 to-blue-500" : "bg-gradient-to-b from-teal-400 to-emerald-500"}`} />
-            <div className="relative grid gap-3 sm:gap-6 md:grid-cols-[1fr_auto] md:items-center">
-              <div>
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-teal-600 to-emerald-500 px-2.5 py-1 text-[9px] font-black uppercase tracking-wide text-white sm:gap-1.5 sm:px-3 sm:py-1.5 sm:text-[10px]">
-                    <Star className="h-3 w-3 fill-current sm:h-3.5 sm:w-3.5" /> {featuredSurvey.recommended ? "Recommended" : "Featured"}
-                  </span>
-                  <span className="rounded-full bg-slate-100 px-2 py-1 text-[10px] font-semibold text-slate-600 sm:px-2.5 sm:text-[11px]">{featuredSurvey.provider}</span>
-                  <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-1 text-[10px] font-semibold text-emerald-700 sm:px-2.5 sm:text-[11px]"><Clock3 className="h-3 w-3" /> {featuredSurvey.durationMinutes} min</span>
-                </div>
-                <h3 className="mt-2.5 text-base font-extrabold text-slate-900 sm:mt-4 sm:text-2xl">Survey #{featuredSurvey.id}</h3>
-                <p className="mt-1 text-xs text-slate-500 sm:mt-1.5 sm:text-sm">The provider will confirm your eligibility and survey details when you continue.</p>
-                {featuredSurvey.rating !== null && (
-                  <p className="mt-3 flex items-center gap-1.5 text-sm text-slate-600">
-                    <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
-                    <span className="font-bold">{featuredSurvey.rating.toFixed(1)}</span>
-                    <span className="text-slate-400">({featuredSurvey.ratingCount} ratings)</span>
-                  </p>
-                )}
-              </div>
-              <div className="flex items-center justify-between gap-3 rounded-xl bg-slate-50 p-2.5 sm:gap-5 sm:rounded-2xl sm:p-4 md:min-w-56 md:flex-col md:items-end md:bg-transparent md:p-0">
-                <div className="md:text-right">
-                  <p className="text-[10px] font-semibold text-slate-500 sm:text-xs">ESTIMATED REWARD</p>
-                  <p className="mt-0.5 flex items-center gap-1.5 text-xl font-black tracking-tight text-slate-900 sm:gap-2 sm:text-3xl"><NexCoinIcon size={20} /> {formatCoins(featuredSurvey.rewardCoins)}</p>
-                  <p className="mt-0.5 text-[10px] font-semibold text-teal-700 sm:text-xs">NexCoins</p>
-                </div>
-                <a href={featuredSurvey.entryUrl} target="_blank" rel="noopener noreferrer" className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg bg-gradient-to-r from-teal-600 to-emerald-500 px-3 text-xs font-bold text-white shadow-md shadow-teal-700/15 transition hover:shadow-lg sm:h-11 sm:gap-2 sm:rounded-xl sm:px-5 sm:text-sm sm:hover:-translate-y-0.5">
-                  Start survey <ExternalLink className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                </a>
-              </div>
-            </div>
-          </article>
-        ) : (
-          <div className="rounded-2xl border border-slate-200 bg-white px-4 py-6 text-center shadow-sm sm:rounded-3xl sm:px-5 sm:py-10">
-            <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-xl bg-teal-50 text-teal-700 sm:h-12 sm:w-12 sm:rounded-2xl"><Info className="h-5 w-5 sm:h-6 sm:w-6" /></div>
-            <h3 className="mt-3 text-base font-bold text-slate-900 sm:mt-4 sm:text-lg">No surveys available right now</h3>
-            <p className="mx-auto mt-1 max-w-lg text-xs text-slate-500 sm:text-sm">Providers may have no surveys matching your profile at the moment. Try a partner offerwall below or check again later.</p>
-          </div>
-        )}
-      </section>
-
-      <section aria-labelledby="daily-picks-heading">
-        <div className="mb-3 flex flex-col gap-2.5 sm:mb-4 sm:gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <div className="mb-1 flex items-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-indigo-600"><Flame className="h-3.5 w-3.5" /> Available now</div>
-            <h2 id="daily-picks-heading" className="text-xl font-black tracking-tight sm:text-2xl">Today&apos;s survey picks</h2>
-            <p className="mt-1 text-xs text-slate-500 sm:text-sm">These listings come directly from your connected survey partners.</p>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {PROVIDER_FILTERS.map((filter) => (
-              <button key={filter} type="button" onClick={() => setProviderFilter(filter)} aria-pressed={providerFilter === filter} className={`rounded-full border px-2.5 py-1.5 text-[10px] font-semibold transition sm:px-3.5 sm:py-2 sm:text-xs ${providerFilter === filter ? "border-slate-900 bg-slate-900 text-white" : "border-slate-200 bg-white text-slate-600 hover:border-teal-300 hover:text-teal-700"}`}>
-                {filter}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {otherSurveys.length > 0 ? (
-          <div className="grid gap-2.5 sm:grid-cols-2 sm:gap-4 xl:grid-cols-3">
-            {otherSurveys.map((survey) => (
-              <article key={`${survey.provider}-${survey.id}`} className="group overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition hover:shadow-md sm:rounded-2xl sm:hover:-translate-y-1 sm:hover:shadow-xl sm:hover:shadow-slate-900/10">
-                <div className={`relative h-16 overflow-hidden p-2.5 sm:h-24 sm:p-4 ${survey.provider === "CPX Research" ? "bg-gradient-to-br from-violet-600 via-indigo-600 to-blue-600" : "bg-gradient-to-br from-teal-500 via-emerald-500 to-lime-500"}`}>
-                  <div aria-hidden className="absolute -right-3 -top-12 h-36 w-36 rounded-full border-[18px] border-white/10" />
-                  <div className="relative flex items-start justify-between">
-                    <span className="rounded-full border border-white/20 bg-black/10 px-2 py-0.5 text-[9px] font-bold text-white sm:px-2.5 sm:py-1 sm:text-[10px]">{survey.provider}</span>
-                    <span className="flex items-center gap-1 rounded-full bg-white/15 px-1.5 py-0.5 text-[9px] font-bold text-white sm:px-2 sm:py-1 sm:text-[10px]"><Clock3 className="h-3 w-3" /> {survey.durationMinutes} min</span>
+        ) : visibleSurveys.length ? (
+          <div className="-mx-1 flex snap-x snap-mandatory gap-3 overflow-x-auto px-1 pb-2">
+            {visibleSurveys.map((survey) => (
+              <article key={`${survey.provider}-${survey.id}`} className="group flex w-[148px] shrink-0 snap-start flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition hover:border-teal-300 hover:shadow-md sm:w-[168px]">
+                <div className={`relative h-[70px] overflow-hidden p-2.5 ${survey.provider === "CPX Research" ? "bg-gradient-to-br from-[#322b69] via-indigo-700 to-blue-700" : "bg-gradient-to-br from-[#0A514F] via-teal-700 to-emerald-700"}`}>
+                  <div aria-hidden className="absolute -right-4 -top-10 h-24 w-24 rounded-full border-[12px] border-white/10" />
+                  <div className="relative flex items-start justify-between gap-1">
+                    <span className="max-w-[94px] truncate rounded-full border border-white/20 bg-black/15 px-2 py-0.5 text-[9px] font-bold text-white">{survey.provider}</span>
+                    <span className="inline-flex shrink-0 items-center gap-0.5 rounded-full bg-white/15 px-1.5 py-0.5 text-[9px] font-bold text-white"><Clock3 className="h-3 w-3" /> {survey.durationMinutes}m</span>
                   </div>
-                  <BarChart3 className="absolute bottom-[-8px] right-3 h-12 w-12 text-white/30 sm:bottom-[-10px] sm:right-5 sm:h-16 sm:w-16" strokeWidth={1.5} />
+                  <BarChart3 className="absolute -bottom-2 right-3 h-10 w-10 text-white/25" strokeWidth={1.5} />
+                  {survey.recommended && <span className="absolute bottom-2 left-2 rounded-full bg-teal-300 px-1.5 py-0.5 text-[8px] font-black text-slate-950">PICK</span>}
                 </div>
-                <div className="flex min-h-0 flex-col p-3 sm:min-h-40 sm:p-5">
-                  <h3 className="text-sm font-extrabold leading-snug text-slate-900 sm:text-base">Survey #{survey.id}</h3>
-                  <p className="mt-1 text-[10px] leading-snug text-slate-500 sm:mt-1.5 sm:text-xs sm:leading-relaxed">Eligibility and final reward are confirmed by the survey provider.</p>
-                  <div className="mt-2 flex items-center justify-between gap-2 pt-1 sm:mt-auto sm:items-end sm:gap-3 sm:pt-5">
+                <div className="flex min-h-[104px] flex-1 flex-col p-2.5">
+                  <h3 className="truncate text-xs font-extrabold text-slate-900">Answer a few questions</h3>
+                  <p className="mt-1 line-clamp-2 text-[10px] leading-snug text-slate-500">The partner checks your answers and eligibility.</p>
+                  <div className="mt-auto flex items-end justify-between gap-1 pt-2">
                     <div>
-                      <p className="flex items-center gap-1 text-base font-black text-slate-900 sm:gap-1.5 sm:text-xl"><NexCoinIcon size={16} /> {formatCoins(survey.rewardCoins)}</p>
-                      <p className="ml-[21px] text-[9px] font-semibold text-teal-700 sm:ml-[26px] sm:text-[10px]">NexCoins</p>
-                      {survey.rating !== null && <p className="mt-1 flex items-center gap-1 text-[10px] text-slate-400 sm:mt-1.5 sm:text-[11px]"><Star className="h-3 w-3 fill-amber-400 text-amber-400" /> {survey.rating.toFixed(1)} <span>·</span> {survey.ratingCount} ratings</p>}
+                      <p className="flex items-center gap-1 text-sm font-black text-slate-900"><NexCoinIcon size={14} /> {formatCoins(survey.rewardCoins)}</p>
+                      {survey.rating !== null && <p className="mt-0.5 flex items-center gap-0.5 text-[9px] text-slate-500"><Star className="h-2.5 w-2.5 fill-amber-400 text-amber-400" /> {survey.rating.toFixed(1)}</p>}
                     </div>
-                    <a href={survey.entryUrl} target="_blank" rel="noopener noreferrer" aria-label={`Start survey ${survey.id} from ${survey.provider}`} className="flex h-9 items-center gap-1 rounded-lg bg-teal-600 px-2 text-[10px] font-extrabold text-white shadow-sm transition hover:bg-teal-700 sm:h-10 sm:gap-1.5 sm:rounded-xl sm:px-3 sm:text-xs sm:hover:-translate-y-0.5">
-                      Start survey <ExternalLink className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                    <a href={survey.entryUrl} target="_blank" rel="noopener noreferrer" aria-label={`Start survey ${survey.id} from ${survey.provider}`} className="inline-flex h-7 shrink-0 items-center gap-1 rounded-md bg-teal-600 px-2 text-[9px] font-extrabold text-white transition hover:bg-teal-700">
+                      Start <ExternalLink className="h-3 w-3" />
                     </a>
                   </div>
                 </div>
@@ -502,22 +447,28 @@ export default function SurveysPage() {
             ))}
           </div>
         ) : (
-          !loading && <p className="rounded-xl border border-dashed border-slate-300 bg-white/70 px-3 py-4 text-center text-xs text-slate-500 sm:rounded-2xl sm:px-4 sm:py-6 sm:text-sm">More matching surveys will appear here when the providers have inventory.</p>
+          <div className="rounded-xl border border-dashed border-slate-300 bg-white/70 px-4 py-5 text-center">
+            <div className="mx-auto flex h-9 w-9 items-center justify-center rounded-lg bg-teal-50 text-teal-700"><Info className="h-4 w-4" /></div>
+            <h3 className="mt-2 text-sm font-bold text-slate-900">No questions available right now</h3>
+            <p className="mt-1 text-xs text-slate-500">Try a different partner or explore the featured tasks above.</p>
+          </div>
         )}
 
         {!loading && (errors.cpx_research || errors.theoremreach) && (
-          <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4 text-xs leading-relaxed text-amber-900">
-            <p className="font-bold">Some partner listings could not load</p>
+          <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-[10px] leading-relaxed text-amber-900 sm:text-xs">
+            <p className="font-bold">Some questions could not be loaded</p>
             {errors.cpx_research && <p className="mt-1">CPX Research: {errors.cpx_research}</p>}
-            {errors.theoremreach && <p className="mt-1">TheoremReach surveys: {errors.theoremreach}</p>}
-            <button type="button" onClick={() => { void loadSurveys(); void loadOfferwalls(); }} className="mt-3 inline-flex items-center gap-1.5 font-bold text-amber-950 underline underline-offset-2"><RefreshCw className="h-3 w-3" /> Refresh partner listings</button>
+            {errors.theoremreach && <p className="mt-1">TheoremReach: {errors.theoremreach}</p>}
+            <button type="button" onClick={() => { void loadSurveys(); void loadOfferwalls(); }} className="mt-2 inline-flex items-center gap-1.5 font-bold underline underline-offset-2">
+              <RefreshCw className="h-3 w-3" /> Refresh partner listings
+            </button>
           </div>
         )}
       </section>
 
-      <p className="mx-auto flex max-w-3xl items-start justify-center gap-2 text-center text-xs leading-relaxed text-slate-400">
+      <p className="order-5 mx-auto flex max-w-3xl items-start justify-center gap-2 text-center text-xs leading-relaxed text-slate-400">
         <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-        Survey availability, eligibility, estimated time, and rewards can vary by location and provider. NexCoins are credited only after provider confirmation.
+        Available activities, eligibility, time, and rewards can vary by location. NexCoins are added after the partner confirms completion.
       </p>
     </main>
   );

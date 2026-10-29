@@ -12,6 +12,7 @@ interface OfferwallProvider {
   name: string;
   is_active: boolean;
   integration_type: string;
+  api_key: string | null;
   postback_secret: string | null;
   custom_config: Record<string, unknown> | null;
 }
@@ -341,6 +342,107 @@ async function getTheoremReachOffers(
   });
 }
 
+async function getNotikOffers(
+  req: NextRequest,
+  userId: string,
+  provider: OfferwallProvider | undefined,
+): Promise<Offer[]> {
+  if (!provider?.is_active || provider.integration_type === "disabled") return [];
+
+  const config = provider.custom_config ?? {};
+  const apiKey = provider.api_key?.trim();
+  const appId = typeof config.app_id === "string" ? config.app_id.trim() : "";
+  const publisherId = typeof config.publisher_id === "string" ? config.publisher_id.trim() : "";
+  const postbackSecret = provider.postback_secret?.trim();
+  if (!apiKey || !appId || !publisherId || !postbackSecret) {
+    throw new Error("Notik Live Offers is not fully configured");
+  }
+
+  const ip = getClientIp(req);
+  const userAgent = req.headers.get("user-agent");
+  if (!ip || !userAgent) throw new Error("Notik needs the visitor's IP address and browser information");
+
+  const params = new URLSearchParams({
+    api_key: apiKey,
+    pub_id: publisherId,
+    app_id: appId,
+    user_id: userId,
+    duration: "30d",
+    page: "1",
+  });
+  const response = await fetch(`https://notik.me/api/v1/live-campaigns-for-user?${params}`, {
+    headers: {
+      Accept: "application/json",
+      "User-Agent": userAgent,
+      "X-Forwarded-For": ip,
+      "X-Real-IP": ip,
+    },
+    signal: AbortSignal.timeout(12_000),
+    cache: "no-store",
+  });
+  if (response.status === 401 || response.status === 403) {
+    throw new Error("Notik rejected the Live Offers API credentials or access");
+  }
+  if (!response.ok) throw new Error(`Notik Live Offers returned HTTP ${response.status}`);
+
+  const result = await response.json() as {
+    status?: string;
+    data?: Array<{
+      offer_id?: string | number;
+      name?: string;
+      categories?: unknown[];
+      description1?: string | null;
+      description2?: string | null;
+      description3?: string | null;
+      image_url?: string;
+      payout?: number | string;
+      click_url?: string;
+      events?: Array<{ name?: string; payout?: number | string }>;
+    }>;
+  };
+  if (result.status !== "success" || !Array.isArray(result.data)) {
+    throw new Error("Notik returned an invalid Live Offers response");
+  }
+
+  const items = result.data;
+  const conversionRate = toPositiveNumber(config.conversion_rate) ?? 660;
+  return items.flatMap((item, index): Offer[] => {
+    const entryUrl = getHttpsUrl(item.click_url, "notik.me");
+    const payout = toPositiveNumber(item.payout);
+    const id = item.offer_id === undefined ? "" : String(item.offer_id);
+    if (!entryUrl || !payout || !id || !item.name?.trim()) return [];
+
+    const imageUrl = getAnyHttpsUrl(item.image_url);
+    const categories = Array.isArray(item.categories)
+      ? item.categories.filter((category): category is string => typeof category === "string" && !!category.trim())
+      : [];
+    const description = [item.description1, item.description2, item.description3]
+      .filter((part): part is string => typeof part === "string" && !!part.trim())
+      .join(" ");
+    const events = (item.events ?? []).flatMap((event) => {
+      const eventPayout = toPositiveNumber(event.payout);
+      if (!event.name?.trim() || !eventPayout) return [];
+      return [{
+        name: event.name,
+        estimatedRewardCoins: Math.ceil(eventPayout * conversionRate),
+      }];
+    });
+
+    return [{
+      id: `notik-${id}`,
+      name: item.name.trim(),
+      description: description || (categories.length ? categories.join(" · ") : null),
+      imageUrl: imageUrl?.toString() ?? null,
+      providerName: "Notik",
+      kind: "network",
+      estimatedRewardCoins: Math.ceil(payout * conversionRate),
+      rankScore: items.length - index,
+      events,
+      entryUrl: entryUrl.toString(),
+    }];
+  });
+}
+
 export async function GET(req: NextRequest) {
   const token = req.headers.get("authorization")?.replace(/^Bearer\s+/i, "");
   if (!token) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -351,8 +453,8 @@ export async function GET(req: NextRequest) {
       admin.auth.getUser(token),
       admin
         .from("offerwall_providers")
-        .select("slug, name, is_active, integration_type, postback_secret, custom_config")
-        .in("slug", ["cpx_research", "theoremreach"]),
+        .select("slug, name, is_active, integration_type, api_key, postback_secret, custom_config")
+        .in("slug", ["cpx_research", "theoremreach", "notik"]),
     ]);
   if (authError || !user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   if (providerError) {
@@ -367,6 +469,7 @@ export async function GET(req: NextRequest) {
   const theoremReachProvider = providerRows.find(
     (provider) => provider.slug === "theoremreach" && provider.integration_type !== "disabled",
   );
+  const notikProvider = providerRows.find((provider) => provider.slug === "notik");
   const { data: profile, error: profileError } = await admin
     .from("profiles")
     .select("country")
@@ -374,7 +477,7 @@ export async function GET(req: NextRequest) {
     .maybeSingle();
   if (profileError) console.error("[api/surveys] Profile lookup failed:", profileError.message);
 
-  const [cpxResult, theoremReachResult, theoremReachOffersResult] = await Promise.all([
+  const [cpxResult, theoremReachResult, theoremReachOffersResult, notikOffersResult] = await Promise.all([
     getCpxSurveys(req, user.id, cpxProvider).then(
       (surveys) => ({ surveys, error: null as string | null }),
       (error: unknown) => ({ surveys: [] as Survey[], error: error instanceof Error ? error.message : "Unable to load CPX Research surveys" }),
@@ -386,6 +489,10 @@ export async function GET(req: NextRequest) {
     getTheoremReachOffers(req, user.id, profile?.country ?? null, theoremReachProvider).then(
       (offers) => ({ offers, error: null as string | null }),
       (error: unknown) => ({ offers: [] as Offer[], error: error instanceof Error ? error.message : "Unable to load TheoremReach offers" }),
+    ),
+    getNotikOffers(req, user.id, notikProvider).then(
+      (offers) => ({ offers, error: null as string | null }),
+      (error: unknown) => ({ offers: [] as Offer[], error: error instanceof Error ? error.message : "Unable to load Notik tasks" }),
     ),
   ]);
 
@@ -399,12 +506,14 @@ export async function GET(req: NextRequest) {
     cpx_research: cpxProvider?.is_active ? cpxResult.error : null,
     theoremreach: theoremReachProvider?.is_active ? theoremReachResult.error : null,
     theoremreach_offers: theoremReachProvider?.is_active ? theoremReachOffersResult.error : null,
+    notik_offers: notikProvider?.is_active ? notikOffersResult.error : null,
   };
 
   return NextResponse.json(
     {
       surveys,
-      offers: theoremReachOffersResult.offers.sort((a, b) => b.rankScore - a.rankScore),
+      offers: [...notikOffersResult.offers, ...theoremReachOffersResult.offers]
+        .sort((a, b) => b.rankScore - a.rankScore),
       errors,
     },
     { headers: { "Cache-Control": "private, no-store, max-age=0" } },
