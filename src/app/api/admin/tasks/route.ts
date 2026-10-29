@@ -202,7 +202,9 @@ async function sendNewTaskEmails(
     .eq("role", "contributor")
     .not("email", "is", null);
   if (task.target_countries?.length) {
-    contributorsQuery.in("country_code", task.target_countries);
+    contributorsQuery = contributorsQuery.or(
+      `country_code.is.null,country_code.in.(${task.target_countries.join(",")})`,
+    );
   }
   const { data: contributors } = await contributorsQuery;
 

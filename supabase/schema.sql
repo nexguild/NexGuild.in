@@ -94,6 +94,13 @@ RETURNS TRIGGER
 LANGUAGE plpgsql
 AS $$
 BEGIN
+  IF OLD.country_code IS NULL AND (
+    NEW.country_code IS NOT NULL
+    OR NEW.country IS DISTINCT FROM OLD.country
+  ) THEN
+    RAISE EXCEPTION 'Country is reserved for new accounts and cannot be changed on existing profiles.';
+  END IF;
+
   IF OLD.country_code IS NOT NULL AND (
     NEW.country_code IS DISTINCT FROM OLD.country_code
     OR NEW.country IS DISTINCT FROM OLD.country
@@ -145,6 +152,8 @@ AS $$
     WHERE t.id = p_task_id
       AND (auth.uid() = p_user_id OR auth.role() = 'service_role')
       AND (
+        p.country_code IS NULL
+        OR
         cardinality(COALESCE(t.target_countries, '{}'::TEXT[])) = 0
         OR p.country_code = ANY(t.target_countries)
       )

@@ -6,7 +6,6 @@ import { Camera, X, Loader2, Plus, Star, Copy, CheckCheck, Crown, CheckCircle2, 
 import { NexCoinIcon } from "@/components/ui/nexcoin-icon";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
-import { CountrySelect } from "@/components/forms/CountrySelect";
 import { getCountryName } from "@/lib/countries";
 
 interface Profile {
@@ -55,9 +54,6 @@ export default function ProfilePage() {
   const [editPhone, setEditPhone]     = useState("");
   const [saving, setSaving]           = useState(false);
   const [saveError, setSaveError]     = useState<string | null>(null);
-  const [countryChoice, setCountryChoice] = useState("");
-  const [countrySaving, setCountrySaving] = useState(false);
-  const [countryError, setCountryError] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchProfile() {
@@ -101,7 +97,6 @@ export default function ProfilePage() {
       setTotalEarned((txnData ?? []).reduce((s: number, t: { amount: number }) => s + (t.amount ?? 0), 0));
 
       setProfile(data ?? { full_name: null, country: null, country_code: null, phone: null, joined_at: null, nexcoins: 0, xp: 0, level: 1, skills: [], languages: [], avatar_url: null, is_nexleader: null });
-      setCountryChoice((data as Profile | null)?.country_code ?? "");
       setLoading(false);
     }
     fetchProfile();
@@ -165,27 +160,6 @@ export default function ProfilePage() {
     setProfile((prev) => prev ? { ...prev, full_name: editName.trim() || null, phone: editPhone.trim() || null } : prev);
     setSaving(false);
     setShowEdit(false);
-  }
-
-  async function saveCountry() {
-    if (!userId || !countryChoice || profile?.country_code) return;
-    setCountrySaving(true);
-    setCountryError(null);
-    const countryName = getCountryName(countryChoice);
-    const { data, error } = await supabase
-      .from("profiles")
-      .update({ country: countryName, country_code: countryChoice })
-      .eq("id", userId)
-      .is("country_code", null)
-      .select("country_code")
-      .maybeSingle();
-    if (error || !data) {
-      setCountryError(error?.message ?? "Country was already saved. Refresh your profile to see the saved value.");
-      setCountrySaving(false);
-      return;
-    }
-    setProfile((prev) => prev ? { ...prev, country: countryName, country_code: countryChoice } : prev);
-    setCountrySaving(false);
   }
 
   async function addSkill(e: React.FormEvent) {
@@ -386,25 +360,6 @@ export default function ProfilePage() {
                   <p className="text-sm text-slate-800 font-medium text-right">{row.value}</p>
                 </div>
               ))}
-              {!loading && userId && !profile?.country_code && (
-                <div className="space-y-2 py-4">
-                  <p className="text-xs leading-relaxed text-amber-700">
-                    Confirm your country once to see tasks targeted to your region. This choice cannot be changed later.
-                  </p>
-                  <div className="flex flex-col gap-2 sm:flex-row">
-                    <CountrySelect
-                      value={countryChoice}
-                      onChange={setCountryChoice}
-                      required
-                      className="h-10 min-w-0 flex-1 rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm text-slate-800 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-indigo-400"
-                    />
-                    <Button type="button" onClick={() => void saveCountry()} disabled={!countryChoice || countrySaving}>
-                      {countrySaving ? <><Loader2 className="h-4 w-4 animate-spin" /> Saving…</> : "Save country once"}
-                    </Button>
-                  </div>
-                  {countryError && <p role="alert" className="text-xs text-red-600">{countryError}</p>}
-                </div>
-              )}
               {!loading && profile?.country_code && (
                 <p className="py-3 text-xs text-slate-400">Country is permanently saved and used for country-targeted tasks.</p>
               )}

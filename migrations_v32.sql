@@ -5,58 +5,6 @@ ALTER TABLE public.profiles
 ALTER TABLE public.tasks
   ADD COLUMN IF NOT EXISTS target_countries TEXT[] NOT NULL DEFAULT '{}';
 
--- Normalize common existing profile values; users with an unrecognized legacy
--- value can confirm their country once from their profile page.
-UPDATE public.profiles
-SET country_code = CASE lower(trim(country))
-  WHEN 'in' THEN 'IN'
-  WHEN 'us' THEN 'US'
-  WHEN 'gb' THEN 'GB'
-  WHEN 'ca' THEN 'CA'
-  WHEN 'au' THEN 'AU'
-  WHEN 'bd' THEN 'BD'
-  WHEN 'pk' THEN 'PK'
-  WHEN 'np' THEN 'NP'
-  WHEN 'lk' THEN 'LK'
-  WHEN 'ph' THEN 'PH'
-  WHEN 'ng' THEN 'NG'
-  WHEN 'za' THEN 'ZA'
-  WHEN 'de' THEN 'DE'
-  WHEN 'fr' THEN 'FR'
-  WHEN 'br' THEN 'BR'
-  WHEN 'id' THEN 'ID'
-  WHEN 'my' THEN 'MY'
-  WHEN 'sg' THEN 'SG'
-  WHEN 'ae' THEN 'AE'
-  WHEN 'sa' THEN 'SA'
-  WHEN 'india' THEN 'IN'
-  WHEN 'united states' THEN 'US'
-  WHEN 'united states of america' THEN 'US'
-  WHEN 'usa' THEN 'US'
-  WHEN 'united kingdom' THEN 'GB'
-  WHEN 'uk' THEN 'GB'
-  WHEN 'canada' THEN 'CA'
-  WHEN 'australia' THEN 'AU'
-  WHEN 'bangladesh' THEN 'BD'
-  WHEN 'pakistan' THEN 'PK'
-  WHEN 'nepal' THEN 'NP'
-  WHEN 'sri lanka' THEN 'LK'
-  WHEN 'philippines' THEN 'PH'
-  WHEN 'nigeria' THEN 'NG'
-  WHEN 'south africa' THEN 'ZA'
-  WHEN 'germany' THEN 'DE'
-  WHEN 'france' THEN 'FR'
-  WHEN 'brazil' THEN 'BR'
-  WHEN 'indonesia' THEN 'ID'
-  WHEN 'malaysia' THEN 'MY'
-  WHEN 'singapore' THEN 'SG'
-  WHEN 'united arab emirates' THEN 'AE'
-  WHEN 'uae' THEN 'AE'
-  WHEN 'saudi arabia' THEN 'SA'
-  ELSE NULL
-END
-WHERE country_code IS NULL;
-
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 DECLARE
@@ -114,6 +62,13 @@ RETURNS TRIGGER
 LANGUAGE plpgsql
 AS $$
 BEGIN
+  IF OLD.country_code IS NULL AND (
+    NEW.country_code IS NOT NULL
+    OR NEW.country IS DISTINCT FROM OLD.country
+  ) THEN
+    RAISE EXCEPTION 'Country is reserved for new accounts and cannot be changed on existing profiles.';
+  END IF;
+
   IF OLD.country_code IS NOT NULL AND (
     NEW.country_code IS DISTINCT FROM OLD.country_code
     OR NEW.country IS DISTINCT FROM OLD.country
@@ -156,6 +111,8 @@ AS $$
     WHERE t.id = p_task_id
       AND (auth.uid() = p_user_id OR auth.role() = 'service_role')
       AND (
+        p.country_code IS NULL
+        OR
         cardinality(COALESCE(t.target_countries, '{}'::TEXT[])) = 0
         OR p.country_code = ANY(t.target_countries)
       )
