@@ -282,6 +282,8 @@ export default function ProviderExperiencePage({
 
   if (!provider) return null;
 
+  const embedUrl = buildEmbedUrl();
+
   return (
     <div
       className="-m-4 flex min-h-0 flex-col overflow-x-hidden overflow-y-auto overscroll-y-contain sm:-m-6"
@@ -298,6 +300,19 @@ export default function ProviderExperiencePage({
         </Link>
         <span className="text-slate-300">/</span>
         <span className="text-sm text-slate-700 font-semibold">{provider.name}</span>
+        {provider.slug === "mylead" && embedUrl && (
+          <a
+            href={embedUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Open full MyLead offerwall in a new tab"
+            title="Open full MyLead offerwall in a new tab"
+            className="ml-2 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-slate-200 text-xs font-semibold text-indigo-600 transition-colors hover:bg-indigo-50 sm:w-auto sm:gap-1 sm:px-2"
+          >
+            <span className="sr-only sm:not-sr-only">Open full offerwall</span>
+            <ExternalLink className="h-3.5 w-3.5" />
+          </a>
+        )}
         <div className="ml-auto flex items-center gap-1.5 text-xs text-slate-400">
           <NexCoinIcon size={13} />
           <span>Earnings credited automatically</span>
@@ -306,7 +321,7 @@ export default function ProviderExperiencePage({
 
       {/* Widget — fills remaining height */}
       <div className="flex min-h-0 flex-1 flex-col">
-        {renderWidget(provider, trIframeUrl, trIframeLoading, buildEmbedUrl(), cpagripFrameUrl, notikFrameUrl, clixwallFrameUrl, clixwallFrameError, tapRainOffers, tapRainTitle, tapRainLoading, tapRainError, cpxFrameUrl, cpxFrameError, token)}
+        {renderWidget(provider, trIframeUrl, trIframeLoading, embedUrl, cpagripFrameUrl, notikFrameUrl, clixwallFrameUrl, clixwallFrameError, tapRainOffers, tapRainTitle, tapRainLoading, tapRainError, cpxFrameUrl, cpxFrameError, token)}
       </div>
     </div>
   );
