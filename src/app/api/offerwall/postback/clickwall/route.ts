@@ -1,4 +1,5 @@
 import { NextRequest } from "next/server";
+import { timingSafeEqual } from "crypto";
 import { createClient } from "@supabase/supabase-js";
 import { createServerClient } from "@/lib/supabase-server";
 
@@ -27,11 +28,14 @@ async function logPostback(
 async function handlePostback(req: NextRequest): Promise<Response> {
   const url       = new URL(req.url);
   const q         = url.searchParams;
-  const rawParams = Object.fromEntries(q.entries());
+  const rawParams = Object.fromEntries(
+    [...q.entries()].filter(([key]) => key.toLowerCase() !== "secret"),
+  );
 
-  const userId        = q.get("user_id") ?? "";
-  const txId          = q.get("txid")    ?? "";
-  const amount        = parseFloat(q.get("amount") ?? "0") || 0;
+  const userId = q.get("user_id")?.trim() ?? "";
+  const txId = q.get("txid")?.trim() ?? "";
+  const rawAmount = q.get("amount") ?? "";
+  const amount = Number(rawAmount);
   const incomingSecret = q.get("secret") ?? "";
 
   const admin = createServerClient();
@@ -53,14 +57,21 @@ async function handlePostback(req: NextRequest): Promise<Response> {
     return new Response("OK", { status: 200 });
   }
 
-  // Static secret check
-  const expectedSecret = provider.postback_secret as string | null;
-  const secretValid = expectedSecret ? incomingSecret === expectedSecret : true;
+  const expectedSecret = provider.postback_secret?.trim();
+  if (!expectedSecret) {
+    console.error("[postback/clickwall] postback secret is not configured");
+    await logPostback(rawParams, null, "error", "ClickWall postback secret is not configured");
+    return new Response("ClickWall postback secret is not configured", { status: 503 });
+  }
+  const expectedBytes = Buffer.from(expectedSecret);
+  const incomingBytes = Buffer.from(incomingSecret);
+  const secretValid = expectedBytes.length === incomingBytes.length
+    && timingSafeEqual(expectedBytes, incomingBytes);
 
   if (!secretValid) {
     console.warn("[postback/clickwall] secret mismatch — possible spoofed postback");
     await logPostback(rawParams, false, "hash_invalid", "secret mismatch");
-    return new Response("OK", { status: 200 });
+    return new Response("Invalid ClickWall postback secret", { status: 403 });
   }
 
   if (!userId || !txId) {
@@ -69,7 +80,7 @@ async function handlePostback(req: NextRequest): Promise<Response> {
     return new Response("OK", { status: 200 });
   }
 
-  if (amount <= 0) {
+  if (!Number.isFinite(amount) || amount <= 0) {
     console.warn(`[postback/clickwall] zero amount (tx=${txId})`);
     await logPostback(rawParams, true, "error", "zero amount");
     return new Response("OK", { status: 200 });
