@@ -41,6 +41,7 @@ interface SurveyResponse {
     theoremreach: string | null;
     theoremreach_offers: string | null;
     notik_offers: string | null;
+    mylead_campaigns: string | null;
   };
 }
 
@@ -94,6 +95,7 @@ export default function SurveysPage() {
     theoremreach: null,
     theoremreach_offers: null,
     notik_offers: null,
+    mylead_campaigns: null,
   });
   const [sortMode, setSortMode] = useState<SortMode>("Recommended");
   const [providerFilter, setProviderFilter] = useState<ProviderFilter>("All surveys");
@@ -206,9 +208,9 @@ export default function SurveysPage() {
         </div>
       ) : featuredOffer ? (
         <>
-          {(errors.theoremreach_offers || errors.notik_offers) && (
+          {(errors.theoremreach_offers || errors.notik_offers || errors.mylead_campaigns) && (
             <p role="status" className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[10px] leading-relaxed text-amber-900 sm:text-xs">
-              Some tasks could not be loaded. {errors.notik_offers && `Notik: ${errors.notik_offers}. `}{errors.theoremreach_offers && `TheoremReach: ${errors.theoremreach_offers}. `}Other tasks are still available below.
+              Some tasks could not be loaded. {errors.notik_offers && `Notik: ${errors.notik_offers}. `}{errors.theoremreach_offers && `TheoremReach: ${errors.theoremreach_offers}. `}{errors.mylead_campaigns && `MyLead: ${errors.mylead_campaigns}. `}Other tasks are still available below.
             </p>
           )}
           <div className="-mx-1 grid auto-cols-[148px] grid-flow-col grid-rows-2 gap-3 overflow-x-auto px-1 pb-2 sm:auto-cols-[168px]">
@@ -275,7 +277,7 @@ export default function SurveysPage() {
         <div className="rounded-xl border border-dashed border-slate-300 bg-white/70 px-4 py-5 text-center">
           <p className="text-sm font-bold text-slate-800">No featured tasks showing right now</p>
           <p className="mt-1 text-xs leading-relaxed text-slate-500">Try the partner apps below or check back later for new activities.</p>
-          {(errors.theoremreach_offers || errors.notik_offers) && <p role="status" className="mt-2 text-xs text-amber-800">{errors.notik_offers && `Notik: ${errors.notik_offers} `}{errors.theoremreach_offers && `TheoremReach: ${errors.theoremreach_offers}`}</p>}
+          {(errors.theoremreach_offers || errors.notik_offers || errors.mylead_campaigns) && <p role="status" className="mt-2 text-xs text-amber-800">{errors.notik_offers && `Notik: ${errors.notik_offers} `}{errors.theoremreach_offers && `TheoremReach: ${errors.theoremreach_offers} `}{errors.mylead_campaigns && `MyLead: ${errors.mylead_campaigns}`}</p>}
         </div>
       )}
       <p className="text-[10px] leading-relaxed text-slate-500">

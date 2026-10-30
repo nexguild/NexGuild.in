@@ -1,6 +1,7 @@
 import { createHash, createHmac } from "crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase-server";
+import { getMyLeadCampaignOffers, isMyLeadApiConfigured } from "@/lib/mylead-campaigns";
 
 export const dynamic = "force-dynamic";
 
@@ -119,12 +120,13 @@ function cleanOfferText(value: string): string {
     .trim();
 }
 
-function interleaveOffers(first: Offer[], second: Offer[]): Offer[] {
+function interleaveOffers(...groups: Offer[][]): Offer[] {
   const offers: Offer[] = [];
-  const count = Math.max(first.length, second.length);
+  const count = Math.max(0, ...groups.map((group) => group.length));
   for (let index = 0; index < count; index += 1) {
-    if (first[index]) offers.push(first[index]);
-    if (second[index]) offers.push(second[index]);
+    for (const group of groups) {
+      if (group[index]) offers.push(group[index]);
+    }
   }
   return offers;
 }
@@ -549,7 +551,7 @@ export async function GET(req: NextRequest) {
       admin
         .from("offerwall_providers")
         .select("slug, name, is_active, integration_type, api_key, postback_secret, custom_config")
-        .in("slug", ["cpx_research", "theoremreach", "notik"]),
+        .in("slug", ["cpx_research", "theoremreach", "notik", "mylead"]),
     ]);
   if (authError || !user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   if (providerError) {
@@ -565,6 +567,7 @@ export async function GET(req: NextRequest) {
     (provider) => provider.slug === "theoremreach" && provider.integration_type !== "disabled",
   );
   const notikProvider = providerRows.find((provider) => provider.slug === "notik");
+  const myLeadProvider = providerRows.find((provider) => provider.slug === "mylead");
   const { data: profile, error: profileError } = await admin
     .from("profiles")
     .select("country_code")
@@ -572,7 +575,7 @@ export async function GET(req: NextRequest) {
     .maybeSingle();
   if (profileError) console.error("[api/surveys] Profile lookup failed:", profileError.message);
 
-  const [cpxResult, theoremReachResult, theoremReachOffersResult, notikOffersResult] = await Promise.all([
+  const [cpxResult, theoremReachResult, theoremReachOffersResult, notikOffersResult, myLeadCampaignsResult] = await Promise.all([
     getCpxSurveys(req, user.id, cpxProvider).then(
       (surveys) => ({ surveys, error: null as string | null }),
       (error: unknown) => ({ surveys: [] as Survey[], error: error instanceof Error ? error.message : "Unable to load CPX Research surveys" }),
@@ -589,6 +592,12 @@ export async function GET(req: NextRequest) {
       (offers) => ({ offers, error: null as string | null }),
       (error: unknown) => ({ offers: [] as Offer[], error: error instanceof Error ? error.message : "Unable to load Notik tasks" }),
     ),
+    myLeadProvider?.is_active && isMyLeadApiConfigured()
+      ? getMyLeadCampaignOffers(user.id, getCountryCode(req, profile?.country_code ?? null)).then(
+        (offers) => ({ offers, error: null as string | null }),
+        (error: unknown) => ({ offers: [] as Offer[], error: error instanceof Error ? error.message : "Unable to load MyLead campaigns" }),
+      )
+      : Promise.resolve({ offers: [] as Offer[], error: null as string | null }),
   ]);
 
   const surveys = [...cpxResult.surveys, ...theoremReachResult.surveys]
@@ -602,6 +611,7 @@ export async function GET(req: NextRequest) {
     theoremreach: theoremReachProvider?.is_active ? theoremReachResult.error : null,
     theoremreach_offers: theoremReachProvider?.is_active ? theoremReachOffersResult.error : null,
     notik_offers: notikProvider?.is_active ? notikOffersResult.error : null,
+    mylead_campaigns: myLeadProvider?.is_active && isMyLeadApiConfigured() ? myLeadCampaignsResult.error : null,
   };
 
   return NextResponse.json(
@@ -610,6 +620,7 @@ export async function GET(req: NextRequest) {
       offers: interleaveOffers(
         theoremReachOffersResult.offers.sort((a, b) => b.rankScore - a.rankScore),
         notikOffersResult.offers,
+        myLeadCampaignsResult.offers.sort((a, b) => b.rankScore - a.rankScore),
       ),
       errors,
     },

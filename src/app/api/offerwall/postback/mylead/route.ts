@@ -1,7 +1,8 @@
 import { NextRequest } from "next/server";
-import { createHmac } from "crypto";
+import { createHmac, timingSafeEqual } from "crypto";
 import { createClient } from "@supabase/supabase-js";
 import { createServerClient } from "@/lib/supabase-server";
+import { myLeadCoinsPerCurrency } from "@/lib/mylead-campaigns";
 
 const logAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -27,8 +28,10 @@ async function logPostback(
 
 // MyLead hash: HMAC-SHA256(key=security_key, message=postback_url)
 function verifyHash(secret: string, urlStr: string, incomingHash: string): boolean {
-  const expected = createHmac("sha256", secret).update(urlStr).digest("hex");
-  return expected === incomingHash;
+  if (!/^[\da-f]{64}$/i.test(incomingHash)) return false;
+  const expected = createHmac("sha256", secret).update(urlStr).digest();
+  const received = Buffer.from(incomingHash, "hex");
+  return expected.length === received.length && timingSafeEqual(expected, received);
 }
 
 async function handlePostback(req: NextRequest): Promise<Response> {
@@ -36,10 +39,20 @@ async function handlePostback(req: NextRequest): Promise<Response> {
   const q          = url.searchParams;
   const rawParams  = Object.fromEntries(q.entries());
 
-  const userId  = q.get("user_id") ?? "";
-  const txId    = q.get("tx_id")   ?? "";
-  const amount  = parseFloat(q.get("amount") ?? "0") || 0;
-  const status  = q.get("status")  ?? "";
+  const isCampaignConversion = Boolean(q.get("ml_sub1")?.trim() || q.has("payout_decimal") || q.has("campaign_id"));
+  const userId = (isCampaignConversion
+    ? q.get("ml_sub1")?.trim() || q.get("user_id")?.trim()
+    : q.get("user_id")?.trim() || q.get("ml_sub1")?.trim())
+    || q.get("player_id")?.trim()
+    || "";
+  const txId = q.get("tx_id")?.trim() || q.get("transaction_id")?.trim() || "";
+  const amount = Number(
+    isCampaignConversion
+      ? q.get("payout_decimal") ?? q.get("amount") ?? "0"
+      : q.get("amount") ?? q.get("virtual_amount") ?? "0",
+  ) || 0;
+  const currency = q.get("currency")?.trim().toUpperCase() ?? "";
+  const status  = q.get("status")?.trim().toLowerCase() ?? "";
 
   const admin = createServerClient();
 
@@ -60,22 +73,24 @@ async function handlePostback(req: NextRequest): Promise<Response> {
     return new Response("OK", { status: 200 });
   }
 
+  const securityKey = provider.postback_secret?.trim();
+  if (!securityKey) {
+    await logPostback(rawParams, null, "error", "MyLead security key is not configured");
+    return new Response("MyLead security key is not configured", { status: 503 });
+  }
+
   // Verify X-MyLead-Security-Hash header
   const incomingHash = req.headers.get("x-mylead-security-hash");
-  let hashValid: boolean | null = null;
-
-  if (provider.postback_secret) {
-    if (!incomingHash) {
-      console.warn("[postback/mylead] missing X-MyLead-Security-Hash header");
-      await logPostback(rawParams, false, "hash_invalid", "missing security header");
-      return new Response("OK", { status: 200 });
-    }
-    hashValid = verifyHash(provider.postback_secret as string, req.url, incomingHash);
-    if (!hashValid) {
-      console.warn("[postback/mylead] hash validation failed");
-      await logPostback(rawParams, false, "hash_invalid");
-      return new Response("OK", { status: 200 });
-    }
+  if (!incomingHash) {
+    console.warn("[postback/mylead] missing X-MyLead-Security-Hash header");
+    await logPostback(rawParams, false, "hash_invalid", "missing security header");
+    return new Response("Missing MyLead security hash", { status: 403 });
+  }
+  const hashValid = verifyHash(securityKey, req.url, incomingHash);
+  if (!hashValid) {
+    console.warn("[postback/mylead] hash validation failed");
+    await logPostback(rawParams, false, "hash_invalid");
+    return new Response("Invalid MyLead security hash", { status: 403 });
   }
 
   if (!userId || !txId) {
@@ -112,27 +127,32 @@ async function handlePostback(req: NextRequest): Promise<Response> {
     return new Response("OK", { status: 200 });
   }
 
-  // Real postbacks send status="approved"; tester sends status="0"
-  if (status !== "approved" && status !== "0") {
+  // MyLead documents pending, pre_approved, approved, and rejected statuses.
+  if (status !== "approved") {
     console.log(`[postback/mylead] status="${status}" — not crediting yet (tx=${txId})`);
     await logPostback(rawParams, hashValid, `skipped_${status || "unknown"}`);
     return new Response("OK", { status: 200 });
   }
 
-  if (amount <= 0) {
-    console.warn(`[postback/mylead] zero virtual_amount (tx=${txId})`);
-    await logPostback(rawParams, hashValid, "error", "zero amount");
+  if (!Number.isFinite(amount) || amount <= 0) {
+    console.warn(`[postback/mylead] invalid reward amount (tx=${txId})`);
+    await logPostback(rawParams, hashValid, "error", "invalid reward amount");
     return new Response("OK", { status: 200 });
   }
 
-  // Currency Multiplier in MyLead dashboard = 660, so amount IS the user's coin amount
-  const userCoins = Math.max(1, Math.floor(amount));
+  const conversionRate = isCampaignConversion ? myLeadCoinsPerCurrency(currency) : null;
+  if (isCampaignConversion && !conversionRate) {
+    await logPostback(rawParams, hashValid, "error", `unsupported campaign currency: ${currency || "missing"}`);
+    return new Response("OK", { status: 200 });
+  }
+  const userCoins = Math.max(1, Math.floor(amount * (conversionRate ?? 1)));
+  const grossAmount = isCampaignConversion ? Math.max(1, Math.round(amount * 100)) : Math.round(amount);
 
   const { data: credited, error: creditError } = await admin.rpc("credit_offerwall_conversion", {
     p_provider_id: provider.id,
     p_contributor_id: userId,
     p_provider_transaction_id: txId,
-    p_gross_amount: Math.round(amount),
+    p_gross_amount: grossAmount,
     p_nexcoins_awarded: userCoins,
     p_raw_payload: { query: rawParams },
     p_provider_name: provider.name,

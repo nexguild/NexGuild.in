@@ -284,8 +284,8 @@ export default function ProviderExperiencePage({
 
   return (
     <div
-      className="-m-4 flex min-h-0 flex-col overflow-hidden sm:-m-6"
-      style={{ height: "calc(100vh - 64px)" }}
+      className="-m-4 flex min-h-0 flex-col overflow-x-hidden overflow-y-auto overscroll-y-contain sm:-m-6"
+      style={{ minHeight: "calc(100dvh - 64px)" }}
     >
       {/* Breadcrumb bar */}
       <div className="flex items-center gap-2 px-4 sm:px-6 h-12 border-b border-slate-100 bg-white flex-shrink-0">
@@ -329,7 +329,7 @@ function renderWidget(
   cpxFrameError: string | null,
   token: string | null,
 ) {
-  const widgetH = "calc(100vh - 112px)";
+  const widgetH = "calc(100dvh - 112px)";
   if (provider.slug === "cpx_research") {
     if (cpxFrameError) {
       return (
@@ -509,7 +509,8 @@ function renderWidget(
       <iframe
         src={embedUrl}
         className="flex-1 w-full border-0"
-        style={{ minHeight: widgetH }}
+        style={{ minHeight: widgetH, touchAction: "pan-y" }}
+        scrolling="yes"
         allow="accelerometer; autoplay; clipboard-write; encrypted-media"
         sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox"
         title={`${provider.name} Offerwall`}
