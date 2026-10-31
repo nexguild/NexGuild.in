@@ -16,18 +16,38 @@ interface DashboardSidebarProps {
   onClose: () => void;
 }
 
-const NAV_ITEMS = [
-  { label: "Dashboard",      href: "/dashboard",               icon: LayoutDashboard },
-  { label: "Opportunities",  href: "/dashboard/opportunities",  icon: Search },
-  { label: "Surveys & Offers", href: "/dashboard/surveys",     icon: Sparkles },
-  { label: "My Tasks",       href: "/dashboard/tasks",          icon: ClipboardList },
-  { label: "Earnings",       href: "/dashboard/earnings",       icon: TrendingUp },
-  { label: "NexCoins",       href: "/dashboard/wallet",         icon: Wallet },
-  { label: "NexStore",       href: "/dashboard/store",          icon: ShoppingBag },
-  { label: "My Vouchers",    href: "/dashboard/vouchers",       icon: Gift },
-  { label: "Community",      href: "/dashboard/community",      icon: Users },
-  { label: "Announcements",  href: "/dashboard/announcements",  icon: Megaphone },
-  { label: "Support",        href: "/dashboard/support",        icon: Headphones },
+const NAV_GROUPS = [
+  {
+    label: "Workspace",
+    items: [
+      { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+    ],
+  },
+  {
+    label: "Discover",
+    items: [
+      { label: "Opportunities", href: "/dashboard/opportunities", icon: Search },
+      { label: "Surveys & Offers", href: "/dashboard/surveys", icon: Sparkles },
+    ],
+  },
+  {
+    label: "Your account",
+    items: [
+      { label: "My Tasks", href: "/dashboard/tasks", icon: ClipboardList },
+      { label: "Earnings", href: "/dashboard/earnings", icon: TrendingUp },
+      { label: "NexCoins", href: "/dashboard/wallet", icon: Wallet },
+      { label: "NexStore", href: "/dashboard/store", icon: ShoppingBag },
+      { label: "My Vouchers", href: "/dashboard/vouchers", icon: Gift },
+    ],
+  },
+  {
+    label: "Community",
+    items: [
+      { label: "Community", href: "/dashboard/community", icon: Users },
+      { label: "Announcements", href: "/dashboard/announcements", icon: Megaphone },
+      { label: "Support", href: "/dashboard/support", icon: Headphones },
+    ],
+  },
 ];
 
 const ACCOUNT_ITEMS = [
@@ -51,7 +71,7 @@ export function DashboardSidebar({ open, onClose }: DashboardSidebarProps) {
           href={href}
           onClick={onClose}
           className={cn(
-            "flex items-center gap-3 h-10 px-3 rounded-xl text-sm transition-all duration-150",
+            "flex items-center gap-3 h-10 px-3 rounded-xl text-[13px] transition-all duration-150",
             active
               ? "font-semibold text-white shadow-md"
               : "font-medium text-slate-500 hover:bg-slate-100 hover:text-slate-900"
@@ -86,11 +106,12 @@ export function DashboardSidebar({ open, onClose }: DashboardSidebarProps) {
         )}
       >
         {/* Logo */}
-        <div className="h-16 flex items-center justify-between px-4 border-b border-slate-100 flex-shrink-0">
+        <div className="h-[76px] flex flex-col items-start justify-center gap-0.5 px-5 border-b border-slate-100 flex-shrink-0">
           <NexGuildLogo theme="light" href="/dashboard" />
+          <span className="pl-1 text-[9px] font-bold uppercase tracking-[0.2em] text-slate-400">Contributor workspace</span>
           <button
             onClick={onClose}
-            className="lg:hidden h-8 w-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+            className="absolute right-4 top-5 lg:hidden h-8 w-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
             aria-label="Close menu"
           >
             <X className="h-4 w-4" />
@@ -98,21 +119,26 @@ export function DashboardSidebar({ open, onClose }: DashboardSidebarProps) {
         </div>
 
         {/* Nav */}
-        <nav className="flex-1 px-3 py-4 overflow-y-auto" style={{ scrollbarWidth: "none" }}>
+        <nav className="flex-1 px-3 py-5 overflow-y-auto" style={{ scrollbarWidth: "none" }}>
+          {NAV_GROUPS.map((group, index) => (
+            <section key={group.label} className={index === 0 ? "" : "mt-5"}>
+              <p className="mb-2 px-3 text-[9px] font-bold uppercase tracking-[0.18em] text-slate-400">{group.label}</p>
+              <ul className="space-y-1">
+                {group.items.map((item) => (
+                  <NavItem key={item.href} href={item.href} icon={item.icon} label={item.label} />
+                ))}
+              </ul>
+            </section>
+          ))}
 
-          <p className="mb-2 px-3 text-[10px] font-bold uppercase tracking-widest text-slate-400">Main</p>
-          <ul className="space-y-0.5">
-            {NAV_ITEMS.map((item) => (
-              <NavItem key={item.href} href={item.href} icon={item.icon} label={item.label} />
-            ))}
-          </ul>
-
-          <p className="mt-5 mb-2 px-3 text-[10px] font-bold uppercase tracking-widest text-slate-400">Account</p>
-          <ul className="space-y-0.5">
-            {ACCOUNT_ITEMS.map((item) => (
-              <NavItem key={item.href} href={item.href} icon={item.icon} label={item.label} />
-            ))}
-          </ul>
+          <section className="mt-5 border-t border-slate-100 pt-4">
+            <p className="mb-2 px-3 text-[9px] font-bold uppercase tracking-[0.18em] text-slate-400">Preferences</p>
+            <ul className="space-y-1">
+              {ACCOUNT_ITEMS.map((item) => (
+                <NavItem key={item.href} href={item.href} icon={item.icon} label={item.label} />
+              ))}
+            </ul>
+          </section>
         </nav>
 
         {/* Sign Out */}

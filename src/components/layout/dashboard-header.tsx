@@ -226,8 +226,8 @@ if (existingChannel) {
   }
 
   return (
-    <header className="h-16 fixed top-0 right-0 left-0 lg:left-sidebar z-30 flex items-center justify-between px-4 sm:px-6 bg-white border-b border-slate-200 shadow-sm">
-      <div className="flex items-center gap-3">
+    <header className="h-[72px] fixed top-0 right-0 left-0 lg:left-sidebar z-30 flex items-center justify-between px-4 sm:px-7 bg-white/95 border-b border-slate-200 shadow-sm backdrop-blur-md">
+      <div className="flex min-w-0 items-center gap-3 sm:gap-4">
         <button
           onClick={onMenuToggle}
           className="lg:hidden h-9 w-9 flex items-center justify-center rounded-xl text-slate-600 hover:bg-slate-100 transition-colors"
@@ -235,7 +235,10 @@ if (existingChannel) {
         >
           <Menu className="h-5 w-5" />
         </button>
-        <h1 className="text-lg font-bold text-slate-800">{title}</h1>
+        <div className="min-w-0">
+          <p className="hidden sm:block text-[9px] font-bold uppercase tracking-[0.2em] text-slate-400">NexGuild / Member space</p>
+          <h1 className="truncate text-base font-bold tracking-tight text-slate-800 sm:text-lg">{title}</h1>
+        </div>
       </div>
 
       <div className="flex items-center gap-1.5">
