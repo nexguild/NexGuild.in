@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
 import { usePageGuard } from "@/components/layout/admin-auth-guard";
 import { ADMIN_ROLES } from "@/lib/admin-permissions";
+import { formatNexcoins } from "@/lib/nexcoins";
 
 interface FinanceStat {
   label: string;
@@ -93,13 +94,13 @@ export default function FinancesPage() {
   const stats: FinanceStat[] = [
     {
       label: "Total Coins Issued",
-      value: totalCoinsEarned.toLocaleString(),
+      value: formatNexcoins(totalCoinsEarned),
       sub: "via approved task submissions",
       icon: <Coins className="h-5 w-5 text-[var(--brand-500)]" />,
     },
     {
       label: "Total Coins Redeemed",
-      value: totalCoinsRedeemed.toLocaleString(),
+      value: formatNexcoins(totalCoinsRedeemed),
       sub: "via voucher requests",
       icon: <Gift className="h-5 w-5 text-[var(--brand-500)]" />,
     },
@@ -181,15 +182,15 @@ export default function FinancesPage() {
             <h2 className="font-semibold text-[var(--text-primary)] mb-4">NexCoins Overview</h2>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 text-center">
               <div>
-                <p className="text-3xl font-bold text-[var(--brand-500)]">{totalCoinsEarned.toLocaleString()}</p>
+                <p className="text-3xl font-bold text-[var(--brand-500)]">{formatNexcoins(totalCoinsEarned)}</p>
                 <p className="text-sm text-[var(--text-secondary)] mt-1">Total Issued</p>
               </div>
               <div>
-                <p className="text-3xl font-bold text-red-400">{totalCoinsRedeemed.toLocaleString()}</p>
+                <p className="text-3xl font-bold text-red-400">{formatNexcoins(totalCoinsRedeemed)}</p>
                 <p className="text-sm text-[var(--text-secondary)] mt-1">Total Redeemed</p>
               </div>
               <div>
-                <p className="text-3xl font-bold text-green-400">{(totalCoinsEarned - totalCoinsRedeemed).toLocaleString()}</p>
+                <p className="text-3xl font-bold text-green-400">{formatNexcoins(totalCoinsEarned - totalCoinsRedeemed)}</p>
                 <p className="text-sm text-[var(--text-secondary)] mt-1">Circulating</p>
               </div>
             </div>
@@ -215,8 +216,8 @@ export default function FinancesPage() {
                     <div key={m.month} className="space-y-1">
                       <div className="flex items-center justify-between text-xs text-[var(--text-muted)]">
                         <span className="w-24 flex-shrink-0">{m.month}</span>
-                        <span className="text-[var(--brand-500)]">{m.earned.toLocaleString()} issued</span>
-                        <span className="text-red-400">{m.redeemed.toLocaleString()} redeemed</span>
+                        <span className="text-[var(--brand-500)]">{formatNexcoins(m.earned)} issued</span>
+                        <span className="text-red-400">{formatNexcoins(m.redeemed)} redeemed</span>
                       </div>
                       <div className="flex flex-col gap-0.5">
                         <div className="h-2 rounded-full bg-[var(--surface-subtle)] overflow-hidden">

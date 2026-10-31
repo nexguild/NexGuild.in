@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { timingSafeEqual } from "crypto";
 import { createClient } from "@supabase/supabase-js";
 import { createServerClient } from "@/lib/supabase-server";
+import { isValidNexcoinAmount, normalizeNexcoins } from "@/lib/nexcoins";
 
 const logAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -80,20 +81,19 @@ async function handlePostback(req: NextRequest): Promise<Response> {
     return new Response("OK", { status: 200 });
   }
 
-  if (!Number.isFinite(amount) || amount <= 0) {
-    console.warn(`[postback/clickwall] zero amount (tx=${txId})`);
-    await logPostback(rawParams, true, "error", "zero amount");
+  const userCoins = normalizeNexcoins(amount);
+  if (!isValidNexcoinAmount(userCoins)) {
+    console.warn(`[postback/clickwall] invalid reward amount (tx=${txId})`);
+    await logPostback(rawParams, true, "error", "invalid reward amount");
     return new Response("OK", { status: 200 });
   }
 
   // ClickWall exchange rate 660 → {amount} is payout × 660 = user's NexCoins directly
-  const userCoins = Math.max(1, Math.floor(amount));
-
   const { data: credited, error: creditError } = await admin.rpc("credit_offerwall_conversion", {
     p_provider_id: provider.id,
     p_contributor_id: userId,
     p_provider_transaction_id: txId,
-    p_gross_amount: Math.round(amount),
+    p_gross_amount: userCoins,
     p_nexcoins_awarded: userCoins,
     p_raw_payload: { query: rawParams },
     p_provider_name: provider.name,

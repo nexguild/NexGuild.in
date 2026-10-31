@@ -207,7 +207,7 @@ async function loadMyLeadCampaignOffers(countryCode: string | null): Promise<MyL
       if (!Number.isFinite(revenue) || revenue <= 0 || !rate) return [];
       return [{
         name: payment.title?.trim() || "Complete the campaign",
-        reward: Math.max(1, Math.floor(revenue * rate)),
+        reward: Number((revenue * rate).toFixed(6)),
       }];
     });
     if (!payments.length) return [];

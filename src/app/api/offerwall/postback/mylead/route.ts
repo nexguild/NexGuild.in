@@ -3,6 +3,7 @@ import { createHmac, timingSafeEqual } from "crypto";
 import { createClient } from "@supabase/supabase-js";
 import { createServerClient } from "@/lib/supabase-server";
 import { myLeadCoinsPerCurrency } from "@/lib/mylead-campaigns";
+import { isValidNexcoinAmount, normalizeNexcoins } from "@/lib/nexcoins";
 
 const logAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -145,8 +146,12 @@ async function handlePostback(req: NextRequest): Promise<Response> {
     await logPostback(rawParams, hashValid, "error", `unsupported campaign currency: ${currency || "missing"}`);
     return new Response("OK", { status: 200 });
   }
-  const userCoins = Math.max(1, Math.floor(amount * (conversionRate ?? 1)));
-  const grossAmount = isCampaignConversion ? Math.max(1, Math.round(amount * 100)) : Math.round(amount);
+  const userCoins = normalizeNexcoins(amount * (conversionRate ?? 1));
+  const grossAmount = normalizeNexcoins(isCampaignConversion ? amount * 100 : amount);
+  if (!isValidNexcoinAmount(userCoins) || !isValidNexcoinAmount(grossAmount)) {
+    await logPostback(rawParams, hashValid, "error", "reward amount is invalid or exceeds the supported range");
+    return new Response("OK", { status: 200 });
+  }
 
   const { data: credited, error: creditError } = await admin.rpc("credit_offerwall_conversion", {
     p_provider_id: provider.id,

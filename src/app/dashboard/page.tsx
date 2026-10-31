@@ -9,6 +9,7 @@ import Link from "next/link";
 import { NexCoinIcon } from "@/components/ui/nexcoin-icon";
 import { supabase } from "@/lib/supabase";
 import { BlogTipCard } from "@/components/dashboard/BlogTipCard";
+import { formatNexcoins } from "@/lib/nexcoins";
 import {
   type DashboardPromotion,
 } from "@/lib/dashboard-promotion";
@@ -47,7 +48,7 @@ function useCountUp(target: number, duration: number = 1000): number {
       const elapsed = Date.now() - startTime;
       const progress = Math.min(elapsed / duration, 1);
       const eased = 1 - Math.pow(1 - progress, 3);
-      setCount(Math.floor(eased * target));
+      setCount(Number((eased * target).toFixed(6)));
       if (progress >= 1) clearInterval(timer);
     }, 16);
     return () => clearInterval(timer);
@@ -742,7 +743,7 @@ export default function DashboardHome() {
                   <NexCoinIcon size={22} />
                   <div>
                     <p className="text-white/60 text-xs font-medium">NexCoins Balance</p>
-                    <p className="text-white font-bold text-2xl leading-tight">{countCoins.toLocaleString()}</p>
+                    <p className="text-white font-bold text-2xl leading-tight">{formatNexcoins(countCoins)}</p>
                     <p className="text-white/70 text-xs mt-0.5">(${estimatedUsd.toFixed(2)} estimated value)</p>
                   </div>
                 </div>
@@ -884,14 +885,14 @@ export default function DashboardHome() {
         {[
           {
             label: "NexCoins Balance",
-            value: loading ? "—" : countCoins.toLocaleString(),
+            value: loading ? "—" : formatNexcoins(countCoins),
             sub: "Available to redeem",
             icon: <NexCoinIcon size={18} />,
             topBorder: "border-t-teal-400",
           },
           {
             label: "Total Earned",
-            value: loading ? "—" : countEarned.toLocaleString(),
+            value: loading ? "—" : formatNexcoins(countEarned),
             sub: "Lifetime coins earned",
             icon: <NexCoinIcon size={18} />,
             topBorder: "border-t-indigo-400",

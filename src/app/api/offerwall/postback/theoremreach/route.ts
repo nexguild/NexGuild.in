@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { createHmac } from "crypto";
 import { createClient } from "@supabase/supabase-js";
 import { createServerClient } from "@/lib/supabase-server";
+import { isValidNexcoinAmount, normalizeNexcoins } from "@/lib/nexcoins";
 
 // Dedicated service-role client for postback_logs writes — guaranteed to bypass RLS
 const logAdmin = createClient(
@@ -142,7 +143,7 @@ async function handlePostback(req: NextRequest): Promise<Response> {
   const userId     = resolveField(rawParams, "user_id", "uid", "publisher_user_id");
   const txId       = resolveField(rawParams, "tx_id", "trans_id", "transaction_id", "tid", "offer_transaction_id");
   const rewardStr  = resolveField(rawParams, "reward", "payout", "amount", "coins");
-  const reward     = parseInt(rewardStr || "0", 10);
+  const reward     = Number(rewardStr || "0");
   const isReversal = rawParams.reversal === "true" || rawParams.reversal === "1";
   const screenout  = rawParams.screenout === "1";
 
@@ -217,13 +218,17 @@ async function handlePostback(req: NextRequest): Promise<Response> {
   }
 
   // Exchange rate in TheoremReach dashboard = 660, so reward IS the user's coin amount
-  const userCoins = Math.max(1, reward);
+  const userCoins = normalizeNexcoins(reward);
+  if (!isValidNexcoinAmount(userCoins)) {
+    await logPostback(rawParams, hashValid, "error", "reward amount is invalid or exceeds the supported range");
+    return new Response("OK", { status: 200 });
+  }
 
   const { data: credited, error: creditError } = await admin.rpc("credit_offerwall_conversion", {
     p_provider_id: provider.id,
     p_contributor_id: userId,
     p_provider_transaction_id: txId,
-    p_gross_amount: reward,
+    p_gross_amount: userCoins,
     p_nexcoins_awarded: userCoins,
     p_raw_payload: {
       query: rawParams,

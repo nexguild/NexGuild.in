@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { isIP } from "node:net";
 import { createServerClient } from "@/lib/supabase-server";
+import { normalizeNexcoins } from "@/lib/nexcoins";
 
 interface TapRainOffer {
   id?: string;
@@ -130,13 +131,13 @@ export async function GET(req: NextRequest) {
     if (typeof offer.id !== "string" || !offer.id.trim()
       || typeof offer.name !== "string" || !offer.name.trim()
       || !entryUrl || !Number.isFinite(payout) || payout <= 0) return [];
-    const grossCoins = Math.round(payout * coinRate);
+    const grossCoins = payout * coinRate;
     return [{
       id: offer.id,
       name: offer.name,
       description: typeof offer.description === "string" ? offer.description : null,
       imageUrl: getImageUrl(offer.picture),
-      estimatedRewardCoins: Math.max(1, Math.round(grossCoins * payoutMultiplier * contributorShare / 100)),
+      estimatedRewardCoins: normalizeNexcoins(grossCoins * payoutMultiplier * contributorShare / 100),
       entryUrl,
     }];
   });

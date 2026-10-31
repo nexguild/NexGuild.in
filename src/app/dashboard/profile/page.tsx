@@ -7,6 +7,7 @@ import { NexCoinIcon } from "@/components/ui/nexcoin-icon";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { getCountryName } from "@/lib/countries";
+import { formatNexcoins } from "@/lib/nexcoins";
 
 interface Profile {
   full_name: string | null;
@@ -329,7 +330,7 @@ export default function ProfilePage() {
               <div>
                 <p className="text-white/80 text-sm font-medium">NexCoins Balance</p>
                 <p className="text-white text-4xl font-bold leading-tight">
-                  {loading ? "—" : (profile?.nexcoins ?? 0).toLocaleString()}
+                  {loading ? "—" : formatNexcoins(profile?.nexcoins ?? 0)}
                 </p>
               </div>
             </div>

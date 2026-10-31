@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
 import { usePageGuard } from "@/components/layout/admin-auth-guard";
 import { ADMIN_ROLES } from "@/lib/admin-permissions";
+import { formatNexcoins } from "@/lib/nexcoins";
 
 interface Profile {
   id: string;
@@ -283,7 +284,7 @@ export default function ContributorDetailPage({ params }: { params: Promise<{ id
 
         <div className="mt-5 grid grid-cols-2 sm:grid-cols-4 gap-4">
           {[
-            { label: "NexCoins",     value: (profile.nexcoins ?? 0).toLocaleString(), icon: <Coins className="h-4 w-4 text-[var(--brand-500)]" /> },
+            { label: "NexCoins",     value: formatNexcoins(profile.nexcoins ?? 0), icon: <Coins className="h-4 w-4 text-[var(--brand-500)]" /> },
             { label: "Submissions",  value: submissions.length,                       icon: <ClipboardList className="h-4 w-4 text-[var(--brand-500)]" /> },
             { label: "Approved",     value: approvedSubs.length,                      icon: <ClipboardList className="h-4 w-4 text-green-400" /> },
             { label: "Coins Earned", value: totalEarned.toLocaleString(),             icon: <Coins className="h-4 w-4 text-green-400" /> },
@@ -411,7 +412,7 @@ export default function ContributorDetailPage({ params }: { params: Promise<{ id
                 <span className={`text-sm font-semibold flex-shrink-0 ${
                   txn.type === "earned" || txn.type === "bonus" ? "text-[var(--brand-500)]" : "text-red-400"
                 }`}>
-                  {txn.type === "earned" || txn.type === "bonus" ? "+" : "-"}{txn.amount.toLocaleString()}
+                  {txn.type === "earned" || txn.type === "bonus" ? "+" : "-"}{formatNexcoins(txn.amount)}
                 </span>
               </li>
             ))}
@@ -465,7 +466,7 @@ export default function ContributorDetailPage({ params }: { params: Promise<{ id
                 <p className="font-semibold text-[var(--text-primary)]">
                   {coinsDone.toLocaleString()} coins {coinsMode === "send" ? "sent!" : "deducted."}
                 </p>
-                <p className="text-sm text-[var(--text-secondary)]">New balance: {(profile.nexcoins).toLocaleString()} coins</p>
+                <p className="text-sm text-[var(--text-secondary)]">New balance: {formatNexcoins(profile.nexcoins)} coins</p>
                 <Button className="w-full mt-2" onClick={() => setCoinsModal(false)}>Done</Button>
               </div>
             ) : (
@@ -486,7 +487,7 @@ export default function ContributorDetailPage({ params }: { params: Promise<{ id
 
                 <div className="rounded-lg bg-[var(--surface-subtle)] px-4 py-3">
                   <p className="text-xs text-[var(--text-muted)]">Current balance</p>
-                  <p className="text-base font-bold text-[var(--text-primary)]">{(profile.nexcoins ?? 0).toLocaleString()} coins</p>
+                  <p className="text-base font-bold text-[var(--text-primary)]">{formatNexcoins(profile.nexcoins ?? 0)} coins</p>
                 </div>
 
                 <div>

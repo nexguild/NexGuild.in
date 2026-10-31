@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { createHash } from "crypto";
 import { createClient } from "@supabase/supabase-js";
 import { createServerClient } from "@/lib/supabase-server";
+import { isValidNexcoinAmount, normalizeNexcoins } from "@/lib/nexcoins";
 
 // Set CPX_POSTBACK_DEBUG=true in Vercel env vars to bypass hash validation
 // and confirm the rest of the pipeline works. Remove after debugging.
@@ -191,7 +192,12 @@ async function handleCpxPostback(req: NextRequest): Promise<Response> {
       await logPostback(rawParams, hashValid, "error", `zero reward amount for ${type}`);
       return new Response("OK", { status: 200 });
     }
-    const userCoins = Math.max(1, Math.floor(gross));
+    const userCoins = normalizeNexcoins(gross);
+    const recordedGross = normalizeNexcoins(gross);
+    if (!isValidNexcoinAmount(userCoins) || !isValidNexcoinAmount(recordedGross)) {
+      await logPostback(rawParams, hashValid, "error", "reward amount is invalid or exceeds the supported range");
+      return new Response("OK", { status: 200 });
+    }
 
     console.log("[postback/cpx_research] crediting", {
       user_id: userId, trans_id: transId, type,
@@ -202,7 +208,7 @@ async function handleCpxPostback(req: NextRequest): Promise<Response> {
       p_provider_id: provider.id,
       p_contributor_id: userId,
       p_provider_transaction_id: transId,
-      p_gross_amount: Math.round(gross),
+      p_gross_amount: recordedGross,
       p_nexcoins_awarded: userCoins,
       p_raw_payload: {
         query:      rawParams,

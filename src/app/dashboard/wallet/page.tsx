@@ -5,6 +5,7 @@ import { ShoppingBag, TrendingUp, History, ArrowDownLeft, ArrowUpRight } from "l
 import { NexCoinIcon } from "@/components/ui/nexcoin-icon";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
+import { formatNexcoins } from "@/lib/nexcoins";
 
 interface Transaction {
   id: string;
@@ -90,7 +91,7 @@ export default function NexCoinsPage() {
             </div>
             <p className="mb-1 text-sm text-white/75">Available Balance</p>
             <p className="text-5xl font-extrabold text-white">
-              {loading ? "—" : (nexcoins ?? 0).toLocaleString()}
+              {loading ? "—" : formatNexcoins(nexcoins ?? 0)}
             </p>
             <p className="mt-1 text-sm text-white/60">NexCoins</p>
           </div>
@@ -110,7 +111,7 @@ export default function NexCoinsPage() {
             <TrendingUp className="h-3.5 w-3.5 text-green-600" />
             <span className="text-xs text-green-600">Total Earned</span>
           </div>
-          <p className="text-xl font-extrabold text-green-700">{loading ? "—" : totalEarned.toLocaleString()}</p>
+          <p className="text-xl font-extrabold text-green-700">{loading ? "—" : formatNexcoins(totalEarned)}</p>
           <p className="mt-0.5 text-xs text-green-500">From tasks &amp; offers</p>
         </div>
         <div className="rounded-2xl border border-indigo-100 bg-indigo-50 p-4 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
@@ -118,7 +119,7 @@ export default function NexCoinsPage() {
             <ShoppingBag className="h-3.5 w-3.5 text-indigo-500" />
             <span className="text-xs text-indigo-600">Total Spent</span>
           </div>
-          <p className="text-xl font-extrabold text-indigo-700">{loading ? "—" : totalSpent.toLocaleString()}</p>
+          <p className="text-xl font-extrabold text-indigo-700">{loading ? "—" : formatNexcoins(totalSpent)}</p>
           <p className="mt-0.5 text-xs text-indigo-400">Redeemed for vouchers</p>
         </div>
       </div>
@@ -208,7 +209,7 @@ export default function NexCoinsPage() {
                     </p>
                   </div>
                   <span className={`flex-shrink-0 text-sm font-bold ${isEarned ? "text-green-600" : "text-indigo-500"}`}>
-                    {isEarned ? "+" : "−"}{Math.abs(tx.amount).toLocaleString()}
+                    {isEarned ? "+" : "−"}{formatNexcoins(Math.abs(tx.amount))}
                   </span>
                 </li>
               );

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
 import { usePageGuard } from "@/components/layout/admin-auth-guard";
 import { ADMIN_ROLES } from "@/lib/admin-permissions";
+import { formatNexcoins } from "@/lib/nexcoins";
 
 interface Anomaly {
   id: string;
@@ -142,7 +143,7 @@ export default function InsightsPage() {
                     <td className="px-4 py-3 font-medium text-[var(--text-primary)]">{a.name}</td>
                     <td className="px-4 py-3 text-[var(--text-secondary)]">{a.email}</td>
                     <td className="px-4 py-3">
-                      <span className="text-amber-400 font-semibold">{a.amount.toLocaleString()} NC</span>
+                      <span className="text-amber-400 font-semibold">{formatNexcoins(a.amount)} NC</span>
                     </td>
                     <td className="px-4 py-3">
                       {data.platformAvgToday > 0 ? (

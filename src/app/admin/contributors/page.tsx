@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
 import { usePageGuard } from "@/components/layout/admin-auth-guard";
 import { ADMIN_ROLES } from "@/lib/admin-permissions";
+import { formatNexcoins } from "@/lib/nexcoins";
 
 interface Contributor {
   id: string;
@@ -345,7 +346,7 @@ export default function ContributorsPage() {
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-1">
                       <Coins className="h-3.5 w-3.5 text-[var(--brand-500)]" />
-                      <span className="text-[var(--brand-500)] font-medium">{(c.nexcoins ?? 0).toLocaleString()}</span>
+                      <span className="text-[var(--brand-500)] font-medium">{formatNexcoins(c.nexcoins ?? 0)}</span>
                     </div>
                   </td>
                   <td className="px-4 py-3">
@@ -639,7 +640,7 @@ export default function ContributorsPage() {
                   </div>
                   <div className="min-w-0">
                     <p className="text-sm font-medium text-[var(--text-primary)] truncate">{sendTarget.full_name ?? "—"}</p>
-                    <p className="text-xs text-[var(--text-muted)] truncate">{sendTarget.email} · {(sendTarget.nexcoins ?? 0).toLocaleString()} coins</p>
+                    <p className="text-xs text-[var(--text-muted)] truncate">{sendTarget.email} · {formatNexcoins(sendTarget.nexcoins ?? 0)} coins</p>
                   </div>
                 </div>
 

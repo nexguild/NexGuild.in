@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { sendBrevoEmails } from "@/lib/brevo";
+import { formatNexcoins } from "@/lib/nexcoins";
 
 export async function GET(req: NextRequest) {
   // Verify cron secret so only Vercel can call this
@@ -55,7 +56,7 @@ export async function GET(req: NextRequest) {
 
     emails.push({
       to:      p.email,
-      subject: `Your NexGuild week in review — +${weekEarned.toLocaleString()} NexCoins earned`,
+      subject: `Your NexGuild week in review — +${formatNexcoins(weekEarned)} NexCoins earned`,
       html:    weeklyDigestHtml(name, weekEarned, p.nexcoins),
     });
   }
@@ -88,7 +89,7 @@ function weeklyDigestHtml(name: string, weekEarned: number, totalBalance: number
             <tr>
               <td style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:20px;text-align:center;">
                 <p style="margin:0;font-size:12px;font-weight:600;color:#16a34a;text-transform:uppercase;letter-spacing:1px;">Earned This Week</p>
-                <p style="margin:8px 0 0;font-size:36px;font-weight:800;color:#15803d;">+${weekEarned.toLocaleString()}</p>
+                <p style="margin:8px 0 0;font-size:36px;font-weight:800;color:#15803d;">+${formatNexcoins(weekEarned)}</p>
                 <p style="margin:4px 0 0;font-size:13px;color:#16a34a;">NexCoins</p>
               </td>
             </tr>
@@ -97,7 +98,7 @@ function weeklyDigestHtml(name: string, weekEarned: number, totalBalance: number
           <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;background:#f9fafb;border-radius:10px;padding:16px;">
             <tr>
               <td style="font-size:14px;color:#6b7280;">Total Balance</td>
-              <td style="font-size:14px;font-weight:700;color:#111827;text-align:right;">${totalBalance.toLocaleString()} NC</td>
+              <td style="font-size:14px;font-weight:700;color:#111827;text-align:right;">${formatNexcoins(totalBalance)} NC</td>
             </tr>
           </table>
 

@@ -2,6 +2,7 @@ import { createHash, createHmac } from "crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase-server";
 import { getMyLeadCampaignOffers, isMyLeadApiConfigured } from "@/lib/mylead-campaigns";
+import { normalizeNexcoins } from "@/lib/nexcoins";
 
 export const dynamic = "force-dynamic";
 
@@ -232,7 +233,7 @@ async function getCpxSurveys(
       id,
       provider: "CPX Research",
       durationMinutes: Math.ceil(minutes),
-      rewardCoins: Math.floor(payout),
+      rewardCoins: normalizeNexcoins(payout),
       rating: Number.isFinite(rating) && rating > 0 ? rating : null,
       ratingCount: Number.isFinite(ratingCount) && ratingCount > 0 ? Math.floor(ratingCount) : 0,
       rankScore: Number(item.score) || 0,
@@ -310,7 +311,7 @@ async function getTheoremReachSurveys(
       id,
       provider: "TheoremReach",
       durationMinutes: Math.ceil(minutes),
-      rewardCoins: Math.ceil(cpi * THEOREMREACH_COINS_PER_USD),
+      rewardCoins: normalizeNexcoins(cpi * THEOREMREACH_COINS_PER_USD),
       rating: Number.isFinite(rating) && rating > 0 ? rating : null,
       ratingCount: Number.isFinite(ratingCount) && ratingCount > 0 ? Math.floor(ratingCount) : 0,
       rankScore: Number(item.rank) || 0,
@@ -411,7 +412,7 @@ async function getTheoremReachOffers(
       if (!event.name || !eventPayout) return [];
       return [{
         name: cleanOfferText(event.name),
-        estimatedRewardCoins: Math.ceil(eventPayout * THEOREMREACH_COINS_PER_USD),
+        estimatedRewardCoins: normalizeNexcoins(eventPayout * THEOREMREACH_COINS_PER_USD),
       }];
     });
 
@@ -425,7 +426,7 @@ async function getTheoremReachOffers(
       sourceName: "TheoremReach",
       providerName: typeof item.provider_name === "string" ? item.provider_name : null,
       kind: item.type === "network" ? "network" : "diy",
-      estimatedRewardCoins: Math.ceil(payout * THEOREMREACH_COINS_PER_USD),
+      estimatedRewardCoins: normalizeNexcoins(payout * THEOREMREACH_COINS_PER_USD),
       rankScore: Number(item.rank) || 0,
       events,
       entryUrl: entryUrl.toString(),
@@ -518,7 +519,7 @@ async function getNotikOffers(
       if (!event.name?.trim() || !eventPayout) return [];
       return [{
         name: cleanOfferText(event.name),
-        estimatedRewardCoins: Math.ceil(eventPayout * conversionRate),
+        estimatedRewardCoins: normalizeNexcoins(eventPayout * conversionRate),
       }];
     });
 
@@ -532,7 +533,7 @@ async function getNotikOffers(
       sourceName: "Notik",
       providerName: "Notik",
       kind: "network",
-      estimatedRewardCoins: Math.ceil(payout * conversionRate),
+      estimatedRewardCoins: normalizeNexcoins(payout * conversionRate),
       rankScore: items.length - index,
       events,
       entryUrl: entryUrl.toString(),

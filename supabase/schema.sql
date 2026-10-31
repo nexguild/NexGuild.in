@@ -288,13 +288,13 @@ CREATE OR REPLACE TRIGGER on_auth_user_created
 -- Run these in Supabase SQL Editor to add the NexCoins system.
 
 -- Add nexcoins balance to profiles
-ALTER TABLE profiles ADD COLUMN IF NOT EXISTS nexcoins INTEGER DEFAULT 0;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS nexcoins NUMERIC(20, 6) DEFAULT 0;
 
 -- Coin transaction ledger
 CREATE TABLE IF NOT EXISTS coin_transactions (
   id             UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   contributor_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
-  amount         INTEGER NOT NULL,
+  amount         NUMERIC(20, 6) NOT NULL,
   type           TEXT NOT NULL,   -- 'earned' | 'redeemed'
   source         TEXT,            -- 'task' | 'offerwall' | 'bonus'
   description    TEXT,
@@ -376,7 +376,7 @@ GRANT ALL ON public.binance_redemption_requests TO authenticated, service_role;
 
 CREATE OR REPLACE FUNCTION reserve_nexcoins(
   p_contributor_id UUID,
-  p_coins INTEGER
+  p_coins NUMERIC
 ) RETURNS BOOLEAN
 LANGUAGE plpgsql SECURITY DEFINER SET search_path = public
 AS $$
@@ -393,7 +393,7 @@ $$;
 
 CREATE OR REPLACE FUNCTION refund_nexcoins(
   p_contributor_id UUID,
-  p_coins INTEGER
+  p_coins NUMERIC
 ) RETURNS BOOLEAN
 LANGUAGE plpgsql SECURITY DEFINER SET search_path = public
 AS $$
@@ -405,8 +405,8 @@ BEGIN
 END;
 $$;
 
-GRANT EXECUTE ON FUNCTION reserve_nexcoins(UUID, INTEGER) TO authenticated, service_role;
-GRANT EXECUTE ON FUNCTION refund_nexcoins(UUID, INTEGER) TO service_role;
+GRANT EXECUTE ON FUNCTION reserve_nexcoins(UUID, NUMERIC) TO authenticated, service_role;
+GRANT EXECUTE ON FUNCTION refund_nexcoins(UUID, NUMERIC) TO service_role;
 
 -- ── 6. Profile extensions ─────────────────────────────────────
 -- Run these to add skills, notification prefs, and phone columns.
@@ -592,7 +592,7 @@ CREATE POLICY "Admins can insert coin transactions"
 -- ── 13. Helper functions ─────────────────────────────────────────
 -- Atomic nexcoins increment — avoids race conditions on concurrent approvals.
 -- SECURITY DEFINER lets service_role call it even without direct UPDATE grants.
-CREATE OR REPLACE FUNCTION increment_nexcoins(p_contributor_id UUID, p_coins INTEGER)
+CREATE OR REPLACE FUNCTION increment_nexcoins(p_contributor_id UUID, p_coins NUMERIC)
 RETURNS void
 LANGUAGE sql
 SECURITY DEFINER
@@ -602,11 +602,11 @@ AS $$
   WHERE id = p_contributor_id;
 $$;
 
-GRANT EXECUTE ON FUNCTION increment_nexcoins(UUID, INTEGER) TO service_role;
+GRANT EXECUTE ON FUNCTION increment_nexcoins(UUID, NUMERIC) TO service_role;
 
 -- Atomic nexcoins decrement — called from contributor store redemption.
 -- WHERE nexcoins >= p_coins prevents going negative (double-spend guard).
-CREATE OR REPLACE FUNCTION decrement_nexcoins(p_contributor_id UUID, p_coins INTEGER)
+CREATE OR REPLACE FUNCTION decrement_nexcoins(p_contributor_id UUID, p_coins NUMERIC)
 RETURNS void
 LANGUAGE sql
 SECURITY DEFINER
@@ -617,8 +617,8 @@ AS $$
     AND COALESCE(nexcoins, 0) >= p_coins;
 $$;
 
-GRANT EXECUTE ON FUNCTION decrement_nexcoins(UUID, INTEGER) TO service_role;
-GRANT EXECUTE ON FUNCTION decrement_nexcoins(UUID, INTEGER) TO authenticated;
+GRANT EXECUTE ON FUNCTION decrement_nexcoins(UUID, NUMERIC) TO service_role;
+GRANT EXECUTE ON FUNCTION decrement_nexcoins(UUID, NUMERIC) TO authenticated;
 
 -- ── 14. Support tickets ──────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS support_tickets (

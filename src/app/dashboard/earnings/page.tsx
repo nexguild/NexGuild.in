@@ -5,6 +5,7 @@ import { ReceiptText, TrendingUp, Download } from "lucide-react";
 import { NexCoinIcon } from "@/components/ui/nexcoin-icon";
 import { supabase } from "@/lib/supabase";
 import { BlogTipCard } from "@/components/dashboard/BlogTipCard";
+import { formatNexcoins } from "@/lib/nexcoins";
 
 interface Transaction {
   id: string;
@@ -282,7 +283,7 @@ export default function EarningsPage() {
           {!loading && (
             <div className="flex-shrink-0 rounded-xl border border-white/25 bg-white/15 px-4 py-3 text-center">
               <p className="text-xs text-white/70 mb-0.5">Balance</p>
-              <p className="text-xl font-extrabold text-white">🪙 {nexcoins.toLocaleString()}</p>
+              <p className="text-xl font-extrabold text-white">🪙 {formatNexcoins(nexcoins)}</p>
             </div>
           )}
         </div>
@@ -295,7 +296,7 @@ export default function EarningsPage() {
             <NexCoinIcon size={14} />
             <span className="text-xs text-slate-400">Total Earned</span>
           </div>
-          <p className="text-xl font-extrabold text-slate-800">{loading ? "—" : totalEarned.toLocaleString()}</p>
+          <p className="text-xl font-extrabold text-slate-800">{loading ? "—" : formatNexcoins(totalEarned)}</p>
           <p className="mt-0.5 text-xs text-slate-400">NexCoins</p>
         </div>
         <div className="rounded-2xl border border-amber-100 bg-amber-50 p-4 shadow-sm">
@@ -445,7 +446,7 @@ export default function EarningsPage() {
             <p className="text-xs text-slate-400">
               {filtered.length} transaction{filtered.length !== 1 ? "s" : ""} ·{" "}
               <span className="font-semibold text-indigo-600">
-                {filtered.reduce((s, t) => s + t.amount, 0).toLocaleString()} NexCoins
+                {formatNexcoins(filtered.reduce((s, t) => s + t.amount, 0))} NexCoins
               </span>
             </p>
           )}
@@ -497,7 +498,7 @@ export default function EarningsPage() {
                     Confirmed
                   </span>
                   <span className="flex items-center gap-1 text-sm font-bold text-green-600">
-                    +<NexCoinIcon size={13} />{t.amount.toLocaleString()}
+                    +<NexCoinIcon size={13} />{formatNexcoins(t.amount)}
                   </span>
                 </div>
               </li>

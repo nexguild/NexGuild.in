@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { NexCoinIcon } from "@/components/ui/nexcoin-icon";
+import { formatNexcoins } from "@/lib/nexcoins";
 
 type ProviderName = "CPX Research" | "TheoremReach";
 type ProviderFilter = "All surveys" | ProviderName;
@@ -81,7 +82,7 @@ const SORT_MODES: SortMode[] = ["Recommended", "Fastest", "Highest reward", "Bes
 const PROVIDER_FILTERS: ProviderFilter[] = ["All surveys", "CPX Research", "TheoremReach"];
 
 function formatCoins(value: number) {
-  return new Intl.NumberFormat("en").format(value);
+  return formatNexcoins(value);
 }
 
 export default function SurveysPage() {

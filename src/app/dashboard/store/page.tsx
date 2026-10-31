@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
 import { BlogTipCard } from "@/components/dashboard/BlogTipCard";
 import { BinanceRedemptionCard } from "@/components/dashboard/BinanceRedemptionCard";
+import { formatNexcoins } from "@/lib/nexcoins";
 
 interface DbVoucher {
   id: string;
@@ -271,7 +272,7 @@ export default function StorePage() {
               <span className="text-xl">🪙</span>
               <div>
                 <p className="text-white font-bold text-lg leading-tight">
-                  {loading ? "—" : (nexcoins ?? 0).toLocaleString()}
+                  {loading ? "—" : formatNexcoins(nexcoins ?? 0)}
                   <span className="text-white/80 font-semibold text-sm ml-1">NexCoins</span>
                 </p>
                 <p className="text-white/70 text-xs">Available to redeem</p>
@@ -655,7 +656,7 @@ export default function StorePage() {
                     <div className="flex items-center justify-between text-xs">
                       <span className="text-[var(--text-muted)]">Your balance</span>
                       <span className={`font-medium ${(nexcoins ?? 0) >= finalTotal ? "text-[var(--text-muted)]" : "text-red-400"}`}>
-                        {(nexcoins ?? 0).toLocaleString()} coins
+                        {formatNexcoins(nexcoins ?? 0)} coins
                       </span>
                     </div>
                   </div>

@@ -1,4 +1,5 @@
 import { SupabaseClient } from "@supabase/supabase-js";
+import { normalizeNexcoins } from "@/lib/nexcoins";
 
 const SOMEN_ID = "6c95c54a-33e6-489b-9175-3626c774635e";
 const CONTRIBUTOR_PCT = 0.66;
@@ -154,8 +155,8 @@ export async function creditWithCommission(
  *   S2 — Exchange-rate providers (e.g. CPX, TheoremReach, MyLead): set exchange rate = 660.
  *        Postback sends 660 per $1 = exactly what user receives.
  *
- * The backing gross is rounded up from the user's 66% share; NexLeader receives
- * 10% of that gross and the platform retains the remaining 24%, with integer rounding.
+ * The backing gross is derived from the user's 66% share; commission amounts
+ * retain the same six-decimal precision as the wallet.
  */
 export async function creditOfferwallUserShare(
   supabaseAdmin: SupabaseClient,
@@ -163,10 +164,10 @@ export async function creditOfferwallUserShare(
   userCoins:     number,
   description:   string,
 ): Promise<CommissionResult> {
-  const contributorCredit = userCoins;
-  const impliedGross      = Math.ceil(contributorCredit * 100 / 66);
-  const nexleaderCredit   = Math.floor(impliedGross * 10 / 100);
-  const platformCut       = impliedGross - contributorCredit - nexleaderCredit;
+  const contributorCredit = normalizeNexcoins(userCoins);
+  const impliedGross      = normalizeNexcoins(contributorCredit * 100 / 66);
+  const nexleaderCredit   = normalizeNexcoins(impliedGross * 10 / 100);
+  const platformCut       = normalizeNexcoins(impliedGross - contributorCredit - nexleaderCredit);
 
   const { data: profile } = await supabaseAdmin
     .from("profiles")

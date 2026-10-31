@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { CheckCircle2, CircleDollarSign, Clock3, Loader2, ShieldCheck, WalletCards, XCircle } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import { formatNexcoins } from "@/lib/nexcoins";
 
 const REDEMPTION_PACKAGES = [
   { coins: 10_000, usdt: 10 },
@@ -179,7 +180,7 @@ export function BinanceRedemptionCard({ nexcoins, onBalanceChange }: { nexcoins:
             <p className="mt-0.5 text-xs text-slate-500">Select a package that matches your balance.</p>
           </div>
           <span className="rounded-full bg-amber-50 px-2.5 py-1 text-xs font-bold text-amber-700">
-            {(nexcoins ?? 0).toLocaleString()} coins
+            {formatNexcoins(nexcoins ?? 0)} coins
           </span>
         </div>
         <div className="grid grid-cols-3 gap-2.5">

@@ -7,6 +7,7 @@ import { ChevronLeft, ExternalLink, Layers, Loader2, RefreshCw } from "lucide-re
 import { NexCoinIcon } from "@/components/ui/nexcoin-icon";
 import { supabase } from "@/lib/supabase";
 import { applyWidgetConfig, buildScriptUrl, injectScript, type WidgetInitConfig } from "@/lib/offerwall-widget-inject";
+import { formatNexcoins } from "@/lib/nexcoins";
 
 interface Provider {
   id: string;
@@ -470,7 +471,7 @@ function renderWidget(
                   <div className="flex min-w-0 flex-1 flex-col p-2.5 sm:p-4">
                     <div className="flex items-start justify-between gap-2">
                       <h2 className="line-clamp-2 text-xs font-extrabold leading-snug text-slate-900 sm:text-sm">{offer.name}</h2>
-                      <span className="inline-flex shrink-0 items-center gap-1 text-[10px] font-bold text-teal-700 sm:text-xs"><NexCoinIcon size={12} /> {new Intl.NumberFormat("en").format(offer.estimatedRewardCoins)}</span>
+                      <span className="inline-flex shrink-0 items-center gap-1 text-[10px] font-bold text-teal-700 sm:text-xs"><NexCoinIcon size={12} /> {formatNexcoins(offer.estimatedRewardCoins)}</span>
                     </div>
                     {offer.description && <p className="mt-1 line-clamp-2 text-[10px] leading-snug text-slate-500 sm:text-xs">{offer.description}</p>}
                     <a href={offer.entryUrl} target="_blank" rel="noopener noreferrer" className="mt-auto inline-flex min-h-9 items-center justify-center gap-1.5 rounded-lg bg-indigo-600 px-3 text-[10px] font-extrabold text-white hover:bg-indigo-700 sm:mt-3 sm:text-xs">

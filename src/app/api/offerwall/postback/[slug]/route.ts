@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { createHash, createHmac, timingSafeEqual } from "crypto";
 import { createServerClient } from "@/lib/supabase-server";
+import { isValidNexcoinAmount, normalizeNexcoins } from "@/lib/nexcoins";
 
 type ParamMap = Record<string, string>;
 
@@ -136,17 +137,17 @@ async function handlePostback(req: NextRequest, slug: string): Promise<Response>
   const tapRainPayoutMultiplier = Number(customCfg.payout_multiplier ?? 1);
   const clixwallAmount = slug === "clixwall"
     ? amount > 0
-      ? Math.max(1, Math.round(amount))
+      ? amount
       : userPayoutUsd > 0
-      ? Math.max(1, Math.round(userPayoutUsd * clixwallConversionRate))
+      ? userPayoutUsd * clixwallConversionRate
       : 0
     : 0;
   const creditedAmount = notikHmac && amount <= 0 && payout > 0
-    ? Math.round(payout * notikConversionRate)
+    ? payout * notikConversionRate
     : slug === "clixwall"
     ? clixwallAmount
     : slug === "taprain"
-    ? Math.round(amount * tapRainConversionRate)
+    ? amount * tapRainConversionRate
     : amount;
   const normalizedStatus = status?.trim().toLowerCase() ?? "";
   const isReversalStatus = normalizedStatus === "2"
@@ -286,14 +287,19 @@ async function handlePostback(req: NextRequest, slug: string): Promise<Response>
     await writeLog(admin, slug, safeRawParams, "error", true, "Invalid TapRain contributor share");
     return new Response("Internal Server Error", { status: 500 });
   }
-  const userCoins       = slug === "taprain"
-    ? Math.max(1, Math.round(creditedAmount * payoutMult * contributorShare))
+  const calculatedUserCoins = slug === "taprain"
+    ? creditedAmount * payoutMult * contributorShare
     : rateIsUserShare
-    ? Math.max(1, Math.round(creditedAmount * payoutMult))
-    : Math.max(1, Math.round(creditedAmount * payoutMult * contributorShare));
+    ? creditedAmount * payoutMult
+    : creditedAmount * payoutMult * contributorShare;
+  const userCoins = normalizeNexcoins(calculatedUserCoins);
+  const grossAmount = normalizeNexcoins(creditedAmount);
 
-  if (!Number.isSafeInteger(creditedAmount) || !Number.isSafeInteger(userCoins)) {
-    await writeLog(admin, slug, safeRawParams, "error", hashAuthenticated ? true : null, "Reward amount exceeds supported integer range");
+  if (
+    !isValidNexcoinAmount(grossAmount) ||
+    !isValidNexcoinAmount(userCoins)
+  ) {
+    await writeLog(admin, slug, safeRawParams, "error", hashAuthenticated ? true : null, "Reward amount is invalid or exceeds the supported range");
     return new Response("Bad Request", { status: 400 });
   }
 
@@ -303,7 +309,7 @@ async function handlePostback(req: NextRequest, slug: string): Promise<Response>
     p_provider_id: provider.id,
     p_contributor_id: contributorId,
     p_provider_transaction_id: transId,
-    p_gross_amount: creditedAmount,
+    p_gross_amount: grossAmount,
     p_nexcoins_awarded: userCoins,
     p_raw_payload: {
       query: redactSensitiveParams(Object.fromEntries(q.entries())),
