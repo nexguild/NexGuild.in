@@ -20,7 +20,7 @@ import { formatNexcoins } from "@/lib/nexcoins";
 
 type ProviderName = "CPX Research" | "TheoremReach";
 type ProviderFilter = "All surveys" | ProviderName;
-type SortMode = "Recommended" | "Fastest" | "Highest reward" | "Best rated";
+type SortMode = "Recommended" | "Fastest" | "Highest reward" | "Best value" | "Best rated";
 
 interface Survey {
   id: string;
@@ -78,11 +78,16 @@ interface OfferwallsResponse {
   providers: OfferwallProvider[];
 }
 
-const SORT_MODES: SortMode[] = ["Recommended", "Fastest", "Highest reward", "Best rated"];
+const SORT_MODES: SortMode[] = ["Recommended", "Fastest", "Highest reward", "Best value", "Best rated"];
 const PROVIDER_FILTERS: ProviderFilter[] = ["All surveys", "CPX Research", "TheoremReach"];
+const QUICK_SURVEY_MINUTES = 5;
 
 function formatCoins(value: number) {
   return formatNexcoins(value);
+}
+
+function formatCoinsPerMinute(value: number) {
+  return value.toLocaleString(undefined, { maximumFractionDigits: 1 });
 }
 
 export default function SurveysPage() {
@@ -100,6 +105,7 @@ export default function SurveysPage() {
   });
   const [sortMode, setSortMode] = useState<SortMode>("Recommended");
   const [providerFilter, setProviderFilter] = useState<ProviderFilter>("All surveys");
+  const [quickSurveysOnly, setQuickSurveysOnly] = useState(false);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
 
@@ -168,20 +174,27 @@ export default function SurveysPage() {
   }, [loadOfferwalls, loadSurveys]);
 
   const visibleSurveys = useMemo(() => {
-    const filtered = surveys.filter(
-      (survey) => providerFilter === "All surveys" || survey.provider === providerFilter,
+    const filtered = surveys.filter((survey) =>
+      (providerFilter === "All surveys" || survey.provider === providerFilter)
+      && (!quickSurveysOnly || survey.durationMinutes <= QUICK_SURVEY_MINUTES),
     );
     switch (sortMode) {
       case "Fastest":
         return [...filtered].sort((a, b) => a.durationMinutes - b.durationMinutes);
       case "Highest reward":
         return [...filtered].sort((a, b) => b.rewardCoins - a.rewardCoins);
+      case "Best value":
+        return [...filtered].sort(
+          (a, b) => (b.rewardCoins / b.durationMinutes) - (a.rewardCoins / a.durationMinutes),
+        );
       case "Best rated":
-        return [...filtered].sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0));
+        return [...filtered].sort(
+          (a, b) => (b.rating ?? 0) - (a.rating ?? 0) || b.ratingCount - a.ratingCount,
+        );
       default:
         return [...filtered].sort((a, b) => Number(b.recommended) - Number(a.recommended));
     }
-  }, [providerFilter, sortMode, surveys]);
+  }, [providerFilter, quickSurveysOnly, sortMode, surveys]);
 
   const featuredOffer = offers[0];
   const otherOffers = offers.slice(1);
@@ -416,6 +429,14 @@ export default function SurveysPage() {
                 {filter === "All surveys" ? "All questions" : filter}
               </button>
             ))}
+            <button
+              type="button"
+              onClick={() => setQuickSurveysOnly((current) => !current)}
+              aria-pressed={quickSurveysOnly}
+              className={`rounded-full border px-2.5 py-1.5 text-[10px] font-semibold transition ${quickSurveysOnly ? "border-teal-700 bg-teal-700 text-white" : "border-slate-200 bg-white text-slate-600 hover:border-teal-300 hover:text-teal-700"}`}
+            >
+              ≤ {QUICK_SURVEY_MINUTES} min
+            </button>
             <label className="sr-only" htmlFor="survey-sort">Sort surveys</label>
             <select
               id="survey-sort"
@@ -463,7 +484,10 @@ export default function SurveysPage() {
                   <div className="mt-auto flex items-end justify-between gap-1 pt-2">
                     <div>
                       <p className="flex items-center gap-1 text-sm font-black text-slate-900"><NexCoinIcon size={14} /> {formatCoins(survey.rewardCoins)}</p>
-                      {survey.rating !== null && <p className="mt-0.5 flex items-center gap-0.5 text-[9px] text-slate-500"><Star className="h-2.5 w-2.5 fill-amber-400 text-amber-400" /> {survey.rating.toFixed(1)}</p>}
+                      <p className="mt-0.5 text-[9px] font-medium text-slate-500">
+                        ~{formatCoinsPerMinute(survey.rewardCoins / survey.durationMinutes)} coins/min
+                      </p>
+                      {survey.rating !== null && <p className="mt-0.5 flex items-center gap-0.5 text-[9px] text-slate-500"><Star className="h-2.5 w-2.5 fill-amber-400 text-amber-400" /> {survey.rating.toFixed(1)}{survey.ratingCount > 0 ? ` (${survey.ratingCount})` : ""}</p>}
                     </div>
                     <a href={survey.entryUrl} target="_blank" rel="noopener noreferrer" aria-label={`Start survey ${survey.id} from ${survey.provider}`} className="inline-flex h-7 shrink-0 items-center gap-1 rounded-md bg-teal-600 px-2 text-[9px] font-extrabold text-white transition hover:bg-teal-700">
                       Start <ExternalLink className="h-3 w-3" />
@@ -476,8 +500,8 @@ export default function SurveysPage() {
         ) : (
           <div className="rounded-xl border border-dashed border-slate-300 bg-white/70 px-4 py-5 text-center">
             <div className="mx-auto flex h-9 w-9 items-center justify-center rounded-lg bg-teal-50 text-teal-700"><Info className="h-4 w-4" /></div>
-            <h3 className="mt-2 text-sm font-bold text-slate-900">No questions available right now</h3>
-            <p className="mt-1 text-xs text-slate-500">Try a different partner or explore the featured tasks above.</p>
+            <h3 className="mt-2 text-sm font-bold text-slate-900">{quickSurveysOnly ? "No quick surveys available right now" : "No questions available right now"}</h3>
+            <p className="mt-1 text-xs text-slate-500">{quickSurveysOnly ? `Try turning off the ${QUICK_SURVEY_MINUTES}-minute filter, or explore the featured tasks above.` : "Try a different partner or explore the featured tasks above."}</p>
           </div>
         )}
 
