@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import {
   LayoutDashboard, Users, FolderOpen,
   ClipboardCheck, Layers, Gift, BarChart3,
-  Settings, LogOut, ClipboardList, GraduationCap, Megaphone, Headphones, Tag, X, Activity, Crown, Newspaper, TrendingUp, Briefcase, ShieldAlert, WalletCards,
+  Settings, LogOut, ClipboardList, GraduationCap, Megaphone, Headphones, Tag, X, Activity, Newspaper, TrendingUp, Briefcase, ShieldAlert, WalletCards,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { NexGuildLogo } from "@/components/ui/nexguild-logo";
@@ -24,20 +24,18 @@ export function AdminSidebar({ open, onClose }: AdminSidebarProps) {
   const [assignmentCount, setAssignmentCount]   = useState(0);
   const [supportCount, setSupportCount]         = useState(0);
   const [suspiciousCount, setSuspiciousCount]   = useState(0);
-  const [nexleaderCount, setNexleaderCount]     = useState(0);
   const [binanceRedemptionCount, setBinanceRedemptionCount] = useState(0);
 
   useEffect(() => {
     async function fetchCounts() {
       try {
-        const [{ count: wdCount }, { count: subCount }, { count: asnCount }, { count: supCount }, { count: susCount }, { count: susSubCount }, { count: nlCount }, { count: binanceCount }] = await Promise.all([
+        const [{ count: wdCount }, { count: subCount }, { count: asnCount }, { count: supCount }, { count: susCount }, { count: susSubCount }, { count: binanceCount }] = await Promise.all([
           supabase.from("voucher_requests").select("*", { count: "exact", head: true }).eq("status", "pending"),
           supabase.from("submissions").select("*", { count: "exact", head: true }).eq("status", "submitted"),
           supabase.from("assignments").select("*", { count: "exact", head: true }).eq("status", "pending"),
           supabase.from("support_tickets").select("*", { count: "exact", head: true }).eq("status", "open"),
           supabase.from("proof_code_submissions").select("*", { count: "exact", head: true }).eq("suspicious", true).eq("reviewed", false),
           supabase.from("submissions").select("*", { count: "exact", head: true }).eq("suspicious", true).eq("reviewed", false),
-          supabase.from("nexleader_applications").select("*", { count: "exact", head: true }).eq("status", "pending"),
           supabase.from("binance_redemption_requests").select("*", { count: "exact", head: true }).in("status", ["pending", "under_review"]),
         ]);
         setWithdrawalCount(wdCount ?? 0);
@@ -45,7 +43,6 @@ export function AdminSidebar({ open, onClose }: AdminSidebarProps) {
         setAssignmentCount(asnCount ?? 0);
         setSupportCount(supCount ?? 0);
         setSuspiciousCount((susCount ?? 0) + (susSubCount ?? 0));
-        setNexleaderCount(nlCount ?? 0);
         setBinanceRedemptionCount(binanceCount ?? 0);
       } catch {
         // silently keep counts at 0 if queries fail
@@ -72,7 +69,6 @@ export function AdminSidebar({ open, onClose }: AdminSidebarProps) {
     { label: "Announcements",    href: "/admin/announcements",   icon: Megaphone,       badge: 0 },
     { label: "Support",          href: "/admin/support",         icon: Headphones,      badge: supportCount },
     { label: "Finances",         href: "/admin/finances",        icon: BarChart3,       badge: 0 },
-    { label: "NexLeaders",        href: "/admin/nexleaders",      icon: Crown,           badge: nexleaderCount },
     { label: "Postback Logs",    href: "/admin/postback-logs",   icon: Activity,        badge: 0 },
     { label: "Suspicious Visits", href: "/admin/suspicious-visits", icon: ShieldAlert,   badge: suspiciousCount },
     { label: "Insights",         href: "/admin/insights",        icon: TrendingUp,      badge: 0 },

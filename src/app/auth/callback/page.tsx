@@ -19,16 +19,6 @@ export default function AuthCallbackPage() {
       handled.current = true;
       console.log("[auth/callback] session found, user:", session.user.email);
 
-      // Assign NexLeader (handles referral chain resolution; idempotent)
-      try {
-        await fetch("/api/auth/set-nexleader", {
-          method:  "POST",
-          headers: { Authorization: `Bearer ${session.access_token}` },
-        });
-      } catch (err) {
-        console.error("[auth/callback] set-nexleader failed:", err);
-      }
-
       fetch("/api/auth/welcome", {
         method:  "POST",
         headers: { "Content-Type": "application/json" },

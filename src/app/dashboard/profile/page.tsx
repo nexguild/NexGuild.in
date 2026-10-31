@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Camera, X, Loader2, Plus, Star, Copy, CheckCheck, Crown, CheckCircle2, Calendar, User } from "lucide-react";
+import { Camera, X, Loader2, Plus, Star, Copy, CheckCheck, CheckCircle2, Calendar, User } from "lucide-react";
 import { NexCoinIcon } from "@/components/ui/nexcoin-icon";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
@@ -21,7 +21,6 @@ interface Profile {
   skills: string[] | null;
   languages: string[] | null;
   avatar_url: string | null;
-  is_nexleader: boolean | null;
 }
 
 const SUGGESTED_SKILLS = [
@@ -71,7 +70,7 @@ export default function ProfilePage() {
       ] = await Promise.all([
         supabase
           .from("profiles")
-          .select("full_name, country, country_code, phone, joined_at, nexcoins, xp, level, skills, languages, avatar_url, is_nexleader")
+          .select("full_name, country, country_code, phone, joined_at, nexcoins, xp, level, skills, languages, avatar_url")
           .eq("id", user.id)
           .single(),
         supabase
@@ -97,7 +96,7 @@ export default function ProfilePage() {
       setApprovalRate(reviewed > 0 ? Math.round((approved / reviewed) * 100) : null);
       setTotalEarned((txnData ?? []).reduce((s: number, t: { amount: number }) => s + (t.amount ?? 0), 0));
 
-      setProfile(data ?? { full_name: null, country: null, country_code: null, phone: null, joined_at: null, nexcoins: 0, xp: 0, level: 1, skills: [], languages: [], avatar_url: null, is_nexleader: null });
+      setProfile(data ?? { full_name: null, country: null, country_code: null, phone: null, joined_at: null, nexcoins: 0, xp: 0, level: 1, skills: [], languages: [], avatar_url: null });
       setLoading(false);
     }
     fetchProfile();
@@ -281,11 +280,6 @@ export default function ProfilePage() {
                         {loading ? "Loading…" : displayName}
                       </h2>
                       <p className="text-white/70 text-xs sm:text-sm mt-0.5 truncate">{loading ? "—" : (email ?? "—")}</p>
-                      {!loading && profile?.is_nexleader && (
-                        <span className="mt-2 inline-flex items-center gap-1 rounded-full bg-white/20 px-2.5 py-1 text-xs font-bold text-white">
-                          <Crown className="h-3 w-3" /> NexLeader
-                        </span>
-                      )}
                       {uploadError && <p className="mt-1 text-xs text-red-200">{uploadError}</p>}
                     </div>
                     {/* Edit button — inline, not absolute */}

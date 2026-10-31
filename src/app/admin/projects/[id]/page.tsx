@@ -14,6 +14,7 @@ import { supabase } from "@/lib/supabase";
 import { usePageGuard } from "@/components/layout/admin-auth-guard";
 import { ADMIN_ROLES } from "@/lib/admin-permissions";
 import { NexCoinIcon } from "@/components/ui/nexcoin-icon";
+import { formatNexcoins } from "@/lib/nexcoins";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 interface Project {
@@ -23,8 +24,7 @@ interface Project {
   client_payment_amount: string | null; client_payment_inr: number | null;
   client_payment_received: boolean; client_payment_received_at: string | null;
   internal_notes: string | null; created_at: string; updated_at: string | null;
-  task_count: number; nc_paid: number; nexleader_commission: number;
-  platform_cut: number; net_contributor_payout: number;
+  task_count: number; nc_paid: number; owner_commission: number;
   // Daily target fields
   is_daily_target: boolean | null;
   daily_quota: number | null;
@@ -106,7 +106,7 @@ function fmt(d: string | null) {
 }
 
 function exportCSV(submissions: Submission[], projectName: string) {
-  const header = ["Contributor Name", "Email", "NexLeader", "Task", "Status", "Coins Awarded", "Submitted At"];
+  const header = ["Contributor Name", "Email", "Legacy NexLeader", "Task", "Status", "Coins Awarded", "Submitted At"];
   const rows = submissions.map((s) => [
     s.profiles?.full_name ?? "Unknown",
     s.profiles?.email ?? "—",
@@ -914,7 +914,7 @@ export default function ProjectDetailPage() {
               <table className="w-full text-sm min-w-[700px]">
                 <thead>
                   <tr className="bg-[var(--surface-subtle)] border-b border-[var(--border-default)]">
-                    {["Contributor", "NexLeader", "Task", "Submitted", "Status", "Coins", "Actions"].map((h) => (
+                    {["Contributor", "Legacy NexLeader", "Task", "Submitted", "Status", "Coins", "Actions"].map((h) => (
                       <th key={h} className="text-left px-4 py-3 font-medium text-[var(--text-secondary)] whitespace-nowrap">{h}</th>
                     ))}
                   </tr>
@@ -1223,14 +1223,12 @@ export default function ProjectDetailPage() {
               <h2 className="font-bold text-[var(--text-primary)]">Paid NC Breakdown</h2>
               {[
                 { label: "Total NC Paid to Contributors",   value: project.nc_paid,                 cls: "text-[var(--text-primary)]" },
-                { label: "NexLeader Commissions (10%)",     value: project.nexleader_commission,     cls: "text-amber-400" },
-                { label: "Platform Cut (24%)",              value: project.platform_cut,             cls: "text-amber-400" },
-                { label: "Net Contributor Payouts (66%)",   value: project.net_contributor_payout,   cls: "text-green-400" },
+                { label: "Owner Platform Commission (34%)", value: project.owner_commission,        cls: "text-amber-400" },
               ].map((row) => (
                 <div key={row.label} className="flex items-center justify-between py-2.5 border-b border-[var(--border-default)] last:border-0">
                   <span className="text-sm text-[var(--text-secondary)]">{row.label}</span>
                   <span className={`flex items-center gap-1 font-bold text-sm ${row.cls}`}>
-                    <NexCoinIcon size={13} /> {row.value.toLocaleString()} NC
+                    <NexCoinIcon size={13} /> {formatNexcoins(row.value)} NC
                   </span>
                 </div>
               ))}

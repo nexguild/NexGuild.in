@@ -10,8 +10,7 @@ export function PayoutBreakdown({ inrAmount, nexcoinPerInr }: PayoutBreakdownPro
 
   const gross       = Math.round(inrAmount * nexcoinPerInr);
   const contributor = Math.floor(gross * 0.66);
-  const nexleader   = Math.floor(gross * 0.10);
-  const platform    = gross - contributor - nexleader;
+  const ownerCommission = Number((gross * 0.34).toFixed(6));
 
   return (
     <div className="rounded-lg p-4 space-y-3 text-sm" style={{
@@ -40,20 +39,11 @@ export function PayoutBreakdown({ inrAmount, nexcoinPerInr }: PayoutBreakdownPro
         </div>
         <div className="flex items-center justify-between">
           <span className="flex items-center gap-1.5 text-[var(--text-secondary)]">
-            <span>👑</span> NexLeader commission
+            <span>🏛️</span> Owner platform commission
           </span>
           <span className="flex items-center gap-1 font-semibold text-[var(--text-primary)]">
-            <NexCoinIcon size={12} /> {nexleader.toLocaleString()} NC
-            <span className="font-normal text-[var(--text-muted)] text-xs">(10%)</span>
-          </span>
-        </div>
-        <div className="flex items-center justify-between">
-          <span className="flex items-center gap-1.5 text-[var(--text-secondary)]">
-            <span>🏛️</span> Platform cut
-          </span>
-          <span className="flex items-center gap-1 font-semibold text-[var(--text-primary)]">
-            <NexCoinIcon size={12} /> {platform.toLocaleString()} NC
-            <span className="font-normal text-[var(--text-muted)] text-xs">(24%)</span>
+            <NexCoinIcon size={12} /> {ownerCommission.toLocaleString("en-IN", { maximumFractionDigits: 6 })} NC
+            <span className="font-normal text-[var(--text-muted)] text-xs">(34%)</span>
           </span>
         </div>
       </div>

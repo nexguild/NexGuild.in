@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase-server";
-import { creditWithCommission } from "@/lib/nexleader-commission";
+import { creditTaskWithPlatformCommission } from "@/lib/platform-commission";
 import { getResend, FROM_NOREPLY, taskRejectedHtml } from "@/lib/email";
 
 async function verifyAdmin(req: NextRequest) {
@@ -164,11 +164,11 @@ export async function POST(
         const grossCoins = db.tasks?.pay_per_task ?? 0;
         let contributorCoins = grossCoins;
 
-        const commResult = await creditWithCommission(
+        const commResult = await creditTaskWithPlatformCommission(
           admin,
           db.contributor_id,
           grossCoins,
-          "task",
+          `submission:${row.submissionId}`,
           `Client validation approved: ${taskTitle}`,
         );
         contributorCoins = commResult.contributorCredit;

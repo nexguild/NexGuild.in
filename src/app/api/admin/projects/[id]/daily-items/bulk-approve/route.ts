@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase-server";
-import { creditWithCommission } from "@/lib/nexleader-commission";
+import { creditTaskWithPlatformCommission } from "@/lib/platform-commission";
 
 async function verifyAdmin(req: NextRequest) {
   const token = req.headers.get("authorization")?.replace("Bearer ", "");
@@ -52,11 +52,11 @@ export async function POST(
 
     try {
       if (payPerUnit > 0) {
-        const commResult = await creditWithCommission(
+        const commResult = await creditTaskWithPlatformCommission(
           admin,
           item.contributor_id,
           payPerUnit,
-          "task",
+          `daily_item:${item.id}`,
           `Daily work approved: ${item.file_name ?? "item"} (${taskMeta?.title ?? "task"})`,
         );
         contributorCoins = commResult.contributorCredit;

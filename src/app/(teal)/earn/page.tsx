@@ -30,7 +30,7 @@ const EARNING_FEATURED = [
   { icon: "💼", name: "Remote & WFH Jobs", desc: "Curated remote and work-from-home listings from Telus, Appen, Lionbridge and our HR network.", href: "/earn/jobs", badge: "New Listings Daily" },
 ];
 
-const EARNING_GRID = [
+const EARNING_GRID: { icon: string; name: string; desc: string; href?: string }[] = [
   { icon: "🎙️", name: "Audio Recording",      desc: "Record voice prompts for AI training in any language." },
   { icon: "📝", name: "Transcription",         desc: "Convert audio files to accurate text." },
   { icon: "🏷️", name: "Data Annotation",       desc: "Label images, text, and video for ML datasets." },
@@ -40,7 +40,6 @@ const EARNING_GRID = [
   { icon: "▶️", name: "Social Media Tasks",    desc: "Organic engagement and awareness campaigns." },
   { icon: "🔍", name: "Web Research",          desc: "Research, fact-checking, and data gathering." },
   { icon: "🌿", name: "Field Data Collection", desc: "On-ground data collection across cities worldwide." },
-  { icon: "👑", name: "NexLeader",              desc: "Lead a guild and earn 10% commission on every NexCoin your team earns — forever.", href: "/earn/refer" },
 ];
 
 const VOUCHERS = [

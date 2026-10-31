@@ -22,7 +22,7 @@ interface PendingSubmission {
   tasks: { title: string | null; pay_per_task: number | null } | null;
 }
 
-type SourceFilter = "all" | "task" | "offerwall" | "streak_bonus" | "nexleader_commission";
+type SourceFilter = "all" | "task" | "offerwall" | "streak_bonus" | "platform_commission" | "nexleader_commission";
 type DateRange    = "week" | "month" | "all" | "custom";
 
 const SOURCE_LABELS: Record<SourceFilter, string> = {
@@ -30,7 +30,8 @@ const SOURCE_LABELS: Record<SourceFilter, string> = {
   task:                 "Tasks",
   offerwall:            "Offerwall",
   streak_bonus:         "Streak Bonus",
-  nexleader_commission: "NexLeader Commission",
+  platform_commission:  "Platform Commission",
+  nexleader_commission: "Legacy NexLeader Commission",
 };
 
 const DATE_LABELS: Record<DateRange, string> = {
@@ -398,7 +399,7 @@ export default function EarningsPage() {
 
           {/* Source filter */}
           <div className="flex flex-wrap gap-1.5">
-            {(["all", "task", "offerwall", "streak_bonus", "nexleader_commission"] as SourceFilter[]).map((s) => (
+            {(["all", "task", "offerwall", "streak_bonus", "platform_commission", "nexleader_commission"] as SourceFilter[]).map((s) => (
               <button
                 key={s}
                 onClick={() => setSourceFilter(s)}

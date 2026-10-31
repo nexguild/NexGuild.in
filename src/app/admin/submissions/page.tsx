@@ -427,7 +427,7 @@ export default function AdminSubmissionsPage() {
             onChange={(e) => setNlFilter(e.target.value)}
             className="h-9 px-3 rounded-md border border-[var(--border-default)] bg-[var(--surface-card)] text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--border-focus)]"
           >
-            <option value="all">All NexLeaders</option>
+            <option value="all">All Legacy NexLeaders</option>
             {nexleaderOptions.map(([id, name]) => (
               <option key={id} value={id}>{name}</option>
             ))}
@@ -498,7 +498,7 @@ export default function AdminSubmissionsPage() {
                 </div>
               </div>
 
-              {/* Task + NexLeader */}
+              {/* Task + legacy NexLeader attribution */}
               {sub.tasks && (
                 <p className="text-xs text-[var(--text-muted)]">
                   Task: <span className="font-semibold text-[var(--text-primary)]">{sub.tasks.title}</span>

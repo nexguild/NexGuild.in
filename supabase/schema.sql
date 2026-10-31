@@ -301,6 +301,22 @@ CREATE TABLE IF NOT EXISTS coin_transactions (
   created_at     TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- Owner's platform commission ledger; NexLeader history remains in its legacy tables.
+CREATE TABLE IF NOT EXISTS platform_commissions (
+  id                 UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  owner_id           UUID NOT NULL REFERENCES profiles(id),
+  contributor_id     UUID REFERENCES profiles(id) ON DELETE SET NULL,
+  source_type        TEXT NOT NULL CHECK (source_type IN ('task', 'offerwall')),
+  source_event_id    TEXT NOT NULL,
+  gross_amount       NUMERIC(20, 6) NOT NULL,
+  contributor_credit NUMERIC(20, 6) NOT NULL,
+  owner_credit       NUMERIC(20, 6) NOT NULL,
+  description        TEXT,
+  status             TEXT NOT NULL DEFAULT 'credited' CHECK (status IN ('credited', 'reversed')),
+  created_at         TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE (source_type, source_event_id)
+);
+
 -- Voucher redemption requests
 CREATE TABLE IF NOT EXISTS voucher_requests (
   id             UUID DEFAULT gen_random_uuid() PRIMARY KEY,
@@ -316,6 +332,7 @@ CREATE TABLE IF NOT EXISTS voucher_requests (
 
 -- RLS
 ALTER TABLE coin_transactions  ENABLE ROW LEVEL SECURITY;
+ALTER TABLE platform_commissions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE voucher_requests   ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Users can view own coin transactions"
@@ -337,6 +354,8 @@ CREATE POLICY "Admins can manage voucher requests"
 
 -- Grants
 GRANT ALL ON public.coin_transactions TO authenticated, service_role;
+REVOKE ALL ON public.platform_commissions FROM PUBLIC, anon, authenticated;
+GRANT SELECT, INSERT, UPDATE ON public.platform_commissions TO service_role;
 GRANT ALL ON public.voucher_requests  TO authenticated, service_role;
 
 -- Manual Binance Pay NexCoin redemptions

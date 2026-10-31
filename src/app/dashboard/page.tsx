@@ -803,7 +803,7 @@ export default function DashboardHome() {
       </div>
 
       {/* ── QUICK ACTIONS GRID ──────────────────────────────────────── */}
-      <div className="animate-fade-slide-up grid grid-cols-2 sm:grid-cols-4 gap-3" style={{ animationDelay: "100ms" }}>
+      <div className="animate-fade-slide-up grid grid-cols-2 sm:grid-cols-3 gap-3" style={{ animationDelay: "100ms" }}>
         <Link href="/dashboard/surveys" className="rounded-2xl px-4 py-3 text-sm font-semibold flex items-center gap-2 w-full justify-center transition-all duration-200 hover:-translate-y-0.5 bg-gradient-to-r from-teal-500 to-teal-600 text-white shadow-md hover:shadow-lg">
           <span>🎯</span><span>Complete a Survey</span>
         </Link>
@@ -812,9 +812,6 @@ export default function DashboardHome() {
         </Link>
         <Link href="/dashboard/store" className="rounded-2xl px-4 py-3 text-sm font-semibold flex items-center gap-2 w-full justify-center transition-all duration-200 hover:-translate-y-0.5 bg-gradient-to-r from-purple-500 to-purple-600 text-white shadow-md hover:shadow-lg">
           <span>🛍️</span><span>NexStore</span>
-        </Link>
-        <Link href="/dashboard/nexleader" className="rounded-2xl px-4 py-3 text-sm font-semibold flex items-center gap-2 w-full justify-center transition-all duration-200 hover:-translate-y-0.5 bg-gradient-to-r from-amber-500 to-amber-600 text-white shadow-md hover:shadow-lg">
-          <span>👑</span><span>NexLeader Hub</span>
         </Link>
       </div>
 

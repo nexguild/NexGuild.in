@@ -39,17 +39,41 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   const { data: submissions } = taskIds.length
     ? await ctx.admin
         .from("submissions")
-        .select("id, task_id, status, coins_awarded, nexleader_id")
+        .select("id, task_id, status, coins_awarded")
         .in("task_id", taskIds)
     : { data: [] };
 
   const approved = (submissions ?? []).filter((s: { status: string }) => s.status === "approved");
-  const ncPaid = approved.reduce((sum: number, s: { coins_awarded: number | null }) => sum + (s.coins_awarded ?? 0), 0);
+  const { data: dailyItems, error: dailyItemsError } = await ctx.admin
+    .from("daily_work_items")
+    .select("id, coins_awarded")
+    .eq("project_id", id)
+    .eq("status", "approved");
+  if (dailyItemsError) {
+    return NextResponse.json({ error: `Failed to load approved daily work: ${dailyItemsError.message}` }, { status: 500 });
+  }
 
-  // Rough nexleader commission: approved submissions where nexleader_id is set, commission = coins_awarded * 0.10
-  const nexleaderCommission = approved
-    .filter((s: { nexleader_id: string | null }) => s.nexleader_id)
-    .reduce((sum: number, s: { coins_awarded: number | null }) => sum + Math.floor((s.coins_awarded ?? 0) * 0.10), 0);
+  const ncPaid = approved.reduce((sum: number, s: { coins_awarded: number | null }) => sum + (s.coins_awarded ?? 0), 0)
+    + (dailyItems ?? []).reduce((sum: number, item: { coins_awarded: number | null }) => sum + (item.coins_awarded ?? 0), 0);
+  const eventIds = [
+    ...approved.map((s: { id: string }) => `submission:${s.id}`),
+    ...(dailyItems ?? []).map((item: { id: string }) => `daily_item:${item.id}`),
+  ];
+  const { data: commissions, error: commissionsError } = eventIds.length
+    ? await ctx.admin
+        .from("platform_commissions")
+        .select("owner_credit")
+        .eq("source_type", "task")
+        .eq("status", "credited")
+        .in("source_event_id", eventIds)
+    : { data: [], error: null };
+  if (commissionsError) {
+    return NextResponse.json({ error: `Failed to load platform commissions: ${commissionsError.message}` }, { status: 500 });
+  }
+  const ownerCommission = (commissions ?? []).reduce(
+    (sum: number, commission: { owner_credit: number }) => sum + Number(commission.owner_credit),
+    0,
+  );
 
   const taskStats = (tasks ?? []).map((t: Record<string, unknown>) => {
     const taskSubs = (submissions ?? []).filter((s: { task_id: string }) => s.task_id === t.id);
@@ -67,9 +91,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       ...project,
       task_count:           (tasks ?? []).length,
       nc_paid:              ncPaid,
-      nexleader_commission: nexleaderCommission,
-      platform_cut:         Math.floor(ncPaid * 0.24),
-      net_contributor_payout: Math.floor(ncPaid * 0.66),
+      owner_commission:     ownerCommission,
     },
     tasks: taskStats,
   });

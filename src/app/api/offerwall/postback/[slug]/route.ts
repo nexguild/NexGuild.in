@@ -303,8 +303,8 @@ async function handlePostback(req: NextRequest, slug: string): Promise<Response>
     return new Response("Bad Request", { status: 400 });
   }
 
-  // The RPC commits the idempotency record, wallet balance, ledger, and
-  // NexLeader commission together; failed writes remain retryable by provider.
+  // The RPC commits the idempotency record, contributor credit, and owner
+  // commission together; failed writes remain retryable by the provider.
   const { data: credited, error: creditError } = await admin.rpc("credit_offerwall_conversion", {
     p_provider_id: provider.id,
     p_contributor_id: contributorId,

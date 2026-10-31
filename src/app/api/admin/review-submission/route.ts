@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { FROM_NOREPLY, getResend, taskApprovedHtml, taskRejectedHtml, resubmissionRequestedHtml } from "@/lib/email";
 import { syncSheetStatus } from "@/lib/google-drive";
-import { creditWithCommission } from "@/lib/nexleader-commission";
+import { creditTaskWithPlatformCommission } from "@/lib/platform-commission";
 
 export async function POST(req: NextRequest) {
   const admin = createClient(
@@ -72,12 +72,12 @@ export async function POST(req: NextRequest) {
         ? `Partial approval — ${validUnits} of ${taskMeta!.total_units} ${unitLabel}s: ${taskMeta!.title}`
         : `Task approved: ${taskTitle}`;
 
-      // 1. Apply NexLeader commission split — contributor gets 66%, NexLeader 10%, platform 24%
-      const commResult = await creditWithCommission(
+      // 1. Credit the contributor and the platform owner atomically.
+      const commResult = await creditTaskWithPlatformCommission(
         admin,
         sub.contributor_id,
         grossCoins,
-        "task",
+        `submission:${submissionId}`,
         txDescription,
       );
       const contributorCoins = commResult.contributorCredit;
