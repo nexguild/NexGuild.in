@@ -62,6 +62,20 @@ const DEFAULT_RULES = [
   "Admin review decisions are final.",
 ];
 
+const EARNING_OPTIONS = [
+  { title: "Paid Tasks", description: "Complete paid work and challenges.", href: "#task-list", action: "Browse tasks", icon: ClipboardList, tone: "teal" },
+  { title: "Paid Surveys", description: "Share your opinion and earn NexCoins.", href: "/dashboard/surveys", action: "Find surveys", icon: Sparkles, tone: "amber" },
+  { title: "Apps & Offers", description: "Try apps, play games, and complete partner offers.", href: "/dashboard/offerwalls", action: "Explore offers", icon: Layers, tone: "blue" },
+  { title: "My Work", description: "Continue tasks and track your submissions.", href: "/dashboard/tasks", action: "View my work", icon: CheckCircle2, tone: "slate" },
+] as const;
+
+const OPTION_TONES: Record<(typeof EARNING_OPTIONS)[number]["tone"], string> = {
+  teal: "bg-teal-50 text-teal-700 group-hover:border-teal-300",
+  amber: "bg-amber-50 text-amber-700 group-hover:border-amber-300",
+  blue: "bg-sky-50 text-sky-700 group-hover:border-sky-300",
+  slate: "bg-slate-100 text-slate-700 group-hover:border-slate-300",
+};
+
 function formatDeadline(deadline: string | null, now: Date): { text: string; cls: string } | null {
   if (!deadline) return null;
   const diff = new Date(deadline).getTime() - now.getTime();
@@ -250,22 +264,11 @@ export default function OpportunitiesPage() {
           <h2 className="mt-1 text-lg font-semibold tracking-tight text-slate-900">Your earning options</h2>
         </div>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          {[
-            { title: "Paid Tasks", description: "Complete paid work and challenges.", href: "#task-list", action: "Browse tasks", icon: ClipboardList, tone: "teal" },
-            { title: "Paid Surveys", description: "Share your opinion and earn NexCoins.", href: "/dashboard/surveys", action: "Find surveys", icon: Sparkles, tone: "amber" },
-            { title: "Apps & Offers", description: "Try apps, play games, and complete partner offers.", href: "/dashboard/offerwalls", action: "Explore offers", icon: Layers, tone: "blue" },
-            { title: "My Work", description: "Continue tasks and track your submissions.", href: "/dashboard/tasks", action: "View my work", icon: CheckCircle2, tone: "slate" },
-          ].map((option) => {
+          {EARNING_OPTIONS.map((option) => {
             const Icon = option.icon;
-            const tones = {
-              teal: "bg-teal-50 text-teal-700 group-hover:border-teal-300",
-              amber: "bg-amber-50 text-amber-700 group-hover:border-amber-300",
-              blue: "bg-sky-50 text-sky-700 group-hover:border-sky-300",
-              slate: "bg-slate-100 text-slate-700 group-hover:border-slate-300",
-            };
             return (
               <Link key={option.title} href={option.href} className="group flex min-h-44 flex-col rounded-2xl border border-slate-200/80 bg-white p-5 shadow-[0_4px_18px_rgba(15,23,42,0.04)] transition hover:-translate-y-1 hover:shadow-[0_14px_32px_rgba(15,76,69,0.1)]">
-                <span className={`flex h-11 w-11 items-center justify-center rounded-xl ${tones[option.tone]}`}><Icon className="h-5 w-5" /></span>
+                <span className={`flex h-11 w-11 items-center justify-center rounded-xl ${OPTION_TONES[option.tone]}`}><Icon className="h-5 w-5" /></span>
                 <span className="mt-4 text-sm font-bold text-slate-900">{option.title}</span>
                 <span className="mt-1 text-xs leading-5 text-slate-500">{option.description}</span>
                 <span className="mt-auto inline-flex items-center gap-1 pt-4 text-xs font-bold text-teal-700">{option.action}<ArrowRight className="h-3.5 w-3.5 transition group-hover:translate-x-1" /></span>
