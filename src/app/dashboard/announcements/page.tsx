@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Megaphone, Loader2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import { formatAnnouncementHtml, formatAnnouncementInlineHtml } from "@/lib/announcement-format";
 
 interface AnnouncementNotif {
   id: string;
@@ -10,13 +11,6 @@ interface AnnouncementNotif {
   message: string;
   is_read: boolean;
   created_at: string;
-}
-
-function formatAnnouncement(text: string): string {
-  return text.split("\n").map(line => {
-    const html = line.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
-    return `<p style="margin:0 0 0.25rem">${html || "&nbsp;"}</p>`;
-  }).join("");
 }
 
 export default function AnnouncementsPage() {
@@ -107,7 +101,10 @@ export default function AnnouncementsPage() {
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="mb-1.5 flex flex-wrap items-center gap-2">
-                      <p className="text-sm font-semibold text-slate-800">{cleanTitle}</p>
+                      <p
+                        className="text-sm font-semibold text-slate-800"
+                        dangerouslySetInnerHTML={{ __html: formatAnnouncementInlineHtml(cleanTitle) }}
+                      />
                       {unread && (
                         <span className="rounded-full bg-indigo-100 px-2 py-0.5 text-[10px] font-bold text-indigo-600">
                           NEW
@@ -116,7 +113,7 @@ export default function AnnouncementsPage() {
                     </div>
                     <div
                       className="text-sm leading-relaxed text-slate-600"
-                      dangerouslySetInnerHTML={{ __html: formatAnnouncement(item.message) }}
+                      dangerouslySetInnerHTML={{ __html: formatAnnouncementHtml(item.message) }}
                     />
                     <p className="mt-2.5 text-xs text-slate-400">
                       {new Date(item.created_at).toLocaleDateString("en-IN", {

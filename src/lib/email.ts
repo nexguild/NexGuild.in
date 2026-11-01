@@ -1,6 +1,7 @@
 import { Resend } from "resend";
 import { SupabaseClient } from "@supabase/supabase-js";
 import { formatNexcoins } from "@/lib/nexcoins";
+import { formatAnnouncementHtml, formatAnnouncementInlineHtml } from "@/lib/announcement-format";
 
 export const FROM_NOREPLY = "NexGuild <noreply@nexguild.in>";
 
@@ -812,7 +813,7 @@ export function announcementHtml(
   annTitle: string,
   annMessage: string,
 ): string {
-  const n = esc(name), at = esc(annTitle), am = esc(annMessage);
+  const n = esc(name), at = formatAnnouncementInlineHtml(annTitle), am = formatAnnouncementHtml(annMessage);
   return layout(`
 <div style="display:inline-block;background:#111;border:1px solid rgba(245,158,11,0.3);border-radius:8px;padding:4px 14px;margin:0 0 18px;">
   <span style="font-size:12px;font-weight:700;color:#F59E0B;text-transform:uppercase;letter-spacing:1px;">📢 Announcement</span>
@@ -823,7 +824,7 @@ export function announcementHtml(
 <p style="margin:0 0 16px;font-size:15px;color:rgba(255,255,255,0.7);">Hi <strong style="color:#fff;">${n}</strong>,</p>
 
 <div style="background:#111;border:1px solid #222;border-left:3px solid #F59E0B;border-radius:0 10px 10px 0;padding:18px 22px;margin:0 0 24px;">
-  <p style="margin:0;font-size:14px;color:rgba(255,255,255,0.75);line-height:1.7;white-space:pre-wrap;">${am}</p>
+  <div style="font-size:14px;color:rgba(255,255,255,0.75);line-height:1.7;">${am}</div>
 </div>
 
 ${btn("View on Dashboard →", "https://www.nexguild.in/dashboard/announcements")}`);
