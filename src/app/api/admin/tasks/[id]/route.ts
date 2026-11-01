@@ -82,7 +82,10 @@ export async function PATCH(
     targetType: "task",
     targetId: taskId,
     summary: `Updated task "${updatedTask.title}" fields: ${Object.keys(updates).join(", ")}.`,
-    metadata: { fields: Object.keys(updates).join(", "), status: updates.status ?? null },
+    metadata: {
+      fields: Object.keys(updates).join(", "),
+      status: typeof updates.status === "string" ? updates.status : null,
+    },
   });
 
   // Email blast when publishing draft → active
