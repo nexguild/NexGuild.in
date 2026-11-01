@@ -26,8 +26,8 @@ const FLOATING_PILLS = [
 ];
 
 const EARNING_FEATURED = [
-  { icon: "🎯", name: "Offerwalls",        desc: "Complete surveys, app installs, and partner tasks. Earnings credit instantly after provider confirmation.", href: "/earn/tasks", badge: "Highest Volume" },
-  { icon: "💼", name: "Remote & WFH Jobs", desc: "Curated remote and work-from-home listings from Telus, Appen, Lionbridge and our HR network.", href: "/earn/jobs", badge: "New Listings Daily" },
+  { icon: "🎯", name: "Offerwalls",        desc: "Explore surveys, app installs, and partner tasks. Offers and eligibility depend on your country and each provider's current campaigns.", href: "/earn/tasks", badge: "Country-based availability" },
+  { icon: "💼", name: "Remote & WFH Jobs", desc: "Browse remote and work-from-home listings. Check each listing for its location, eligibility, and application requirements.", href: "/earn/jobs", badge: "Check listing eligibility" },
 ];
 
 const EARNING_GRID: { icon: string; name: string; desc: string; href?: string }[] = [
@@ -42,15 +42,6 @@ const EARNING_GRID: { icon: string; name: string; desc: string; href?: string }[
   { icon: "🌿", name: "Field Data Collection", desc: "On-ground data collection across cities worldwide." },
 ];
 
-const VOUCHERS = [
-  { icon: "🛒", name: "Amazon"   },
-  { icon: "📦", name: "Flipkart" },
-  { icon: "💙", name: "Paytm"    },
-  { icon: "💜", name: "PhonePe"  },
-  { icon: "🛵", name: "Swiggy"   },
-  { icon: "🍽️", name: "Zomato"   },
-];
-
 const WHY_JOIN = [
   { accent: "#0D9488", icon: "📱", title: "Work From Your Phone",    desc: "No laptop needed. Most tasks complete entirely from your smartphone — anytime, anywhere." },
   { accent: "#F59E0B", icon: "💰", title: "Multiple Income Streams", desc: "Earn from Tasks, Offerwalls, Jobs, and Referrals — all tracked in one dashboard." },
@@ -59,11 +50,11 @@ const WHY_JOIN = [
 ];
 
 const STEPS = [
-  { num: "01", icon: "🆓", title: "Sign Up Free",    desc: "30-second sign-up. No fees, no verification required." },
-  { num: "02", icon: "✅", title: "Complete Profile", desc: "Set skills and device info to unlock matching tasks." },
-  { num: "03", icon: "🔎", title: "Pick Tasks",       desc: "Browse 12 categories and apply for what fits you." },
-  { num: "04", icon: "📤", title: "Submit Work",      desc: "Complete and submit. Our team reviews within 48 hrs." },
-  { num: "05", icon: "🎁", title: "Redeem Vouchers",  desc: "Exchange NexCoins for gift cards at the Store." },
+  { num: "01", icon: "🆓", title: "Create an Account", desc: "Sign up for free, verify your email, and select your country." },
+  { num: "02", icon: "✅", title: "Complete Profile", desc: "Add accurate skills, languages, and device details for relevant opportunities." },
+  { num: "03", icon: "🔎", title: "Check Availability", desc: "Browse current tasks, surveys, and listings. Eligibility varies by country and provider." },
+  { num: "04", icon: "📤", title: "Complete & Submit", desc: "Follow each opportunity's instructions. Review and provider confirmation times vary." },
+  { num: "05", icon: "🎁", title: "View Your Rewards",  desc: "Check the dashboard Store for reward options currently available in your country." },
 ];
 
 /* ─────────────────────── Components ───────────────────────────── */
@@ -237,13 +228,13 @@ export default function EarnPage() {
             </div>
             <h2 className="text-xl sm:text-2xl font-bold text-[#0F3D36]/55 mb-6 tracking-tight"
               style={{ fontFamily: "'Instrument Serif', serif" }}>
-              Get Paid in Gift Vouchers.
+              Find Flexible Online Tasks.
             </h2>
           </FadeIn>
 
           <FadeIn delay={140}>
             <p className="text-sm sm:text-base leading-relaxed max-w-xl mx-auto mb-7 text-stone-500 text-balance">
-              Complete tasks from your phone — recording, testing, transcribing — and redeem NexCoins for rewards available in your region.
+              Explore tasks, surveys, and remote-work listings. Select your country at signup to see which opportunities and rewards are available to you.
             </p>
           </FadeIn>
 
@@ -254,10 +245,10 @@ export default function EarnPage() {
           <FadeIn delay={300}>
             <div className="flex flex-wrap items-center justify-center gap-2.5 mt-7">
               {[
-                { icon: "🔒", label: "Secure Payments" },
+                { icon: "🌍", label: "Worldwide signup" },
                 { icon: "📱", label: "Mobile Friendly" },
-                { icon: "🌍", label: "Global Platform" },
-                { icon: "⚡", label: "Instant Vouchers" },
+                { icon: "🧭", label: "Country-based eligibility" },
+                { icon: "🎁", label: "Regional reward options" },
               ].map((b) => (
                 <span key={b.label} className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold"
                   style={{ background: "rgba(255,255,255,0.5)", backdropFilter: "blur(8px)", border: "1.5px solid rgba(13,148,136,0.12)", color: "#334155" }}>
@@ -279,16 +270,16 @@ export default function EarnPage() {
               <div className="flex flex-col sm:flex-row items-center justify-center gap-6 sm:gap-16 text-center">
                 <div>
                   <div className="text-3xl sm:text-4xl font-black tabular-nums" style={{ color: "#2DD4BF", fontFamily: "'Instrument Serif', serif" }}>
-                    <AnimatedCounter target={Math.max(100, stats.members)} suffix="+" />
+                    <AnimatedCounter target={stats.members} suffix="+" />
                   </div>
-                  <div className="text-[10px] font-bold text-white/40 uppercase tracking-widest mt-1.5">Active Members</div>
+                  <div className="text-[10px] font-bold text-white/40 uppercase tracking-widest mt-1.5">Registered Contributors</div>
                 </div>
                 <div className="hidden sm:block w-px h-10" style={{ background: "rgba(255,255,255,0.08)" }} />
                 <div>
                   <div className="text-3xl sm:text-4xl font-black tabular-nums" style={{ color: "#2DD4BF", fontFamily: "'Instrument Serif', serif" }}>
                     <AnimatedCounter target={stats.tasks_completed} suffix="+" />
                   </div>
-                  <div className="text-[10px] font-bold text-white/40 uppercase tracking-widest mt-1.5">Tasks Completed</div>
+                  <div className="text-[10px] font-bold text-white/40 uppercase tracking-widest mt-1.5">Approved Submissions</div>
                 </div>
                 <div className="hidden sm:block w-px h-10" style={{ background: "rgba(255,255,255,0.08)" }} />
                 <div>
@@ -297,8 +288,8 @@ export default function EarnPage() {
                 </div>
                 <div className="hidden sm:block w-px h-10" style={{ background: "rgba(255,255,255,0.08)" }} />
                 <div>
-                  <div className="text-3xl sm:text-4xl font-black" style={{ color: "#2DD4BF", fontFamily: "'Instrument Serif', serif" }}>6+</div>
-                  <div className="text-[10px] font-bold text-white/40 uppercase tracking-widest mt-1.5">Voucher Partners</div>
+                  <div className="text-3xl sm:text-4xl font-black" style={{ color: "#2DD4BF", fontFamily: "'Instrument Serif', serif" }}>Global</div>
+                  <div className="text-[10px] font-bold text-white/40 uppercase tracking-widest mt-1.5">Country-based access</div>
                 </div>
               </div>
             </FadeIn>
@@ -481,18 +472,16 @@ export default function EarnPage() {
       <section className="py-10 px-6" style={{ background: "rgba(13,148,136,0.04)", borderTop: "1px solid rgba(13,148,136,0.08)", borderBottom: "1px solid rgba(13,148,136,0.08)" }}>
         <div className="mx-auto max-w-container text-center">
           <FadeIn>
-            <p className="text-xs font-bold uppercase tracking-widest text-stone-400 mb-5">Example reward partners</p>
-            <div className="flex flex-wrap items-center justify-center gap-2.5">
-              {VOUCHERS.map((v) => (
-                <div key={v.name}
-                  className="flex items-center gap-2 h-10 px-5 rounded-full font-bold text-sm transition-all duration-200 hover:translate-y-[-2px] hover:shadow-md"
-                  style={{ background: "rgba(255,255,255,0.8)", border: "1.5px solid rgba(13,148,136,0.15)", color: "#0F3D36", backdropFilter: "blur(8px)" }}>
-                  <span style={{ fontSize: 18 }}>{v.icon}</span>
-                  {v.name}
-                </div>
-              ))}
-            </div>
-            <p className="text-xs text-stone-400 mt-4">Available reward partners and delivery times vary by country and provider.</p>
+            <p className="text-xs font-bold uppercase tracking-widest text-stone-400 mb-3">Rewards depend on your location</p>
+            <h2 className="text-xl sm:text-2xl font-bold text-[#0F3D36] mb-2" style={{ fontFamily: "'Instrument Serif', serif" }}>
+              See what is available in your country
+            </h2>
+            <p className="max-w-2xl mx-auto text-sm leading-relaxed text-stone-500">
+              Reward brands, currencies, denominations, and delivery times vary by country and provider. Choose your country when you sign up, then check the Store in your dashboard for current options before earning toward a reward.
+            </p>
+            <Link href="/signup" className="inline-flex items-center gap-2 mt-5 text-sm font-bold text-[#0D9488] hover:text-[#0F3D36]">
+              Check your country’s options <span aria-hidden>→</span>
+            </Link>
           </FadeIn>
         </div>
       </section>

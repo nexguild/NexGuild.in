@@ -29,36 +29,36 @@ const STEPS = [
     num: "01",
     icon: "🆓",
     title: "Sign Up Free",
-    body: "Create your account with your name, email, and country in 30 seconds. No experience or identity verification needed to get started.",
-    tip: "Use your primary email — vouchers and approval notifications are delivered there.",
+    body: "Create a free account with your name, email, and country. Verify your email to continue.",
+    tip: "Use an email address you can access for account and task notifications.",
   },
   {
     num: "02",
     icon: "✅",
     title: "Complete Your Profile",
-    body: "Set your skills, languages, and device capabilities so we can match you with the right tasks from day one.",
-    tip: "Mark all languages you speak fluently — bilingual contributors unlock more task types.",
+    body: "Add accurate skills, languages, and device details to help find relevant opportunities.",
+    tip: "Only list languages and skills that reflect your actual ability.",
   },
   {
     num: "03",
     icon: "🔎",
     title: "Browse & Apply for Tasks",
-    body: "Explore available tasks across recordings, transcription, annotation, app testing, offerwalls, surveys, and more.",
-    tip: "Check the dashboard every morning — the best batches fill up fast.",
+    body: "Browse current tasks, surveys, offerwalls, and job listings. Eligibility and availability vary by country and provider.",
+    tip: "Read each listing's location, qualification, and reward details before you begin.",
   },
   {
     num: "04",
     icon: "📤",
     title: "Submit Your Work",
-    body: "Follow the task instructions carefully, complete the work, and submit. Your submission enters our review queue immediately.",
-    tip: "Your first few submissions set your quality score. Take the extra time.",
+    body: "Follow the instructions for the opportunity and submit your work. Review and provider confirmation times vary.",
+    tip: "Keep any completion confirmation until the reward is reflected in your account.",
   },
   {
     num: "05",
     icon: "🎁",
     title: "Redeem for Rewards",
-    body: "Once you have enough NexCoins, visit the Store in your dashboard to see the rewards available in your region.",
-    tip: "Reward brands, denominations, and availability vary by country. Check the Store in your dashboard.",
+    body: "Visit the Store in your dashboard to review reward options currently available for your country.",
+    tip: "Check brands, currencies, denominations, and terms before earning toward a redemption.",
   },
 ];
 
@@ -67,17 +67,8 @@ const FAQS = [
   { q: "How long does it take to get approved?",     a: "Approval times vary by task type. Micro-tasks may be reviewed within 24 hours. Audio, content, and survey tasks typically take 1–3 business days." },
   { q: "What happens if my submission is rejected?", a: "You will receive a notification with feedback explaining the reason. Depending on the task, you may be able to revise and resubmit." },
   { q: "How quickly are vouchers delivered?",        a: "Delivery times depend on the reward provider and redemption approval. Check the Store and redemption details for current estimates." },
-  { q: "Which countries can join?",                  a: "NexGuild welcomes contributors worldwide. Task eligibility and availability depend on each organization's requirements and your location." },
+  { q: "Which countries can join?",                  a: "You can select your country from the signup form. Task and survey eligibility still depends on current provider campaigns and your location." },
   { q: "How do I redeem NexCoins?",                  a: "Visit the Store in your dashboard to see the rewards available in your region. Options vary by country and provider." },
-];
-
-const VOUCHERS = [
-  { name: "Amazon",   icon: "🛒" },
-  { name: "Flipkart", icon: "📦" },
-  { name: "Paytm",    icon: "💙" },
-  { name: "PhonePe",  icon: "💜" },
-  { name: "Swiggy",   icon: "🛵" },
-  { name: "Zomato",   icon: "🍽️" },
 ];
 
 export default function HowItWorksPage() {
@@ -117,9 +108,9 @@ export default function HowItWorksPage() {
           <FadeIn delay={240}>
             <div className="flex flex-wrap items-center justify-center gap-4 mt-8">
               {[
-                { value: "30 sec", label: "to sign up" },
-                { value: "5 steps", label: "to your first voucher" },
-                { value: "48 hrs", label: "voucher delivery" },
+                { value: "Free", label: "to create an account" },
+                { value: "5 steps", label: "to explore opportunities" },
+                { value: "Worldwide", label: "with local eligibility" },
               ].map((s) => (
                 <div key={s.label}
                   className="px-5 py-2.5 rounded-full"
@@ -234,20 +225,10 @@ export default function HowItWorksPage() {
             </div>
           </FadeIn>
           <FadeIn delay={160}>
-            <div className="text-center">
-              <p className="text-xs font-bold uppercase tracking-widest text-stone-400 mb-5">Example reward partners</p>
-              <div className="flex flex-wrap items-center justify-center gap-3">
-                {VOUCHERS.map((v) => (
-                  <div key={v.name}
-                    className="flex items-center gap-2.5 h-10 px-5 rounded-full font-semibold text-sm transition-all duration-200 hover:translate-y-[-2px] hover:shadow-md"
-                    style={{ background: "rgba(255,255,255,0.8)", border: "1.5px solid rgba(13,148,136,0.12)", color: "#0F3D36", backdropFilter: "blur(8px)" }}>
-                    <span style={{ fontSize: 18 }}>{v.icon}</span>
-                    {v.name}
-                  </div>
-                ))}
-              </div>
-              <p className="text-xs text-stone-400 mt-4">
-                Available partners and reward options vary by country. Check your dashboard Store for current options.
+            <div className="text-center max-w-2xl mx-auto">
+              <p className="text-xs font-bold uppercase tracking-widest text-stone-400 mb-3">Country-specific rewards</p>
+              <p className="text-sm leading-relaxed text-stone-500">
+                Reward partners, currencies, denominations, and delivery times vary by country. After signup, check the Store in your dashboard for options currently available to you.
               </p>
             </div>
           </FadeIn>

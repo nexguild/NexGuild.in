@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Earn Money Online — Tasks, Remote Jobs & Surveys | NexGuild",
+  title: "Online Tasks, Surveys & Rewards Worldwide | NexGuild",
   description:
-    "Earn real money online from home. Complete micro-tasks, paid surveys, data annotation, and offerwalls — or browse remote & WFH job listings worldwide. Redeem for Amazon, PayPal, and Google Play gift vouchers.",
+    "Explore online tasks, surveys, offerwalls, and remote job listings with NexGuild. Opportunities and reward options depend on your country and provider.",
   keywords: [
     "earn money online",
     "work from home tasks",
@@ -18,17 +18,15 @@ export const metadata: Metadata = {
   ],
   alternates: { canonical: "https://www.nexguild.in/earn" },
   openGraph: {
-    title: "Earn Money Online — NexGuild",
-    description:
-      "Complete micro-tasks, surveys, and offerwalls — or browse remote & WFH jobs worldwide. Earn NexCoins and redeem for gift vouchers.",
+    title: "Online Tasks, Surveys & Rewards — NexGuild",
+    description: "Explore online tasks, surveys, offerwalls, and remote jobs. Availability and rewards vary by country and provider.",
     url: "https://www.nexguild.in/earn",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Earn Money Online — NexGuild",
-    description:
-      "Complete micro-tasks, surveys, and browse remote & WFH jobs. Earn NexCoins and redeem for gift vouchers.",
+    title: "Online Tasks, Surveys & Rewards — NexGuild",
+    description: "Explore online tasks, surveys, and remote jobs. Availability and rewards vary by country and provider.",
   },
 };
 
