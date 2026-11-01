@@ -23,6 +23,7 @@ const BREADCRUMBS: Record<string, string[]> = {
   "/admin/settings":          ["Settings"],
   "/admin/audit-logs":        ["Audit History"],
   "/admin/email-previews":    ["Email Previews"],
+  "/admin/active-contributors": ["Contributor Activity"],
 };
 
 interface AdminProfile {

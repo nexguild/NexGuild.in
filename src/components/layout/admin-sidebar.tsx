@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import {
   LayoutDashboard, Users, FolderOpen,
   ClipboardCheck, Layers, Gift, BarChart3,
-  Settings, LogOut, ClipboardList, GraduationCap, Megaphone, Headphones, Tag, X, Activity, Newspaper, TrendingUp, Briefcase, ShieldAlert, WalletCards, History, Mail,
+  Settings, LogOut, ClipboardList, GraduationCap, Megaphone, Headphones, Tag, X, Activity, Newspaper, TrendingUp, Briefcase, ShieldAlert, WalletCards, History, Mail, UserCheck,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { NexGuildLogo } from "@/components/ui/nexguild-logo";
@@ -76,6 +76,7 @@ export function AdminSidebar({ open, onClose }: AdminSidebarProps) {
     { label: "Postback Logs", href: "/admin/postback-logs", icon: Activity, badge: 0, roles: ADMIN_ROLES.UPPER },
     { label: "Suspicious Visits", href: "/admin/suspicious-visits", icon: ShieldAlert, badge: queueCounts.suspiciousItems, roles: ADMIN_ROLES.UPPER },
     { label: "Insights", href: "/admin/insights", icon: TrendingUp, badge: 0, roles: ADMIN_ROLES.UPPER },
+    { label: "Contributor Activity", href: "/admin/active-contributors", icon: UserCheck, badge: 0, roles: ADMIN_ROLES.UPPER },
     { label: "Settings", href: "/admin/settings", icon: Settings, badge: 0, roles: ADMIN_ROLES.UPPER },
     { label: "Audit History", href: "/admin/audit-logs", icon: History, badge: 0, roles: ADMIN_ROLES.UPPER },
     { label: "Email Previews", href: "/admin/email-previews", icon: Mail, badge: 0, roles: ADMIN_ROLES.UPPER },

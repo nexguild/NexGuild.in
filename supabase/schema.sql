@@ -23,6 +23,16 @@ CREATE TABLE profiles (
   PRIMARY KEY (id)
 );
 
+CREATE TABLE contributor_activity (
+  contributor_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  activity_date DATE NOT NULL,
+  last_active_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  PRIMARY KEY (contributor_id, activity_date)
+);
+
+CREATE INDEX contributor_activity_date_last_active_idx
+  ON contributor_activity (activity_date, last_active_at DESC);
+
 CREATE TABLE tasks (
   id                  UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   title               TEXT NOT NULL,
@@ -66,6 +76,7 @@ CREATE TABLE withdrawals (
 
 GRANT USAGE ON SCHEMA public TO anon, authenticated, service_role;
 GRANT SELECT ON public.profiles    TO authenticated, service_role;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.contributor_activity TO service_role;
 GRANT INSERT, UPDATE ON public.profiles TO authenticated, service_role;
 GRANT SELECT ON public.tasks       TO anon, authenticated, service_role;
 GRANT ALL    ON public.tasks       TO service_role;
@@ -75,9 +86,11 @@ GRANT ALL    ON public.withdrawals TO authenticated, service_role;
 -- ── 3. Row Level Security ─────────────────────────────────────
 
 ALTER TABLE profiles    ENABLE ROW LEVEL SECURITY;
+ALTER TABLE contributor_activity ENABLE ROW LEVEL SECURITY;
 ALTER TABLE tasks       ENABLE ROW LEVEL SECURITY;
 ALTER TABLE earnings    ENABLE ROW LEVEL SECURITY;
 ALTER TABLE withdrawals ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON public.contributor_activity FROM PUBLIC, anon, authenticated;
 
 -- profiles
 CREATE POLICY "Users can view own profile"

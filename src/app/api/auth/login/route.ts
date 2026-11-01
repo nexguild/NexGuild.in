@@ -3,6 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 import { createServerClient } from "@/lib/supabase-server";
 import { clientIp, isRateLimited, recordFailure, resetRateLimit } from "@/lib/rate-limit";
 import { getIpReputation } from "@/lib/ip-reputation";
+import { getContributorActivityDate } from "@/lib/contributor-activity";
 
 const MAX      = 10;
 const WINDOW   = 15 * 60 * 1000; // 15 minutes
@@ -75,7 +76,17 @@ export async function POST(req: NextRequest) {
         update.ip_fraud_score  = rep.fraudScore;
       }
     }
-    await admin.from("profiles").update(update).eq("id", userId);
+    const { error: updateError } = await admin.from("profiles").update(update).eq("id", userId);
+    if (updateError) console.error("[auth/login] profile activity update failed:", updateError.message);
+    const { error: activityError } = await admin.from("contributor_activity").upsert(
+      {
+        contributor_id: userId,
+        activity_date: getContributorActivityDate(),
+        last_active_at: new Date().toISOString(),
+      },
+      { onConflict: "contributor_id,activity_date" },
+    );
+    if (activityError) console.error("[auth/login] daily activity write failed:", activityError.message);
   })();
 
   return NextResponse.json({
