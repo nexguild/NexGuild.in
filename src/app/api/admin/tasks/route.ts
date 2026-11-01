@@ -4,6 +4,7 @@ import { newTaskHtml } from "@/lib/email";
 import { isBrevoConfigured, sendBrevoEmails } from "@/lib/brevo";
 import { createDriveResourcesForTask, isDriveConfigured } from "@/lib/google-drive";
 import { isCountryCode } from "@/lib/countries";
+import { writeAdminAudit } from "@/lib/admin-audit";
 
 export async function POST(req: NextRequest) {
   const admin = createClient(
@@ -139,6 +140,15 @@ export async function POST(req: NextRequest) {
       console.error("[admin/tasks] insert error:", insertErr?.message);
       return NextResponse.json({ error: insertErr?.message ?? "Failed to create task" }, { status: 500 });
     }
+
+    await writeAdminAudit(admin, {
+      actorId: user.id,
+      action: "task_created",
+      targetType: "task",
+      targetId: task.id,
+      summary: `Created ${status} task "${task.title}" with a ${Number(task.pay_per_task ?? 0).toLocaleString()} NexCoin reward.`,
+      metadata: { status, reward: Number(task.pay_per_task ?? 0), isPrivate: task.is_private },
+    });
 
     // ── Google Drive folder + Images subfolder + Sheet ───────────────────────
     // MUST be awaited — Vercel terminates the function when the response is sent,

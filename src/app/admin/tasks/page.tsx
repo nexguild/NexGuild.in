@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { ClipboardList, Plus, Search, Pause, X, Pencil, Eye, BarChart2, Loader2, Sheet, Trash2, Rocket } from "lucide-react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
-import { usePageGuard } from "@/components/layout/admin-auth-guard";
+import { useAdminRole, usePageGuard } from "@/components/layout/admin-auth-guard";
 import { ADMIN_ROLES } from "@/lib/admin-permissions";
 import type { TaskStat } from "@/app/api/admin/task-analytics/route";
 
@@ -34,6 +34,8 @@ const STATUSES   = ["All Status", "active", "paused", "draft", "archived"];
 export default function AdminTasksPage() {
   const tokenRef = useRef<string | null>(null);
   const allowed = usePageGuard(ADMIN_ROLES.CONTENT);
+  const role = useAdminRole();
+  const canManage = ADMIN_ROLES.UPPER.some((allowedRole) => allowedRole === role);
 
   const [tasks, setTasks]             = useState<Task[]>([]);
   const [loading, setLoading]         = useState(true);
@@ -126,7 +128,9 @@ export default function AdminTasksPage() {
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-[var(--text-primary)]">Tasks</h1>
-          <p className="text-sm text-[var(--text-secondary)]">Create and manage all contributor tasks.</p>
+          <p className="text-sm text-[var(--text-secondary)]">
+            {canManage ? "Create and manage all contributor tasks." : "Review contributor tasks and submissions."}
+          </p>
         </div>
         <div className="flex items-center gap-2">
           <div className="flex items-center rounded-md border border-[var(--border-default)] bg-[var(--surface-card)] p-0.5 gap-0.5">
@@ -140,20 +144,24 @@ export default function AdminTasksPage() {
             >
               <ClipboardList className="h-3.5 w-3.5" /> Tasks
             </button>
-            <button
-              onClick={() => switchView("analytics")}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-sm font-medium transition-colors ${
-                view === "analytics"
-                  ? "bg-[var(--brand-500)] text-white"
-                  : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
-              }`}
-            >
-              <BarChart2 className="h-3.5 w-3.5" /> Analytics
-            </button>
+            {canManage && (
+              <button
+                onClick={() => switchView("analytics")}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-sm font-medium transition-colors ${
+                  view === "analytics"
+                    ? "bg-[var(--brand-500)] text-white"
+                    : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+                }`}
+              >
+                <BarChart2 className="h-3.5 w-3.5" /> Analytics
+              </button>
+            )}
           </div>
-          <Button asChild size="sm">
-            <Link href="/admin/tasks/new"><Plus className="h-4 w-4" /> Post New Task</Link>
-          </Button>
+          {canManage && (
+            <Button asChild size="sm">
+              <Link href="/admin/tasks/new"><Plus className="h-4 w-4" /> Post New Task</Link>
+            </Button>
+          )}
         </div>
       </div>
 
@@ -196,7 +204,7 @@ export default function AdminTasksPage() {
                   {tasks.length === 0 ? "Post your first task for contributors." : "Try adjusting your filters."}
                 </p>
               </div>
-              {tasks.length === 0 && (
+              {tasks.length === 0 && canManage && (
                 <Button asChild size="sm">
                   <Link href="/admin/tasks/new"><Plus className="h-4 w-4" /> Post New Task</Link>
                 </Button>
@@ -249,12 +257,14 @@ export default function AdminTasksPage() {
                               <Eye className="h-3.5 w-3.5" />
                             </Link>
                           </Button>
-                          <Button variant="secondary" size="sm" asChild>
-                            <Link href={`/admin/tasks/${task.id}/edit`}>
-                              <Pencil className="h-3.5 w-3.5" />
-                            </Link>
-                          </Button>
-                          {task.status === "draft" && (
+                          {canManage && (
+                            <Button variant="secondary" size="sm" asChild>
+                              <Link href={`/admin/tasks/${task.id}/edit`}>
+                                <Pencil className="h-3.5 w-3.5" />
+                              </Link>
+                            </Button>
+                          )}
+                          {canManage && task.status === "draft" && (
                             <Button size="sm" disabled={updating === task.id}
                               onClick={() => updateStatus(task.id, "active")}
                               className="bg-[var(--brand-500)] hover:brightness-105 text-white">
@@ -263,31 +273,33 @@ export default function AdminTasksPage() {
                                 : <><Rocket className="h-3.5 w-3.5" /> Publish</>}
                             </Button>
                           )}
-                          {task.status === "active" && (
+                          {canManage && task.status === "active" && (
                             <Button variant="secondary" size="sm" disabled={updating === task.id}
                               onClick={() => updateStatus(task.id, "paused")}>
                               <Pause className="h-3.5 w-3.5" /> Pause
                             </Button>
                           )}
-                          {task.status === "paused" && (
+                          {canManage && task.status === "paused" && (
                             <Button variant="secondary" size="sm" disabled={updating === task.id}
                               onClick={() => updateStatus(task.id, "active")}>
                               ▶ Resume
                             </Button>
                           )}
-                          {task.status !== "archived" && task.status !== "draft" && (
+                          {canManage && task.status !== "archived" && task.status !== "draft" && (
                             <Button variant="destructive" size="sm" disabled={updating === task.id}
                               onClick={() => updateStatus(task.id, "archived")}>
                               <X className="h-3.5 w-3.5" /> Close
                             </Button>
                           )}
-                          <Button
-                            variant="secondary" size="sm"
-                            onClick={() => setDeleteTarget(task)}
-                            className="text-red-400 hover:text-red-300 hover:border-red-500/30"
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </Button>
+                          {canManage && (
+                            <Button
+                              variant="secondary" size="sm"
+                              onClick={() => setDeleteTarget(task)}
+                              className="text-red-400 hover:text-red-300 hover:border-red-500/30"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </Button>
+                          )}
                         </div>
                       </td>
                     </tr>

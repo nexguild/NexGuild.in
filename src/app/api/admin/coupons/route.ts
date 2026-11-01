@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase-server";
 import { SupabaseClient } from "@supabase/supabase-js";
+import { writeAdminAudit } from "@/lib/admin-audit";
 
-async function verifyAdmin(req: NextRequest): Promise<SupabaseClient | null> {
+async function verifyAdmin(req: NextRequest): Promise<{ admin: SupabaseClient; userId: string } | null> {
   const token = req.headers.get("authorization")?.replace("Bearer ", "");
   if (!token) return null;
   const admin = createServerClient();
@@ -11,14 +12,14 @@ async function verifyAdmin(req: NextRequest): Promise<SupabaseClient | null> {
   const { data: profile } = await admin.from("profiles").select("role").eq("id", user.id).single();
   const role = (profile as { role: string } | null)?.role;
   if (role !== "admin" && role !== "owner") return null;
-  return admin;
+  return { admin, userId: user.id };
 }
 
 export async function GET(req: NextRequest) {
-  const admin = await verifyAdmin(req);
-  if (!admin) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  const ctx = await verifyAdmin(req);
+  if (!ctx) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
-  const { data, error } = await admin
+  const { data, error } = await ctx.admin
     .from("coupons")
     .select("id, code, discount_percent, discount_coins, max_uses, used_count, expires_at, is_active, created_at")
     .order("created_at", { ascending: false });
@@ -28,8 +29,9 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const admin = await verifyAdmin(req);
-  if (!admin) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  const ctx = await verifyAdmin(req);
+  if (!ctx) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  const { admin, userId } = ctx;
 
   const body = await req.json() as {
     action: "create" | "delete" | "toggle";
@@ -61,18 +63,52 @@ export async function POST(req: NextRequest) {
       .single();
 
     if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+    await writeAdminAudit(admin, {
+      actorId: userId,
+      action: "coupon_created",
+      targetType: "coupon",
+      targetId: data.id,
+      summary: `Created coupon ${data.code} with ${discount_type === "percent" ? `${discount_value}%` : `${discount_value} NexCoins`} discount.`,
+      metadata: { discountType: discount_type ?? null, discountValue: discount_value, maxUses: max_uses },
+    });
     return NextResponse.json({ coupon: data });
   }
 
   if (body.action === "delete") {
     if (!body.id) return NextResponse.json({ error: "id required" }, { status: 400 });
-    await admin.from("coupons").delete().eq("id", body.id);
+    const { data, error } = await admin.from("coupons").delete().eq("id", body.id).select("id, code").maybeSingle();
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    if (!data) return NextResponse.json({ error: "Coupon not found." }, { status: 404 });
+    await writeAdminAudit(admin, {
+      actorId: userId,
+      action: "coupon_deleted",
+      targetType: "coupon",
+      targetId: data.id,
+      summary: `Deleted coupon ${data.code}.`,
+    });
     return NextResponse.json({ ok: true });
   }
 
   if (body.action === "toggle") {
     if (!body.id) return NextResponse.json({ error: "id required" }, { status: 400 });
-    await admin.from("coupons").update({ is_active: body.is_active }).eq("id", body.id);
+    if (typeof body.is_active !== "boolean") {
+      return NextResponse.json({ error: "is_active must be a boolean." }, { status: 400 });
+    }
+    const { data, error } = await admin.from("coupons")
+      .update({ is_active: body.is_active })
+      .eq("id", body.id)
+      .select("id, code")
+      .maybeSingle();
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    if (!data) return NextResponse.json({ error: "Coupon not found." }, { status: 404 });
+    await writeAdminAudit(admin, {
+      actorId: userId,
+      action: "coupon_toggled",
+      targetType: "coupon",
+      targetId: data.id,
+      summary: `${body.is_active ? "Enabled" : "Disabled"} coupon ${data.code}.`,
+      metadata: { isActive: body.is_active },
+    });
     return NextResponse.json({ ok: true });
   }
 

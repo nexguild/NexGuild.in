@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase-server";
+import { ADMIN_ROLES } from "@/lib/admin-permissions";
+import { writeAdminAudit } from "@/lib/admin-audit";
 
 const SECTION_KEYS = [
   "maintenance_org",
@@ -36,23 +38,31 @@ async function verifyAdminOrOwner(req: NextRequest) {
 export async function GET(req: NextRequest) {
   const ctx = await verifyAdminOrOwner(req);
   if (!ctx) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const canManageSettings = ADMIN_ROLES.UPPER.some((allowedRole) => allowedRole === ctx.role);
+  if (!canManageSettings && ctx.role !== "finance") {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
   const { admin } = ctx;
 
-  const SETTING_KEYS = [
-    ...SECTION_KEYS,
-    "streak_daily_bonus",
-    "streak_day7_bonus",
-    "streak_tasks_required_per_day",
-    "allowed_signup_domains",
-    "nexcoin_per_inr",
-    "nexcoin_per_usd",
-  ] as const;
+  const SETTING_KEYS = canManageSettings
+    ? [
+        ...SECTION_KEYS,
+        "streak_daily_bonus",
+        "streak_day7_bonus",
+        "streak_tasks_required_per_day",
+        "allowed_signup_domains",
+        "nexcoin_per_inr",
+        "nexcoin_per_usd",
+      ] as const
+    : ["nexcoin_per_inr", "nexcoin_per_usd"] as const;
 
   const [{ data: staff }, { data: settings }] = await Promise.all([
-    admin.from("profiles")
-      .select("id, full_name, email, role, joined_at")
-      .in("role", [...ALL_STAFF_ROLES])
-      .order("joined_at", { ascending: true }),
+    canManageSettings
+      ? admin.from("profiles")
+          .select("id, full_name, email, role, joined_at")
+          .in("role", [...ALL_STAFF_ROLES])
+          .order("joined_at", { ascending: true })
+      : Promise.resolve({ data: null, error: null }),
     admin.from("platform_settings")
       .select("key, value")
       .in("key", [...SETTING_KEYS]),
@@ -77,6 +87,10 @@ export async function GET(req: NextRequest) {
 
   const nexcoinPerInr = parseFloat(rows.find((r) => r.key === "nexcoin_per_inr")?.value ?? "12.5") || 12.5;
   const nexcoinPerUsd = parseFloat(rows.find((r) => r.key === "nexcoin_per_usd")?.value ?? "1000") || 1000;
+
+  if (ctx.role === "finance") {
+    return NextResponse.json({ nexcoinPerInr, nexcoinPerUsd });
+  }
 
   return NextResponse.json({
     admins: staff ?? [],
@@ -110,6 +124,14 @@ export async function PATCH(req: NextRequest) {
       { onConflict: "key" }
     );
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    await writeAdminAudit(admin, {
+      actorId: ctx.userId,
+      action: "maintenance_changed",
+      targetType: "platform_setting",
+      targetId: key,
+      summary: `${value === "true" ? "Enabled" : "disabled"} maintenance mode for ${section}.`,
+      metadata: { key, enabled: value === "true" },
+    });
     return NextResponse.json({ ok: true });
   }
 
@@ -129,6 +151,14 @@ export async function PATCH(req: NextRequest) {
     if (tgt.role === "owner") return NextResponse.json({ error: "Cannot modify the owner account." }, { status: 403 });
     const { error } = await admin.from("profiles").update({ role: newRole }).eq("id", tgt.id);
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    await writeAdminAudit(admin, {
+      actorId: ctx.userId,
+      action: "staff_role_changed",
+      targetType: "staff_member",
+      targetId: tgt.id,
+      summary: `Changed ${email}'s role from ${tgt.role} to ${newRole}.`,
+      metadata: { oldRole: tgt.role, newRole },
+    });
     const { data: updated } = await admin.from("profiles")
       .select("id, full_name, email, role, joined_at")
       .in("role", [...ALL_STAFF_ROLES])
@@ -141,9 +171,19 @@ export async function PATCH(req: NextRequest) {
     const newRole: unknown = body.role;
     if (!isTeamRole(newRole)) return NextResponse.json({ error: "Invalid role." }, { status: 400 });
     const { data: target } = await admin.from("profiles").select("role").eq("id", body.id).single();
-    if ((target as { role: string } | null)?.role === "owner") return NextResponse.json({ error: "Cannot modify the owner account." }, { status: 403 });
-    const { error } = await admin.from("profiles").update({ role: newRole }).eq("id", body.id);
+    const oldRole = (target as { role: string } | null)?.role;
+    if (oldRole === "owner") return NextResponse.json({ error: "Cannot modify the owner account." }, { status: 403 });
+    const { data: updatedTarget, error } = await admin.from("profiles").update({ role: newRole }).eq("id", body.id).select("id").maybeSingle();
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    if (!updatedTarget) return NextResponse.json({ error: "Staff member not found." }, { status: 404 });
+    await writeAdminAudit(admin, {
+      actorId: ctx.userId,
+      action: "staff_role_changed",
+      targetType: "staff_member",
+      targetId: body.id,
+      summary: `Changed staff role from ${oldRole ?? "unknown"} to ${newRole}.`,
+      metadata: { oldRole: oldRole ?? null, newRole },
+    });
     const { data: updated } = await admin.from("profiles")
       .select("id, full_name, email, role, joined_at")
       .in("role", [...ALL_STAFF_ROLES])
@@ -155,7 +195,17 @@ export async function PATCH(req: NextRequest) {
     if (!body.id) return NextResponse.json({ error: "id required" }, { status: 400 });
     const { data: target } = await admin.from("profiles").select("role").eq("id", body.id).single();
     if ((target as { role: string } | null)?.role === "owner") return NextResponse.json({ error: "Cannot modify the owner account." }, { status: 403 });
-    await admin.from("profiles").update({ role: "contributor" }).eq("id", body.id);
+    const { data: updatedTarget, error } = await admin.from("profiles").update({ role: "contributor" }).eq("id", body.id).select("id").maybeSingle();
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    if (!updatedTarget) return NextResponse.json({ error: "Staff member not found." }, { status: 404 });
+    await writeAdminAudit(admin, {
+      actorId: ctx.userId,
+      action: "staff_role_changed",
+      targetType: "staff_member",
+      targetId: body.id,
+      summary: `Changed staff role from ${(target as { role: string } | null)?.role ?? "unknown"} to contributor.`,
+      metadata: { oldRole: (target as { role: string } | null)?.role ?? null, newRole: "contributor" },
+    });
     return NextResponse.json({ ok: true });
   }
 
@@ -173,6 +223,13 @@ export async function PATCH(req: NextRequest) {
       { key: "streak_tasks_required_per_day", value: String(required), updated_at: new Date().toISOString() },
     ], { onConflict: "key" });
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    await writeAdminAudit(admin, {
+      actorId: ctx.userId,
+      action: "settings_changed",
+      targetType: "platform_settings",
+      summary: "Updated daily streak rewards and completion requirements.",
+      metadata: { dailyBonus: daily, day7Bonus: day7, tasksRequired: required },
+    });
     return NextResponse.json({ ok: true });
   }
 
@@ -190,6 +247,14 @@ export async function PATCH(req: NextRequest) {
       { onConflict: "key" }
     );
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    await writeAdminAudit(admin, {
+      actorId: ctx.userId,
+      action: "settings_changed",
+      targetType: "platform_setting",
+      targetId: "allowed_signup_domains",
+      summary: `Updated allowed signup domains: ${cleaned.join(", ")}.`,
+      metadata: { domainCount: cleaned.length },
+    });
     return NextResponse.json({ ok: true, allowedDomains: cleaned });
   }
 
@@ -206,6 +271,13 @@ export async function PATCH(req: NextRequest) {
       { key: "nexcoin_per_usd", value: String(perUsd), updated_at: new Date().toISOString() },
     ], { onConflict: "key" });
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    await writeAdminAudit(admin, {
+      actorId: ctx.userId,
+      action: "settings_changed",
+      targetType: "platform_settings",
+      summary: "Updated NexCoin exchange rates.",
+      metadata: { nexcoinPerInr: perInr, nexcoinPerUsd: perUsd },
+    });
     return NextResponse.json({ ok: true });
   }
 

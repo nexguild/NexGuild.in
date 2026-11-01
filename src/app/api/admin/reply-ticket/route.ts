@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
 
     const { data: caller } = await admin
       .from("profiles").select("role").eq("id", user.id).single();
-    if (caller?.role !== "admin" && caller?.role !== "owner") {
+    if (!["admin", "owner", "support"].includes(caller?.role ?? "")) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 

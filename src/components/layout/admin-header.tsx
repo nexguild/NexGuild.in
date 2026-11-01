@@ -6,6 +6,7 @@ import { Avatar } from "@/components/ui/avatar";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
+import { ADMIN_ROLES } from "@/lib/admin-permissions";
 
 const BREADCRUMBS: Record<string, string[]> = {
   "/admin":                   ["Overview"],
@@ -16,11 +17,11 @@ const BREADCRUMBS: Record<string, string[]> = {
   "/admin/submissions":       ["Submissions"],
   "/admin/assignments":       ["Assignments"],
   "/admin/offerwalls":        ["Offerwalls"],
-  "/admin/withdrawals":       ["Voucher Redemptions"],
   "/admin/vouchers":          ["Vouchers"],
   "/admin/announcements":     ["Announcements"],
   "/admin/finances":          ["Finances"],
   "/admin/settings":          ["Settings"],
+  "/admin/audit-logs":        ["Audit History"],
 };
 
 interface AdminProfile {
@@ -41,6 +42,7 @@ export function AdminHeader({ onMenuToggle }: AdminHeaderProps) {
 
   const [open, setOpen]       = useState(false);
   const [profile, setProfile] = useState<AdminProfile | null>(null);
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
@@ -74,6 +76,8 @@ export function AdminHeader({ onMenuToggle }: AdminHeaderProps) {
 
   const displayName = profile?.full_name ?? "Admin";
   const isOwner     = profile?.role === "owner";
+  const canSearchContributors = ADMIN_ROLES.USERS.some((role) => role === profile?.role);
+  const canManageSettings = ADMIN_ROLES.UPPER.some((role) => role === profile?.role);
 
   return (
     <header className="h-16 fixed top-0 right-0 left-0 lg:left-sidebar-admin z-30 flex items-center justify-between px-4 sm:px-6 bg-[var(--surface-card)] border-b border-[var(--border-default)]">
@@ -103,14 +107,24 @@ export function AdminHeader({ onMenuToggle }: AdminHeaderProps) {
 
       <div className="flex items-center gap-3">
         {/* Search */}
-        <div className="hidden md:flex items-center gap-2 h-9 px-3 rounded-md border border-[var(--border-default)] bg-[var(--surface-subtle)] w-56">
+        {canSearchContributors && <form
+          onSubmit={(event) => {
+            event.preventDefault();
+            const query = search.trim();
+            if (query) router.push("/admin/contributors?search=" + encodeURIComponent(query));
+          }}
+          className="hidden md:flex items-center gap-2 h-9 px-3 rounded-md border border-[var(--border-default)] bg-[var(--surface-subtle)] w-56"
+        >
           <Search className="h-4 w-4 text-[var(--text-muted)] flex-shrink-0" />
           <input
-            type="text"
+            type="search"
             placeholder="Search contributors..."
+            aria-label="Search contributors by name, email or ID"
             className="flex-1 bg-transparent text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none"
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
           />
-        </div>
+        </form>}
 
         {/* Admin user dropdown */}
         <div className="relative" ref={dropRef}>
@@ -152,13 +166,13 @@ export function AdminHeader({ onMenuToggle }: AdminHeaderProps) {
                 >
                   <User className="h-4 w-4" /> Profile
                 </Link>
-                <Link
+                {canManageSettings && <Link
                   href="/admin/settings"
                   onClick={() => setOpen(false)}
                   className="flex items-center gap-2.5 w-full px-4 py-2.5 text-sm text-[var(--text-secondary)] hover:bg-[var(--surface-subtle)] hover:text-[var(--text-primary)] transition-colors"
                 >
                   <Settings className="h-4 w-4" /> Settings
-                </Link>
+                </Link>}
               </div>
 
               <div className="border-t border-[var(--border-default)] py-1">

@@ -324,10 +324,15 @@ CREATE TABLE IF NOT EXISTS voucher_requests (
   voucher_type   TEXT NOT NULL,
   voucher_value  INTEGER,
   coins_spent    INTEGER NOT NULL,
+  charged_coins  INTEGER,
   status         TEXT DEFAULT 'pending',  -- 'pending' | 'processing' | 'delivered'
   voucher_code   TEXT,
   requested_at   TIMESTAMPTZ DEFAULT NOW(),
-  delivered_at   TIMESTAMPTZ
+  delivered_at   TIMESTAMPTZ,
+  refund_reason  TEXT,
+  refund_amount  INTEGER,
+  refunded_at    TIMESTAMPTZ,
+  refunded_by    UUID REFERENCES profiles(id)
 );
 
 -- RLS
@@ -426,6 +431,104 @@ $$;
 
 GRANT EXECUTE ON FUNCTION reserve_nexcoins(UUID, NUMERIC) TO authenticated, service_role;
 GRANT EXECUTE ON FUNCTION refund_nexcoins(UUID, NUMERIC) TO service_role;
+
+CREATE OR REPLACE FUNCTION public.refund_voucher_request(
+  p_request_id UUID,
+  p_reason TEXT,
+  p_admin_id UUID
+)
+RETURNS INTEGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
+DECLARE
+  v_request public.voucher_requests%ROWTYPE;
+  v_reason TEXT := trim(COALESCE(p_reason, ''));
+BEGIN
+  IF p_request_id IS NULL OR p_admin_id IS NULL
+    OR length(v_reason) < 10 OR length(v_reason) > 500 THEN
+    RAISE EXCEPTION 'A request ID, staff ID, and reason between 10 and 500 characters are required';
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1
+    FROM public.profiles
+    WHERE id = p_admin_id AND role IN ('owner', 'admin', 'finance')
+  ) THEN
+    RAISE EXCEPTION 'Forbidden';
+  END IF;
+
+  SELECT *
+  INTO v_request
+  FROM public.voucher_requests
+  WHERE id = p_request_id
+  FOR UPDATE;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Voucher request not found';
+  END IF;
+
+  IF v_request.status NOT IN ('pending', 'processing') THEN
+    RAISE EXCEPTION 'Only pending or processing voucher requests can be refunded';
+  END IF;
+
+  IF v_request.charged_coins IS NULL OR v_request.charged_coins < 0 THEN
+    RAISE EXCEPTION 'The exact coin charge is unavailable for this legacy request';
+  END IF;
+
+  IF NOT public.refund_nexcoins(v_request.contributor_id, v_request.charged_coins) THEN
+    RAISE EXCEPTION 'Contributor balance could not be refunded';
+  END IF;
+
+  INSERT INTO public.coin_transactions (
+    contributor_id, amount, type, source, description, created_at
+  ) VALUES (
+    v_request.contributor_id,
+    v_request.charged_coins,
+    'earned',
+    'voucher_refund',
+    format('Refund for voucher request %s: %s', p_request_id, v_reason),
+    NOW()
+  );
+
+  UPDATE public.voucher_requests
+  SET status = 'cancelled',
+      refund_reason = v_reason,
+      refund_amount = v_request.charged_coins,
+      refunded_at = NOW(),
+      refunded_by = p_admin_id
+  WHERE id = p_request_id;
+
+  INSERT INTO public.notifications (user_id, title, message, type)
+  VALUES (
+    v_request.contributor_id,
+    'Voucher request cancelled',
+    format('%s NexCoins were refunded for your cancelled voucher request.', v_request.charged_coins),
+    'voucher'
+  );
+
+  RETURN v_request.charged_coins;
+END;
+$$;
+
+REVOKE ALL ON FUNCTION public.refund_voucher_request(UUID, TEXT, UUID) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.refund_voucher_request(UUID, TEXT, UUID) TO service_role;
+
+CREATE OR REPLACE FUNCTION public.admin_dashboard_earned_coins()
+RETURNS NUMERIC
+LANGUAGE SQL
+STABLE
+SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
+  SELECT COALESCE(SUM(amount), 0)
+  FROM public.coin_transactions
+  WHERE type = 'earned';
+$$;
+
+REVOKE ALL ON FUNCTION public.admin_dashboard_earned_coins() FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.admin_dashboard_earned_coins() TO service_role;
 
 -- ── 6. Profile extensions ─────────────────────────────────────
 -- Run these to add skills, notification prefs, and phone columns.
@@ -561,6 +664,28 @@ ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Users can view own notifications"
   ON notifications FOR SELECT TO authenticated USING (auth.uid() = user_id);
+
+CREATE TABLE IF NOT EXISTS public.admin_audit_logs (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  actor_id UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
+  action TEXT NOT NULL,
+  target_type TEXT NOT NULL,
+  target_id TEXT,
+  summary TEXT NOT NULL,
+  metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS admin_audit_logs_created_at_idx
+  ON public.admin_audit_logs (created_at DESC);
+CREATE INDEX IF NOT EXISTS admin_audit_logs_action_idx
+  ON public.admin_audit_logs (action, created_at DESC);
+CREATE INDEX IF NOT EXISTS admin_audit_logs_actor_id_idx
+  ON public.admin_audit_logs (actor_id, created_at DESC);
+
+ALTER TABLE public.admin_audit_logs ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON public.admin_audit_logs FROM PUBLIC, anon, authenticated;
+GRANT SELECT, INSERT ON public.admin_audit_logs TO service_role;
 
 -- UPDATE policy needs both USING (row filter) and WITH CHECK (post-update check).
 -- Without WITH CHECK some Postgres versions silently reject the write.

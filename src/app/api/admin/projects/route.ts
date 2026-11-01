@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase-server";
+import { writeAdminAudit } from "@/lib/admin-audit";
 
 async function verifyAdmin(req: NextRequest) {
   const token = req.headers.get("authorization")?.replace("Bearer ", "");
@@ -84,5 +85,12 @@ export async function POST(req: NextRequest) {
   }).select("id").single();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  await writeAdminAudit(ctx.admin, {
+    actorId: ctx.userId,
+    action: "project_created",
+    targetType: "project",
+    targetId: data.id,
+    summary: `Created project "${body.name.trim()}".`,
+  });
   return NextResponse.json({ ok: true, id: (data as { id: string }).id });
 }

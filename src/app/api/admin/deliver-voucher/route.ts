@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { Resend } from "resend";
+import { writeAdminAudit } from "@/lib/admin-audit";
 
 export async function POST(req: NextRequest) {
   const admin = createClient(
@@ -24,7 +25,7 @@ export async function POST(req: NextRequest) {
       .eq("id", user.id)
       .single();
 
-    if (callerProfile?.role !== "admin" && callerProfile?.role !== "owner") {
+    if (!["admin", "owner", "finance"].includes(callerProfile?.role ?? "")) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
@@ -41,7 +42,7 @@ export async function POST(req: NextRequest) {
     // ── Fetch voucher request + contributor profile ───────────────
     const { data: vr, error: fetchErr } = await admin
       .from("voucher_requests")
-      .select("id, voucher_type, coins_spent, contributor_id, profiles(full_name, email)")
+      .select("id, voucher_type, coins_spent, contributor_id, status, profiles(full_name, email)")
       .eq("id", requestId)
       .single();
 
@@ -52,18 +53,24 @@ export async function POST(req: NextRequest) {
 
     // ── Update status to delivered ───────────────────────────────
     const deliveredAt = new Date().toISOString();
-    const { error: updateErr } = await admin
+    const { data: updatedRequest, error: updateErr } = await admin
       .from("voucher_requests")
       .update({
         status:       "delivered",
         voucher_code: voucherCode.trim(),
         delivered_at: deliveredAt,
       })
-      .eq("id", requestId);
+      .eq("id", requestId)
+      .in("status", ["pending", "processing"])
+      .select("id")
+      .maybeSingle();
 
     if (updateErr) {
       console.error("[deliver-voucher] update error:", updateErr.message);
       return NextResponse.json({ error: "Failed to update: " + updateErr.message }, { status: 500 });
+    }
+    if (!updatedRequest) {
+      return NextResponse.json({ error: "This voucher request is no longer available for delivery." }, { status: 409 });
     }
 
     // ── Gather contributor details ───────────────────────────────
@@ -73,6 +80,14 @@ export async function POST(req: NextRequest) {
     const email       = contributor?.email ?? null;
     const voucherType = vr.voucher_type;
     const code        = voucherCode.trim();
+
+    await writeAdminAudit(admin, {
+      actorId: user.id,
+      action: "voucher_delivered",
+      targetType: "voucher_request",
+      targetId: requestId,
+      summary: `Delivered ${voucherType} voucher to ${contributor?.full_name ?? email ?? vr.contributor_id}.`,
+    });
 
     // ── Send email via Resend ────────────────────────────────────
     if (process.env.RESEND_API_KEY && email) {

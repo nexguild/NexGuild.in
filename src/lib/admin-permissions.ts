@@ -9,3 +9,7 @@ export const ADMIN_ROLES = {
   USERS:    ["owner", "admin", "reviewer", "support", "moderator"],
   ANNOUNCE: ["owner", "admin", "support", "moderator"],
 } as const;
+
+export function isAdminRole(role: string | null | undefined): boolean {
+  return role != null && ADMIN_ROLES.ALL.some((adminRole) => adminRole === role);
+}

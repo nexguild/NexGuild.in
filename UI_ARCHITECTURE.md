@@ -908,22 +908,15 @@ The admin dashboard uses a wider sidebar (260px) and a denser data-forward layou
 
 ---
 
-### 3.7 Withdrawals (`/admin/withdrawals`)
+### 3.7 Voucher Requests (`/admin/vouchers`)
 
 ```
-┌──────────────────────────────────────────────────────┐
-│  TABS: [Pending]  [Processing]  [Completed] [Rejected]│
-├──────────────────────────────────────────────────────┤
-│  TABLE                                               │
-│  Contributor | Amount | Method | Requested | Actions │
-│  ──────────────────────────────────────────────────  │
-│  Row...      │ $X.XX  │ PayPal │ date      │ [buttons]│
-└──────────────────────────────────────────────────────┘
+Queue: Pending | Processing | Delivered | Cancelled
+Deliver a voucher code, or cancel an eligible request with a required reason
+and an exact NexCoin refund.
 ```
 
-**Pending tab actions per row:** "Mark Processing" | "Reject."
-**Processing tab actions per row:** "Mark Completed" | "Reject."
-**Reject action:** Opens a modal with a mandatory reason field.
+Requests created before exact per-voucher charges were recorded cannot be refunded automatically.
 
 ---
 
@@ -1015,15 +1008,26 @@ Header controls:
 
 ```
 Sidebar (primary navigation):
-  Overview         /admin
-  Contributors     /admin/contributors
-  Opportunities    /admin/opportunities
-  Projects         /admin/projects
-  Submissions      /admin/submissions      [pending badge]
-  Offerwalls       /admin/offerwalls
-  Withdrawals      /admin/withdrawals      [pending badge]
-  Finances         /admin/finances
-  Settings         /admin/settings
+  Overview              /admin
+  Contributors          /admin/contributors
+  Tasks                 /admin/tasks
+  Projects              /admin/projects
+  Submissions           /admin/submissions       [pending badge]
+  Assignments           /admin/assignments       [pending badge]
+  Offerwalls            /admin/offerwalls
+  Vouchers              /admin/vouchers          [pending badge]
+  Binance Redemptions   /admin/binance-redemptions [pending badge]
+  Voucher Catalog       /admin/voucher-catalog
+  Jobs                  /admin/jobs
+  Blog                  /admin/blog
+  Announcements         /admin/announcements
+  Support               /admin/support           [open badge]
+  Finances              /admin/finances
+  Postback Logs         /admin/postback-logs
+  Suspicious Visits     /admin/suspicious-visits [flagged badge]
+  Insights              /admin/insights
+  Settings              /admin/settings
+  Audit History         /admin/audit-logs
 
 Header:
   Breadcrumb navigation

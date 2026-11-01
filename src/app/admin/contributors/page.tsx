@@ -75,6 +75,11 @@ export default function ContributorsPage() {
   const [deleteErr, setDeleteErr]       = useState<string | null>(null);
 
   useEffect(() => {
+    const initialSearch = new URLSearchParams(window.location.search).get("search");
+    if (initialSearch) setSearch(initialSearch);
+  }, []);
+
+  useEffect(() => {
     async function fetchContributors() {
       const { data: { session } } = await supabase.auth.getSession();
       tokenRef.current = session?.access_token ?? null;

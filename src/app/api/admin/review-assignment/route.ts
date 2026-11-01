@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { FROM_NOREPLY, getResend, assignmentApprovedHtml, assignmentRejectedHtml } from "@/lib/email";
+import { writeAdminAudit } from "@/lib/admin-audit";
 
 const admin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -18,7 +19,7 @@ export async function POST(req: NextRequest) {
     if (authErr || !user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const { data: profile } = await admin.from("profiles").select("role").eq("id", user.id).single();
-    if (profile?.role !== "admin" && profile?.role !== "owner") {
+    if (!["admin", "owner", "reviewer"].includes(profile?.role ?? "")) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
@@ -28,6 +29,9 @@ export async function POST(req: NextRequest) {
       feedback?: string;
     };
     const { assignmentId, action, feedback } = body;
+    if (!["approve", "reject"].includes(action)) {
+      return NextResponse.json({ error: "Action must be approve or reject." }, { status: 400 });
+    }
 
     const { data: assignment, error: aErr } = await admin
       .from("assignments")
@@ -42,12 +46,22 @@ export async function POST(req: NextRequest) {
     const taskId    = taskMeta?.id ?? "";
     const now = new Date().toISOString();
 
-    await admin.from("assignments").update({
+    const { error: updateError } = await admin.from("assignments").update({
       status:      action === "approve" ? "approved" : "rejected",
       feedback:    feedback ?? null,
       reviewed_by: user.id,
       reviewed_at: now,
     }).eq("id", assignmentId);
+    if (updateError) return NextResponse.json({ error: updateError.message }, { status: 500 });
+
+    await writeAdminAudit(admin, {
+      actorId: user.id,
+      action: "assignment_reviewed",
+      targetType: "assignment",
+      targetId: assignmentId,
+      summary: `${action === "approve" ? "Approved" : "Rejected"} assignment for "${taskTitle}".`,
+      metadata: { decision: action },
+    });
 
     if (action === "approve") {
       await admin.from("notifications").insert({

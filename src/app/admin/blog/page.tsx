@@ -22,7 +22,7 @@ interface BlogPost {
 }
 
 export default function AdminBlogPage() {
-  const allowed  = usePageGuard(ADMIN_ROLES.REVIEW);
+  const allowed  = usePageGuard(ADMIN_ROLES.UPPER);
   const tokenRef = useRef<string | null>(null);
 
   const [posts, setPosts]           = useState<BlogPost[]>([]);

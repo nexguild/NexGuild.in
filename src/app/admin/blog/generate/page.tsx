@@ -113,7 +113,7 @@ const tc = "w-full px-3 py-2.5 rounded-lg border border-[var(--border-default)] 
 
 // ── Main Page ─────────────────────────────────────────────────────────────────
 export default function BlogGeneratePage() {
-  const allowed  = usePageGuard(ADMIN_ROLES.REVIEW);
+  const allowed  = usePageGuard(ADMIN_ROLES.UPPER);
   const tokenRef = useRef<string | null>(null);
 
   // Phase: form → loading → preview

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { binanceRedemptionPaidHtml, binanceRedemptionRejectedHtml, FROM_NOREPLY, getResend } from "@/lib/email";
+import { writeAdminAudit } from "@/lib/admin-audit";
 
 const ALLOWED_ROLES = ["owner", "admin", "finance"] as const;
 
@@ -87,6 +88,23 @@ export async function PATCH(req: NextRequest) {
       description: `Refund for rejected Binance Pay redemption ${item.id}`,
     });
   }
+
+  await writeAdminAudit(ctx.admin, {
+    actorId: ctx.userId,
+    action: "binance_redemption_updated",
+    targetType: "binance_redemption",
+    targetId: item.id,
+    summary: body.action === "paid"
+      ? `Marked ${item.usdt_amount} USDT redemption paid. Reference: ${body.paymentReference!.trim()}`
+      : body.action === "rejected"
+        ? `Rejected ${item.coins_requested.toLocaleString()}-coin Binance redemption and refunded it: ${body.rejectionReason!.trim()}`
+        : "Moved Binance redemption under review.",
+    metadata: {
+      status: body.action,
+      coins: item.coins_requested,
+      usdtAmount: Number(item.usdt_amount),
+    },
+  });
 
   await ctx.admin.from("notifications").insert({
     user_id: item.contributor_id,

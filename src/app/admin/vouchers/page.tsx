@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Gift, CheckCircle, Loader2, Search, Pencil, X, Save } from "lucide-react";
+import { Gift, CheckCircle, Loader2, Search, Pencil, X, Save, Ban } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
 import { usePageGuard } from "@/components/layout/admin-auth-guard";
@@ -13,10 +13,14 @@ interface VoucherRequest {
   voucher_type: string;
   voucher_value: number | null;
   coins_spent: number;
+  charged_coins: number | null;
   status: string;
   voucher_code: string | null;
   requested_at: string;
   delivered_at: string | null;
+  refund_reason: string | null;
+  refund_amount: number | null;
+  refunded_at: string | null;
   profiles: {
     full_name: string | null;
     email: string | null;
@@ -27,9 +31,10 @@ const STATUS_STYLES: Record<string, string> = {
   pending:    "bg-yellow-500/10 text-yellow-400",
   processing: "bg-blue-500/10 text-blue-400",
   delivered:  "bg-green-500/10 text-green-400",
+  cancelled:  "bg-red-500/10 text-red-400",
 };
 
-const TABS = ["pending", "processing", "delivered"];
+const TABS = ["pending", "processing", "delivered", "cancelled"];
 
 export default function VouchersPage() {
   const allowed = usePageGuard(ADMIN_ROLES.FINANCE);
@@ -45,12 +50,20 @@ export default function VouchersPage() {
   const [editCode, setEditCode] = useState("");
   const [updating, setUpdating] = useState(false);
   const [updateError, setUpdateError] = useState<string | null>(null);
+  const [cancellingId, setCancellingId] = useState<string | null>(null);
+  const [refundReason, setRefundReason] = useState("");
+  const [refundError, setRefundError] = useState<string | null>(null);
+  const [refunding, setRefunding] = useState(false);
 
   useEffect(() => {
     async function fetchRequests() {
       const { data: { session } } = await supabase.auth.getSession();
       const res = await fetch("/api/admin/voucher-requests", {
+        headers: session?.access_token ? { Authorization: "Bearer " + session.access_token } : {},
+        /*
         headers: session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {},
+      });
+      */
       });
       if (res.ok) {
         const { requests } = await res.json() as { requests: VoucherRequest[] };
@@ -75,7 +88,11 @@ export default function VouchersPage() {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        ...(token ? { Authorization: "Bearer " + token } : {}),
+        /*
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+        */
       },
       body: JSON.stringify({ requestId: req.id, voucherCode: code }),
     });
@@ -112,7 +129,11 @@ export default function VouchersPage() {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        ...(token ? { Authorization: "Bearer " + token } : {}),
+        /*
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+        */
       },
       body: JSON.stringify({ requestId: req.id, voucherCode: editCode }),
     });
@@ -126,6 +147,52 @@ export default function VouchersPage() {
       setUpdateError(data.error ?? "Update failed.");
     }
     setUpdating(false);
+  }
+
+  async function cancelAndRefund(req: VoucherRequest) {
+    const reason = refundReason.trim();
+    if (reason.length < 10 || reason.length > 500) return;
+
+    setRefunding(true);
+    setRefundError(null);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await fetch("/api/admin/refund-voucher", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(session?.access_token ? { Authorization: "Bearer " + session.access_token } : {}),
+          /*
+          ...(session?.access_token ? { Authorization: `****** } : {}),
+        },
+          */
+        },
+        body: JSON.stringify({ requestId: req.id, reason }),
+      });
+      const data = await res.json().catch(() => ({})) as { error?: string; refundAmount?: number };
+      if (!res.ok) {
+        setRefundError(data.error ?? "Failed to cancel and refund voucher.");
+        return;
+      }
+
+      setRequests((prev) => prev.map((request) => request.id === req.id
+        ? {
+          ...request,
+          status: "cancelled",
+          refund_reason: reason,
+          refund_amount: data.refundAmount ?? req.charged_coins,
+          refunded_at: new Date().toISOString(),
+        }
+        : request
+      ));
+      setCancellingId(null);
+      setRefundReason("");
+    } catch (error) {
+      console.error("[admin-vouchers] refund request failed:", error);
+      setRefundError("Unable to reach the server. Please try again.");
+    } finally {
+      setRefunding(false);
+    }
   }
 
   const filtered = requests.filter((r) => {
@@ -159,12 +226,16 @@ export default function VouchersPage() {
       {/* Tabs */}
       <div className="flex gap-1 border-b border-[var(--border-default)]">
         {TABS.map((tab) => (
-          <button key={tab} onClick={() => setActiveTab(tab)}
-            className={`px-4 py-3 text-sm font-medium whitespace-nowrap border-b-2 -mb-px capitalize transition-colors ${
-              activeTab === tab
+          <button
+            key={tab}
+            onClick={() => setActiveTab(tab)}
+            className={
+              "px-4 py-3 text-sm font-medium whitespace-nowrap border-b-2 -mb-px capitalize transition-colors " +
+              (activeTab === tab
                 ? "border-[var(--brand-500)] text-[var(--brand-500)]"
-                : "border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
-            }`}>
+                : "border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)]")
+            }
+          >
             {tab}
           </button>
         ))}
@@ -205,6 +276,17 @@ export default function VouchersPage() {
                       <span> · Delivered {new Date(req.delivered_at).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}</span>
                     )}
                   </p>
+                  {req.charged_coins !== null && req.charged_coins !== req.coins_spent && (
+                    <p className="text-xs text-[var(--text-muted)]">
+                      Actual charge: {req.charged_coins.toLocaleString()} coins
+                    </p>
+                  )}
+                  {req.status === "cancelled" && (
+                    <div className="mt-2 text-xs text-[var(--text-secondary)]">
+                      <p>Refunded {req.refund_amount?.toLocaleString() ?? 0} coins{req.refunded_at ? " - " + new Date(req.refunded_at).toLocaleDateString("en-IN") : ""}</p>
+                      {req.refund_reason && <p>Reason: {req.refund_reason}</p>}
+                    </div>
+                  )}
                   {req.voucher_code && editingId !== req.id && (
                     <div className="flex items-center gap-2 mt-1">
                       <p className="text-xs font-mono text-[var(--brand-500)]">Code: {req.voucher_code}</p>
@@ -240,12 +322,12 @@ export default function VouchersPage() {
                     </div>
                   )}
                 </div>
-                <span className={`text-xs font-medium px-2.5 py-1 rounded-full flex-shrink-0 ${STATUS_STYLES[req.status] ?? ""}`}>
+                <span className={"text-xs font-medium px-2.5 py-1 rounded-full flex-shrink-0 " + (STATUS_STYLES[req.status] ?? "")}>
                   {req.status.charAt(0).toUpperCase() + req.status.slice(1)}
                 </span>
               </div>
 
-              {req.status !== "delivered" && (
+              {["pending", "processing"].includes(req.status) && (
                 <div className="mt-4 space-y-1.5">
                   <div className="flex items-center gap-2">
                     <input
@@ -264,6 +346,52 @@ export default function VouchersPage() {
                   </div>
                   {deliverErrors[req.id] && (
                     <p className="text-xs text-red-400">{deliverErrors[req.id]}</p>
+                  )}
+                  {req.charged_coins === null ? (
+                    <p className="text-xs text-amber-400">
+                      Automatic refund is unavailable: the exact charge was not recorded for this older request.
+                    </p>
+                  ) : cancellingId === req.id ? (
+                    <div className="space-y-2 rounded-md border border-[var(--border-default)] p-3">
+                      <label className="block text-xs text-[var(--text-secondary)]" htmlFor={"refund-reason-" + req.id}>
+                        Refund reason (10–500 characters)
+                      </label>
+                      <textarea
+                        id={"refund-reason-" + req.id}
+                        value={refundReason}
+                        onChange={(event) => setRefundReason(event.target.value)}
+                        maxLength={500}
+                        rows={2}
+                        className="w-full rounded-md border border-[var(--border-strong)] bg-[var(--surface-subtle)] px-3 py-2 text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--border-focus)]"
+                      />
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Button
+                          size="sm"
+                          disabled={refunding || refundReason.trim().length < 10 || refundReason.trim().length > 500}
+                          onClick={() => cancelAndRefund(req)}
+                        >
+                          {refunding ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Ban className="h-4 w-4" /> Cancel &amp; Refund</>}
+                        </Button>
+                        <button
+                          type="button"
+                          disabled={refunding}
+                          onClick={() => { setCancellingId(null); setRefundError(null); setRefundReason(""); }}
+                          className="text-xs text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+                        >
+                          Keep request
+                        </button>
+                      </div>
+                      {refundError && <p className="text-xs text-red-400">{refundError}</p>}
+                    </div>
+                  ) : (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={delivering === req.id}
+                      onClick={() => { setCancellingId(req.id); setRefundError(null); setRefundReason(""); }}
+                    >
+                      <Ban className="h-4 w-4" /> Cancel &amp; Refund
+                    </Button>
                   )}
                 </div>
               )}

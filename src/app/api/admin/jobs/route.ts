@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase-server";
+import { writeAdminAudit } from "@/lib/admin-audit";
 
 async function verifyAdmin(req: NextRequest) {
   const token = req.headers.get("authorization")?.replace("Bearer ", "");
@@ -10,7 +11,7 @@ async function verifyAdmin(req: NextRequest) {
   const { data: profile } = await admin.from("profiles").select("role").eq("id", user.id).single();
   const role = (profile as { role: string } | null)?.role;
   if (role !== "admin" && role !== "owner") return null;
-  return { admin };
+  return { admin, userId: user.id };
 }
 
 export async function GET(req: NextRequest) {
@@ -86,5 +87,12 @@ export async function POST(req: NextRequest) {
   }).select("id").single();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  await writeAdminAudit(ctx.admin, {
+    actorId: ctx.userId,
+    action: "job_created",
+    targetType: "job",
+    targetId: data.id,
+    summary: `Created job "${title}" for ${company}.`,
+  });
   return NextResponse.json({ job: data });
 }

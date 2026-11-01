@@ -129,7 +129,7 @@ export default function ProjectDetailPage() {
   const params       = useParams();
   const searchParams = useSearchParams();
   const id           = params.id as string;
-  const allowed      = usePageGuard(ADMIN_ROLES.REVIEW);
+  const allowed      = usePageGuard(ADMIN_ROLES.UPPER);
 
   const tokenRef = useRef<string | null>(null);
   const [tab, setTab]               = useState<"overview" | "tasks" | "submissions" | "financials" | "daily">(

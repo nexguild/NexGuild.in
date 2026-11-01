@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
-import { usePageGuard } from "@/components/layout/admin-auth-guard";
+import { useAdminRole, usePageGuard } from "@/components/layout/admin-auth-guard";
 import { ADMIN_ROLES } from "@/lib/admin-permissions";
 import { formatNexcoins } from "@/lib/nexcoins";
 
@@ -59,6 +59,8 @@ const STATUS_STYLES: Record<string, string> = {
 export default function ContributorDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const tokenRef = useRef<string | null>(null);
   const allowed = usePageGuard(ADMIN_ROLES.USERS);
+  const role = useAdminRole();
+  const canManage = ADMIN_ROLES.UPPER.some((allowedRole) => allowedRole === role);
 
   const [id, setId]                     = useState<string | null>(null);
   const [profile, setProfile]           = useState<Profile | null>(null);
@@ -266,19 +268,23 @@ export default function ContributorDetailPage({ params }: { params: Promise<{ id
             <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${STATUS_STYLES[profile.status] ?? "bg-[var(--surface-subtle)] text-[var(--text-secondary)]"}`}>
               {profile.status}
             </span>
-            <Button variant="secondary" size="sm" onClick={() => openCoinsModal("send")}>
-              <Send className="h-3.5 w-3.5" /> Send
-            </Button>
-            <Button variant="secondary" size="sm" className="text-red-400 border-red-500/30 hover:bg-red-500/10" onClick={() => openCoinsModal("deduct")}>
-              <Minus className="h-3.5 w-3.5" /> Deduct
-            </Button>
-            <Button variant={profile.status === "banned" ? "secondary" : "destructive"} size="sm" onClick={openBanModal}>
-              <Ban className="h-3.5 w-3.5" />
-              {profile.status === "banned" ? "Unban" : "Ban"}
-            </Button>
-            <Button variant="ghost" size="sm" className="text-red-400 hover:bg-red-500/10" onClick={() => setDeleteConfirm(true)}>
-              <Trash2 className="h-3.5 w-3.5" />
-            </Button>
+            {canManage && (
+              <>
+                <Button variant="secondary" size="sm" onClick={() => openCoinsModal("send")}>
+                  <Send className="h-3.5 w-3.5" /> Send
+                </Button>
+                <Button variant="secondary" size="sm" className="text-red-400 border-red-500/30 hover:bg-red-500/10" onClick={() => openCoinsModal("deduct")}>
+                  <Minus className="h-3.5 w-3.5" /> Deduct
+                </Button>
+                <Button variant={profile.status === "banned" ? "secondary" : "destructive"} size="sm" onClick={openBanModal}>
+                  <Ban className="h-3.5 w-3.5" />
+                  {profile.status === "banned" ? "Unban" : "Ban"}
+                </Button>
+                <Button variant="ghost" size="sm" className="text-red-400 hover:bg-red-500/10" onClick={() => setDeleteConfirm(true)}>
+                  <Trash2 className="h-3.5 w-3.5" />
+                </Button>
+              </>
+            )}
           </div>
         </div>
 

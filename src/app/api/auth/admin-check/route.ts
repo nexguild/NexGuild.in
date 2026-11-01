@@ -1,5 +1,6 @@
 import { createServerClient } from "@/lib/supabase-server";
 import { NextRequest, NextResponse } from "next/server";
+import { isAdminRole } from "@/lib/admin-permissions";
 
 export async function POST(req: NextRequest) {
   // ── Env sanity check ────────────────────────────────────────────
@@ -44,7 +45,7 @@ export async function POST(req: NextRequest) {
   }
 
   const role = profile?.role ?? "contributor";
-  const isAdmin = role !== "contributor";
+  const isAdmin = isAdminRole(role);
   console.log("[admin-check] role:", role, "→ isAdmin:", isAdmin);
 
   return NextResponse.json({ isAdmin, role });

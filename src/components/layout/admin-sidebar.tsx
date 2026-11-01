@@ -6,11 +6,13 @@ import { useEffect, useState } from "react";
 import {
   LayoutDashboard, Users, FolderOpen,
   ClipboardCheck, Layers, Gift, BarChart3,
-  Settings, LogOut, ClipboardList, GraduationCap, Megaphone, Headphones, Tag, X, Activity, Newspaper, TrendingUp, Briefcase, ShieldAlert, WalletCards,
+  Settings, LogOut, ClipboardList, GraduationCap, Megaphone, Headphones, Tag, X, Activity, Newspaper, TrendingUp, Briefcase, ShieldAlert, WalletCards, History,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { NexGuildLogo } from "@/components/ui/nexguild-logo";
 import { supabase } from "@/lib/supabase";
+import { ADMIN_ROLES } from "@/lib/admin-permissions";
+import { useAdminRole } from "@/components/layout/admin-auth-guard";
 
 interface AdminSidebarProps {
   open: boolean;
@@ -19,61 +21,64 @@ interface AdminSidebarProps {
 
 export function AdminSidebar({ open, onClose }: AdminSidebarProps) {
   const pathname = usePathname();
-  const [submissionCount, setSubmissionCount]   = useState(0);
-  const [withdrawalCount, setWithdrawalCount]   = useState(0);
-  const [assignmentCount, setAssignmentCount]   = useState(0);
-  const [supportCount, setSupportCount]         = useState(0);
-  const [suspiciousCount, setSuspiciousCount]   = useState(0);
-  const [binanceRedemptionCount, setBinanceRedemptionCount] = useState(0);
+  const role = useAdminRole();
+  const [queueCounts, setQueueCounts] = useState({
+    pendingReviews: 0,
+    pendingAssignments: 0,
+    pendingVouchers: 0,
+    pendingRedemptions: 0,
+    openSupportTickets: 0,
+    suspiciousItems: 0,
+  });
 
   useEffect(() => {
+    if (!role) return;
+    let active = true;
     async function fetchCounts() {
       try {
-        const [{ count: wdCount }, { count: subCount }, { count: asnCount }, { count: supCount }, { count: susCount }, { count: susSubCount }, { count: binanceCount }] = await Promise.all([
-          supabase.from("voucher_requests").select("*", { count: "exact", head: true }).eq("status", "pending"),
-          supabase.from("submissions").select("*", { count: "exact", head: true }).eq("status", "submitted"),
-          supabase.from("assignments").select("*", { count: "exact", head: true }).eq("status", "pending"),
-          supabase.from("support_tickets").select("*", { count: "exact", head: true }).eq("status", "open"),
-          supabase.from("proof_code_submissions").select("*", { count: "exact", head: true }).eq("suspicious", true).eq("reviewed", false),
-          supabase.from("submissions").select("*", { count: "exact", head: true }).eq("suspicious", true).eq("reviewed", false),
-          supabase.from("binance_redemption_requests").select("*", { count: "exact", head: true }).in("status", ["pending", "under_review"]),
-        ]);
-        setWithdrawalCount(wdCount ?? 0);
-        setSubmissionCount(subCount ?? 0);
-        setAssignmentCount(asnCount ?? 0);
-        setSupportCount(supCount ?? 0);
-        setSuspiciousCount((susCount ?? 0) + (susSubCount ?? 0));
-        setBinanceRedemptionCount(binanceCount ?? 0);
-      } catch {
-        // silently keep counts at 0 if queries fail
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) return;
+        const response = await fetch("/api/admin/stats", {
+          headers: { Authorization: "Bearer " + session.access_token },
+          cache: "no-store",
+        });
+        if (!response.ok) throw new Error(`Queue counts request failed (${response.status}).`);
+        const stats = await response.json();
+        if (active) setQueueCounts(stats);
+      } catch (error) {
+        console.error("[admin/sidebar] queue counts fetch failed:", error);
       }
     }
     fetchCounts();
     const refresh = window.setInterval(fetchCounts, 30_000);
-    return () => window.clearInterval(refresh);
-  }, []);
+    return () => {
+      active = false;
+      window.clearInterval(refresh);
+    };
+  }, [role]);
 
   const NAV_ITEMS = [
-    { label: "Overview",         href: "/admin",                 icon: LayoutDashboard, badge: 0 },
-    { label: "Contributors",     href: "/admin/contributors",    icon: Users,           badge: 0 },
-    { label: "Tasks",            href: "/admin/tasks",           icon: ClipboardList,   badge: 0 },
-    { label: "Projects",         href: "/admin/projects",        icon: FolderOpen,      badge: 0 },
-    { label: "Submissions",      href: "/admin/submissions",     icon: ClipboardCheck,  badge: submissionCount },
-    { label: "Assignments",      href: "/admin/assignments",     icon: GraduationCap,   badge: assignmentCount },
-    { label: "Offerwalls",       href: "/admin/offerwalls",      icon: Layers,          badge: 0 },
-    { label: "Vouchers",         href: "/admin/vouchers",        icon: Gift,            badge: withdrawalCount },
-    { label: "Binance Redemptions", href: "/admin/binance-redemptions", icon: WalletCards, badge: binanceRedemptionCount },
-    { label: "Voucher Catalog",  href: "/admin/voucher-catalog", icon: Tag,             badge: 0 },
-    { label: "Jobs",              href: "/admin/jobs",            icon: Briefcase,       badge: 0 },
-    { label: "Blog",             href: "/admin/blog",            icon: Newspaper,       badge: 0 },
-    { label: "Announcements",    href: "/admin/announcements",   icon: Megaphone,       badge: 0 },
-    { label: "Support",          href: "/admin/support",         icon: Headphones,      badge: supportCount },
-    { label: "Finances",         href: "/admin/finances",        icon: BarChart3,       badge: 0 },
-    { label: "Postback Logs",    href: "/admin/postback-logs",   icon: Activity,        badge: 0 },
-    { label: "Suspicious Visits", href: "/admin/suspicious-visits", icon: ShieldAlert,   badge: suspiciousCount },
-    { label: "Insights",         href: "/admin/insights",        icon: TrendingUp,      badge: 0 },
-    { label: "Settings",         href: "/admin/settings",        icon: Settings,        badge: 0 },
-  ];
+    { label: "Overview", href: "/admin", icon: LayoutDashboard, badge: 0, roles: ADMIN_ROLES.ALL },
+    { label: "Contributors", href: "/admin/contributors", icon: Users, badge: 0, roles: ADMIN_ROLES.USERS },
+    { label: "Tasks", href: "/admin/tasks", icon: ClipboardList, badge: 0, roles: ADMIN_ROLES.CONTENT },
+    { label: "Projects", href: "/admin/projects", icon: FolderOpen, badge: 0, roles: ADMIN_ROLES.UPPER },
+    { label: "Submissions", href: "/admin/submissions", icon: ClipboardCheck, badge: queueCounts.pendingReviews, roles: ADMIN_ROLES.CONTENT },
+    { label: "Assignments", href: "/admin/assignments", icon: GraduationCap, badge: queueCounts.pendingAssignments, roles: ADMIN_ROLES.REVIEW },
+    { label: "Offerwalls", href: "/admin/offerwalls", icon: Layers, badge: 0, roles: ADMIN_ROLES.UPPER },
+    { label: "Vouchers", href: "/admin/vouchers", icon: Gift, badge: queueCounts.pendingVouchers, roles: ADMIN_ROLES.FINANCE },
+    { label: "Binance Redemptions", href: "/admin/binance-redemptions", icon: WalletCards, badge: queueCounts.pendingRedemptions, roles: ADMIN_ROLES.FINANCE },
+    { label: "Voucher Catalog", href: "/admin/voucher-catalog", icon: Tag, badge: 0, roles: ADMIN_ROLES.FINANCE },
+    { label: "Jobs", href: "/admin/jobs", icon: Briefcase, badge: 0, roles: ADMIN_ROLES.UPPER },
+    { label: "Blog", href: "/admin/blog", icon: Newspaper, badge: 0, roles: ADMIN_ROLES.UPPER },
+    { label: "Announcements", href: "/admin/announcements", icon: Megaphone, badge: 0, roles: ADMIN_ROLES.ANNOUNCE },
+    { label: "Support", href: "/admin/support", icon: Headphones, badge: queueCounts.openSupportTickets, roles: ADMIN_ROLES.SUPPORT },
+    { label: "Finances", href: "/admin/finances", icon: BarChart3, badge: 0, roles: ADMIN_ROLES.FINANCE },
+    { label: "Postback Logs", href: "/admin/postback-logs", icon: Activity, badge: 0, roles: ADMIN_ROLES.UPPER },
+    { label: "Suspicious Visits", href: "/admin/suspicious-visits", icon: ShieldAlert, badge: queueCounts.suspiciousItems, roles: ADMIN_ROLES.UPPER },
+    { label: "Insights", href: "/admin/insights", icon: TrendingUp, badge: 0, roles: ADMIN_ROLES.UPPER },
+    { label: "Settings", href: "/admin/settings", icon: Settings, badge: 0, roles: ADMIN_ROLES.UPPER },
+    { label: "Audit History", href: "/admin/audit-logs", icon: History, badge: 0, roles: ADMIN_ROLES.UPPER },
+  ].filter((item) => item.roles.some((allowedRole) => allowedRole === role));
 
   function isActive(href: string) {
     if (href === "/admin") return pathname === "/admin";

@@ -16,7 +16,7 @@ export async function GET(req: NextRequest) {
     if (authErr || !user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const { data: caller } = await admin.from("profiles").select("role").eq("id", user.id).single();
-    if (caller?.role !== "admin" && caller?.role !== "owner") {
+    if (!["admin", "owner", "reviewer"].includes(caller?.role ?? "")) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 

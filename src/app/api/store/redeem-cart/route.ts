@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
 
   const { items, couponCode } = await req.json() as { items: CartItem[]; couponCode: string | null };
 
-  if (!items || items.length === 0) {
+  if (!Array.isArray(items) || items.length === 0 || items.some((item) => !Number.isSafeInteger(item.coins) || item.coins <= 0)) {
     return NextResponse.json({ error: "Cart is empty." }, { status: 400 });
   }
 
@@ -66,6 +66,9 @@ export async function POST(req: NextRequest) {
   }
 
   const totalCoins = items.reduce((s, i) => s + i.coins, 0);
+  if (!Number.isSafeInteger(totalCoins)) {
+    return NextResponse.json({ error: "Cart total is too large." }, { status: 400 });
+  }
 
   // Validate coupon if provided
   let discountCoins = 0;
@@ -93,6 +96,12 @@ export async function POST(req: NextRequest) {
   }
 
   const finalTotal = Math.max(0, totalCoins - discountCoins);
+  const chargedCoins = items.map((item) => Math.floor(item.coins * finalTotal / totalCoins));
+  let undistributedCoins = finalTotal - chargedCoins.reduce((sum, coins) => sum + coins, 0);
+  for (let index = 0; undistributedCoins > 0; index = (index + 1) % chargedCoins.length) {
+    chargedCoins[index] += 1;
+    undistributedCoins -= 1;
+  }
 
   // Reserve coins atomically so concurrent redemptions cannot spend the same balance.
   const { data: reserved, error: reserveErr } = await admin.rpc("reserve_nexcoins", {
@@ -108,11 +117,12 @@ export async function POST(req: NextRequest) {
   }
 
   // Insert all voucher requests
-  const inserts = items.map((item) => ({
+  const inserts = items.map((item, index) => ({
     contributor_id: user.id,
     voucher_type:   item.voucherType,
     voucher_value:  null,
     coins_spent:    item.coins,
+    charged_coins:  chargedCoins[index],
     status:         "pending",
   }));
 

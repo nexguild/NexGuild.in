@@ -99,7 +99,7 @@ function Toggle({ value, onChange, label }: { value: boolean; onChange: (v: bool
 }
 
 export default function AdminJobsNewPage() {
-  const allowed = usePageGuard(ADMIN_ROLES.REVIEW);
+  const allowed  = usePageGuard(ADMIN_ROLES.UPPER);
   const router  = useRouter();
   const [form, setForm]     = useState<FormData>(DEFAULT);
   const [saving, setSaving] = useState(false);

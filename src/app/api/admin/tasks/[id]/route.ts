@@ -3,6 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 import { newTaskHtml } from "@/lib/email";
 import { isBrevoConfigured, sendBrevoEmails } from "@/lib/brevo";
 import { isCountryCode } from "@/lib/countries";
+import { writeAdminAudit } from "@/lib/admin-audit";
 
 const admin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -65,8 +66,24 @@ export async function PATCH(
     if (!prevTask) return NextResponse.json({ error: "Task not found" }, { status: 404 });
   }
 
-  const { error: updateErr } = await admin.from("tasks").update(updates).eq("id", taskId);
+  const { data: updatedTask, error: updateErr } = await admin
+    .from("tasks")
+    .update(updates)
+    .eq("id", taskId)
+    .is("deleted_at", null)
+    .select("id, title")
+    .maybeSingle();
   if (updateErr) return NextResponse.json({ error: updateErr.message }, { status: 500 });
+  if (!updatedTask) return NextResponse.json({ error: "Task not found." }, { status: 404 });
+
+  await writeAdminAudit(admin, {
+    actorId: user.id,
+    action: "task_updated",
+    targetType: "task",
+    targetId: taskId,
+    summary: `Updated task "${updatedTask.title}" fields: ${Object.keys(updates).join(", ")}.`,
+    metadata: { fields: Object.keys(updates).join(", "), status: updates.status ?? null },
+  });
 
   // Email blast when publishing draft → active
   // MUST be awaited — Vercel terminates the function when the response is sent,
@@ -90,12 +107,23 @@ export async function DELETE(
   const user  = await requireAdmin(token);
   if (!user) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
-  const { error } = await admin
+  const { data: deletedTask, error } = await admin
     .from("tasks")
     .update({ deleted_at: new Date().toISOString() })
-    .eq("id", taskId);
+    .eq("id", taskId)
+    .is("deleted_at", null)
+    .select("id, title")
+    .maybeSingle();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (!deletedTask) return NextResponse.json({ error: "Task not found." }, { status: 404 });
+  await writeAdminAudit(admin, {
+    actorId: user.id,
+    action: "task_deleted",
+    targetType: "task",
+    targetId: taskId,
+    summary: `Archived task "${deletedTask.title}".`,
+  });
   return NextResponse.json({ ok: true });
 }
 

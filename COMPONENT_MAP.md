@@ -1276,8 +1276,8 @@ src/app/admin/finances/page.tsx
 src/app/admin/settings/page.tsx
   Purpose: Admin/platform settings
 
-src/app/admin/withdrawals/page.tsx
-  Purpose: Voucher redemption/withdrawal management
+src/app/admin/vouchers/page.tsx
+  Purpose: Voucher redemption, delivery, and refund management
 
 src/app/maintenance/page.tsx
   Purpose: Generic maintenance mode page

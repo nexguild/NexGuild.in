@@ -1,9 +1,11 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Plus, Trash2, Loader2, X, CheckCircle2, Tag, ToggleLeft, ToggleRight, Crown, ChevronDown, Globe, RefreshCw, Database, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
+import { usePageGuard } from "@/components/layout/admin-auth-guard";
+import { ADMIN_ROLES } from "@/lib/admin-permissions";
 
 interface AdminUser {
   id: string;
@@ -23,6 +25,18 @@ interface Coupon {
   expires_at: string | null;
   is_active: boolean;
   created_at: string;
+}
+
+interface BackupStatus {
+  configured: boolean;
+  lastRun: {
+    runNumber: number;
+    status: string;
+    conclusion: string | null;
+    createdAt: string;
+    updatedAt: string;
+    url: string;
+  } | null;
 }
 
 type MaintenanceSections = Record<string, boolean>;
@@ -68,6 +82,7 @@ function Toggle({ on, onToggle, disabled }: { on: boolean; onToggle: () => void;
 }
 
 export default function AdminSettingsPage() {
+  const allowed = usePageGuard(ADMIN_ROLES.UPPER);
   const tokenRef = useRef<string | null>(null);
   const [currentRole, setCurrentRole] = useState<string | null>(null);
 
@@ -118,6 +133,9 @@ export default function AdminSettingsPage() {
   // Database backup
   const [backingUp, setBackingUp]   = useState(false);
   const [backupMsg, setBackupMsg]   = useState<{ ok: boolean; text: string } | null>(null);
+  const [backupStatus, setBackupStatus] = useState<BackupStatus | null>(null);
+  const [backupStatusLoading, setBackupStatusLoading] = useState(false);
+  const [backupStatusError, setBackupStatusError] = useState<string | null>(null);
 
   // Create coupon modal
   const [showCoupon, setShowCoupon]         = useState(false);
@@ -129,22 +147,51 @@ export default function AdminSettingsPage() {
   const [creatingCoupon, setCreatingCoupon] = useState(false);
   const [couponErr, setCouponErr]           = useState<string | null>(null);
 
+  const refreshBackupStatus = useCallback(async (token: string) => {
+    setBackupStatusLoading(true);
+    setBackupStatusError(null);
+    try {
+      const response = await fetch("/api/admin/backup", {
+        headers: { Authorization: "Bearer " + token },
+        cache: "no-store",
+      });
+      const data = await response.json().catch(() => ({})) as BackupStatus & { error?: string };
+      if (!response.ok) throw new Error(data.error ?? "Unable to load backup status.");
+      setBackupStatus(data);
+    } catch (error) {
+      console.error("[admin/settings] backup status fetch failed:", error);
+      setBackupStatusError(error instanceof Error ? error.message : "Unable to load backup status.");
+    } finally {
+      setBackupStatusLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
+    if (!allowed) return;
     async function load() {
       const { data: { session } } = await supabase.auth.getSession();
       tokenRef.current = session?.access_token ?? null;
       if (!session) return;
 
       // Get current user's role for owner-check
+      let roleForSession: string | null = null;
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single();
-        setCurrentRole((profile as { role: string } | null)?.role ?? null);
+        roleForSession = (profile as { role: string } | null)?.role ?? null;
+        setCurrentRole(roleForSession);
       }
 
+      /*
       const [settingsRes, couponsRes] = await Promise.all([
         fetch("/api/admin/settings", { headers: { Authorization: `Bearer ${session.access_token}` } }),
         fetch("/api/admin/coupons",  { headers: { Authorization: `Bearer ${session.access_token}` } }),
+      ]);
+
+      */
+      const [settingsRes, couponsRes] = await Promise.all([
+        fetch("/api/admin/settings", { headers: { Authorization: "Bearer " + session.access_token } }),
+        fetch("/api/admin/coupons", { headers: { Authorization: "Bearer " + session.access_token } }),
       ]);
 
       if (settingsRes.ok) {
@@ -174,9 +221,12 @@ export default function AdminSettingsPage() {
         setCoupons(data ?? []);
       }
       setLoadingCoupons(false);
+      if (roleForSession === "owner" && session.access_token) {
+        await refreshBackupStatus(session.access_token);
+      }
     }
     load();
-  }, []);
+  }, [allowed, refreshBackupStatus]);
 
   async function toggleSection(section: string) {
     const next = !maintenanceSections[section];
@@ -339,6 +389,7 @@ export default function AdminSettingsPage() {
   async function handleBackup() {
     setBackingUp(true);
     setBackupMsg(null);
+    try {
     const res = await fetch("/api/admin/backup", {
       method:  "POST",
       headers: { Authorization: `Bearer ${tokenRef.current}` },
@@ -348,6 +399,14 @@ export default function AdminSettingsPage() {
       ok:   res.ok && !!data.ok,
       text: data.message ?? data.error ?? (res.ok ? "Backup triggered." : "Backup failed."),
     });
+    if (res.ok && tokenRef.current) await refreshBackupStatus(tokenRef.current);
+    } catch (error) {
+      console.error("[admin/settings] backup trigger failed:", error);
+      setBackupMsg({
+        ok: false,
+        text: error instanceof Error ? error.message : "Unable to trigger backup.",
+      });
+    }
     setBackingUp(false);
   }
 
@@ -372,6 +431,8 @@ export default function AdminSettingsPage() {
 
   const isOwner = currentRole === "owner";
   const isOwnerOrAdmin = currentRole === "owner" || currentRole === "admin";
+
+  if (!allowed) return null;
 
   return (
     <div className="space-y-6 max-w-2xl">
@@ -756,15 +817,45 @@ export default function AdminSettingsPage() {
                 </p>
               </div>
             </div>
-            <Button
-              size="sm"
-              variant="secondary"
-              disabled={backingUp}
-              onClick={handleBackup}
-              className="flex-shrink-0"
-            >
-              {backingUp ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Backup Now"}
-            </Button>
+            <div className="flex flex-shrink-0 items-center gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={backupStatusLoading}
+                onClick={() => tokenRef.current && refreshBackupStatus(tokenRef.current)}
+                aria-label="Refresh backup status"
+              >
+                <RefreshCw className={`h-3.5 w-3.5 ${backupStatusLoading ? "animate-spin" : ""}`} />
+              </Button>
+              <Button
+                size="sm"
+                variant="secondary"
+                disabled={backingUp || backupStatusLoading || backupStatus?.configured === false}
+                onClick={handleBackup}
+              >
+                {backingUp ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Backup Now"}
+              </Button>
+            </div>
+          </div>
+          <div className="px-6 py-3 text-sm text-[var(--text-secondary)]">
+            {backupStatusLoading ? (
+              "Checking GitHub Actions status…"
+            ) : backupStatusError ? (
+              <p className="text-red-400">{backupStatusError}</p>
+            ) : backupStatus?.configured === false ? (
+              <p className="text-amber-400">Backup is not configured. Set GH_REPO and GH_PAT in the deployment environment.</p>
+            ) : backupStatus?.lastRun ? (
+              <p>
+                Last run: <span className="font-medium text-[var(--text-primary)]">
+                  {backupStatus.lastRun.conclusion ?? backupStatus.lastRun.status}
+                </span>
+                {" "}· Run #{backupStatus.lastRun.runNumber}
+                {" "}· {new Date(backupStatus.lastRun.createdAt).toLocaleString("en-IN")}
+                {" "}· <a href={backupStatus.lastRun.url} target="_blank" rel="noreferrer" className="text-[var(--brand-500)] hover:underline">View workflow</a>
+              </p>
+            ) : (
+              "No backup workflow runs were found."
+            )}
           </div>
           {backupMsg && (
             <div className={`px-6 py-3 text-sm flex items-center gap-2 ${backupMsg.ok ? "text-green-400 bg-green-500/10" : "text-red-400 bg-red-500/10"}`}>

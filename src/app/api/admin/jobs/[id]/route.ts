@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase-server";
+import { writeAdminAudit } from "@/lib/admin-audit";
 
 async function verifyAdmin(req: NextRequest) {
   const token = req.headers.get("authorization")?.replace("Bearer ", "");
@@ -10,7 +11,7 @@ async function verifyAdmin(req: NextRequest) {
   const { data: profile } = await admin.from("profiles").select("role").eq("id", user.id).single();
   const role = (profile as { role: string } | null)?.role;
   if (role !== "admin" && role !== "owner") return null;
-  return { admin };
+  return { admin, userId: user.id };
 }
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -43,12 +44,23 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   const { id } = await params;
   const body = await req.json();
 
-  const { error } = await ctx.admin
+  const { data, error } = await ctx.admin
     .from("jobs")
     .update({ ...body, updated_at: new Date().toISOString() })
-    .eq("id", id);
+    .eq("id", id)
+    .select("id")
+    .maybeSingle();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (!data) return NextResponse.json({ error: "Job not found." }, { status: 404 });
+  await writeAdminAudit(ctx.admin, {
+    actorId: ctx.userId,
+    action: "job_updated",
+    targetType: "job",
+    targetId: id,
+    summary: `Updated job fields: ${Object.keys(body).join(", ") || "no fields"}.`,
+    metadata: { fields: Object.keys(body).join(", ") },
+  });
   return NextResponse.json({ ok: true });
 }
 
@@ -57,7 +69,15 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
   if (!ctx) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { id } = await params;
-  const { error } = await ctx.admin.from("jobs").delete().eq("id", id);
+  const { data, error } = await ctx.admin.from("jobs").delete().eq("id", id).select("id").maybeSingle();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (!data) return NextResponse.json({ error: "Job not found." }, { status: 404 });
+  await writeAdminAudit(ctx.admin, {
+    actorId: ctx.userId,
+    action: "job_deleted",
+    targetType: "job",
+    targetId: id,
+    summary: "Deleted job.",
+  });
   return NextResponse.json({ ok: true });
 }

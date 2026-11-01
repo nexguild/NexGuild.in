@@ -282,22 +282,27 @@ The admin dashboard gives NexGuild staff full control over the platform.
 - Enable or disable providers.
 - View offerwall revenue and contributor payout totals.
 
-### 7.7 Withdrawals (`/admin/withdrawals`)
-- Queue of pending withdrawal requests.
-- Each entry: Contributor name, amount, method, request date.
-- Actions: Approve (mark as processing), Complete (mark as paid), Reject (with reason).
-- Audit log of all processed withdrawals.
+### 7.7 Voucher Requests (`/admin/vouchers`)
+- Queue pending, processing, delivered, and cancelled voucher requests.
+- Deliver voucher codes and review request history.
+- Cancel eligible requests with a required reason and atomic NexCoin refund.
+- Legacy requests without an exact recorded charge require manual review.
 
-### 7.8 Finances (`/admin/finances`)
+### 7.8 Binance Redemptions (`/admin/binance-redemptions`)
+- Review payout requests and record payment references or rejection reasons.
+- Rejections refund the reserved NexCoins.
+
+### 7.9 Finances (`/admin/finances`)
 - Revenue by source: Offerwall, Managed Projects, Organization Fees.
 - Total paid out to contributors.
 - Pending payout obligations.
 - Monthly and lifetime summaries.
 
-### 7.9 Settings (`/admin/settings`)
-- Platform-wide configuration: Minimum withdrawal amount, supported withdrawal methods, maintenance mode toggle.
-- Email template management.
-- Admin user management (add/remove admin accounts).
+### 7.10 Settings (`/admin/settings`)
+- Manage maintenance sections, streak rewards, allowed signup domains, and exchange rates.
+- Manage staff roles and coupons.
+- Review database backup workflow status and trigger an owner-only backup.
+- Review sensitive operator actions in `/admin/audit-logs`.
 
 ---
 

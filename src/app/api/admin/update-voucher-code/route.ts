@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { writeAdminAudit } from "@/lib/admin-audit";
 
 export async function POST(req: NextRequest) {
   const admin = createClient(
@@ -21,7 +22,7 @@ export async function POST(req: NextRequest) {
     .eq("id", user.id)
     .single();
 
-  if (callerProfile?.role !== "admin" && callerProfile?.role !== "owner") {
+  if (!["admin", "owner", "finance"].includes(callerProfile?.role ?? "")) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
@@ -34,14 +35,28 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "requestId and voucherCode are required" }, { status: 400 });
   }
 
-  const { error: updateErr } = await admin
+  const { data: updatedRequest, error: updateErr } = await admin
     .from("voucher_requests")
     .update({ voucher_code: voucherCode.trim() })
-    .eq("id", requestId);
+    .eq("id", requestId)
+    .eq("status", "delivered")
+    .select("id")
+    .maybeSingle();
 
   if (updateErr) {
     return NextResponse.json({ error: "Failed to update: " + updateErr.message }, { status: 500 });
   }
+  if (!updatedRequest) {
+    return NextResponse.json({ error: "Only delivered voucher codes can be edited." }, { status: 409 });
+  }
+
+  await writeAdminAudit(admin, {
+    actorId: user.id,
+    action: "voucher_code_updated",
+    targetType: "voucher_request",
+    targetId: requestId,
+    summary: "Updated the code for a delivered voucher.",
+  });
 
   return NextResponse.json({ success: true });
 }

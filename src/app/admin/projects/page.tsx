@@ -50,11 +50,12 @@ function DeadlinePill({ deadline }: { deadline: string | null }) {
 
 export default function AdminProjectsPage() {
   const tokenRef = useRef<string | null>(null);
-  const allowed  = usePageGuard(ADMIN_ROLES.REVIEW);
+  const allowed  = usePageGuard(ADMIN_ROLES.UPPER);
 
   const [projects, setProjects]       = useState<Project[]>([]);
   const [loading, setLoading]         = useState(true);
   const [error, setError]             = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
   const [search, setSearch]           = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [deleteTarget, setDeleteTarget] = useState<Project | null>(null);
@@ -82,13 +83,23 @@ export default function AdminProjectsPage() {
   async function confirmDelete() {
     if (!deleteTarget) return;
     setDeleting(true);
-    await fetch(`/api/admin/projects/${deleteTarget.id}`, {
+    setActionError(null);
+    try {
+      if (!tokenRef.current) throw new Error("Your admin session has expired. Please sign in again.");
+      const response = await fetch(`/api/admin/projects/${deleteTarget.id}`, {
       method: "DELETE",
       headers: { Authorization: `Bearer ${tokenRef.current}` },
-    });
-    setProjects((prev) => prev.filter((p) => p.id !== deleteTarget.id));
-    setDeleting(false);
-    setDeleteTarget(null);
+      });
+      const data = await response.json().catch(() => null) as { error?: string } | null;
+      if (!response.ok) throw new Error(data?.error ?? "Failed to delete project.");
+      setProjects((prev) => prev.filter((p) => p.id !== deleteTarget.id));
+      setDeleteTarget(null);
+    } catch (error) {
+      console.error("[admin/projects] delete failed:", error);
+      setActionError(error instanceof Error ? error.message : "Failed to delete project.");
+    } finally {
+      setDeleting(false);
+    }
   }
 
   // Stats
@@ -264,6 +275,7 @@ export default function AdminProjectsPage() {
               <span className="font-semibold text-[var(--text-primary)]">&ldquo;{deleteTarget.name}&rdquo;</span>{" "}
               will be permanently deleted. All linked tasks will be unlinked (not deleted).
             </p>
+            {actionError && <p role="alert" className="text-sm text-red-400">{actionError}</p>}
             <div className="flex gap-3">
               <Button variant="ghost" className="flex-1" onClick={() => setDeleteTarget(null)} disabled={deleting}>Cancel</Button>
               <Button className="flex-1 bg-red-500 hover:bg-red-600 text-white" disabled={deleting} onClick={confirmDelete}>

@@ -29,7 +29,7 @@ export async function GET(req: NextRequest) {
 
   const { data, error } = await ctx.admin
     .from("voucher_requests")
-    .select("id, contributor_id, voucher_type, voucher_value, coins_spent, status, voucher_code, requested_at, delivered_at, profiles(full_name, email)")
+    .select("id, contributor_id, voucher_type, voucher_value, coins_spent, charged_coins, status, voucher_code, requested_at, delivered_at, refund_reason, refund_amount, refunded_at, profiles(full_name, email)")
     .order("requested_at", { ascending: false });
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });

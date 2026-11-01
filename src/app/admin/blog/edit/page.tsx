@@ -36,7 +36,7 @@ function Counter({ value, max }: { value: string; max: number }) {
 function EditInner() {
   const params   = useSearchParams();
   const tokenRef = useRef<string | null>(null);
-  const allowed  = usePageGuard(ADMIN_ROLES.REVIEW);
+  const allowed  = usePageGuard(ADMIN_ROLES.UPPER);
 
   const filename = params.get("file") ?? "";
 

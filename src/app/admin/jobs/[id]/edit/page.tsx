@@ -82,7 +82,7 @@ function Toggle({ value, onChange, label }: { value: boolean; onChange: (v: bool
 }
 
 export default function AdminJobsEditPage() {
-  const allowed = usePageGuard(ADMIN_ROLES.REVIEW);
+  const allowed = usePageGuard(ADMIN_ROLES.UPPER);
   const router  = useRouter();
   const { id }  = useParams<{ id: string }>();
 

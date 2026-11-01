@@ -38,7 +38,7 @@ interface InsightsData {
 }
 
 export default function InsightsPage() {
-  const allowed = usePageGuard(ADMIN_ROLES.USERS);
+  const allowed = usePageGuard(ADMIN_ROLES.UPPER);
   const tokenRef = useRef<string | null>(null);
   const [data, setData]       = useState<InsightsData | null>(null);
   const [loading, setLoading] = useState(true);

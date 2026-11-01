@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase-server";
+import { writeAdminAudit } from "@/lib/admin-audit";
 
 async function verifyAdmin(req: NextRequest) {
   const token = req.headers.get("authorization")?.replace("Bearer ", "");
@@ -125,8 +126,17 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     updates.client_payment_received_at = null;
   }
 
-  const { error } = await ctx.admin.from("projects").update(updates).eq("id", id);
+  const { data, error } = await ctx.admin.from("projects").update(updates).eq("id", id).select("id").maybeSingle();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (!data) return NextResponse.json({ error: "Project not found." }, { status: 404 });
+  await writeAdminAudit(ctx.admin, {
+    actorId: ctx.userId,
+    action: "project_updated",
+    targetType: "project",
+    targetId: id,
+    summary: `Updated project fields: ${Object.keys(updates).join(", ") || "no fields"}.`,
+    metadata: { fields: Object.keys(updates).join(", ") },
+  });
   return NextResponse.json({ ok: true });
 }
 
@@ -136,8 +146,17 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
   const { id } = await params;
 
   // Unlink tasks before deleting
-  await ctx.admin.from("tasks").update({ project_id: null }).eq("project_id", id);
-  const { error } = await ctx.admin.from("projects").delete().eq("id", id);
+  const { error: unlinkError } = await ctx.admin.from("tasks").update({ project_id: null }).eq("project_id", id);
+  if (unlinkError) return NextResponse.json({ error: `Failed to unlink project tasks: ${unlinkError.message}` }, { status: 500 });
+  const { data, error } = await ctx.admin.from("projects").delete().eq("id", id).select("id").maybeSingle();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (!data) return NextResponse.json({ error: "Project not found." }, { status: 404 });
+  await writeAdminAudit(ctx.admin, {
+    actorId: ctx.userId,
+    action: "project_deleted",
+    targetType: "project",
+    targetId: id,
+    summary: "Deleted project after unlinking its tasks.",
+  });
   return NextResponse.json({ ok: true });
 }

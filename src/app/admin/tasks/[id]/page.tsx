@@ -11,7 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Avatar } from "@/components/ui/avatar";
 import { supabase } from "@/lib/supabase";
-import { usePageGuard } from "@/components/layout/admin-auth-guard";
+import { useAdminRole, usePageGuard } from "@/components/layout/admin-auth-guard";
 import { ADMIN_ROLES } from "@/lib/admin-permissions";
 
 interface Task {
@@ -81,6 +81,9 @@ export default function AdminTaskDetailPage() {
   const router  = useRouter();
 
   const allowed = usePageGuard(ADMIN_ROLES.CONTENT);
+  const role = useAdminRole();
+  const canManage = ADMIN_ROLES.UPPER.some((allowedRole) => allowedRole === role);
+  const canBulkValidate = ADMIN_ROLES.REVIEW.some((allowedRole) => allowedRole === role);
 
   const [task, setTask]               = useState<Task | null>(null);
   const [submissions, setSubmissions] = useState<Submission[]>([]);
@@ -299,9 +302,11 @@ export default function AdminTaskDetailPage() {
         <Link href="/admin/tasks" className="inline-flex items-center gap-1.5 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors">
           <ArrowLeft className="h-4 w-4" /> Back to Tasks
         </Link>
-        <Button variant="secondary" size="sm" asChild>
-          <Link href={`/admin/tasks/${id}/edit`}><Edit className="h-4 w-4" /> Edit Task</Link>
-        </Button>
+        {canManage && (
+          <Button variant="secondary" size="sm" asChild>
+            <Link href={`/admin/tasks/${id}/edit`}><Edit className="h-4 w-4" /> Edit Task</Link>
+          </Button>
+        )}
       </div>
 
       {/* Task Info */}
@@ -433,9 +438,11 @@ export default function AdminTaskDetailPage() {
                 {pending} pending review
               </span>
             )}
-            <Button variant="secondary" size="sm" onClick={() => { resetImport(); setImportOpen(true); }}>
-              <Upload className="h-3.5 w-3.5" /> Import Client Validation
-            </Button>
+            {canBulkValidate && (
+              <Button variant="secondary" size="sm" onClick={() => { resetImport(); setImportOpen(true); }}>
+                <Upload className="h-3.5 w-3.5" /> Import Client Validation
+              </Button>
+            )}
           </div>
         </div>
 

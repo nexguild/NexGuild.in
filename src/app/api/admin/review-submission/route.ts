@@ -3,6 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 import { FROM_NOREPLY, getResend, taskApprovedHtml, taskRejectedHtml, resubmissionRequestedHtml } from "@/lib/email";
 import { syncSheetStatus } from "@/lib/google-drive";
 import { creditTaskWithPlatformCommission } from "@/lib/platform-commission";
+import { writeAdminAudit } from "@/lib/admin-audit";
 
 export async function POST(req: NextRequest) {
   const admin = createClient(
@@ -26,7 +27,7 @@ export async function POST(req: NextRequest) {
       .eq("id", user.id)
       .single();
 
-    if (!["admin", "owner", "reviewer"].includes(callerProfile?.role ?? "")) {
+    if (!["admin", "owner", "reviewer", "moderator"].includes(callerProfile?.role ?? "")) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
@@ -100,6 +101,15 @@ export async function POST(req: NextRequest) {
         console.error("[review-submission] update submission:", e1.message);
         return NextResponse.json({ error: "Failed to update submission: " + e1.message }, { status: 500 });
       }
+
+      await writeAdminAudit(admin, {
+        actorId: user.id,
+        action: "submission_approved",
+        targetType: "submission",
+        targetId: submissionId,
+        summary: `Approved "${taskTitle}" submission and credited ${contributorCoins.toLocaleString()} NexCoins.`,
+        metadata: { coinsAwarded: contributorCoins, grossCoins },
+      });
 
       // 3. Award XP
       const xpToAward = taskMeta?.xp_reward ?? 0;
@@ -203,6 +213,14 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: "Failed to reject submission: " + e1.message }, { status: 500 });
       }
 
+      await writeAdminAudit(admin, {
+        actorId: user.id,
+        action: "submission_rejected",
+        targetType: "submission",
+        targetId: submissionId,
+        summary: `Rejected "${taskTitle}" submission.`,
+      });
+
       const { error: e2 } = await admin.from("notifications").insert({
         user_id: sub.contributor_id,
         title:   "Submission Rejected",
@@ -258,6 +276,14 @@ export async function POST(req: NextRequest) {
         console.error("[review-submission] resubmit update:", e1.message);
         return NextResponse.json({ error: "Failed to update submission: " + e1.message }, { status: 500 });
       }
+
+      await writeAdminAudit(admin, {
+        actorId: user.id,
+        action: "submission_resubmission_requested",
+        targetType: "submission",
+        targetId: submissionId,
+        summary: `Requested changes to "${taskTitle}" submission.`,
+      });
 
       await admin.from("notifications").insert({
         user_id: sub.contributor_id,

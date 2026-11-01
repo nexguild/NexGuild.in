@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   Briefcase, Plus, Loader2, Pencil, Trash2, Search,
@@ -41,8 +41,7 @@ const WORK_TYPE_META: Record<string, string> = {
 };
 
 export default function AdminJobsPage() {
-  const tokenRef = useRef<string | null>(null);
-  const allowed  = usePageGuard(ADMIN_ROLES.REVIEW);
+  const allowed  = usePageGuard(ADMIN_ROLES.UPPER);
 
   const [jobs, setJobs]           = useState<Job[]>([]);
   const [loading, setLoading]     = useState(true);
@@ -50,12 +49,8 @@ export default function AdminJobsPage() {
   const [search, setSearch]       = useState("");
   const [deleteTarget, setDeleteTarget] = useState<Job | null>(null);
   const [deleting, setDeleting]   = useState(false);
-
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      tokenRef.current = data.session?.access_token ?? null;
-    });
-  }, []);
+  const [updating, setUpdating] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!allowed) return;
@@ -84,35 +79,69 @@ export default function AdminJobsPage() {
 
   async function toggleActive(job: Job) {
     const { data: { session } } = await supabase.auth.getSession();
-    await fetch(`/api/admin/jobs/${job.id}`, {
+    setActionError(null);
+    setUpdating(job.id);
+    try {
+      if (!session) throw new Error("Your admin session has expired. Please sign in again.");
+      const response = await fetch(`/api/admin/jobs/${job.id}`, {
       method: "PUT",
       headers: { Authorization: `Bearer ${session?.access_token}`, "Content-Type": "application/json" },
       body: JSON.stringify({ is_active: !job.is_active }),
-    });
-    setJobs((prev) => prev.map((j) => j.id === job.id ? { ...j, is_active: !j.is_active } : j));
+      });
+      const data = await response.json().catch(() => null) as { error?: string } | null;
+      if (!response.ok) throw new Error(data?.error ?? "Failed to update job status.");
+      setJobs((prev) => prev.map((j) => j.id === job.id ? { ...j, is_active: !job.is_active } : j));
+    } catch (error) {
+      console.error("[admin/jobs] status update failed:", error);
+      setActionError(error instanceof Error ? error.message : "Failed to update job status.");
+    } finally {
+      setUpdating(null);
+    }
   }
 
   async function toggleFeatured(job: Job) {
     const { data: { session } } = await supabase.auth.getSession();
-    await fetch(`/api/admin/jobs/${job.id}`, {
+    setActionError(null);
+    setUpdating(job.id);
+    try {
+      if (!session) throw new Error("Your admin session has expired. Please sign in again.");
+      const response = await fetch(`/api/admin/jobs/${job.id}`, {
       method: "PUT",
       headers: { Authorization: `Bearer ${session?.access_token}`, "Content-Type": "application/json" },
       body: JSON.stringify({ is_featured: !job.is_featured }),
-    });
-    setJobs((prev) => prev.map((j) => j.id === job.id ? { ...j, is_featured: !j.is_featured } : j));
+      });
+      const data = await response.json().catch(() => null) as { error?: string } | null;
+      if (!response.ok) throw new Error(data?.error ?? "Failed to update featured status.");
+      setJobs((prev) => prev.map((j) => j.id === job.id ? { ...j, is_featured: !job.is_featured } : j));
+    } catch (error) {
+      console.error("[admin/jobs] featured update failed:", error);
+      setActionError(error instanceof Error ? error.message : "Failed to update featured status.");
+    } finally {
+      setUpdating(null);
+    }
   }
 
   async function confirmDelete() {
     if (!deleteTarget) return;
     setDeleting(true);
+    setActionError(null);
     const { data: { session } } = await supabase.auth.getSession();
-    await fetch(`/api/admin/jobs/${deleteTarget.id}`, {
+    try {
+      if (!session) throw new Error("Your admin session has expired. Please sign in again.");
+      const response = await fetch(`/api/admin/jobs/${deleteTarget.id}`, {
       method: "DELETE",
       headers: { Authorization: `Bearer ${session?.access_token}` },
-    });
-    setJobs((prev) => prev.filter((j) => j.id !== deleteTarget.id));
-    setDeleteTarget(null);
-    setDeleting(false);
+      });
+      const data = await response.json().catch(() => null) as { error?: string } | null;
+      if (!response.ok) throw new Error(data?.error ?? "Failed to delete job.");
+      setJobs((prev) => prev.filter((j) => j.id !== deleteTarget.id));
+      setDeleteTarget(null);
+    } catch (error) {
+      console.error("[admin/jobs] delete failed:", error);
+      setActionError(error instanceof Error ? error.message : "Failed to delete job.");
+    } finally {
+      setDeleting(false);
+    }
   }
 
   const filtered = jobs.filter((j) =>
@@ -129,6 +158,7 @@ export default function AdminJobsPage() {
           <div className="h-9 w-9 rounded-lg bg-[var(--brand-500)]/10 flex items-center justify-center">
             <Briefcase className="h-5 w-5 text-[var(--brand-500)]" />
           </div>
+          {actionError && <p role="alert" className="mb-4 rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">{actionError}</p>}
           <div>
             <h1 className="text-xl font-bold text-[var(--text-primary)]">Jobs</h1>
             <p className="text-xs text-[var(--text-muted)]">{jobs.length} total</p>
@@ -203,6 +233,7 @@ export default function AdminJobsPage() {
                 {/* Status toggle */}
                 <button
                   onClick={() => toggleActive(job)}
+                  disabled={updating !== null || deleting}
                   className="hidden sm:flex items-center gap-1 text-xs font-medium transition-colors"
                   title={job.is_active ? "Deactivate" : "Activate"}
                 >
@@ -216,6 +247,7 @@ export default function AdminJobsPage() {
                 {/* Featured toggle */}
                 <button
                   onClick={() => toggleFeatured(job)}
+                  disabled={updating !== null || deleting}
                   title={job.is_featured ? "Unfeature" : "Feature"}
                   className="hidden sm:flex"
                 >
@@ -232,6 +264,7 @@ export default function AdminJobsPage() {
                 {/* Delete */}
                 <button
                   onClick={() => setDeleteTarget(job)}
+                  disabled={deleting || updating !== null}
                   className="h-8 w-8 rounded-md flex items-center justify-center text-[var(--text-muted)] hover:text-red-400 hover:bg-red-500/10 transition-colors"
                 >
                   <Trash2 className="h-3.5 w-3.5" />
@@ -250,6 +283,7 @@ export default function AdminJobsPage() {
             <p className="text-sm text-[var(--text-muted)] mb-5">
               &ldquo;{deleteTarget.title}&rdquo; at {deleteTarget.company} will be permanently deleted.
             </p>
+            {actionError && <p role="alert" className="mb-4 text-sm text-red-400">{actionError}</p>}
             <div className="flex gap-3">
               <Button variant="secondary" className="flex-1" onClick={() => setDeleteTarget(null)}>Cancel</Button>
               <Button

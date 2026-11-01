@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase-server";
 import { FROM_NOREPLY, getResend, coinsReceivedHtml } from "@/lib/email";
+import { writeAdminAudit } from "@/lib/admin-audit";
 
 export async function POST(req: NextRequest) {
   const token = req.headers.get("authorization")?.replace("Bearer ", "");
@@ -48,6 +49,15 @@ export async function POST(req: NextRequest) {
   if (updateErr) {
     return NextResponse.json({ error: "Failed to update balance." }, { status: 500 });
   }
+
+  await writeAdminAudit(admin, {
+    actorId: user.id,
+    action: "coins_sent",
+    targetType: "contributor",
+    targetId: contributorId,
+    summary: `Sent ${amount.toLocaleString()} NexCoins to ${p.full_name ?? p.email ?? contributorId}${reason?.trim() ? `: ${reason.trim()}` : ""}`,
+    metadata: { amount, newBalance },
+  });
 
   await admin.from("coin_transactions").insert({
     contributor_id: contributorId,
