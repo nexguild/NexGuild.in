@@ -52,15 +52,30 @@ export async function POST(req: NextRequest) {
 
   // Check is_active with admin client (bypasses RLS)
   const admin = createServerClient();
-  const { data: profile } = await admin
+  const { data: profile, error: profileError } = await admin
     .from("profiles")
-    .select("is_active")
+    .select("role, is_active")
     .eq("id", data.user!.id)
     .single();
+
+  if (profileError) {
+    console.error("[auth/login] profile lookup failed:", profileError.message);
+    await admin.auth.admin.signOut(data.user!.id, "global").catch(() => {});
+    return NextResponse.json({ error: "Unable to verify account permissions." }, { status: 500 });
+  }
 
   if ((profile as { is_active: boolean | null } | null)?.is_active === false) {
     await admin.auth.admin.signOut(data.user!.id, "global").catch(() => {});
     return NextResponse.json({ deactivated: true }, { status: 403 });
+  }
+
+  const role = (profile as { role: string | null } | null)?.role;
+  if (role && role !== "contributor") {
+    await admin.auth.admin.signOut(data.user!.id, "global").catch(() => {});
+    return NextResponse.json(
+      { error: "This is a staff account. Please sign in through the admin portal." },
+      { status: 403 },
+    );
   }
 
   resetRateLimit(key);

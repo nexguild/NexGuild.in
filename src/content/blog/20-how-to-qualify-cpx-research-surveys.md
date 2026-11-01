@@ -18,6 +18,7 @@ faqs:
     a: "Survey availability depends on active advertiser campaigns and whether your demographic matches available studies. Keeping your profile complete and updated improves matching. Survey inventory also changes daily — checking back regularly gives you more options over time."
 ---
 
+If you are looking for a fixed answer key, read our explanation of [why CPX Research surveys do not have universal answers](/earn/blog/cpx-research-survey-answers-no-answer-key). The reliable approach is to answer each study honestly and consistently.
 
 Qualifying for CPX Research surveys consistently comes down to two things: a complete profile and honest screener answers. Complete profiles get pre-matched before you start — you see surveys you're likely to qualify for, not a random feed. Honest screeners clear faster because CPX's quality checks flag inconsistent answers and disqualify you mid-survey anyway. Here are the five steps that actually reduce disqualification on CPX Research.
 

@@ -8,9 +8,10 @@ const HEARTBEAT_INTERVAL_MS = 5 * 60 * 1000;
 export function ContributorActivityHeartbeat() {
   useEffect(() => {
     let pending = false;
+    let contributorAccess = true;
 
     async function recordActivity() {
-      if (pending || document.visibilityState !== "visible") return;
+      if (!contributorAccess || pending || document.visibilityState !== "visible") return;
       pending = true;
       try {
         const { data: { session }, error } = await supabase.auth.getSession();
@@ -23,6 +24,11 @@ export function ContributorActivityHeartbeat() {
         });
         if (!response.ok) {
           const result = await response.json() as { error?: string };
+          if (response.status === 403) {
+            contributorAccess = false;
+            console.warn("[activity/heartbeat] tracking stopped:", result.error ?? "This session is not an active contributor account.");
+            return;
+          }
           throw new Error(result.error ?? `Activity heartbeat failed (${response.status}).`);
         }
       } catch (error) {
