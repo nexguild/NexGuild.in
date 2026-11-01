@@ -386,7 +386,7 @@ export default function VouchersPage() {
                   ) : (
                     <Button
                       size="sm"
-                      variant="outline"
+                      variant="secondary"
                       disabled={delivering === req.id}
                       onClick={() => { setCancellingId(req.id); setRefundError(null); setRefundReason(""); }}
                     >
