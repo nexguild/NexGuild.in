@@ -243,9 +243,13 @@ ${f ? `<div style="background:#1c1010;border:1px solid rgba(239,68,68,0.25);bord
 <div style="background:#111;border:1px solid #222;border-radius:10px;padding:16px 20px;margin:0 0 24px;">
   <p style="margin:0 0 10px;font-size:12px;font-weight:700;color:#F59E0B;text-transform:uppercase;letter-spacing:1px;">Next steps</p>
   <p style="margin:0 0 6px;font-size:14px;color:rgba(255,255,255,0.6);line-height:1.6;">• Review the task instructions carefully</p>
-  <p style="margin:0 0 6px;font-size:14px;color:rgba(255,255,255,0.6);line-height:1.6;">• Address the feedback above before re-submitting</p>
-  <p style="margin:0;font-size:14px;color:rgba(255,255,255,0.6);line-height:1.6;">• You can re-submit when you're confident in your work</p>
+  <p style="margin:0;font-size:14px;color:rgba(255,255,255,0.6);line-height:1.6;">• Review the feedback above and contact us if you believe there has been a mistake</p>
 </div>
+
+<p style="margin:0 0 24px;font-size:13px;color:rgba(255,255,255,0.6);line-height:1.6;">
+  Disagree with this review or have a question? Contact us at
+  <a href="mailto:admin@nexguild.in" style="color:#F59E0B;text-decoration:none;">admin@nexguild.in</a>.
+</p>
 
 ${btn("Go to My Tasks →", "https://www.nexguild.in/dashboard/tasks")}`);
 }
@@ -537,6 +541,11 @@ export function resubmissionRequestedHtml(
   <p style="margin:0 0 6px;font-size:14px;color:rgba(255,255,255,0.6);line-height:1.6;">• Make the required changes to your work</p>
   <p style="margin:0;font-size:14px;color:rgba(255,255,255,0.6);line-height:1.6;">• Click "Resubmit" in your dashboard when ready</p>
 </div>
+
+<p style="margin:0 0 24px;font-size:13px;color:rgba(255,255,255,0.6);line-height:1.6;">
+  Disagree with this review or have a question? Contact us at
+  <a href="mailto:admin@nexguild.in" style="color:#F59E0B;text-decoration:none;">admin@nexguild.in</a>.
+</p>
 
 ${btn("Resubmit Now →", "https://www.nexguild.in/dashboard/tasks")}`);
 }

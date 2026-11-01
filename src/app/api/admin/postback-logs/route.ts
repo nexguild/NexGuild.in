@@ -17,19 +17,24 @@ export async function DELETE(req: NextRequest) {
   const ctx = await verifyOwnerOrAdmin(req);
   if (!ctx) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { ids, action } = await req.json() as { ids?: string[]; action?: string };
+  let body: { ids?: unknown; action?: string };
+  try {
+    body = await req.json() as { ids?: unknown; action?: string };
+  } catch {
+    return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
+  }
 
-  if (action === "clear_test") {
-    await ctx.admin.from("postback_logs").delete().eq("action_taken", "hash_invalid");
-    await ctx.admin.from("postback_logs").delete().contains("raw_params", { user_id: "TEST" });
+  if (body.action === "clear_test") {
+    const { error } = await ctx.admin.from("postback_logs").delete().contains("raw_params", { user_id: "TEST" });
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
     return NextResponse.json({ ok: true });
   }
 
-  if (!ids || ids.length === 0) {
+  if (!Array.isArray(body.ids) || body.ids.length === 0 || !body.ids.every((id) => typeof id === "string")) {
     return NextResponse.json({ error: "No IDs provided" }, { status: 400 });
   }
 
-  const { error } = await ctx.admin.from("postback_logs").delete().in("id", ids);
+  const { error } = await ctx.admin.from("postback_logs").delete().in("id", body.ids);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
   return NextResponse.json({ ok: true });

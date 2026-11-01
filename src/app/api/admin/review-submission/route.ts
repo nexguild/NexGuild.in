@@ -224,7 +224,7 @@ export async function POST(req: NextRequest) {
       const { error: e2 } = await admin.from("notifications").insert({
         user_id: sub.contributor_id,
         title:   "Submission Rejected",
-        message: `Your submission for "${taskTitle}" was not approved.${feedback ? ` Reason: ${feedback}` : ""} You can re-submit.`,
+        message: `Your submission for "${taskTitle}" was not approved and cannot be resubmitted.${feedback ? ` Reason: ${feedback}` : ""} If you disagree with the review or have questions, email admin@nexguild.in.`,
         type:    "submission_rejected",
       });
       if (e2) console.error("[review-submission] reject notification:", e2.message);
@@ -288,7 +288,7 @@ export async function POST(req: NextRequest) {
       await admin.from("notifications").insert({
         user_id: sub.contributor_id,
         title:   "Changes Requested",
-        message: `Admin requested changes to your submission for "${taskTitle}". Tap to resubmit.`,
+        message: `Admin requested changes to your submission for "${taskTitle}". Feedback: ${feedback.trim()} If you disagree or have questions, email admin@nexguild.in.`,
         type:    "resubmit_requested",
       });
 

@@ -37,6 +37,11 @@ export default function AdminAnnouncementsPage() {
   const [sending, setSending]   = useState(false);
   const [error, setError]       = useState<string | null>(null);
   const [sent, setSent]         = useState(false);
+  const [deliverySummary, setDeliverySummary] = useState("");
+  const [recipientCount, setRecipientCount] = useState<number | null>(null);
+  const [previewLoading, setPreviewLoading] = useState(true);
+  const [previewError, setPreviewError] = useState<string | null>(null);
+  const [confirmSend, setConfirmSend] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -54,24 +59,70 @@ export default function AdminAnnouncementsPage() {
     load();
   }, []);
 
+  useEffect(() => {
+    let cancelled = false;
+    async function loadAudience() {
+      setPreviewLoading(true);
+      setPreviewError(null);
+      setRecipientCount(null);
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session?.access_token) throw new Error("Your session has expired. Sign in again to preview recipients.");
+        tokenRef.current = session.access_token;
+        const response = await fetch(`/api/admin/announcements?target=${target}`, {
+          headers: { Authorization: "Bearer " + session.access_token },
+        });
+        const result = await response.json() as { recipientCount?: number; error?: string };
+        if (!response.ok) throw new Error(result.error ?? "Unable to preview recipients.");
+        if (!cancelled) setRecipientCount(result.recipientCount ?? 0);
+      } catch (previewErr) {
+        if (!cancelled) setPreviewError(previewErr instanceof Error ? previewErr.message : "Unable to preview recipients.");
+      } finally {
+        if (!cancelled) setPreviewLoading(false);
+      }
+    }
+    loadAudience();
+    return () => { cancelled = true; };
+  }, [target]);
+
   async function send(e: React.FormEvent) {
     e.preventDefault();
     if (!title.trim() || !message.trim()) {
       setError("Title and message are required.");
       return;
     }
+    if (!confirmSend) {
+      if (previewLoading || recipientCount === null || previewError) {
+        setError(previewError ?? "Wait for the audience preview before sending.");
+        return;
+      }
+      setError(null);
+      setConfirmSend(true);
+      return;
+    }
     setSending(true);
     setError(null);
 
+    try {
     const res = await fetch("/api/admin/announcements", {
       method:  "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${tokenRef.current}` },
-      body:    JSON.stringify({ title: title.trim(), message: message.trim(), target }),
+      body:    JSON.stringify({ title: title.trim(), message: message.trim(), target, expectedRecipientCount: recipientCount }),
     });
-    const data = await res.json() as { ok?: boolean; announcement?: Announcement; error?: string };
+    const data = await res.json() as {
+      ok?: boolean;
+      announcement?: Announcement;
+      recipientCount?: number;
+      notifsSent?: number;
+      emailsSent?: number;
+      emailConfigured?: boolean;
+      deliveryWarning?: string | null;
+      error?: string;
+    };
 
     if (!res.ok || data.error) {
       setError(data.error ?? "Failed to send announcement.");
+      if (res.status === 409) setConfirmSend(false);
       setSending(false);
       return;
     }
@@ -79,12 +130,24 @@ export default function AdminAnnouncementsPage() {
     if (data.announcement) {
       setAnnouncements((prev) => [data.announcement!, ...prev]);
     }
+    const emailStatus = data.emailConfigured
+      ? `${data.emailsSent ?? 0} emails sent`
+      : "email sending is not configured";
+    setDeliverySummary(
+      `${data.notifsSent ?? 0}/${data.recipientCount ?? 0} dashboard notifications created; ${emailStatus}.`,
+    );
+    if (data.deliveryWarning) setError(data.deliveryWarning);
     setTitle("");
     setMessage("");
     setTarget("all");
+    setConfirmSend(false);
     setSent(true);
     setSending(false);
-    setTimeout(() => setSent(false), 4000);
+    setTimeout(() => setSent(false), 6000);
+    } catch (sendError) {
+      setError(sendError instanceof Error ? sendError.message : "Failed to send announcement.");
+      setSending(false);
+    }
   }
 
   if (!allowed) return null;
@@ -111,10 +174,12 @@ export default function AdminAnnouncementsPage() {
               type="text"
               required
               value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              onChange={(e) => { setTitle(e.target.value); setConfirmSend(false); }}
+              maxLength={120}
               placeholder="Announcement title…"
               className={inputClass}
             />
+            <p className="mt-1 text-right text-xs text-[var(--text-muted)]">{title.length}/120</p>
           </div>
 
           <div>
@@ -123,30 +188,38 @@ export default function AdminAnnouncementsPage() {
               required
               rows={4}
               value={message}
-              onChange={(e) => setMessage(e.target.value)}
+              onChange={(e) => { setMessage(e.target.value); setConfirmSend(false); }}
+              maxLength={2000}
               placeholder="Write your announcement message here…"
               className="w-full px-3 py-2.5 rounded-lg border border-[var(--border-default)] bg-[var(--surface-subtle)] text-[var(--text-primary)] text-sm placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--border-focus)] focus:border-transparent transition-colors resize-y"
             />
+            <p className="mt-1 text-right text-xs text-[var(--text-muted)]">{message.length}/2000</p>
           </div>
 
           <div>
             <label className={labelClass}>Send To</label>
-            <select value={target} onChange={(e) => setTarget(e.target.value)} className={inputClass}>
+            <select value={target} onChange={(e) => { setTarget(e.target.value); setConfirmSend(false); }} className={inputClass}>
               <option value="all">All Contributors</option>
               <option value="active">Active Contributors</option>
               <option value="new">New Contributors (joined last 30 days)</option>
             </select>
           </div>
 
+          <div className="rounded-lg border border-[var(--border-default)] bg-[var(--surface-subtle)] px-4 py-3 text-sm text-[var(--text-secondary)]">
+            {previewLoading ? "Counting recipients…" : previewError ? previewError : (
+              <>This announcement will be sent to <strong className="text-[var(--text-primary)]">{recipientCount}</strong> {recipientCount === 1 ? "account" : "accounts"} in {TARGET_LABELS[target] ?? target}.</>
+            )}
+          </div>
+
           {error && <p className="text-sm text-red-400 bg-red-500/10 px-3 py-2 rounded-md">{error}</p>}
           {sent && (
             <div className="flex items-center gap-2 text-sm text-green-400 bg-green-500/10 px-3 py-2 rounded-md">
-              <CheckCircle2 className="h-4 w-4" /> Announcement sent and notifications created.
+              <CheckCircle2 className="h-4 w-4" /> Announcement saved. {deliverySummary}
             </div>
           )}
 
-          <Button type="submit" size="lg" disabled={sending}>
-            {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Bell className="h-4 w-4" /> Send Announcement</>}
+          <Button type="submit" size="lg" disabled={sending || previewLoading || recipientCount === null || !!previewError || (confirmSend && recipientCount === 0)}>
+            {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : confirmSend ? `Confirm send to ${recipientCount} accounts` : <><Bell className="h-4 w-4" /> Review Audience</>}
           </Button>
         </form>
       </section>

@@ -107,11 +107,14 @@ function StepSubmissionItem({ ss, stepTitle }: { ss: StepSubmission; stepTitle: 
 }
 
 const QUICK_REJECT_REASONS = [
-  "Low quality work",
-  "Proof doesn't match task requirements",
-  "Duplicate / copied submission",
-  "Incomplete submission",
-  "Suspicious activity detected",
+  "Submission is incomplete",
+  "Proof is missing, unclear, or inaccessible",
+  "Proof does not match the task requirements",
+  "Task instructions were not followed",
+  "Duplicate submission",
+  "Unable to verify the submitted work",
+  "Work quality or detail is insufficient",
+  "Please review the task instructions and feedback",
 ];
 
 const TABS = ["submitted", "approved", "rejected", "flagged"] as const;
@@ -655,6 +658,13 @@ export default function AdminSubmissionsPage() {
                 autoFocus
                 disabled={rejecting}
               />
+              <p className="text-xs text-[var(--text-muted)]">
+                Contributors can email{" "}
+                <a className="text-[var(--brand-500)] hover:underline" href="mailto:admin@nexguild.in">
+                  admin@nexguild.in
+                </a>{" "}
+                if they disagree with the review or have questions.
+              </p>
             </div>
 
             {/* Two rejection options */}
@@ -739,6 +749,13 @@ export default function AdminSubmissionsPage() {
                 autoFocus
                 disabled={bulkRejecting}
               />
+              <p className="text-xs text-[var(--text-muted)]">
+                Contributors can email{" "}
+                <a className="text-[var(--brand-500)] hover:underline" href="mailto:admin@nexguild.in">
+                  admin@nexguild.in
+                </a>{" "}
+                if they disagree with the review or have questions.
+              </p>
             </div>
 
             <Button

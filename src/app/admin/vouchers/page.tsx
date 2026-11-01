@@ -41,6 +41,7 @@ export default function VouchersPage() {
 
   const [requests, setRequests] = useState<VoucherRequest[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("pending");
   const [search, setSearch] = useState("");
   const [codes, setCodes] = useState<Record<string, string>>({});
@@ -65,13 +66,20 @@ export default function VouchersPage() {
       });
       */
       });
+      setLoadError(null);
+      const data = await res.json().catch(() => ({})) as { requests?: VoucherRequest[]; error?: string };
       if (res.ok) {
-        const { requests } = await res.json() as { requests: VoucherRequest[] };
-        setRequests(requests ?? []);
+        setRequests(data.requests ?? []);
+      } else {
+        setLoadError(data.error ?? "Unable to load voucher requests.");
       }
       setLoading(false);
     }
-    fetchRequests();
+    fetchRequests().catch((error) => {
+      console.error("[admin-vouchers] request loading failed:", error);
+      setLoadError(error instanceof Error ? error.message : "Unable to load voucher requests.");
+      setLoading(false);
+    });
   }, []);
 
   async function markDelivered(req: VoucherRequest) {
@@ -207,6 +215,10 @@ export default function VouchersPage() {
   });
 
   const pendingCount = requests.filter((r) => r.status === "pending").length;
+  const statusCounts = Object.fromEntries(TABS.map((status) => [
+    status,
+    requests.filter((request) => request.status === status).length,
+  ]));
 
   if (!allowed) return null;
   return (
@@ -236,7 +248,7 @@ export default function VouchersPage() {
                 : "border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)]")
             }
           >
-            {tab}
+            {tab} <span className="ml-1 text-xs opacity-70">({statusCounts[tab] ?? 0})</span>
           </button>
         ))}
       </div>
@@ -252,6 +264,10 @@ export default function VouchersPage() {
       {loading ? (
         <div className="space-y-2">
           {[1,2,3].map((i) => <div key={i} className="h-20 rounded-lg border border-[var(--border-default)] bg-[var(--surface-card)] animate-pulse" />)}
+        </div>
+      ) : loadError ? (
+        <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+          Could not load voucher requests: {loadError}
         </div>
       ) : filtered.length === 0 ? (
         <div className="rounded-lg border border-[var(--border-default)] bg-[var(--surface-card)] py-16 flex flex-col items-center gap-3 text-center">

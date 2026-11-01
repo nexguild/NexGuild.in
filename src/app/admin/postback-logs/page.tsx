@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState, useCallback } from "react";
-import { Loader2, AlertTriangle, RefreshCw, Activity, ChevronDown, ChevronUp, Trash2 } from "lucide-react";
+import { Loader2, AlertTriangle, RefreshCw, Activity, ChevronDown, ChevronUp, Trash2, Download, Search } from "lucide-react";
 import { usePageGuard } from "@/components/layout/admin-auth-guard";
 import { ADMIN_ROLES } from "@/lib/admin-permissions";
 import { supabase } from "@/lib/supabase";
@@ -28,6 +28,11 @@ const ACTION_STYLES: Record<string, string> = {
 const PROVIDERS  = ["theoremreach", "cpx_research", "mylead", "clixwall", "clickwall", "cpagrip", "monlix"];
 const ACTIONS    = ["credited", "duplicate", "reversed", "debug_ignored", "hash_invalid", "error"];
 
+function csvCell(value: unknown) {
+  const text = value == null ? "" : typeof value === "string" ? value : JSON.stringify(value);
+  return `"${text.replace(/"/g, '""')}"`;
+}
+
 export default function PostbackLogsPage() {
   const allowed = usePageGuard(ADMIN_ROLES.UPPER);
 
@@ -35,12 +40,16 @@ export default function PostbackLogsPage() {
   const [loading, setLoading]                 = useState(true);
   const [filterProvider, setFilterProvider]   = useState("all");
   const [filterAction,   setFilterAction]     = useState("all");
+  const [dateRange, setDateRange]             = useState("7d");
+  const [search, setSearch]                   = useState("");
   const [expandedId, setExpandedId]           = useState<string | null>(null);
   const [deletingId, setDeletingId]           = useState<string | null>(null);
   const [clearingTest, setClearingTest]       = useState(false);
+  const [error, setError]                     = useState<string | null>(null);
 
   const fetchLogs = useCallback(async () => {
     setLoading(true);
+    setError(null);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let query: any = supabase
       .from("postback_logs")
@@ -50,11 +59,20 @@ export default function PostbackLogsPage() {
 
     if (filterProvider !== "all") query = query.eq("provider",      filterProvider);
     if (filterAction   !== "all") query = query.eq("action_taken",  filterAction);
+    if (dateRange !== "all") {
+      const days = dateRange === "24h" ? 1 : Number.parseInt(dateRange, 10);
+      query = query.gte("created_at", new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString());
+    }
 
-    const { data } = await query;
+    const { data, error: queryError } = await query;
+    if (queryError) {
+      setError(queryError.message);
+      setLoading(false);
+      return;
+    }
     setLogs((data as PostbackLog[]) ?? []);
     setLoading(false);
-  }, [filterProvider, filterAction]);
+  }, [filterProvider, filterAction, dateRange]);
 
   useEffect(() => {
     if (allowed) fetchLogs();
@@ -68,26 +86,50 @@ export default function PostbackLogsPage() {
   async function deleteLog(id: string, e: React.MouseEvent) {
     e.stopPropagation();
     setDeletingId(id);
+    setError(null);
+    try {
     const token = await getToken();
-    await fetch("/api/admin/postback-logs", {
+    const response = await fetch("/api/admin/postback-logs", {
       method: "DELETE",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
       body: JSON.stringify({ ids: [id] }),
     });
+    if (!response.ok) {
+      const result = await response.json().catch(() => ({})) as { error?: string };
+      setError(result.error ?? "Unable to delete postback log.");
+      setDeletingId(null);
+      return;
+    }
     setLogs((prev) => prev.filter((l) => l.id !== id));
+    } catch (deleteError) {
+      setError(deleteError instanceof Error ? deleteError.message : "Unable to delete postback log.");
+    } finally {
     setDeletingId(null);
+    }
   }
 
   async function clearTestLogs() {
+    if (!window.confirm("Delete only entries marked with user_id TEST? Invalid-hash production logs will be kept.")) return;
     setClearingTest(true);
+    setError(null);
+    try {
     const token = await getToken();
-    await fetch("/api/admin/postback-logs", {
+    const response = await fetch("/api/admin/postback-logs", {
       method: "DELETE",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
       body: JSON.stringify({ action: "clear_test" }),
     });
+    if (!response.ok) {
+      const result = await response.json().catch(() => ({})) as { error?: string };
+      setError(result.error ?? "Unable to clear test entries.");
+      return;
+    }
     await fetchLogs();
+    } catch (clearError) {
+      setError(clearError instanceof Error ? clearError.message : "Unable to clear test entries.");
+    } finally {
     setClearingTest(false);
+    }
   }
 
   if (!allowed) return null;
@@ -123,6 +165,56 @@ export default function PostbackLogsPage() {
   }
 
   const hashInvalidCount = logs.filter(l => l.action_taken === "hash_invalid").length;
+  const searchTerm = search.trim().toLocaleLowerCase();
+  const filteredLogs = logs.filter((log) => {
+    if (!searchTerm) return true;
+    const params = log.raw_params ?? {};
+    return [
+      log.id,
+      log.provider,
+      log.action_taken,
+      log.error_message,
+      params.user_id,
+      params.uid,
+      params.publisher_user_id,
+      params.tx_id,
+      params.trans_id,
+      params.transaction_id,
+      params.tid,
+      params.offer_transaction_id,
+      params.offer_id,
+      params.offer_name,
+      params.event_name,
+    ].some((value) => String(value ?? "").toLocaleLowerCase().includes(searchTerm));
+  });
+
+  function exportLogs() {
+    const rows = [
+      ["Time", "Provider", "Action", "Hash valid", "User ID", "Transaction ID", "Error", "Raw params"],
+      ...filteredLogs.map((log) => {
+        const params = log.raw_params ?? {};
+        return [
+          log.created_at,
+          log.provider,
+          log.action_taken,
+          log.hash_valid,
+          params.user_id ?? params.uid ?? params.publisher_user_id ?? "",
+          params.tx_id ?? params.trans_id ?? params.transaction_id ?? params.tid ?? params.offer_transaction_id ?? "",
+          log.error_message,
+          params,
+        ];
+      }),
+    ];
+    const csv = rows.map((row) => row.map(csvCell).join(",")).join("\r\n");
+    const url = URL.createObjectURL(new Blob([`\uFEFF${csv}`], { type: "text/csv;charset=utf-8;" }));
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = `nexguild-postback-logs-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(anchor);
+    anchor.click();
+    document.body.removeChild(anchor);
+    window.setTimeout(() => URL.revokeObjectURL(url), 0);
+  }
 
   return (
     <div className="space-y-6">
@@ -131,10 +223,17 @@ export default function PostbackLogsPage() {
         <div>
           <h1 className="text-2xl font-bold text-[var(--text-primary)]">Postback Logs</h1>
           <p className="text-sm text-[var(--text-secondary)] mt-0.5">
-            Audit trail of survey completions, offer milestones, reversals, and errors — last 200 entries
+            Audit trail of survey completions, offer milestones, reversals, and errors — up to 200 matching entries
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <button
+            onClick={exportLogs}
+            disabled={filteredLogs.length === 0 || loading}
+            className="flex items-center gap-2 px-3 py-2 rounded-lg border border-[var(--border-default)] bg-[var(--surface-card)] text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] disabled:opacity-50"
+          >
+            <Download className="h-4 w-4" /> Export CSV
+          </button>
           <button
             onClick={clearTestLogs}
             disabled={clearingTest || loading}
@@ -167,6 +266,17 @@ export default function PostbackLogsPage() {
       {/* Filters */}
       <div className="flex gap-3 flex-wrap">
         <select
+          value={dateRange}
+          onChange={e => setDateRange(e.target.value)}
+          className="h-9 px-3 rounded-lg border border-[var(--border-default)] bg-[var(--surface-card)] text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--brand-500)]"
+        >
+          <option value="24h">Last 24 hours</option>
+          <option value="7d">Last 7 days</option>
+          <option value="30d">Last 30 days</option>
+          <option value="all">All time</option>
+        </select>
+
+        <select
           value={filterProvider}
           onChange={e => setFilterProvider(e.target.value)}
           className="h-9 px-3 rounded-lg border border-[var(--border-default)] bg-[var(--surface-card)] text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--brand-500)]"
@@ -184,9 +294,19 @@ export default function PostbackLogsPage() {
           {ACTIONS.map(a => <option key={a} value={a}>{a}</option>)}
         </select>
 
-        {(filterProvider !== "all" || filterAction !== "all") && (
+        <div className="flex h-9 min-w-[220px] flex-1 items-center gap-2 rounded-lg border border-[var(--border-default)] bg-[var(--surface-card)] px-3">
+          <Search className="h-4 w-4 flex-shrink-0 text-[var(--text-muted)]" />
+          <input
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            placeholder="Search user, transaction, offer, or error…"
+            className="w-full bg-transparent text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none"
+          />
+        </div>
+
+        {(filterProvider !== "all" || filterAction !== "all" || dateRange !== "7d" || search) && (
           <button
-            onClick={() => { setFilterProvider("all"); setFilterAction("all"); }}
+            onClick={() => { setFilterProvider("all"); setFilterAction("all"); setDateRange("7d"); setSearch(""); }}
             className="h-9 px-3 rounded-lg border border-[var(--border-default)] bg-[var(--surface-subtle)] text-sm text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors"
           >
             Clear filters
@@ -194,12 +314,18 @@ export default function PostbackLogsPage() {
         )}
       </div>
 
+      {error && (
+        <div role="alert" className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+          {error}
+        </div>
+      )}
+
       {/* Table */}
       {loading ? (
         <div className="flex items-center justify-center py-20">
           <Loader2 className="h-6 w-6 animate-spin text-[var(--brand-500)]" />
         </div>
-      ) : logs.length === 0 ? (
+      ) : filteredLogs.length === 0 ? (
         <div className="rounded-xl border border-[var(--border-default)] bg-[var(--surface-card)] py-16 flex flex-col items-center gap-3 text-center">
           <Activity className="h-8 w-8 text-[var(--text-muted)]" />
           <p className="font-medium text-[var(--text-secondary)]">No postback logs found</p>
@@ -222,7 +348,7 @@ export default function PostbackLogsPage() {
                 </tr>
               </thead>
               <tbody>
-                {logs.map((log) => {
+                {filteredLogs.map((log) => {
                   const isAlert  = log.action_taken === "hash_invalid" || log.action_taken === "error";
                   const expanded = expandedId === log.id;
                   const params   = log.raw_params ?? {};
@@ -335,7 +461,7 @@ export default function PostbackLogsPage() {
             </table>
           </div>
           <div className="px-4 py-2 border-t border-[var(--border-default)] bg-[var(--surface-subtle)]">
-            <p className="text-xs text-[var(--text-muted)]">{logs.length} entries shown (max 200) · click any row to expand raw params</p>
+            <p className="text-xs text-[var(--text-muted)]">{filteredLogs.length} entries shown (max 200 per query) · click any row to expand raw params</p>
           </div>
         </div>
       )}
