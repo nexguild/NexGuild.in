@@ -820,7 +820,7 @@ export default function AdminSettingsPage() {
             <div className="flex flex-shrink-0 items-center gap-2">
               <Button
                 size="sm"
-                variant="outline"
+                variant="secondary"
                 disabled={backupStatusLoading}
                 onClick={() => tokenRef.current && refreshBackupStatus(tokenRef.current)}
                 aria-label="Refresh backup status"
