@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import {
   LayoutDashboard, Search, ClipboardList,
   TrendingUp, ShoppingBag, Gift, Users, Megaphone, Headphones, Sparkles,
-  User, Settings, LogOut, X, Wallet,
+  User, Settings, LogOut, X, Wallet, Banknote,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { NexGuildLogo } from "@/components/ui/nexguild-logo";
@@ -31,13 +31,18 @@ const NAV_GROUPS = [
     ],
   },
   {
-    label: "Your account",
+    label: "Rewards",
     items: [
       { label: "My Work", href: "/dashboard/tasks", icon: ClipboardList },
       { label: "Earnings", href: "/dashboard/earnings", icon: TrendingUp },
       { label: "NexCoins", href: "/dashboard/wallet", icon: Wallet },
-      { label: "NexStore", href: "/dashboard/store", icon: ShoppingBag },
       { label: "My Vouchers", href: "/dashboard/vouchers", icon: Gift },
+    ],
+  },
+  {
+    label: "Cashout",
+    items: [
+      { label: "Cashout & Rewards", href: "/dashboard/store", icon: Banknote },
     ],
   },
   {

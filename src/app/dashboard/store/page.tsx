@@ -278,15 +278,17 @@ export default function StorePage() {
         <div aria-hidden className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_82%_0%,rgba(214,182,110,0.22),transparent_35%),radial-gradient(ellipse_at_5%_100%,rgba(20,184,166,0.16),transparent_42%)]" />
         <div className="relative z-10 flex items-start justify-between gap-4 flex-wrap">
           <div>
-            <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-white/70">Rewards &amp; payouts</p>
-            <h1 className="text-2xl font-bold text-white mb-1">NexStore</h1>
-            <p className="text-sm text-white/75">Browse India-only gift vouchers or request a global USDT payout.</p>
+            <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-white/70">Cashout</p>
+            <h1 className="text-2xl font-bold text-white mb-1">Cashout &amp; Rewards</h1>
+            <p className="text-sm text-white/75">Redeem NexCoins for vouchers or request a global USDT payout.</p>
             <p className="mt-1 text-xs text-white/60">
               Gift vouchers are limited to India. Showing options for {countryCode ? getCountryName(countryCode) : "your account"}.
             </p>
-            <Link href="/dashboard/vouchers" className="mt-4 inline-flex text-sm font-semibold text-[#e4c787] transition-colors hover:text-white">
-              View my vouchers →
-            </Link>
+            <div className="mt-4 flex flex-wrap gap-4">
+              <Link href="/dashboard/vouchers" className="inline-flex text-sm font-semibold text-[#e4c787] transition-colors hover:text-white">
+                View my vouchers →
+              </Link>
+            </div>
           </div>
           <div className="flex items-center gap-3">
             {/* Premium balance card */}
@@ -320,7 +322,7 @@ export default function StorePage() {
         </div>
       </div>
 
-      <div role="tablist" aria-label="Store options" className="grid grid-cols-2 gap-2 rounded-2xl border border-[var(--border-default)] bg-[var(--surface-subtle)] p-1.5">
+      <div role="tablist" aria-label="Cashout and rewards options" className="grid grid-cols-2 gap-2 rounded-2xl border border-[var(--border-default)] bg-[var(--surface-subtle)] p-1.5">
         <button
           type="button"
           role="tab"
@@ -335,7 +337,7 @@ export default function StorePage() {
           }`}
         >
           <Gift className="h-4 w-4" />
-          Gift cards
+          Gift vouchers
           <span className="rounded-full bg-[var(--surface-subtle)] px-2 py-0.5 text-[10px]">{brandList.length}</span>
         </button>
         <button
@@ -352,7 +354,7 @@ export default function StorePage() {
           }`}
         >
           <Globe2 className="h-4 w-4" />
-          Get paid
+          Global Payout
         </button>
       </div>
 
@@ -427,7 +429,7 @@ export default function StorePage() {
               <p className="text-sm text-[var(--text-secondary)]">
                 {countryCode === "IN"
                   ? "We’ll list Indian vouchers again when their purchase source and delivery availability are confirmed."
-                  : "You can still use the Binance Pay payout option if it is available to you."}
+                  : "Switch to the Global Payout tab to request a global USDT payout."}
               </p>
             </>
           )}

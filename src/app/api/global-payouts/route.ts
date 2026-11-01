@@ -8,20 +8,33 @@ import {
 
 async function getContributor(req: NextRequest) {
   const token = req.headers.get("authorization")?.replace(/^Bearer\s+/i, "");
-  if (!token) return null;
+  if (!token) {
+    return { error: NextResponse.json({ error: "Sign in to access contributor cashout." }, { status: 401 }) };
+  }
 
   const admin = createServerClient();
   const { data: { user }, error: authError } = await admin.auth.getUser(token);
-  if (authError || !user) return null;
+  if (authError || !user) {
+    return { error: NextResponse.json({ error: "Your session is invalid or expired. Sign in again." }, { status: 401 }) };
+  }
 
-  const { data: profile, error } = await admin.from("profiles").select("role").eq("id", user.id).single();
-  if (error || profile?.role !== "contributor") return null;
+  const { data: profile, error } = await admin.from("profiles").select("role").eq("id", user.id).maybeSingle();
+  if (error) {
+    console.error("[global-payouts] contributor profile lookup failed:", error.message);
+    return { error: NextResponse.json({ error: "Unable to verify your account. Please try again." }, { status: 500 }) };
+  }
+  if (!profile) {
+    return { error: NextResponse.json({ error: "Your account profile is missing. Sign out and back in; contact support if this continues." }, { status: 403 }) };
+  }
+  if (profile.role !== "contributor") {
+    return { error: NextResponse.json({ error: "Contributor account required. Cashout is available only to contributor accounts." }, { status: 403 }) };
+  }
   return { admin, user };
 }
 
 export async function GET(req: NextRequest) {
   const ctx = await getContributor(req);
-  if (!ctx) return NextResponse.json({ error: "Contributor account required." }, { status: 403 });
+  if ("error" in ctx) return ctx.error;
 
   const { data, error } = await ctx.admin
     .from("global_payout_requests")
@@ -38,7 +51,7 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   const ctx = await getContributor(req);
-  if (!ctx) return NextResponse.json({ error: "Contributor account required." }, { status: 403 });
+  if ("error" in ctx) return ctx.error;
 
   let body: {
     coinsRequested?: unknown;

@@ -10,6 +10,7 @@ import {
   LayoutDashboard,
   Sparkles,
   Wallet,
+  Banknote,
   Users,
   Menu,
   X,
@@ -29,7 +30,7 @@ const PAGE_TITLES: Record<string, string> = {
   "/dashboard/offerwalls":    "Apps & Offers",
   "/dashboard/earnings":      "Earnings",
   "/dashboard/wallet":        "Coin Balance",
-  "/dashboard/store":         "Rewards Store",
+  "/dashboard/store":         "Cashout & Rewards",
   "/dashboard/leaderboard":   "Top Contributors",
   "/dashboard/vouchers":      "My Vouchers",
   "/dashboard/community":     "Community",
@@ -93,7 +94,6 @@ const NAV_CATEGORIES = [
     items: [
       { label: "Coin Balance", href: "/dashboard/wallet" },
       { label: "Earnings History", href: "/dashboard/earnings" },
-      { label: "Rewards Store", href: "/dashboard/store" },
       { label: "My Vouchers", href: "/dashboard/vouchers" },
     ],
   },
@@ -133,8 +133,8 @@ function DashboardCategoryNav({
   const [openCategory, setOpenCategory] = useState<string | null>(null);
   const navRef = useRef<HTMLElement>(null);
   const activeCategory = NAV_CATEGORIES.find((category) =>
-    category.href === "/dashboard"
-      ? pathname === category.href
+    category.items.length === 0
+      ? isNavItemActive(pathname, category.href)
       : category.items.some((item) => isNavItemActive(pathname, item.href))
   );
 
@@ -467,6 +467,18 @@ if (existingChannel) {
         </div>
 
         <div className="flex items-center gap-1.5">
+          <Link
+            href="/dashboard/store"
+            aria-current={pathname === "/dashboard/store" ? "page" : undefined}
+            className={`inline-flex h-10 items-center gap-2 rounded-xl px-3 text-[13px] font-semibold transition-colors ${
+              pathname === "/dashboard/store"
+                ? "bg-teal-700 text-white shadow-sm"
+                : "bg-teal-50 text-teal-800 hover:bg-teal-100"
+            }`}
+          >
+            <Banknote className="h-4 w-4" />
+            <span>Cashout</span>
+          </Link>
           {/* Notification Bell */}
           <div ref={bellRef} className="relative">
           <button
