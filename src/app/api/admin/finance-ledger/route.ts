@@ -56,14 +56,14 @@ function parseCursor(value: string | null): Cursor | null | undefined {
   }
 }
 
-function applyCursor(query: ReturnType<ReturnType<typeof createServerClient>["from"]>, cursor: Cursor, kind: LedgerKind) {
+function cursorFilter(cursor: Cursor, kind: LedgerKind): string {
   if (kind === "binance" && cursor.kind === "coin") {
-    return query.lt("created_at", cursor.createdAt);
+    return `created_at.lt.${cursor.createdAt}`;
   }
   if (kind === "coin" && cursor.kind === "binance") {
-    return query.lte("created_at", cursor.createdAt);
+    return `created_at.lte.${cursor.createdAt}`;
   }
-  return query.or(`created_at.lt.${cursor.createdAt},and(created_at.eq.${cursor.createdAt},id.lt.${cursor.id})`);
+  return `created_at.lt.${cursor.createdAt},and(created_at.eq.${cursor.createdAt},id.lt.${cursor.id})`;
 }
 
 function compareRows(a: LedgerRow, b: LedgerRow): number {
@@ -213,7 +213,7 @@ export async function GET(req: NextRequest) {
       .in("type", coinTypes);
     if (from) query = query.gte("created_at", `${from}T00:00:00.000Z`);
     if (toExclusive) query = query.lt("created_at", toExclusive);
-    if (cursor) query = applyCursor(query, cursor, "coin");
+    if (cursor) query = query.or(cursorFilter(cursor, "coin"));
     dataQueries.push(query
       .order("created_at", { ascending: false })
       .order("id", { ascending: false })
@@ -226,7 +226,7 @@ export async function GET(req: NextRequest) {
     if (status !== "all") query = query.eq("status", status);
     if (from) query = query.gte("created_at", `${from}T00:00:00.000Z`);
     if (toExclusive) query = query.lt("created_at", toExclusive);
-    if (cursor) query = applyCursor(query, cursor, "binance");
+    if (cursor) query = query.or(cursorFilter(cursor, "binance"));
     dataQueries.push(query
       .order("created_at", { ascending: false })
       .order("id", { ascending: false })
