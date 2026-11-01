@@ -1,24 +1,27 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ShoppingCart, X, Loader2, CheckCircle, Tag, Plus, Minus, Trash2 } from "lucide-react";
+import { ShoppingCart, X, Loader2, CheckCircle, Tag, Plus, Minus, Trash2, Gift, Globe2 } from "lucide-react";
 import { NexCoinIcon } from "@/components/ui/nexcoin-icon";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
 import { BlogTipCard } from "@/components/dashboard/BlogTipCard";
-import { BinanceRedemptionCard } from "@/components/dashboard/BinanceRedemptionCard";
+import { GlobalPayoutCard } from "@/components/dashboard/GlobalPayoutCard";
 import { formatNexcoins } from "@/lib/nexcoins";
+import { getCountryName, isCountryCode } from "@/lib/countries";
+import { VOUCHER_CATEGORIES } from "@/lib/voucher-categories";
 
 interface DbVoucher {
   id: string;
   brand_name: string;
   description: string;
   value_inr: number | null;
-  value_usd: number | null;
   coins_required: number;
   category: string;
   emoji: string;
+  country_codes: string[];
+  country_codes_verified: boolean;
   is_available: boolean;
 }
 
@@ -42,7 +45,6 @@ const BRAND_COLORS: Record<string, { bg: string; text: string }> = {
   "Google Play": { bg: "bg-green-500/15",  text: "text-green-400" },
   "Zomato":      { bg: "bg-red-500/15",    text: "text-red-400" },
   "Steam":       { bg: "bg-sky-500/15",    text: "text-sky-400" },
-  "PayPal":      { bg: "bg-blue-600/15",   text: "text-blue-500" },
 };
 
 // Card top-banner gradients
@@ -53,7 +55,6 @@ const BRAND_GRADIENTS: Record<string, string> = {
   "Google Play": "from-green-400 to-green-500",
   "Zomato":      "from-red-400 to-red-500",
   "Steam":       "from-sky-500 to-sky-600",
-  "PayPal":      "from-blue-500 to-blue-700",
 };
 
 function brandColor(brand: string) {
@@ -62,31 +63,23 @@ function brandColor(brand: string) {
 function brandGradient(brand: string): string {
   return BRAND_GRADIENTS[brand] ?? "from-teal-400 to-teal-500";
 }
-function formatValue(v: DbVoucher): string {
-  if (v.value_inr && v.value_inr > 0) return `₹${v.value_inr}`;
-  if (v.value_usd && v.value_usd > 0) return `$${v.value_usd}`;
+function formatValue(v: DbVoucher, countryCode: string | null): string {
+  if (countryCode === "IN" && v.value_inr && v.value_inr > 0) return `₹${v.value_inr}`;
   return "—";
 }
 
-const CATEGORIES = ["All", "Shopping", "Apps", "Food", "Gaming"];
-const CATEGORY_EMOJIS: Record<string, string> = {
-  All: "🎁", Shopping: "🛍️", Apps: "📱", Food: "🍽️", Gaming: "🎮",
-};
-
-const CATEGORY_MAP: Record<string, string> = {
-  Shopping: "shopping", Apps: "apps", Food: "food", Gaming: "gaming",
-};
+const CATEGORIES = [{ value: "all", label: "All", emoji: "🎁" }, ...VOUCHER_CATEGORIES];
 
 const HOW_TO_USE = [
   "Click Redeem in your cart to submit a request",
-  "We process your request within 24–48 hours",
+  "Our team reviews the request; processing times vary",
   "Your voucher code appears in My Vouchers",
-  "Use the code on the brand's website or app",
+  "Check the issuer's terms before using your code",
 ];
 
 const TERMS = [
   "Vouchers are non-refundable once redeemed",
-  "Valid for 12 months from the date of issue",
+  "Validity and usage follow the issuer's terms",
   "Cannot be exchanged for NexCoins or cash",
   "One voucher code per redemption request",
 ];
@@ -95,9 +88,12 @@ export default function StorePage() {
   const tokenRef = useRef<string | null>(null);
 
   const [nexcoins, setNexcoins]   = useState<number | null>(null);
+  const [countryCode, setCountryCode] = useState<string | null>(null);
   const [loading, setLoading]     = useState(true);
+  const [catalogError, setCatalogError] = useState<string | null>(null);
   const [vouchers, setVouchers]   = useState<DbVoucher[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState("All");
+  const [activeSection, setActiveSection] = useState<"rewards" | "payouts">("rewards");
+  const [selectedCategory, setSelectedCategory] = useState("all");
   const [showAffordable, setShowAffordable]     = useState(false);
 
   const [detailBrand, setDetailBrand]             = useState<string | null>(null);
@@ -123,17 +119,36 @@ export default function StorePage() {
       const { data: { session } } = await supabase.auth.getSession();
       tokenRef.current = session?.access_token ?? null;
 
-      const [{ data: profileData }, { data: voucherData }] = await Promise.all([
-        supabase.from("profiles").select("nexcoins").eq("id", user.id).single(),
+      const [profileResult, voucherResult] = await Promise.all([
+        supabase.from("profiles").select("nexcoins, country_code").eq("id", user.id).single(),
         supabase
           .from("voucher_inventory")
-          .select("id, brand_name, description, value_inr, value_usd, coins_required, category, emoji, is_available")
+          .select("id, brand_name, description, value_inr, coins_required, category, emoji, country_codes, country_codes_verified, is_available")
           .order("brand_name", { ascending: true })
           .order("coins_required", { ascending: true }),
       ]);
 
-      setNexcoins((profileData as { nexcoins: number } | null)?.nexcoins ?? 0);
-      setVouchers((voucherData as DbVoucher[]) ?? []);
+      if (profileResult.error || !profileResult.data) {
+        console.error("[store] contributor profile lookup failed:", profileResult.error?.message ?? "No profile row returned.");
+        setCatalogError("We couldn't load your country settings. Refresh the page or contact support.");
+        setLoading(false);
+        return;
+      }
+      if (voucherResult.error || !voucherResult.data) {
+        console.error("[store] voucher inventory lookup failed:", voucherResult.error?.message ?? "No catalog rows returned.");
+        setCatalogError("We couldn't load the reward catalog. Please try again later.");
+        setLoading(false);
+        return;
+      }
+      const profile = profileResult.data as { nexcoins: number; country_code: string | null };
+      setNexcoins(profile?.nexcoins ?? 0);
+      const contributorCountry = isCountryCode(profile?.country_code) ? profile.country_code : null;
+      setCountryCode(contributorCountry);
+      setVouchers(contributorCountry === "IN"
+        ? ((voucherResult.data as DbVoucher[]) ?? []).filter((voucher) =>
+          voucher.country_codes_verified && voucher.country_codes?.includes("IN")
+        )
+        : []);
       setLoading(false);
     }
     fetchData();
@@ -222,8 +237,7 @@ export default function StorePage() {
         body:    JSON.stringify({
           items: cart.flatMap((e) =>
             Array.from({ length: e.qty }, () => ({
-              voucherType: `${e.voucher.brand_name} ${formatValue(e.voucher)} Voucher`,
-              coins:       e.voucher.coins_required,
+              voucherId: e.voucher.id,
             }))
           ),
           couponCode: coupon?.code ?? null,
@@ -248,7 +262,7 @@ export default function StorePage() {
   }
 
   const displayedBrands = brandList.filter(({ brand, category }) => {
-    if (selectedCategory !== "All" && category !== CATEGORY_MAP[selectedCategory]) return false;
+    if (selectedCategory !== "all" && category !== selectedCategory) return false;
     if (showAffordable) {
       const minCoins = Math.min(...brandVouchers(brand).map((v) => v.coins_required));
       if ((nexcoins ?? 0) < minCoins) return false;
@@ -264,9 +278,12 @@ export default function StorePage() {
         <div aria-hidden className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_82%_0%,rgba(214,182,110,0.22),transparent_35%),radial-gradient(ellipse_at_5%_100%,rgba(20,184,166,0.16),transparent_42%)]" />
         <div className="relative z-10 flex items-start justify-between gap-4 flex-wrap">
           <div>
-            <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-white/70">Rewards store</p>
+            <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-white/70">Rewards &amp; payouts</p>
             <h1 className="text-2xl font-bold text-white mb-1">NexStore</h1>
-            <p className="text-sm text-white/75">Redeem your NexCoins for real gift vouchers.</p>
+            <p className="text-sm text-white/75">Browse India-only gift vouchers or request a global USDT payout.</p>
+            <p className="mt-1 text-xs text-white/60">
+              Gift vouchers are limited to India. Showing options for {countryCode ? getCountryName(countryCode) : "your account"}.
+            </p>
             <Link href="/dashboard/vouchers" className="mt-4 inline-flex text-sm font-semibold text-[#e4c787] transition-colors hover:text-white">
               View my vouchers →
             </Link>
@@ -286,7 +303,8 @@ export default function StorePage() {
               </div>
             </div>
             {/* Cart button */}
-            <button
+            {activeSection === "rewards" && <button
+              type="button"
               onClick={() => setCartOpen(true)}
               className="relative h-10 w-10 flex items-center justify-center rounded-xl border border-white/20 bg-white/10 shadow-sm transition-colors hover:bg-white/20"
               aria-label="Open cart"
@@ -297,43 +315,83 @@ export default function StorePage() {
                   {cartCount}
                 </span>
               )}
-            </button>
+            </button>}
           </div>
         </div>
       </div>
 
+      <div role="tablist" aria-label="Store options" className="grid grid-cols-2 gap-2 rounded-2xl border border-[var(--border-default)] bg-[var(--surface-subtle)] p-1.5">
+        <button
+          type="button"
+          role="tab"
+          id="store-rewards-tab"
+          aria-controls="store-rewards-panel"
+          aria-selected={activeSection === "rewards"}
+          onClick={() => { setActiveSection("rewards"); setDetailBrand(null); }}
+          className={`flex min-h-12 items-center justify-center gap-2 rounded-xl px-3 text-sm font-semibold transition ${
+            activeSection === "rewards"
+              ? "bg-[var(--surface-card)] text-[var(--text-primary)] shadow-sm"
+              : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+          }`}
+        >
+          <Gift className="h-4 w-4" />
+          Gift cards
+          <span className="rounded-full bg-[var(--surface-subtle)] px-2 py-0.5 text-[10px]">{brandList.length}</span>
+        </button>
+        <button
+          type="button"
+          role="tab"
+          id="store-payouts-tab"
+          aria-controls="store-payouts-panel"
+          aria-selected={activeSection === "payouts"}
+          onClick={() => { setActiveSection("payouts"); setDetailBrand(null); }}
+          className={`flex min-h-12 items-center justify-center gap-2 rounded-xl px-3 text-sm font-semibold transition ${
+            activeSection === "payouts"
+              ? "bg-[var(--surface-card)] text-[var(--text-primary)] shadow-sm"
+              : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+          }`}
+        >
+          <Globe2 className="h-4 w-4" />
+          Get paid
+        </button>
+      </div>
+
+      {activeSection === "rewards" && (
+      <div id="store-rewards-panel" role="tabpanel" aria-labelledby="store-rewards-tab" tabIndex={0} className="space-y-8">
       {/* ── Filters ─────────────────────────────────────────────────── */}
       <div className="space-y-3">
         {/* Category pills */}
         <div className="flex items-center gap-2 flex-wrap">
           {CATEGORIES.map((cat) => (
             <button
-              key={cat}
-              onClick={() => setSelectedCategory(cat)}
+              key={cat.value}
+              onClick={() => setSelectedCategory(cat.value)}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium border transition-all ${
-                selectedCategory === cat
-                  ? "bg-teal-500 text-white border-teal-500"
-                  : "bg-white text-slate-600 border-slate-200 hover:border-teal-300 hover:text-teal-600"
+                selectedCategory === cat.value
+                  ? "bg-[var(--brand-500)] text-white border-[var(--brand-500)]"
+                  : "bg-[var(--surface-card)] text-[var(--text-secondary)] border-[var(--border-default)] hover:border-[var(--brand-500)] hover:text-[var(--brand-500)]"
               }`}
             >
-              {CATEGORY_EMOJIS[cat]} {cat}
+              <span aria-hidden="true">{cat.emoji}</span> {cat.label}
             </button>
           ))}
         </div>
 
         {/* Affordability toggle */}
         <div className="flex items-center justify-end gap-2.5">
-          <span className="text-sm text-slate-600 select-none">Show only what I can afford</span>
-          <div
+          <span className="text-sm text-[var(--text-secondary)] select-none">Show only what I can afford</span>
+          <button
+            type="button"
             role="switch"
             aria-checked={showAffordable}
-            onClick={() => !loading && setShowAffordable(!showAffordable)}
+            disabled={loading}
+            onClick={() => setShowAffordable(!showAffordable)}
             className={`relative h-6 w-10 flex-shrink-0 rounded-full transition-colors duration-200 ${
-              showAffordable ? "bg-teal-500" : "bg-slate-200"
+              showAffordable ? "bg-[var(--brand-500)]" : "bg-[var(--border-strong)]"
             } ${loading ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
           >
             <span className={`absolute top-[2px] h-5 w-5 rounded-full bg-white shadow-sm transition-transform duration-200 ${showAffordable ? "translate-x-[18px]" : "translate-x-[2px]"}`} />
-          </div>
+          </button>
         </div>
       </div>
 
@@ -341,21 +399,21 @@ export default function StorePage() {
       {loading ? (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="h-64 rounded-2xl border border-slate-100 bg-white animate-pulse shadow-[0_2px_12px_rgba(0,0,0,0.06)]" />
+            <div key={i} className="h-64 rounded-2xl border border-[var(--border-default)] bg-[var(--surface-card)] animate-pulse shadow-sm" />
           ))}
         </div>
       ) : displayedBrands.length === 0 ? (
-        <div className="rounded-2xl border border-slate-100 bg-white shadow-[0_2px_12px_rgba(0,0,0,0.06)] py-16 text-center px-6">
-          {showAffordable ? (
+        <div className="rounded-2xl border border-[var(--border-default)] bg-[var(--surface-card)] shadow-sm py-16 text-center px-6">
+          {showAffordable && brandList.length > 0 ? (
             <>
               <p className="text-4xl mb-3">🏆</p>
-              <p className="font-bold text-slate-800 text-lg mb-1">Almost there!</p>
-              <p className="text-sm text-slate-500 mb-4 max-w-xs mx-auto">
+              <p className="font-bold text-[var(--text-primary)] text-lg mb-1">Almost there!</p>
+              <p className="text-sm text-[var(--text-secondary)] mb-4 max-w-xs mx-auto">
                 Complete a few more tasks to unlock vouchers — you&apos;re getting close!
               </p>
               <Link
                 href="/dashboard/opportunities"
-                className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-teal-500 to-teal-600 px-5 py-2.5 text-sm font-semibold text-white hover:from-teal-600 hover:to-teal-700 transition-all"
+                className="inline-flex items-center gap-1.5 rounded-xl bg-[var(--brand-500)] px-5 py-2.5 text-sm font-semibold text-white transition-opacity hover:opacity-90"
               >
                 Browse Opportunities →
               </Link>
@@ -363,9 +421,20 @@ export default function StorePage() {
           ) : (
             <>
               <p className="text-4xl mb-3">🎁</p>
-              <p className="font-bold text-slate-800 text-lg mb-1">More vouchers coming soon!</p>
-              <p className="text-sm text-slate-500">Check back later for new brands and deals.</p>
+              <p className="font-bold text-[var(--text-primary)] text-lg mb-1">
+                {countryCode === "IN" ? "No Indian vouchers are currently stocked" : "Gift-card vouchers are currently available only in India"}
+              </p>
+              <p className="text-sm text-[var(--text-secondary)]">
+                {countryCode === "IN"
+                  ? "We’ll list Indian vouchers again when their purchase source and delivery availability are confirmed."
+                  : "You can still use the Binance Pay payout option if it is available to you."}
+              </p>
             </>
+          )}
+          {catalogError && (
+            <div role="alert" className="rounded-xl border border-red-500/20 bg-red-500/5 px-4 py-3 text-sm text-red-500">
+              {catalogError}
+            </div>
           )}
         </div>
       ) : (
@@ -380,11 +449,13 @@ export default function StorePage() {
             const needed    = minCoins - (nexcoins ?? 0);
 
             return (
-              <div
+              <button
+                type="button"
                 key={brand}
                 onClick={() => !loading && openBrandModal(brand)}
-                className={`flex flex-col overflow-hidden rounded-2xl border border-slate-100 bg-white
-                  shadow-[0_2px_12px_rgba(0,0,0,0.06)] hover:shadow-[0_8px_24px_rgba(0,0,0,0.10)]
+                aria-label={`View ${brand} voucher options`}
+                className={`flex w-full flex-col overflow-hidden rounded-2xl border border-[var(--border-default)] bg-[var(--surface-card)] text-left
+                  shadow-sm hover:shadow-lg
                   hover:-translate-y-1 transition-all duration-200 cursor-pointer
                   ${!available ? "opacity-60" : ""}`}
               >
@@ -397,7 +468,7 @@ export default function StorePage() {
 
                 {/* Content */}
                 <div className="p-4 flex flex-col gap-3 flex-1">
-                  <h3 className="font-bold text-slate-800 text-base leading-tight">{brand}</h3>
+                  <h3 className="font-bold text-[var(--text-primary)] text-base leading-tight">{brand}</h3>
 
                   {/* Denomination pills */}
                   <div className="flex flex-wrap gap-1.5">
@@ -406,11 +477,11 @@ export default function StorePage() {
                         key={v.id}
                         className={`rounded-full px-2.5 py-0.5 text-xs font-semibold border ${
                           v.is_available
-                            ? "bg-slate-100 text-slate-700 border-slate-200"
-                            : "bg-slate-50 text-slate-300 border-slate-100 line-through"
+                            ? "bg-[var(--surface-subtle)] text-[var(--text-secondary)] border-[var(--border-default)]"
+                            : "bg-[var(--surface-subtle)] text-[var(--text-muted)] border-[var(--border-default)] line-through"
                         }`}
                       >
-                        {formatValue(v)}
+                        {formatValue(v, countryCode)}
                       </span>
                     ))}
                   </div>
@@ -418,8 +489,8 @@ export default function StorePage() {
                   {/* Coin cost — prominent */}
                   <div className="flex items-center gap-1.5">
                     <NexCoinIcon size={18} />
-                    <span className="text-xl font-bold text-slate-800">{minCoins.toLocaleString()}</span>
-                    <span className="text-sm text-slate-400">NexCoins</span>
+                    <span className="text-xl font-bold text-[var(--text-primary)]">{minCoins.toLocaleString()}</span>
+                    <span className="text-sm text-[var(--text-muted)]">NexCoins</span>
                   </div>
 
                   {/* Spacer */}
@@ -427,20 +498,20 @@ export default function StorePage() {
 
                   {/* CTA — visual only, card click opens modal */}
                   {!available ? (
-                    <div className="w-full rounded-xl bg-slate-100 text-slate-400 text-sm font-semibold text-center py-2.5">
+                    <div className="w-full rounded-xl bg-[var(--surface-subtle)] text-[var(--text-muted)] text-sm font-semibold text-center py-2.5">
                       Sold Out
                     </div>
                   ) : !canAfford ? (
-                    <div className="w-full rounded-xl bg-slate-100 text-slate-400 text-sm font-medium text-center py-2.5 leading-tight">
+                    <div className="w-full rounded-xl bg-[var(--surface-subtle)] text-[var(--text-muted)] text-sm font-medium text-center py-2.5 leading-tight">
                       Need {needed.toLocaleString()} more coins
                     </div>
                   ) : (
-                    <div className="w-full rounded-xl bg-gradient-to-r from-teal-500 to-teal-600 text-white text-sm font-semibold text-center py-2.5">
+                    <div className="w-full rounded-xl bg-[var(--brand-500)] text-white text-sm font-semibold text-center py-2.5">
                       Redeem Now →
                     </div>
                   )}
                 </div>
-              </div>
+              </button>
             );
           })}
         </div>
@@ -451,8 +522,17 @@ export default function StorePage() {
           View your redeemed vouchers →
         </Link>
       </div>
+      </div>
+      )}
 
-      <BinanceRedemptionCard nexcoins={nexcoins ?? 0} onBalanceChange={setNexcoins} />
+      {activeSection === "payouts" && (
+        <div id="store-payouts-panel" role="tabpanel" aria-labelledby="store-payouts-tab" tabIndex={0}>
+          <GlobalPayoutCard
+            nexcoins={nexcoins ?? 0}
+            onBalanceChange={setNexcoins}
+          />
+        </div>
+      )}
 
       {/* ── Brand Detail Modal ────────────────────────────────────────── */}
       {detailBrand && selectedVoucher && (
@@ -493,7 +573,7 @@ export default function StorePage() {
                             : "border-[var(--border-default)] text-[var(--text-muted)] opacity-50 cursor-not-allowed line-through"
                         }`}
                       >
-                        {formatValue(v)}
+                        {formatValue(v, countryCode)}
                         {!avail && <span className="block text-[10px] font-normal">Sold out</span>}
                       </button>
                     );
@@ -504,7 +584,7 @@ export default function StorePage() {
               <div className="rounded-lg bg-[var(--surface-subtle)] border border-[var(--border-default)] p-4 flex items-center justify-between">
                 <div>
                   <p className="text-xs text-[var(--text-muted)] mb-1">Voucher Value</p>
-                  <p className="text-2xl font-bold text-[var(--text-primary)]">{formatValue(selectedVoucher)}</p>
+                  <p className="text-2xl font-bold text-[var(--text-primary)]">{formatValue(selectedVoucher, countryCode)}</p>
                 </div>
                 <div className="text-right">
                   <p className="text-xs text-[var(--text-muted)] mb-1">Coins Required</p>
@@ -599,7 +679,7 @@ export default function StorePage() {
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium text-[var(--text-primary)] truncate">{entry.voucher.brand_name}</p>
-                          <p className="text-xs text-[var(--text-muted)]">{formatValue(entry.voucher)} · {entry.voucher.coins_required.toLocaleString()} coins each</p>
+                          <p className="text-xs text-[var(--text-muted)]">{formatValue(entry.voucher, countryCode)} · {entry.voucher.coins_required.toLocaleString()} coins each</p>
                         </div>
                         <div className="flex items-center gap-1 flex-shrink-0">
                           <button onClick={() => updateQty(entry.voucher.id, -1)} className="h-6 w-6 rounded-md border border-[var(--border-default)] flex items-center justify-center hover:bg-[var(--surface-card)]">
@@ -684,11 +764,11 @@ export default function StorePage() {
         </div>
       )}
 
-      <BlogTipCard
+      {activeSection === "rewards" && <BlogTipCard
         slug="nexcoins-to-vouchers-redemption"
         title="How to Redeem NexCoins for Vouchers"
         excerpt="A step-by-step guide to converting your NexCoins into real gift vouchers."
-      />
+      />}
 
       {/* ── Success Modal ────────────────────────────────────────────── */}
       {showSuccess && (
@@ -701,7 +781,7 @@ export default function StorePage() {
               {successCount === 1 ? "Voucher Requested!" : `${successCount} Vouchers Requested!`}
             </h2>
             <p className="text-sm text-[var(--text-secondary)] mb-6">
-              Your vouchers will be processed within 24–48 hours. Track them in My Vouchers.
+              Your request is in the review queue. Processing times vary; track its status in My Vouchers.
             </p>
             <div className="flex gap-3">
               <Button variant="ghost" className="flex-1" onClick={() => setShowSuccess(false)}>Keep Shopping</Button>

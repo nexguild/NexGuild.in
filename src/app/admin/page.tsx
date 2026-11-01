@@ -17,7 +17,7 @@ interface Counts {
   pendingReviews:     number | null;
   pendingAssignments: number | null;
   pendingVouchers:    number | null;
-  pendingRedemptions: number | null;
+  pendingGlobalPayouts: number | null;
   openSupportTickets: number | null;
   suspiciousItems:    number | null;
   totalCoins:         number | null;
@@ -166,22 +166,17 @@ export default function AdminOverview() {
         { label: "Submission reviews", value: counts.pendingReviews ?? 0, href: "/admin/submissions", icon: <ClipboardCheck className="h-4 w-4" />, roles: ADMIN_ROLES.CONTENT },
         { label: "Assignments", value: counts.pendingAssignments ?? 0, href: "/admin/assignments", icon: <GraduationCap className="h-4 w-4" />, roles: ADMIN_ROLES.REVIEW },
         { label: "Voucher requests", value: counts.pendingVouchers ?? 0, href: "/admin/vouchers", icon: <Gift className="h-4 w-4" />, roles: ADMIN_ROLES.FINANCE },
-        { label: "Binance redemptions", value: counts.pendingRedemptions ?? 0, href: "/admin/binance-redemptions", icon: <WalletCards className="h-4 w-4" />, roles: ADMIN_ROLES.FINANCE },
+        { label: "Global payouts", value: counts.pendingGlobalPayouts ?? 0, href: "/admin/global-payouts", icon: <WalletCards className="h-4 w-4" />, roles: ADMIN_ROLES.FINANCE },
         { label: "Support tickets", value: counts.openSupportTickets ?? 0, href: "/admin/support", icon: <Headphones className="h-4 w-4" />, roles: ADMIN_ROLES.SUPPORT },
         { label: "Flagged task submissions", value: counts.suspiciousItems ?? 0, href: "/admin/suspicious-visits", icon: <ShieldAlert className="h-4 w-4" />, roles: ADMIN_ROLES.UPPER },
       ]
-        .filter((item) => item.roles.some((allowedRole) => allowedRole === role))
+        .filter((item) => item.value > 0 && item.roles.some((allowedRole) => allowedRole === role))
     : [];
 
   const quickActions = [
     { label: "Post New Task", href: "/admin/tasks/new", icon: <Briefcase className="h-4 w-4" />, roles: ADMIN_ROLES.UPPER },
-    { label: "Review Submissions", href: "/admin/submissions", icon: <ClipboardCheck className="h-4 w-4" />, roles: ADMIN_ROLES.CONTENT },
-    { label: "Review Assignments", href: "/admin/assignments", icon: <GraduationCap className="h-4 w-4" />, roles: ADMIN_ROLES.REVIEW },
-    { label: "Deliver Vouchers", href: "/admin/vouchers", icon: <Gift className="h-4 w-4" />, roles: ADMIN_ROLES.FINANCE },
+    { label: "Manage Voucher Catalog", href: "/admin/voucher-catalog", icon: <Gift className="h-4 w-4" />, roles: ADMIN_ROLES.FINANCE },
     { label: "Send Announcement", href: "/admin/announcements", icon: <Users className="h-4 w-4" />, roles: ADMIN_ROLES.ANNOUNCE },
-    { label: "Support Tickets", href: "/admin/support", icon: <Headphones className="h-4 w-4" />, roles: ADMIN_ROLES.SUPPORT },
-    { label: "Binance Redemptions", href: "/admin/binance-redemptions", icon: <WalletCards className="h-4 w-4" />, roles: ADMIN_ROLES.FINANCE },
-    { label: "Review Suspicious", href: "/admin/suspicious-visits", icon: <ShieldAlert className="h-4 w-4" />, roles: ADMIN_ROLES.UPPER },
     { label: "View Finances", href: "/admin/finances", icon: <Coins className="h-4 w-4" />, roles: ADMIN_ROLES.FINANCE },
   ].filter((action) => action.roles.some((allowedRole) => allowedRole === role));
 
@@ -235,10 +230,10 @@ export default function AdminOverview() {
           <div className="flex items-center justify-between border-b border-[var(--border-default)] px-5 py-4">
             <div>
               <h2 id="needs-attention-heading" className="font-semibold text-[var(--text-primary)]">Needs attention</h2>
-              <p className="mt-1 text-xs text-[var(--text-muted)]">Open review and support queues</p>
+              <p className="mt-1 text-xs text-[var(--text-muted)]">Only queues with pending work are shown</p>
             </div>
           </div>
-          <div className="grid grid-cols-1 gap-2 p-4 sm:grid-cols-2 xl:grid-cols-3">
+          {attentionItems.length > 0 ? <div className="grid grid-cols-1 gap-2 p-4 sm:grid-cols-2 xl:grid-cols-3">
             {attentionItems.map((item) => (
               <Link
                 key={item.label}
@@ -252,7 +247,7 @@ export default function AdminOverview() {
                 </span>
               </Link>
             ))}
-          </div>
+          </div> : <p className="px-5 py-4 text-sm text-[var(--text-muted)]">All queues are clear.</p>}
         </section>
       )}
 
@@ -296,23 +291,26 @@ export default function AdminOverview() {
         )}
 
         {/* Quick Actions */}
-        <div className="rounded-lg border border-[var(--border-default)] bg-[var(--surface-card)]">
-          <div className="px-5 py-4 border-b border-[var(--border-default)]">
-            <h2 className="font-semibold text-[var(--text-primary)]">Quick Actions</h2>
+        {quickActions.length > 0 && (
+          <div className="rounded-lg border border-[var(--border-default)] bg-[var(--surface-card)]">
+            <div className="px-5 py-4 border-b border-[var(--border-default)]">
+              <h2 className="font-semibold text-[var(--text-primary)]">Quick Actions</h2>
+              <p className="mt-1 text-xs text-[var(--text-muted)]">Create or manage; pending reviews appear above</p>
+            </div>
+            <div className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {quickActions.map((action) => (
+                <Link
+                  key={action.label}
+                  href={action.href}
+                  className="flex items-center gap-3 px-4 py-3 rounded-lg border border-[var(--border-default)] hover:bg-[var(--surface-subtle)] hover:border-[var(--brand-500)] transition-colors text-sm font-medium text-[var(--text-primary)]"
+                >
+                  <span className="text-[var(--brand-500)]">{action.icon}</span>
+                  {action.label}
+                </Link>
+              ))}
+            </div>
           </div>
-          <div className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {quickActions.map((action) => (
-              <Link
-                key={action.label}
-                href={action.href}
-                className="flex items-center gap-3 px-4 py-3 rounded-lg border border-[var(--border-default)] hover:bg-[var(--surface-subtle)] hover:border-[var(--brand-500)] transition-colors text-sm font-medium text-[var(--text-primary)]"
-              >
-                <span className="text-[var(--brand-500)]">{action.icon}</span>
-                {action.label}
-              </Link>
-            ))}
-          </div>
-        </div>
+        )}
       </div>
     </div>
   );

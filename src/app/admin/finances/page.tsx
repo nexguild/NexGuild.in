@@ -31,9 +31,6 @@ interface FinanceSummary {
   totalDelivered: number;
   activeContributors: number;
   pendingSubmissions: number;
-  pendingBinancePayouts: number;
-  binancePaidUsdt: number;
-  paidBinanceCount: number;
   monthlyData: MonthBucket[];
 }
 
@@ -41,23 +38,16 @@ interface LedgerEntry {
   id: string;
   contributor_id: string;
   created_at: string;
-  kind: "coin" | "binance";
   transactionType: string;
-  status: string | null;
   amount: number;
-  currency: "NexCoins" | "USDT";
-  coinsRequested: number | null;
   source: string | null;
   description: string | null;
-  paymentReference: string | null;
-  paidAt: string | null;
   contributorName: string | null;
   contributorEmail: string | null;
 }
 
 interface LedgerFilters {
   type: string;
-  status: string;
   from: string;
   to: string;
 }
@@ -75,7 +65,6 @@ function ledgerUrl(filters: LedgerFilters, cursor: string | null): string {
   const params = new URLSearchParams({
     limit: String(PAGE_SIZE),
     type: filters.type,
-    status: filters.status,
   });
   if (filters.from) params.set("from", filters.from);
   if (filters.to) params.set("to", filters.to);
@@ -110,7 +99,7 @@ export default function FinancesPage() {
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [pageIndex, setPageIndex] = useState(0);
   const [cursorHistory, setCursorHistory] = useState<(string | null)[]>([null]);
-  const [filters, setFilters] = useState<LedgerFilters>({ type: "all", status: "all", from: "", to: "" });
+  const [filters, setFilters] = useState<LedgerFilters>({ type: "all", from: "", to: "" });
   const [draftFilters, setDraftFilters] = useState(filters);
   const cursor = cursorHistory[pageIndex] ?? null;
 
@@ -147,7 +136,7 @@ export default function FinancesPage() {
     {
       label: "Total Coins Redeemed",
       value: formatNexcoins(summary.totalCoinsRedeemed),
-      sub: "including Binance Pay reservations",
+      sub: "from all redeemed coin ledger entries",
       icon: <Gift className="h-5 w-5 text-[var(--brand-500)]" />,
     },
     {
@@ -155,18 +144,6 @@ export default function FinancesPage() {
       value: `${summary.totalDelivered} / ${summary.totalVouchers}`,
       sub: "delivered vs requested",
       icon: <CheckCircle2 className="h-5 w-5 text-green-400" />,
-    },
-    {
-      label: "Binance Paid",
-      value: `${summary.binancePaidUsdt.toLocaleString(undefined, { maximumFractionDigits: 2 })} USDT`,
-      sub: `${summary.paidBinanceCount} completed payouts`,
-      icon: <CheckCircle2 className="h-5 w-5 text-green-400" />,
-    },
-    {
-      label: "Pending Binance Payouts",
-      value: summary.pendingBinancePayouts.toLocaleString(),
-      sub: "awaiting finance review",
-      icon: <RefreshCw className="h-5 w-5 text-amber-400" />,
     },
     {
       label: "Active Contributors",
@@ -189,7 +166,6 @@ export default function FinancesPage() {
     setDraftFilters((previous) => ({
       ...previous,
       [key]: value,
-      ...(key === "type" && (value === "earned" || value === "redeemed") ? { status: "all" } : {}),
     }));
   }
 
@@ -223,14 +199,10 @@ export default function FinancesPage() {
         "Contributor",
         "Email",
         "Entry",
-        "Status",
         "Amount",
         "Currency",
-        "NexCoins",
         "Source",
         "Description",
-        "Payment Reference",
-        "Paid At",
         "Record ID",
       ];
       const rows = allEntries.map((entry) => [
@@ -238,14 +210,10 @@ export default function FinancesPage() {
         entry.contributorName,
         entry.contributorEmail,
         entry.transactionType,
-        entry.status,
         entry.amount,
-        entry.currency,
-        entry.coinsRequested,
+        "NexCoins",
         entry.source,
         entry.description,
-        entry.paymentReference,
-        entry.paidAt,
         entry.id,
       ]);
       const csv = [headers, ...rows].map((row) => row.map(csvCell).join(",")).join("\r\n");
@@ -272,7 +240,7 @@ export default function FinancesPage() {
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-[var(--text-primary)]">Finances</h1>
-          <p className="text-sm text-[var(--text-secondary)]">Review coin ledger activity and reconcile manual Binance payouts.</p>
+          <p className="text-sm text-[var(--text-secondary)]">Review coin ledger activity and contributor rewards.</p>
         </div>
         <Button variant="secondary" size="sm" onClick={handleExport} disabled={loading || exporting}>
           {exporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
@@ -364,7 +332,7 @@ export default function FinancesPage() {
       <section className="space-y-4 rounded-xl border border-[var(--border-default)] bg-[var(--surface-card)] p-5">
         <div>
           <h2 className="font-semibold text-[var(--text-primary)]">Finance transaction ledger</h2>
-          <p className="mt-1 text-xs text-[var(--text-muted)]">Coin movements and Binance payout requests, including their payout status and transaction reference.</p>
+          <p className="mt-1 text-xs text-[var(--text-muted)]">Review and export NexCoin movements. Manage payout requests from Global Payouts.</p>
         </div>
         <div className="flex flex-wrap items-end gap-3">
           <label className="grid gap-1 text-xs text-[var(--text-secondary)]">
@@ -373,19 +341,6 @@ export default function FinancesPage() {
               <option value="all">All entries</option>
               <option value="earned">Coins earned</option>
               <option value="redeemed">Coins redeemed</option>
-              <option value="binance">Binance payouts</option>
-            </select>
-          </label>
-          <label className="grid gap-1 text-xs text-[var(--text-secondary)]">
-            Payout status
-            <select value={draftFilters.status} onChange={(event) => updateDraftFilter("status", event.target.value)} disabled={draftFilters.type === "earned" || draftFilters.type === "redeemed"} className="h-9 min-w-36 rounded-md border border-[var(--border-default)] bg-[var(--surface-subtle)] px-2 text-sm text-[var(--text-primary)] disabled:opacity-50">
-              <option value="all">All statuses</option>
-              <option value="pending">Pending</option>
-              <option value="under_review">Under review</option>
-              <option value="paid">Paid</option>
-              <option value="rejected">Rejected</option>
-              <option value="refunded">Refunded</option>
-              <option value="cancelled">Cancelled</option>
             </select>
           </label>
           <label className="grid gap-1 text-xs text-[var(--text-secondary)]">
@@ -406,21 +361,21 @@ export default function FinancesPage() {
         </div>
 
         <div className="overflow-x-auto rounded-lg border border-[var(--border-default)]">
-          <table className="w-full min-w-[1050px] text-sm">
+          <table className="w-full min-w-[850px] text-sm">
             <thead>
               <tr className="border-b border-[var(--border-default)] bg-[var(--surface-subtle)] text-left text-xs text-[var(--text-secondary)]">
-                {["Date", "Contributor", "Entry", "Status", "Amount", "NexCoins", "Payment reference"].map((heading) => (
+                {["Date", "Contributor", "Entry", "Amount", "Source", "Description"].map((heading) => (
                   <th key={heading} className="px-3 py-3 font-medium">{heading}</th>
                 ))}
               </tr>
             </thead>
             <tbody className="divide-y divide-[var(--border-default)]">
               {loading ? (
-                <tr><td colSpan={7} className="px-4 py-12 text-center text-[var(--text-muted)]"><Loader2 className="mx-auto h-5 w-5 animate-spin" /></td></tr>
+                <tr><td colSpan={6} className="px-4 py-12 text-center text-[var(--text-muted)]"><Loader2 className="mx-auto h-5 w-5 animate-spin" /></td></tr>
               ) : entries.length === 0 ? (
-                <tr><td colSpan={7} className="px-4 py-12 text-center text-[var(--text-muted)]">No matching finance entries.</td></tr>
+                <tr><td colSpan={6} className="px-4 py-12 text-center text-[var(--text-muted)]">No matching finance entries.</td></tr>
               ) : entries.map((entry) => (
-                <tr key={`${entry.kind}-${entry.id}`} className="align-top">
+                <tr key={entry.id} className="align-top">
                   <td className="whitespace-nowrap px-3 py-3 text-xs text-[var(--text-secondary)]">{new Date(entry.created_at).toLocaleString("en-IN")}</td>
                   <td className="px-3 py-3">
                     <p className="font-medium text-[var(--text-primary)]">{entry.contributorName ?? "Unknown contributor"}</p>
@@ -428,19 +383,15 @@ export default function FinancesPage() {
                   </td>
                   <td className="px-3 py-3">
                     <p className="font-medium capitalize text-[var(--text-primary)]">{entry.transactionType}</p>
-                    <p className="max-w-64 break-words text-xs text-[var(--text-muted)]">{entry.source ?? entry.description ?? "—"}</p>
-                  </td>
-                  <td className="px-3 py-3">
-                    <span className="rounded-full bg-[var(--surface-subtle)] px-2 py-1 text-xs capitalize text-[var(--text-secondary)]">{entry.status?.replace("_", " ") ?? "Recorded"}</span>
                   </td>
                   <td className="whitespace-nowrap px-3 py-3 font-semibold text-[var(--text-primary)]">
-                    {entry.currency === "NexCoins" ? formatNexcoins(entry.amount) : `${entry.amount.toLocaleString(undefined, { maximumFractionDigits: 8 })} USDT`}
+                    {formatNexcoins(entry.amount)}
                   </td>
-                  <td className="whitespace-nowrap px-3 py-3 text-[var(--text-secondary)]">
-                    {entry.coinsRequested == null ? "—" : formatNexcoins(entry.coinsRequested)}
+                  <td className="max-w-48 break-words px-3 py-3 text-xs text-[var(--text-secondary)]">
+                    {entry.source ?? "—"}
                   </td>
-                  <td className="max-w-56 break-all px-3 py-3 text-xs text-[var(--text-secondary)]">
-                    {entry.paymentReference ?? (entry.paidAt ? `Paid ${new Date(entry.paidAt).toLocaleString("en-IN")}` : "—")}
+                  <td className="max-w-64 break-words px-3 py-3 text-xs text-[var(--text-secondary)]">
+                    {entry.description ?? "—"}
                   </td>
                 </tr>
               ))}

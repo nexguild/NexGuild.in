@@ -6,13 +6,17 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
 import { usePageGuard } from "@/components/layout/admin-auth-guard";
 import { ADMIN_ROLES } from "@/lib/admin-permissions";
+import { VOUCHER_CATEGORIES } from "@/lib/voucher-categories";
+
+const CATEGORY_LABELS: Record<string, string> = Object.fromEntries(
+  VOUCHER_CATEGORIES.map((category) => [category.value, category.label]),
+);
 
 interface DbVoucher {
   id: string;
   brand_name: string;
   description: string;
   value_inr: number | null;
-  value_usd: number | null;
   coins_required: number;
   category: string;
   emoji: string;
@@ -22,7 +26,6 @@ interface DbVoucher {
 
 function fmtPrice(v: DbVoucher): string {
   if (v.value_inr && v.value_inr > 0) return `₹${v.value_inr}`;
-  if (v.value_usd && v.value_usd > 0) return `$${v.value_usd}`;
   return "—";
 }
 
@@ -30,7 +33,6 @@ type FormState = {
   brand_name: string;
   description: string;
   value_inr: string;
-  value_usd: string;
   coins_required: string;
   coins_overridden: boolean; // true = admin manually set coins, skip auto-calc
   category: string;
@@ -38,28 +40,21 @@ type FormState = {
 };
 
 const EMPTY_FORM: FormState = {
-  brand_name: "", description: "", value_inr: "", value_usd: "", coins_required: "", coins_overridden: false, category: "shopping", emoji: "🎁",
-};
-
-const CATEGORIES = ["shopping", "apps", "food", "other"];
-
-const CATEGORY_LABELS: Record<string, string> = {
-  shopping: "Shopping", apps: "Apps", food: "Food", other: "Other",
+  brand_name: "", description: "", value_inr: "", coins_required: "", coins_overridden: false, category: "shopping", emoji: "🎁",
 };
 
 export default function VoucherCatalogPage() {
-  const tokenRef = useRef<string | null>(null);
-
   const allowed = usePageGuard(ADMIN_ROLES.FINANCE);
+  const tokenRef = useRef<string | null>(null);
 
   const [vouchers, setVouchers]   = useState<DbVoucher[]>([]);
   const [loading, setLoading]     = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [toggling, setToggling]   = useState<string | null>(null);
   const [deleting, setDeleting]   = useState<string | null>(null);
 
   // Exchange rates for auto-pricing
   const [nexcoinPerInr, setNexcoinPerInr] = useState(12.5);
-  const [nexcoinPerUsd, setNexcoinPerUsd] = useState(1000);
 
   // Add / Edit modal
   const [showForm, setShowForm]     = useState(false);
@@ -89,9 +84,8 @@ export default function VoucherCatalogPage() {
       headers: { Authorization: `Bearer ${token}` },
     });
     if (res.ok) {
-      const data = await res.json() as { nexcoinPerInr?: number; nexcoinPerUsd?: number };
+      const data = await res.json() as { nexcoinPerInr?: number };
       if (data.nexcoinPerInr) setNexcoinPerInr(data.nexcoinPerInr);
-      if (data.nexcoinPerUsd) setNexcoinPerUsd(data.nexcoinPerUsd);
     }
   }
 
@@ -99,7 +93,14 @@ export default function VoucherCatalogPage() {
     const res  = await fetch("/api/admin/voucher-catalog", {
       headers: { Authorization: `Bearer ${token}` },
     });
-    const data = await res.json() as { vouchers?: DbVoucher[] };
+    const data = await res.json() as { vouchers?: DbVoucher[]; error?: string };
+    if (!res.ok) {
+      const message = data.error ?? "Could not load the voucher catalog.";
+      console.error("[voucher-catalog] load failed:", message);
+      setLoadError(message);
+      setLoading(false);
+      return;
+    }
     setVouchers(data.vouchers ?? []);
     setLoading(false);
   }
@@ -112,11 +113,9 @@ export default function VoucherCatalogPage() {
     });
   }
 
-  function calcCoins(inr: string, usd: string): string {
+  function calcCoins(inr: string): string {
     const inrVal = parseFloat(inr);
-    const usdVal = parseFloat(usd);
     if (!isNaN(inrVal) && inrVal > 0) return String(Math.round(inrVal * nexcoinPerInr));
-    if (!isNaN(usdVal) && usdVal > 0) return String(Math.round(usdVal * nexcoinPerUsd));
     return "";
   }
 
@@ -134,7 +133,6 @@ export default function VoucherCatalogPage() {
       brand_name:       v.brand_name,
       description:      v.description,
       value_inr:        v.value_inr && v.value_inr > 0 ? String(v.value_inr) : "",
-      value_usd:        v.value_usd && v.value_usd > 0 ? String(v.value_usd) : "",
       coins_required:   String(v.coins_required),
       coins_overridden: true,
       category:         v.category,
@@ -150,24 +148,21 @@ export default function VoucherCatalogPage() {
     setFormErr(null);
 
     const inrVal  = parseFloat(form.value_inr);
-    const usdVal  = parseFloat(form.value_usd);
-    const hasInr  = !isNaN(inrVal) && inrVal > 0;
-    const hasUsd  = !isNaN(usdVal) && usdVal > 0;
-    const coins   = parseInt(form.coins_required, 10);
+    const hasInr  = Number.isSafeInteger(inrVal) && inrVal > 0;
+    const coins   = Number(form.coins_required);
 
     if (!form.brand_name.trim())    { setFormErr("Brand name is required."); return; }
-    if (!hasInr && !hasUsd)         { setFormErr("Enter a price in INR or USD (or both)."); return; }
-    if (isNaN(coins) || coins <= 0) { setFormErr("NexCoins required must be a positive number."); return; }
-
+    if (!hasInr)                    { setFormErr("Enter a valid voucher value in INR."); return; }
+    if (!Number.isSafeInteger(coins) || coins <= 0) { setFormErr("NexCoins required must be a positive whole number."); return; }
     setSaving(true);
     const base = {
       brand_name:     form.brand_name,
       description:    form.description,
-      value_inr:      hasInr ? Math.round(inrVal) : 0,
-      value_usd:      hasUsd ? usdVal : 0,
+      value_inr:      Math.round(inrVal),
       coins_required: coins,
       category:       form.category,
       emoji:          form.emoji,
+      country_codes:  ["IN"],
     };
     const body = editId
       ? { action: "update", id: editId, ...base }
@@ -214,9 +209,8 @@ export default function VoucherCatalogPage() {
   function setField(k: keyof FormState, val: string) {
     setForm((prev) => {
       const next = { ...prev, [k]: val };
-      // Auto-calculate coins when INR or USD changes (unless admin has overridden)
-      if ((k === "value_inr" || k === "value_usd") && !prev.coins_overridden) {
-        const auto = calcCoins(k === "value_inr" ? val : prev.value_inr, k === "value_usd" ? val : prev.value_usd);
+      if (k === "value_inr" && !prev.coins_overridden) {
+        const auto = calcCoins(val);
         if (auto) next.coins_required = auto;
       }
       return next;
@@ -229,7 +223,7 @@ export default function VoucherCatalogPage() {
 
   function resetCoinsAutoCalc() {
     setForm((prev) => {
-      const auto = calcCoins(prev.value_inr, prev.value_usd);
+      const auto = calcCoins(prev.value_inr);
       return { ...prev, coins_required: auto || prev.coins_required, coins_overridden: false };
     });
   }
@@ -240,7 +234,7 @@ export default function VoucherCatalogPage() {
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
           <h1 className="text-2xl font-bold text-[var(--text-primary)]">Voucher Catalog</h1>
-          <p className="text-sm text-[var(--text-secondary)]">Manage vouchers shown in the contributor store.</p>
+          <p className="text-sm text-[var(--text-secondary)]">Manage INR gift vouchers available to contributors in India.</p>
         </div>
         <Button onClick={openAdd}>
           <Plus className="h-4 w-4 mr-1.5" /> Add Voucher
@@ -248,6 +242,11 @@ export default function VoucherCatalogPage() {
       </div>
 
       {/* Stats row */}
+      {loadError && (
+        <p role="alert" className="rounded-lg border border-red-500/20 bg-red-500/5 px-4 py-3 text-sm text-red-400">
+          Could not load the catalog: {loadError}. Apply the latest database migration if the country column is missing.
+        </p>
+      )}
       <div className="flex items-center gap-4 flex-wrap text-sm text-[var(--text-muted)]">
         <span>{vouchers.length} total</span>
         <span>·</span>
@@ -255,6 +254,9 @@ export default function VoucherCatalogPage() {
         <span>·</span>
         <span className="text-red-400">{vouchers.filter((v) => !v.is_available).length} sold out</span>
       </div>
+      <p className="rounded-lg border border-amber-500/20 bg-amber-500/5 px-4 py-3 text-sm text-amber-300">
+        This catalog is for India-only INR vouchers. Add products only when you have confirmed a purchase source and can fulfill contributor redemptions.
+      </p>
 
       {/* Table */}
       {loading ? (
@@ -267,15 +269,15 @@ export default function VoucherCatalogPage() {
         <div className="rounded-xl border border-[var(--border-default)] bg-[var(--surface-card)] py-20 flex flex-col items-center gap-3 text-center">
           <Package className="h-12 w-12 text-[var(--text-muted)]" />
           <p className="font-semibold text-[var(--text-primary)]">No vouchers yet</p>
-          <p className="text-sm text-[var(--text-secondary)]">Add vouchers using the button above — they will appear in the contributor store.</p>
+          <p className="text-sm text-[var(--text-secondary)]">Add only Indian vouchers that you can purchase and reliably deliver.</p>
           <Button className="mt-2" onClick={openAdd}><Plus className="h-4 w-4 mr-1.5" /> Add First Voucher</Button>
         </div>
       ) : (
         <div className="rounded-xl border border-[var(--border-default)] bg-[var(--surface-card)] overflow-x-auto">
-          <table className="w-full text-sm min-w-[700px]">
+          <table className="w-full text-sm min-w-[900px]">
             <thead>
               <tr className="bg-[var(--surface-subtle)] border-b border-[var(--border-default)]">
-                {["", "Brand", "Description", "Value", "Coins", "Category", "Status", "Actions"].map((h) => (
+                {["", "Brand", "Description", "Value", "Coins", "Category", "Countries", "Status", "Actions"].map((h) => (
                   <th key={h} className="text-left px-4 py-3 font-medium text-[var(--text-secondary)] whitespace-nowrap">{h}</th>
                 ))}
               </tr>
@@ -292,6 +294,9 @@ export default function VoucherCatalogPage() {
                     <span className="text-xs px-2 py-0.5 rounded-full bg-[var(--surface-subtle)] text-[var(--text-secondary)] border border-[var(--border-default)] capitalize">
                       {CATEGORY_LABELS[v.category] ?? v.category}
                     </span>
+                  </td>
+                  <td className="px-4 py-3 text-xs text-[var(--text-secondary)]">
+                    India
                   </td>
                   <td className="px-4 py-3">
                     <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
@@ -337,7 +342,7 @@ export default function VoucherCatalogPage() {
       {/* ── Add / Edit Modal ─────────────────────────────────────────── */}
       {showForm && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/60">
-          <div className="w-full max-w-md bg-[var(--surface-card)] rounded-xl border border-[var(--border-default)] p-6 shadow-xl">
+          <div className="w-full max-w-md max-h-[90vh] overflow-y-auto bg-[var(--surface-card)] rounded-xl border border-[var(--border-default)] p-6 shadow-xl">
             <div className="flex items-center justify-between mb-5">
               <h2 className="text-lg font-semibold text-[var(--text-primary)]">
                 {editId ? "Edit Voucher" : "Add Voucher"}
@@ -392,34 +397,19 @@ export default function VoucherCatalogPage() {
                   />
                 </div>
 
-                {/* Price fields — fill INR or USD (or both); at least one required */}
+                {/* India-only voucher price */}
                 <div>
-                  <p className="text-xs text-[var(--text-muted)] mb-2">Fill the price in <strong>INR</strong> for Indian vouchers or <strong>USD</strong> for international ones. At least one is required.</p>
-                  <div className="flex gap-3">
-                    <div className="flex-1">
-                      <label className="block text-xs font-medium text-[var(--text-primary)] mb-1.5">Price in ₹ (INR)</label>
-                      <input
-                        type="number"
-                        min="1"
-                        value={form.value_inr}
-                        onChange={(e) => setField("value_inr", e.target.value)}
-                        placeholder="100"
-                        className="w-full h-10 px-3 rounded-md border border-[var(--border-strong)] bg-[var(--surface-subtle)] text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--border-focus)]"
-                      />
-                    </div>
-                    <div className="flex-1">
-                      <label className="block text-xs font-medium text-[var(--text-primary)] mb-1.5">Price in $ (USD)</label>
-                      <input
-                        type="number"
-                        min="0.01"
-                        step="0.01"
-                        value={form.value_usd}
-                        onChange={(e) => setField("value_usd", e.target.value)}
-                        placeholder="1.00"
-                        className="w-full h-10 px-3 rounded-md border border-[var(--border-strong)] bg-[var(--surface-subtle)] text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--border-focus)]"
-                      />
-                    </div>
-                  </div>
+                  <label className="block text-xs font-medium text-[var(--text-primary)] mb-1.5">Voucher value in ₹ (INR) *</label>
+                  <input
+                    type="number"
+                    min="1"
+                    step="1"
+                    required
+                    value={form.value_inr}
+                    onChange={(e) => setField("value_inr", e.target.value)}
+                    placeholder="100"
+                    className="w-full h-10 px-3 rounded-md border border-[var(--border-strong)] bg-[var(--surface-subtle)] text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--border-focus)]"
+                  />
                 </div>
                 {/* NexCoins Required — auto-calculated, manually overridable */}
                 <div>
@@ -453,11 +443,11 @@ export default function VoucherCatalogPage() {
                     min="1"
                     value={form.coins_required}
                     onChange={(e) => setCoinsManually(e.target.value)}
-                    placeholder={calcCoins(form.value_inr, form.value_usd) || "1250"}
+                    placeholder={calcCoins(form.value_inr) || "1250"}
                     className="w-full h-10 px-3 rounded-md border border-[var(--border-strong)] bg-[var(--surface-subtle)] text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--border-focus)]"
                   />
                   <p className="text-xs text-[var(--text-muted)] mt-1">
-                    Rate: ₹1 = {nexcoinPerInr} coins · $1 = {nexcoinPerUsd} coins
+                    Rate: ₹1 = {nexcoinPerInr} coins
                     {" "}(set in <span className="text-[var(--brand-500)]">Settings → Exchange Rates</span>)
                   </p>
                 </div>
@@ -470,8 +460,8 @@ export default function VoucherCatalogPage() {
                     onChange={(e) => setField("category", e.target.value)}
                     className="w-full h-10 px-3 rounded-md border border-[var(--border-strong)] bg-[var(--surface-subtle)] text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--border-focus)]"
                   >
-                    {CATEGORIES.map((c) => (
-                      <option key={c} value={c}>{CATEGORY_LABELS[c]}</option>
+                    {VOUCHER_CATEGORIES.map((category) => (
+                      <option key={category.value} value={category.value}>{category.emoji} {category.label}</option>
                     ))}
                   </select>
                 </div>

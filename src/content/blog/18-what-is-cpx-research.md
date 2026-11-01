@@ -1,7 +1,7 @@
 ﻿---
-title: "CPX Research Review: Surveys, Rewards, Safety & Screen-Outs"
+title: "CPX Research: How Surveys, Screen-Outs & Rewards Work"
 slug: "what-is-cpx-research-complete-guide"
-description: "Learn how CPX Research surveys work, why screen-outs happen, and how to check survey details, reward terms, and credit with your platform before you start."
+description: "Learn how CPX Research surveys work, why screen-outs happen, and how rewards are tracked. Survey availability and reward terms depend on your platform and location."
 category: "Remote Work"
 date: "2026-07-19"
 tags: ["surveys", "CPX Research", "online earning", "platform guide"]

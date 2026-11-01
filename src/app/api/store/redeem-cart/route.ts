@@ -23,10 +23,26 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase-server";
 import { notifyAdmins } from "@/lib/email";
+import { isCountryCode } from "@/lib/countries";
 
 interface CartItem {
-  voucherType: string;
-  coins: number;
+  voucherId: string;
+}
+
+interface Voucher {
+  id: string;
+  brand_name: string;
+  value_inr: number | null;
+  value_usd: number | null;
+  coins_required: number;
+  country_codes: string[];
+  country_codes_verified: boolean;
+  is_available: boolean;
+}
+
+function formatVoucherValue(voucher: Voucher, countryCode: string | null): string {
+  if (countryCode === "IN" && voucher.value_inr && voucher.value_inr > 0) return `₹${voucher.value_inr}`;
+  return "value unavailable";
 }
 
 export async function POST(req: NextRequest) {
@@ -37,19 +53,61 @@ export async function POST(req: NextRequest) {
   const { data: { user }, error: userErr } = await admin.auth.getUser(token);
   if (userErr || !user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { items, couponCode } = await req.json() as { items: CartItem[]; couponCode: string | null };
+  const body = await req.json() as { items?: CartItem[]; couponCode?: string | null };
+  const { items, couponCode } = body;
 
-  if (!Array.isArray(items) || items.length === 0 || items.some((item) => !Number.isSafeInteger(item.coins) || item.coins <= 0)) {
+  if (!Array.isArray(items) || items.length === 0 || items.length > 100
+    || items.some((item) => !item || typeof item.voucherId !== "string" || !item.voucherId)) {
     return NextResponse.json({ error: "Cart is empty." }, { status: 400 });
   }
 
-  // 48-hour account age gate for first withdrawal
-  const { data: ageProfile } = await admin
+  const { data: profile, error: profileError } = await admin
     .from("profiles")
-    .select("joined_at")
+    .select("joined_at, country_code")
     .eq("id", user.id)
     .single();
-  const joinedAt = new Date((ageProfile as { joined_at: string | null } | null)?.joined_at ?? 0);
+  if (profileError || !profile) {
+    console.error("[redeem-cart] contributor profile lookup failed:", profileError?.message ?? "No profile row returned.");
+    return NextResponse.json({ error: "Unable to verify your account details." }, { status: 500 });
+  }
+  const countryCode = isCountryCode(profile.country_code) ? profile.country_code : null;
+  if (countryCode !== "IN") {
+    return NextResponse.json({ error: "Gift-card vouchers are currently available only to contributors in India." }, { status: 403 });
+  }
+
+  const voucherIds = [...new Set(items.map((item) => item.voucherId))];
+  const { data: catalog, error: catalogError } = await admin
+    .from("voucher_inventory")
+    .select("id, brand_name, value_inr, value_usd, coins_required, country_codes, country_codes_verified, is_available")
+    .in("id", voucherIds);
+  if (catalogError) {
+    console.error("[redeem-cart] voucher catalog lookup failed:", catalogError.message);
+    return NextResponse.json({ error: "Unable to verify the selected rewards." }, { status: 500 });
+  }
+
+  const vouchersById = new Map(((catalog ?? []) as Voucher[]).map((voucher) => [voucher.id, voucher]));
+  const selectedVouchers: Voucher[] = [];
+  for (const item of items) {
+    const voucher = vouchersById.get(item.voucherId);
+    if (!voucher) return NextResponse.json({ error: "A selected reward is no longer available." }, { status: 400 });
+    if (!voucher.is_available) return NextResponse.json({ error: `${voucher.brand_name} is currently unavailable.` }, { status: 400 });
+    if (!voucher.country_codes_verified) {
+      return NextResponse.json({ error: `${voucher.brand_name} is temporarily unavailable while its country eligibility is being confirmed.` }, { status: 400 });
+    }
+    if (!voucher.country_codes?.includes("IN")) {
+      return NextResponse.json({ error: `${voucher.brand_name} is not available in your country.` }, { status: 400 });
+    }
+    if (!Number.isSafeInteger(voucher.coins_required) || voucher.coins_required <= 0
+      || typeof voucher.value_inr !== "number" || !Number.isSafeInteger(voucher.value_inr) || voucher.value_inr <= 0
+      || voucher.value_usd !== null) {
+      console.error("[redeem-cart] invalid catalog price for voucher:", voucher.id);
+      return NextResponse.json({ error: "A selected reward has an invalid price. Please contact support." }, { status: 500 });
+    }
+    selectedVouchers.push(voucher);
+  }
+
+  // 48-hour account age gate for first withdrawal
+  const joinedAt = new Date((profile as { joined_at: string | null } | null)?.joined_at ?? 0);
   const hoursSinceJoin = (Date.now() - joinedAt.getTime()) / (1000 * 60 * 60);
   if (hoursSinceJoin < 48) {
     const { count: prevDelivered } = await admin
@@ -65,7 +123,7 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  const totalCoins = items.reduce((s, i) => s + i.coins, 0);
+  const totalCoins = selectedVouchers.reduce((sum, voucher) => sum + voucher.coins_required, 0);
   if (!Number.isSafeInteger(totalCoins)) {
     return NextResponse.json({ error: "Cart total is too large." }, { status: 400 });
   }
@@ -96,7 +154,7 @@ export async function POST(req: NextRequest) {
   }
 
   const finalTotal = Math.max(0, totalCoins - discountCoins);
-  const chargedCoins = items.map((item) => Math.floor(item.coins * finalTotal / totalCoins));
+  const chargedCoins = selectedVouchers.map((voucher) => Math.floor(voucher.coins_required * finalTotal / totalCoins));
   let undistributedCoins = finalTotal - chargedCoins.reduce((sum, coins) => sum + coins, 0);
   for (let index = 0; undistributedCoins > 0; index = (index + 1) % chargedCoins.length) {
     chargedCoins[index] += 1;
@@ -117,11 +175,11 @@ export async function POST(req: NextRequest) {
   }
 
   // Insert all voucher requests
-  const inserts = items.map((item, index) => ({
+  const inserts = selectedVouchers.map((voucher, index) => ({
     contributor_id: user.id,
-    voucher_type:   item.voucherType,
+    voucher_type:   `${voucher.brand_name} ${formatVoucherValue(voucher, countryCode)} Voucher`,
     voucher_value:  null,
-    coins_spent:    item.coins,
+    coins_spent:    voucher.coins_required,
     charged_coins:  chargedCoins[index],
     status:         "pending",
   }));
@@ -170,7 +228,9 @@ export async function POST(req: NextRequest) {
   // Notify admins async — fire and forget
   const { data: requesterProfile } = await admin.from("profiles").select("full_name").eq("id", user.id).single();
   const requesterName = (requesterProfile as { full_name: string | null } | null)?.full_name ?? "A contributor";
-  const voucherSummary = items.length === 1 ? items[0].voucherType : `${items.length} vouchers`;
+  const voucherSummary = selectedVouchers.length === 1
+    ? `${selectedVouchers[0].brand_name} ${formatVoucherValue(selectedVouchers[0], countryCode)} Voucher`
+    : `${selectedVouchers.length} vouchers`;
   notifyAdmins(admin, "new_voucher_request", {
     contributorName: requesterName,
     detail:    voucherSummary,

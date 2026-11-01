@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import {
   LayoutDashboard, Users, FolderOpen,
   ClipboardCheck, Layers, Gift, BarChart3,
-  Settings, LogOut, ClipboardList, GraduationCap, Megaphone, Headphones, Tag, X, Activity, Newspaper, TrendingUp, Briefcase, ShieldAlert, WalletCards, History, Mail, UserCheck,
+  Settings, LogOut, ClipboardList, GraduationCap, Megaphone, Headphones, Tag, X, Activity, Newspaper, TrendingUp, Briefcase, ShieldAlert, WalletCards, History, UserCheck,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { NexGuildLogo } from "@/components/ui/nexguild-logo";
@@ -26,7 +26,7 @@ export function AdminSidebar({ open, onClose }: AdminSidebarProps) {
     pendingReviews: 0,
     pendingAssignments: 0,
     pendingVouchers: 0,
-    pendingRedemptions: 0,
+    pendingGlobalPayouts: 0,
     openSupportTickets: 0,
     suspiciousItems: 0,
   });
@@ -57,30 +57,51 @@ export function AdminSidebar({ open, onClose }: AdminSidebarProps) {
     };
   }, [role]);
 
-  const NAV_ITEMS = [
-    { label: "Overview", href: "/admin", icon: LayoutDashboard, badge: 0, roles: ADMIN_ROLES.ALL },
-    { label: "Contributors", href: "/admin/contributors", icon: Users, badge: 0, roles: ADMIN_ROLES.USERS },
-    { label: "Tasks", href: "/admin/tasks", icon: ClipboardList, badge: 0, roles: ADMIN_ROLES.CONTENT },
-    { label: "Projects", href: "/admin/projects", icon: FolderOpen, badge: 0, roles: ADMIN_ROLES.UPPER },
-    { label: "Submissions", href: "/admin/submissions", icon: ClipboardCheck, badge: queueCounts.pendingReviews, roles: ADMIN_ROLES.CONTENT },
-    { label: "Assignments", href: "/admin/assignments", icon: GraduationCap, badge: queueCounts.pendingAssignments, roles: ADMIN_ROLES.REVIEW },
-    { label: "Offerwalls", href: "/admin/offerwalls", icon: Layers, badge: 0, roles: ADMIN_ROLES.UPPER },
-    { label: "Vouchers", href: "/admin/vouchers", icon: Gift, badge: queueCounts.pendingVouchers, roles: ADMIN_ROLES.FINANCE },
-    { label: "Binance Redemptions", href: "/admin/binance-redemptions", icon: WalletCards, badge: queueCounts.pendingRedemptions, roles: ADMIN_ROLES.FINANCE },
-    { label: "Voucher Catalog", href: "/admin/voucher-catalog", icon: Tag, badge: 0, roles: ADMIN_ROLES.FINANCE },
-    { label: "Jobs", href: "/admin/jobs", icon: Briefcase, badge: 0, roles: ADMIN_ROLES.UPPER },
-    { label: "Blog", href: "/admin/blog", icon: Newspaper, badge: 0, roles: ADMIN_ROLES.UPPER },
-    { label: "Announcements", href: "/admin/announcements", icon: Megaphone, badge: 0, roles: ADMIN_ROLES.ANNOUNCE },
-    { label: "Support", href: "/admin/support", icon: Headphones, badge: queueCounts.openSupportTickets, roles: ADMIN_ROLES.SUPPORT },
-    { label: "Finances", href: "/admin/finances", icon: BarChart3, badge: 0, roles: ADMIN_ROLES.FINANCE },
-    { label: "Postback Logs", href: "/admin/postback-logs", icon: Activity, badge: 0, roles: ADMIN_ROLES.UPPER },
-    { label: "Suspicious Visits", href: "/admin/suspicious-visits", icon: ShieldAlert, badge: queueCounts.suspiciousItems, roles: ADMIN_ROLES.UPPER },
-    { label: "Insights", href: "/admin/insights", icon: TrendingUp, badge: 0, roles: ADMIN_ROLES.UPPER },
-    { label: "Contributor Activity", href: "/admin/active-contributors", icon: UserCheck, badge: 0, roles: ADMIN_ROLES.UPPER },
-    { label: "Settings", href: "/admin/settings", icon: Settings, badge: 0, roles: ADMIN_ROLES.UPPER },
-    { label: "Audit History", href: "/admin/audit-logs", icon: History, badge: 0, roles: ADMIN_ROLES.UPPER },
-    { label: "Email Previews", href: "/admin/email-previews", icon: Mail, badge: 0, roles: ADMIN_ROLES.UPPER },
-  ].filter((item) => item.roles.some((allowedRole) => allowedRole === role));
+  const navGroups = [
+    {
+      label: "Queues",
+      items: [
+        { label: "Submissions", href: "/admin/submissions", icon: ClipboardCheck, badge: queueCounts.pendingReviews, roles: ADMIN_ROLES.CONTENT },
+        { label: "Assignments", href: "/admin/assignments", icon: GraduationCap, badge: queueCounts.pendingAssignments, roles: ADMIN_ROLES.REVIEW },
+        { label: "Voucher Requests", href: "/admin/vouchers", icon: Gift, badge: queueCounts.pendingVouchers, roles: ADMIN_ROLES.FINANCE },
+        { label: "Global Payouts", href: "/admin/global-payouts", icon: WalletCards, badge: queueCounts.pendingGlobalPayouts, roles: ADMIN_ROLES.FINANCE },
+        { label: "Support", href: "/admin/support", icon: Headphones, badge: queueCounts.openSupportTickets, roles: ADMIN_ROLES.SUPPORT },
+        { label: "Suspicious Visits", href: "/admin/suspicious-visits", icon: ShieldAlert, badge: queueCounts.suspiciousItems, roles: ADMIN_ROLES.UPPER },
+      ],
+    },
+    {
+      label: "Manage",
+      items: [
+        { label: "Contributors", href: "/admin/contributors", icon: Users, badge: 0, roles: ADMIN_ROLES.USERS },
+        { label: "Tasks", href: "/admin/tasks", icon: ClipboardList, badge: 0, roles: ADMIN_ROLES.CONTENT },
+        { label: "Projects", href: "/admin/projects", icon: FolderOpen, badge: 0, roles: ADMIN_ROLES.UPPER },
+        { label: "Offerwalls", href: "/admin/offerwalls", icon: Layers, badge: 0, roles: ADMIN_ROLES.UPPER },
+        { label: "Voucher Catalog", href: "/admin/voucher-catalog", icon: Tag, badge: 0, roles: ADMIN_ROLES.FINANCE },
+        { label: "Finances", href: "/admin/finances", icon: BarChart3, badge: 0, roles: ADMIN_ROLES.FINANCE },
+      ],
+    },
+    {
+      label: "Growth",
+      items: [
+        { label: "Jobs", href: "/admin/jobs", icon: Briefcase, badge: 0, roles: ADMIN_ROLES.UPPER },
+        { label: "Blog", href: "/admin/blog", icon: Newspaper, badge: 0, roles: ADMIN_ROLES.UPPER },
+        { label: "Announcements", href: "/admin/announcements", icon: Megaphone, badge: 0, roles: ADMIN_ROLES.ANNOUNCE },
+        { label: "Insights", href: "/admin/insights", icon: TrendingUp, badge: 0, roles: ADMIN_ROLES.UPPER },
+        { label: "Contributor Activity", href: "/admin/active-contributors", icon: UserCheck, badge: 0, roles: ADMIN_ROLES.UPPER },
+      ],
+    },
+    {
+      label: "System",
+      items: [
+        { label: "Postback Logs", href: "/admin/postback-logs", icon: Activity, badge: 0, roles: ADMIN_ROLES.UPPER },
+        { label: "Settings", href: "/admin/settings", icon: Settings, badge: 0, roles: ADMIN_ROLES.UPPER },
+        { label: "Audit History", href: "/admin/audit-logs", icon: History, badge: 0, roles: ADMIN_ROLES.UPPER },
+      ],
+    },
+  ].map((group) => ({
+    ...group,
+    items: group.items.filter((item) => item.roles.some((allowedRole) => allowedRole === role)),
+  })).filter((group) => group.items.length > 0);
 
   function isActive(href: string) {
     if (href === "/admin") return pathname === "/admin";
@@ -120,30 +141,58 @@ export function AdminSidebar({ open, onClose }: AdminSidebarProps) {
 
         {/* Nav */}
         <nav className="flex-1 px-3 py-4 overflow-y-auto scrollbar-thin">
-          <ul className="space-y-0.5">
-            {NAV_ITEMS.map((item) => {
-              const Icon = item.icon;
-              const active = isActive(item.href);
+          <ul className="space-y-3">
+            <li>
+              <Link
+                href="/admin"
+                onClick={onClose}
+                className={cn(
+                  "flex items-center gap-3 h-10 px-3 rounded-md text-sm font-medium transition-colors duration-150",
+                  isActive("/admin")
+                    ? "bg-[var(--admin-sidebar-item-active)] text-[var(--admin-sidebar-active-text)]"
+                    : "text-[var(--admin-sidebar-text)] hover:bg-[var(--admin-sidebar-item-hover)] hover:text-white"
+                )}
+              >
+                <LayoutDashboard className="h-4 w-4 flex-shrink-0" />
+                <span className="flex-1">Overview</span>
+              </Link>
+            </li>
+            {navGroups.map((group) => {
+              const groupBadge = group.items.reduce((total, item) => total + item.badge, 0);
               return (
-                <li key={item.href}>
-                  <Link
-                    href={item.href}
-                    onClick={onClose}
-                    className={cn(
-                      "flex items-center gap-3 h-10 px-3 rounded-md text-sm font-medium transition-colors duration-150",
-                      active
-                        ? "bg-[var(--admin-sidebar-item-active)] text-[var(--admin-sidebar-active-text)]"
-                        : "text-[var(--admin-sidebar-text)] hover:bg-[var(--admin-sidebar-item-hover)] hover:text-white"
-                    )}
-                  >
-                    <Icon className="h-4 w-4 flex-shrink-0" />
-                    <span className="flex-1">{item.label}</span>
-                    {item.badge > 0 && (
-                      <span className="inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-[var(--brand-500)] text-white text-xs font-bold px-1">
-                        {item.badge}
-                      </span>
-                    )}
-                  </Link>
+                <li key={group.label} className="pt-2">
+                  <div className="mb-1 flex items-center justify-between px-3">
+                    <h2 className="text-[10px] font-semibold uppercase tracking-widest text-[var(--admin-sidebar-text)]">{group.label}</h2>
+                    {groupBadge > 0 && <span className="rounded-full bg-[var(--brand-500)] px-1.5 py-0.5 text-[10px] font-bold text-white">{groupBadge}</span>}
+                  </div>
+                  <ul className="space-y-0.5">
+                    {group.items.map((item) => {
+                      const Icon = item.icon;
+                      const active = isActive(item.href);
+                      return (
+                        <li key={item.href}>
+                          <Link
+                            href={item.href}
+                            onClick={onClose}
+                            className={cn(
+                              "flex h-10 items-center gap-3 rounded-md px-3 text-sm font-medium transition-colors duration-150",
+                              active
+                                ? "bg-[var(--admin-sidebar-item-active)] text-[var(--admin-sidebar-active-text)]"
+                                : "text-[var(--admin-sidebar-text)] hover:bg-[var(--admin-sidebar-item-hover)] hover:text-white"
+                            )}
+                          >
+                            <Icon className="h-4 w-4 flex-shrink-0" />
+                            <span className="flex-1">{item.label}</span>
+                            {item.badge > 0 && (
+                              <span className="inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-[var(--brand-500)] px-1 text-xs font-bold text-white">
+                                {item.badge}
+                              </span>
+                            )}
+                          </Link>
+                        </li>
+                      );
+                    })}
+                  </ul>
                 </li>
               );
             })}

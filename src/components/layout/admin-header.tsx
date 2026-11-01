@@ -18,6 +18,8 @@ const BREADCRUMBS: Record<string, string[]> = {
   "/admin/assignments":       ["Assignments"],
   "/admin/offerwalls":        ["Offerwalls"],
   "/admin/vouchers":          ["Vouchers"],
+  "/admin/voucher-catalog":   ["Voucher Catalog"],
+  "/admin/global-payouts":    ["Queues", "Global Payouts"],
   "/admin/announcements":     ["Announcements"],
   "/admin/finances":          ["Finances"],
   "/admin/settings":          ["Settings"],
