@@ -351,7 +351,7 @@ async function handlePostback(req: NextRequest, slug: string): Promise<Response>
     type:    "bonus_coins",
   });
 
-  await writeLog(admin, slug, { user_id: contributorId, notik_user_id: userId, s1, trans_id: transId, amount, status, coins_credited: contributorCredit }, "credited", hashAuthenticated ? true : null);
+  await writeLog(admin, slug, { user_id: contributorId, notik_user_id: userId, s1, trans_id: transId, offer_id: offerId, amount, status, coins_credited: contributorCredit }, "credited", hashAuthenticated ? true : null);
   console.log(`[postback/${slug}] credited ${contributorCredit} coins → ${contributorId} (tx=${transId})`);
   return new Response("OK", { status: 200 });
 }

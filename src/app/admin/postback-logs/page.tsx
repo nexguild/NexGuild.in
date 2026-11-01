@@ -25,7 +25,7 @@ const ACTION_STYLES: Record<string, string> = {
   error:         "bg-red-500/15   text-red-400   border-red-500/20",
 };
 
-const PROVIDERS  = ["theoremreach", "cpx_research", "mylead", "clixwall", "clickwall", "cpagrip", "monlix"];
+const PROVIDERS  = ["theoremreach", "cpx_research", "mylead", "clixwall", "clickwall", "cpagrip", "monlix", "gemiad"];
 const ACTIONS    = ["credited", "duplicate", "reversed", "debug_ignored", "hash_invalid", "error"];
 
 function csvCell(value: unknown) {
@@ -146,13 +146,13 @@ export default function PostbackLogsPage() {
     const params = log.raw_params ?? {};
     const offerId = params.offer_id ?? "";
     const isCpxSurvey = log.provider === "cpx_research";
-    const isOffer = !isCpxSurvey && (
+    const isOffer = log.provider === "gemiad" || (!isCpxSurvey && (
       params.offer === "true" ||
       params.offer === "1" ||
       Boolean(params.offer_name || params.event_name) ||
       offerId.startsWith("campaign_") ||
       (log.provider !== "theoremreach" && Boolean(offerId))
-    );
+    ));
     const title = isOffer
       ? params.offer_name || params.event_name || (offerId ? `Offer ${offerId}` : "Offer completion")
       : log.provider === "theoremreach"
