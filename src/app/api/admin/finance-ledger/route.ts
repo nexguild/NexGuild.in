@@ -205,7 +205,7 @@ export async function GET(req: NextRequest) {
   const toExclusive = to
     ? new Date(Date.parse(`${to}T00:00:00.000Z`) + 24 * 60 * 60 * 1000).toISOString()
     : null;
-  const dataQueries: Promise<{ data: Record<string, unknown>[] | null; error: { message: string } | null }>[] = [];
+  const dataQueries: PromiseLike<{ data: Record<string, unknown>[] | null; error: { message: string } | null }>[] = [];
 
   if (includeCoins) {
     let query = admin.from("coin_transactions")
