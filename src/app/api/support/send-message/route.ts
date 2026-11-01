@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { Resend } from "resend";
+import { supportContributorReplyAlertHtml } from "@/lib/email";
 
 export async function POST(req: NextRequest) {
   const svc = createClient(
@@ -66,25 +67,7 @@ export async function POST(req: NextRequest) {
         from:    "NexGuild <noreply@nexguild.in>",
         to:      "admin@nexguild.in",
         subject: `Re: ${ticket.subject} [new reply from ${contributorName}]`,
-        html: `
-          <div style="font-family:-apple-system,sans-serif;max-width:560px;margin:0 auto;background:#0f0f0f;color:#e5e5e5;border-radius:12px;overflow:hidden;">
-            <div style="background:linear-gradient(135deg,#14b8a6,#0d9488);padding:24px 32px;">
-              <h1 style="margin:0;font-size:18px;font-weight:700;color:#fff;">New Reply on Ticket</h1>
-              <p style="margin:4px 0 0;font-size:13px;color:rgba(255,255,255,0.8);">${ticket.subject}</p>
-            </div>
-            <div style="padding:24px 32px;">
-              <p style="margin:0 0 16px;font-size:14px;color:#a3a3a3;">
-                <strong style="color:#e5e5e5;">${contributorName}</strong> sent a follow-up message:
-              </p>
-              <div style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:8px;padding:16px;margin-bottom:20px;">
-                <p style="margin:0;font-size:14px;color:#e5e5e5;line-height:1.6;white-space:pre-wrap;">${message.trim()}</p>
-              </div>
-              <p style="font-size:13px;color:#737373;">
-                <a href="https://nexguild.in/admin/support" style="color:#14b8a6;">View in admin dashboard</a>
-              </p>
-            </div>
-          </div>
-        `,
+        html: supportContributorReplyAlertHtml(ticket.subject, contributorName, message.trim()),
       }).catch((e: unknown) => console.error("[send-message] email error:", e));
     }
 

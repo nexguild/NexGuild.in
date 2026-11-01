@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { Resend } from "resend";
-import { notifyAdmins } from "@/lib/email";
+import { notifyAdmins, supportTicketCreatedHtml } from "@/lib/email";
 
 const CAT_LABELS: Record<string, string> = {
   general: "General Inquiry", task: "Task Issue", coins: "Payment / Coins Issue",
@@ -62,28 +62,14 @@ export async function POST(req: NextRequest) {
         from:    "NexGuild <noreply@nexguild.in>",
         to:      "admin@nexguild.in",
         subject: `New Support Ticket: ${subject.trim()}`,
-        html: `
-          <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:560px;margin:0 auto;background:#0f0f0f;color:#e5e5e5;border-radius:12px;overflow:hidden;">
-            <div style="background:linear-gradient(135deg,#14b8a6,#0d9488);padding:24px 32px;">
-              <h1 style="margin:0;font-size:18px;font-weight:700;color:#fff;">New Support Ticket</h1>
-              <p style="margin:4px 0 0;font-size:13px;color:rgba(255,255,255,0.8);">${subject.trim()}</p>
-            </div>
-            <div style="padding:24px 32px;">
-              <table style="width:100%;border-collapse:collapse;font-size:14px;margin-bottom:20px;">
-                <tr><td style="padding:6px 0;color:#737373;width:120px;">From</td><td style="padding:6px 0;color:#e5e5e5;">${contributorName} (${contributorEmail})</td></tr>
-                <tr><td style="padding:6px 0;color:#737373;">Category</td><td style="padding:6px 0;color:#e5e5e5;">${CAT_LABELS[category] ?? category}</td></tr>
-                <tr><td style="padding:6px 0;color:#737373;">Ticket ID</td><td style="padding:6px 0;color:#a3a3a3;font-size:12px;">${ticket.id}</td></tr>
-              </table>
-              <div style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:8px;padding:16px;margin-bottom:20px;">
-                <p style="margin:0 0 8px;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#737373;">Message</p>
-                <p style="margin:0;font-size:14px;color:#e5e5e5;line-height:1.6;white-space:pre-wrap;">${message.trim()}</p>
-              </div>
-              <p style="font-size:13px;color:#737373;">
-                Reply at <a href="https://nexguild.in/admin/support" style="color:#14b8a6;">nexguild.in/admin/support</a>
-              </p>
-            </div>
-          </div>
-        `,
+        html: supportTicketCreatedHtml(
+          subject.trim(),
+          contributorName,
+          contributorEmail,
+          CAT_LABELS[category] ?? category,
+          ticket.id,
+          message.trim(),
+        ),
       }).catch((e: unknown) => console.error("[create-ticket] email error:", e));
     } else {
       console.warn("[create-ticket] RESEND_API_KEY not set — email skipped");

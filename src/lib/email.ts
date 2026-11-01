@@ -1,5 +1,6 @@
 import { Resend } from "resend";
 import { SupabaseClient } from "@supabase/supabase-js";
+import { formatNexcoins } from "@/lib/nexcoins";
 
 export const FROM_NOREPLY = "NexGuild <noreply@nexguild.in>";
 
@@ -62,7 +63,7 @@ export async function notifyAdmins(
   }
 }
 
-function adminNotifHtml(eventLabel: string, contributorName: string, detail: string, actionUrl: string): string {
+export function adminNotifHtml(eventLabel: string, contributorName: string, detail: string, actionUrl: string): string {
   const n = contributorName.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   const d = detail.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   return `<!DOCTYPE html>
@@ -130,7 +131,7 @@ function layout(body: string): string {
       <!-- footer -->
       <tr>
         <td style="padding:18px 36px;border-top:1px solid #1f1f1f;text-align:center;">
-          <p style="margin:0 0 4px;font-size:12px;color:#444;">&copy; 2025 NexGuild &middot; <a href="https://www.nexguild.in" style="color:#444;text-decoration:none;">nexguild.in</a></p>
+          <p style="margin:0 0 4px;font-size:12px;color:#444;">&copy; ${new Date().getFullYear()} NexGuild &middot; <a href="https://www.nexguild.in" style="color:#444;text-decoration:none;">nexguild.in</a></p>
           <p style="margin:0;font-size:11px;color:#2f2f2f;">You received this because you have a NexGuild account.</p>
         </td>
       </tr>
@@ -826,4 +827,176 @@ export function announcementHtml(
 </div>
 
 ${btn("View on Dashboard →", "https://www.nexguild.in/dashboard/announcements")}`);
+}
+
+export function weeklyDigestHtml(name: string, weekEarned: number, totalBalance: number): string {
+  const n = esc(name);
+  return `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f5f5f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#f5f5f5;padding:32px 16px;">
+  <tr><td align="center">
+    <table width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;background:#ffffff;border-radius:16px;overflow:hidden;border:1px solid #e5e5e5;">
+      <tr><td style="background:linear-gradient(135deg,#02b491,#029470);padding:28px 32px;text-align:center;">
+        <p style="margin:0;font-size:11px;font-weight:700;color:rgba(255,255,255,0.75);text-transform:uppercase;letter-spacing:2px;">NexGuild Weekly Digest</p>
+        <h1 style="margin:8px 0 0;font-size:26px;font-weight:800;color:#fff;">Your week in review</h1>
+      </td></tr>
+      <tr><td style="padding:32px;">
+        <p style="margin:0 0 24px;font-size:16px;color:#374151;">Hi <strong>${n}</strong>,</p>
+        <p style="margin:0 0 24px;font-size:15px;color:#6b7280;line-height:1.6;">Here's what you earned on NexGuild this week:</p>
+        <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
+          <tr><td style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:20px;text-align:center;">
+            <p style="margin:0;font-size:12px;font-weight:600;color:#16a34a;text-transform:uppercase;letter-spacing:1px;">Earned This Week</p>
+            <p style="margin:8px 0 0;font-size:36px;font-weight:800;color:#15803d;">+${formatNexcoins(weekEarned)}</p>
+            <p style="margin:4px 0 0;font-size:13px;color:#16a34a;">NexCoins</p>
+          </td></tr>
+        </table>
+        <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;background:#f9fafb;border-radius:10px;padding:16px;">
+          <tr><td style="font-size:14px;color:#6b7280;">Total Balance</td><td style="font-size:14px;font-weight:700;color:#111827;text-align:right;">${formatNexcoins(totalBalance)} NC</td></tr>
+        </table>
+        <p style="margin:0 0 20px;font-size:14px;color:#6b7280;line-height:1.6;">Keep completing tasks, surveys, and offerwalls to earn more. Every NexCoin gets you closer to your next voucher.</p>
+        <table cellpadding="0" cellspacing="0" style="margin:0 auto;">
+          <tr><td style="background:#02b491;border-radius:10px;"><a href="https://nexguild.in/earn" style="display:inline-block;padding:14px 32px;font-size:14px;font-weight:700;color:#fff;text-decoration:none;">Start Earning →</a></td></tr>
+        </table>
+      </td></tr>
+      <tr><td style="padding:20px 32px;border-top:1px solid #f3f4f6;text-align:center;">
+        <p style="margin:0;font-size:12px;color:#9ca3af;">You're receiving this because you have an active NexGuild account.</p>
+        <p style="margin:4px 0 0;font-size:12px;color:#9ca3af;">© ${new Date().getFullYear()} NexGuild · nexguild.in</p>
+      </td></tr>
+    </table>
+  </td></tr>
+</table>
+</body>
+</html>`;
+}
+
+export function contributorInquiryHtml(name: string, email: string, message: string): string {
+  const n = esc(name), e = esc(email), m = esc(message);
+  return `<div style="font-family:sans-serif;max-width:600px;">
+    <h2 style="color:#14b8a6;">Contributor Inquiry</h2>
+    <table style="width:100%;border-collapse:collapse;">
+      <tr><td style="padding:8px 0;color:#888;width:80px;">Name</td><td style="padding:8px 0;">${n}</td></tr>
+      <tr><td style="padding:8px 0;color:#888;">Email</td><td style="padding:8px 0;"><a href="mailto:${e}">${e}</a></td></tr>
+    </table>
+    <h3 style="color:#14b8a6;margin-top:20px;">Message</h3>
+    <p style="white-space:pre-wrap;background:#f9f9f9;padding:16px;border-radius:6px;">${m}</p>
+  </div>`;
+}
+
+export function contactFormHtml(
+  name: string,
+  email: string,
+  message: string,
+  details: { company?: string | null; projectType?: string | null; budget?: string | null; timeline?: string | null } = {},
+): string {
+  const n = esc(name), e = esc(email), m = esc(message);
+  const company = details.company ? esc(details.company) : null;
+  const projectType = details.projectType ? esc(details.projectType) : null;
+  const budget = details.budget ? esc(details.budget) : null;
+  const timeline = details.timeline ? esc(details.timeline) : null;
+  return `<div style="font-family:sans-serif;max-width:600px;">
+    <h2 style="color:#F59E0B;">New Contact Form Submission</h2>
+    <table style="width:100%;border-collapse:collapse;">
+      <tr><td style="padding:8px 0;color:#888;width:130px;">Name</td><td style="padding:8px 0;">${n}</td></tr>
+      <tr><td style="padding:8px 0;color:#888;">Email</td><td style="padding:8px 0;"><a href="mailto:${e}">${e}</a></td></tr>
+      ${company ? `<tr><td style="padding:8px 0;color:#888;">Company</td><td style="padding:8px 0;">${company}</td></tr>` : ""}
+      ${projectType ? `<tr><td style="padding:8px 0;color:#888;">Project Type</td><td style="padding:8px 0;">${projectType}</td></tr>` : ""}
+      ${budget ? `<tr><td style="padding:8px 0;color:#888;">Budget</td><td style="padding:8px 0;">${budget}</td></tr>` : ""}
+      ${timeline ? `<tr><td style="padding:8px 0;color:#888;">Timeline</td><td style="padding:8px 0;">${timeline}</td></tr>` : ""}
+    </table>
+    <h3 style="color:#F59E0B;margin-top:20px;">Message</h3>
+    <p style="white-space:pre-wrap;background:#f9f9f9;padding:16px;border-radius:6px;">${m}</p>
+  </div>`;
+}
+
+export function supportTicketCreatedHtml(
+  subject: string,
+  contributorName: string,
+  contributorEmail: string,
+  category: string,
+  ticketId: string,
+  message: string,
+): string {
+  const s = esc(subject), n = esc(contributorName), e = esc(contributorEmail);
+  const c = esc(category), id = esc(ticketId), m = esc(message);
+  return `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:560px;margin:0 auto;background:#0f0f0f;color:#e5e5e5;border-radius:12px;overflow:hidden;">
+    <div style="background:linear-gradient(135deg,#14b8a6,#0d9488);padding:24px 32px;">
+      <h1 style="margin:0;font-size:18px;font-weight:700;color:#fff;">New Support Ticket</h1>
+      <p style="margin:4px 0 0;font-size:13px;color:rgba(255,255,255,0.8);">${s}</p>
+    </div>
+    <div style="padding:24px 32px;">
+      <table style="width:100%;border-collapse:collapse;font-size:14px;margin-bottom:20px;">
+        <tr><td style="padding:6px 0;color:#737373;width:120px;">From</td><td style="padding:6px 0;color:#e5e5e5;">${n} (${e})</td></tr>
+        <tr><td style="padding:6px 0;color:#737373;">Category</td><td style="padding:6px 0;color:#e5e5e5;">${c}</td></tr>
+        <tr><td style="padding:6px 0;color:#737373;">Ticket ID</td><td style="padding:6px 0;color:#a3a3a3;font-size:12px;">${id}</td></tr>
+      </table>
+      <div style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:8px;padding:16px;margin-bottom:20px;">
+        <p style="margin:0 0 8px;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#737373;">Message</p>
+        <p style="margin:0;font-size:14px;color:#e5e5e5;line-height:1.6;white-space:pre-wrap;">${m}</p>
+      </div>
+      <p style="font-size:13px;color:#737373;">Reply at <a href="https://nexguild.in/admin/support" style="color:#14b8a6;">nexguild.in/admin/support</a></p>
+    </div>
+  </div>`;
+}
+
+export function supportContributorReplyAlertHtml(subject: string, contributorName: string, message: string): string {
+  const s = esc(subject), n = esc(contributorName), m = esc(message);
+  return `<div style="font-family:-apple-system,sans-serif;max-width:560px;margin:0 auto;background:#0f0f0f;color:#e5e5e5;border-radius:12px;overflow:hidden;">
+    <div style="background:linear-gradient(135deg,#14b8a6,#0d9488);padding:24px 32px;">
+      <h1 style="margin:0;font-size:18px;font-weight:700;color:#fff;">New Reply on Ticket</h1>
+      <p style="margin:4px 0 0;font-size:13px;color:rgba(255,255,255,0.8);">${s}</p>
+    </div>
+    <div style="padding:24px 32px;">
+      <p style="margin:0 0 16px;font-size:14px;color:#a3a3a3;"><strong style="color:#e5e5e5;">${n}</strong> sent a follow-up message:</p>
+      <div style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:8px;padding:16px;margin-bottom:20px;">
+        <p style="margin:0;font-size:14px;color:#e5e5e5;line-height:1.6;white-space:pre-wrap;">${m}</p>
+      </div>
+      <p style="font-size:13px;color:#737373;"><a href="https://nexguild.in/admin/support" style="color:#14b8a6;">View in admin dashboard</a></p>
+    </div>
+  </div>`;
+}
+
+export function supportReplyHtml(subject: string, contributorName: string, reply: string): string {
+  const s = esc(subject), n = esc(contributorName), r = esc(reply);
+  return `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:560px;margin:0 auto;background:#0f0f0f;color:#e5e5e5;border-radius:12px;overflow:hidden;">
+    <div style="background:linear-gradient(135deg,#14b8a6,#0d9488);padding:24px 32px;">
+      <h1 style="margin:0;font-size:18px;font-weight:700;color:#fff;">Support Reply</h1>
+      <p style="margin:4px 0 0;font-size:13px;color:rgba(255,255,255,0.8);">Re: ${s}</p>
+    </div>
+    <div style="padding:24px 32px;">
+      <p style="margin:0 0 16px;font-size:14px;color:#a3a3a3;">Hi <strong style="color:#e5e5e5;">${n}</strong>, the NexGuild support team has replied to your ticket:</p>
+      <div style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:8px;padding:16px;margin-bottom:20px;">
+        <p style="margin:0;font-size:14px;color:#e5e5e5;line-height:1.6;white-space:pre-wrap;">${r}</p>
+      </div>
+      <p style="font-size:14px;color:#a3a3a3;margin-bottom:20px;">You can reply directly in your <a href="https://nexguild.in/dashboard/support" style="color:#14b8a6;">support dashboard</a>.</p>
+      <p style="font-size:12px;color:#525252;">© ${new Date().getFullYear()} NexGuild · nexguild.in</p>
+    </div>
+  </div>`;
+}
+
+export function voucherDeliveredHtml(name: string, voucherType: string, code: string, coinsSpent: number): string {
+  const n = esc(name), type = esc(voucherType), voucherCode = esc(code);
+  return `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:560px;margin:0 auto;background:#0f0f0f;color:#e5e5e5;border-radius:12px;overflow:hidden;">
+    <div style="background:linear-gradient(135deg,#14b8a6,#0d9488);padding:32px 40px;">
+      <h1 style="margin:0;font-size:22px;font-weight:700;color:#fff;letter-spacing:-0.3px;">NexGuild</h1>
+      <p style="margin:4px 0 0;font-size:13px;color:rgba(255,255,255,0.8);">Your Voucher is Ready!</p>
+    </div>
+    <div style="padding:32px 40px;">
+      <p style="margin:0 0 20px;font-size:15px;color:#d4d4d4;">Hi <strong style="color:#fff;">${n}</strong>,</p>
+      <p style="margin:0 0 24px;font-size:15px;color:#d4d4d4;line-height:1.6;">Great news! Your <strong style="color:#fff;">${type}</strong> voucher has been delivered.</p>
+      <div style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:10px;padding:24px;text-align:center;margin-bottom:24px;">
+        <p style="margin:0 0 8px;font-size:12px;text-transform:uppercase;letter-spacing:1px;color:#737373;">Your Voucher Code</p>
+        <p style="margin:0;font-size:28px;font-weight:700;font-family:'Courier New',monospace;color:#14b8a6;letter-spacing:3px;">${voucherCode}</p>
+      </div>
+      <div style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:8px;padding:16px;margin-bottom:24px;">
+        <p style="margin:0;font-size:13px;color:#a3a3a3;line-height:1.6;"><strong style="color:#e5e5e5;">Valid for:</strong> ${type}<br><strong style="color:#e5e5e5;">Coins spent:</strong> ${coinsSpent.toLocaleString()} NexCoins</p>
+      </div>
+      <p style="margin:0 0 8px;font-size:14px;color:#a3a3a3;line-height:1.6;">You can also view and copy your code anytime from the <strong style="color:#e5e5e5;">Store → My Requests</strong> section in your dashboard.</p>
+      <p style="margin:24px 0 0;font-size:14px;color:#737373;">Thank you for contributing to NexGuild! Keep earning and redeeming.</p>
+    </div>
+    <div style="padding:16px 40px;border-top:1px solid #1a1a1a;text-align:center;">
+      <p style="margin:0;font-size:12px;color:#525252;">© ${new Date().getFullYear()} NexGuild · nexguild.in</p>
+    </div>
+  </div>`;
 }

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Resend } from "resend";
+import { contactFormHtml } from "@/lib/email";
 
 const TO_EMAIL = "admin@nexguild.in";
 const FROM_EMAIL = "noreply@nexguild.in";
@@ -42,21 +43,7 @@ export async function POST(req: NextRequest) {
     to: TO_EMAIL,
     replyTo: email,
     subject: `New Contact: ${esc(name)}${company ? ` — ${esc(company)}` : ""}`,
-    html: `
-      <div style="font-family: sans-serif; max-width: 600px;">
-        <h2 style="color: #F59E0B;">New Contact Form Submission</h2>
-        <table style="width:100%; border-collapse:collapse;">
-          <tr><td style="padding:8px 0; color:#888; width:130px;">Name</td><td style="padding:8px 0;">${esc(name)}</td></tr>
-          <tr><td style="padding:8px 0; color:#888;">Email</td><td style="padding:8px 0;"><a href="mailto:${esc(email)}">${esc(email)}</a></td></tr>
-          ${company ? `<tr><td style="padding:8px 0; color:#888;">Company</td><td style="padding:8px 0;">${esc(company)}</td></tr>` : ""}
-          ${projectType ? `<tr><td style="padding:8px 0; color:#888;">Project Type</td><td style="padding:8px 0;">${esc(projectType)}</td></tr>` : ""}
-          ${budget ? `<tr><td style="padding:8px 0; color:#888;">Budget</td><td style="padding:8px 0;">${esc(budget)}</td></tr>` : ""}
-          ${timeline ? `<tr><td style="padding:8px 0; color:#888;">Timeline</td><td style="padding:8px 0;">${esc(timeline)}</td></tr>` : ""}
-        </table>
-        <h3 style="color:#F59E0B; margin-top:20px;">Message</h3>
-        <p style="white-space:pre-wrap; background:#f9f9f9; padding:16px; border-radius:6px;">${esc(message)}</p>
-      </div>
-    `,
+    html: contactFormHtml(name, email, message, { company, projectType, budget, timeline }),
   });
 
   if (error) {

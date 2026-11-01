@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Resend } from "resend";
+import { contributorInquiryHtml } from "@/lib/email";
 
 const TO_EMAIL   = "admin@nexguild.in";
 const FROM_EMAIL = "noreply@nexguild.in";
@@ -33,17 +34,7 @@ export async function POST(req: NextRequest) {
     to: TO_EMAIL,
     replyTo: email,
     subject: `Contributor Inquiry from ${name}`,
-    html: `
-      <div style="font-family:sans-serif; max-width:600px;">
-        <h2 style="color:#14b8a6;">Contributor Inquiry</h2>
-        <table style="width:100%; border-collapse:collapse;">
-          <tr><td style="padding:8px 0; color:#888; width:80px;">Name</td><td style="padding:8px 0;">${name}</td></tr>
-          <tr><td style="padding:8px 0; color:#888;">Email</td><td style="padding:8px 0;"><a href="mailto:${email}">${email}</a></td></tr>
-        </table>
-        <h3 style="color:#14b8a6; margin-top:20px;">Message</h3>
-        <p style="white-space:pre-wrap; background:#f9f9f9; padding:16px; border-radius:6px;">${message}</p>
-      </div>
-    `,
+    html: contributorInquiryHtml(name, email, message),
   });
 
   if (error) {

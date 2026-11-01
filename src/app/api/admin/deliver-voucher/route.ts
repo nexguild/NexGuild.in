@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { Resend } from "resend";
 import { writeAdminAudit } from "@/lib/admin-audit";
+import { voucherDeliveredHtml } from "@/lib/email";
 
 export async function POST(req: NextRequest) {
   const admin = createClient(
@@ -96,45 +97,7 @@ export async function POST(req: NextRequest) {
         from:    "NexGuild <noreply@nexguild.in>",
         to:      email,
         subject: "Your NexGuild Voucher is Ready!",
-        html: `
-          <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 560px; margin: 0 auto; background: #0f0f0f; color: #e5e5e5; border-radius: 12px; overflow: hidden;">
-            <div style="background: linear-gradient(135deg, #14b8a6, #0d9488); padding: 32px 40px;">
-              <h1 style="margin: 0; font-size: 22px; font-weight: 700; color: #ffffff; letter-spacing: -0.3px;">NexGuild</h1>
-              <p style="margin: 4px 0 0; font-size: 13px; color: rgba(255,255,255,0.8);">Your Voucher is Ready!</p>
-            </div>
-
-            <div style="padding: 32px 40px;">
-              <p style="margin: 0 0 20px; font-size: 15px; color: #d4d4d4;">Hi <strong style="color: #ffffff;">${name}</strong>,</p>
-              <p style="margin: 0 0 24px; font-size: 15px; color: #d4d4d4; line-height: 1.6;">
-                Great news! Your <strong style="color: #ffffff;">${voucherType}</strong> voucher has been delivered.
-              </p>
-
-              <div style="background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 10px; padding: 24px; text-align: center; margin-bottom: 24px;">
-                <p style="margin: 0 0 8px; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: #737373;">Your Voucher Code</p>
-                <p style="margin: 0; font-size: 28px; font-weight: 700; font-family: 'Courier New', monospace; color: #14b8a6; letter-spacing: 3px;">${code}</p>
-              </div>
-
-              <div style="background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 8px; padding: 16px; margin-bottom: 24px;">
-                <p style="margin: 0; font-size: 13px; color: #a3a3a3; line-height: 1.6;">
-                  <strong style="color: #e5e5e5;">Valid for:</strong> ${voucherType}<br>
-                  <strong style="color: #e5e5e5;">Coins spent:</strong> ${vr.coins_spent.toLocaleString()} NexCoins
-                </p>
-              </div>
-
-              <p style="margin: 0 0 8px; font-size: 14px; color: #a3a3a3; line-height: 1.6;">
-                You can also view and copy your code anytime from the <strong style="color: #e5e5e5;">Store → My Requests</strong> section in your dashboard.
-              </p>
-
-              <p style="margin: 24px 0 0; font-size: 14px; color: #737373;">
-                Thank you for contributing to NexGuild! Keep earning and redeeming.
-              </p>
-            </div>
-
-            <div style="padding: 16px 40px; border-top: 1px solid #1a1a1a; text-align: center;">
-              <p style="margin: 0; font-size: 12px; color: #525252;">© 2025 NexGuild · nexguild.in</p>
-            </div>
-          </div>
-        `,
+        html: voucherDeliveredHtml(name, voucherType, code, vr.coins_spent),
       });
       if (emailErr) {
         console.error("[deliver-voucher] email error:", emailErr);

@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import {
   LayoutDashboard, Users, FolderOpen,
   ClipboardCheck, Layers, Gift, BarChart3,
-  Settings, LogOut, ClipboardList, GraduationCap, Megaphone, Headphones, Tag, X, Activity, Newspaper, TrendingUp, Briefcase, ShieldAlert, WalletCards, History,
+  Settings, LogOut, ClipboardList, GraduationCap, Megaphone, Headphones, Tag, X, Activity, Newspaper, TrendingUp, Briefcase, ShieldAlert, WalletCards, History, Mail,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { NexGuildLogo } from "@/components/ui/nexguild-logo";
@@ -78,6 +78,7 @@ export function AdminSidebar({ open, onClose }: AdminSidebarProps) {
     { label: "Insights", href: "/admin/insights", icon: TrendingUp, badge: 0, roles: ADMIN_ROLES.UPPER },
     { label: "Settings", href: "/admin/settings", icon: Settings, badge: 0, roles: ADMIN_ROLES.UPPER },
     { label: "Audit History", href: "/admin/audit-logs", icon: History, badge: 0, roles: ADMIN_ROLES.UPPER },
+    { label: "Email Previews", href: "/admin/email-previews", icon: Mail, badge: 0, roles: ADMIN_ROLES.UPPER },
   ].filter((item) => item.roles.some((allowedRole) => allowedRole === role));
 
   function isActive(href: string) {
