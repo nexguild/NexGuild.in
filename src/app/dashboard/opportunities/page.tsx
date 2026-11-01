@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Search, Lock, Globe, X, ChevronRight, CheckCircle2, Loader2, XCircle, Star } from "lucide-react";
+import { Search, Lock, Globe, X, ChevronRight, CheckCircle2, Loader2, XCircle, Star, ClipboardList, Sparkles, Layers, ArrowRight } from "lucide-react";
 import { NexCoinIcon } from "@/components/ui/nexcoin-icon";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
 import { BlogTipCard } from "@/components/dashboard/BlogTipCard";
@@ -220,21 +221,73 @@ export default function OpportunitiesPage() {
   return (
     <div className="space-y-6">
 
-      {/* ── Page header ─────────────────────────────────────────────── */}
-      <div className="flex items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900 mb-1">Opportunities</h1>
-          <p className="text-sm text-slate-500">Browse tasks available to you right now.</p>
+      <section className="relative isolate overflow-hidden rounded-[1.6rem] bg-[#103f38] text-white shadow-[0_18px_45px_rgba(15,76,69,0.14)]">
+        <div aria-hidden className="absolute inset-0 bg-[radial-gradient(ellipse_at_80%_10%,rgba(214,182,110,0.22),transparent_35%),radial-gradient(ellipse_at_5%_100%,rgba(20,184,166,0.16),transparent_40%)]" />
+        <div aria-hidden className="absolute -right-20 -top-32 h-72 w-72 rounded-full border border-white/10" />
+        <div className="relative flex flex-col gap-5 p-5 sm:p-7 md:flex-row md:items-center md:justify-between md:p-8">
+          <div className="max-w-2xl">
+            <p className="mb-2 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.07] px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.18em] text-[#e4d3a8]">
+              <Sparkles className="h-3.5 w-3.5" /> Earn with NexGuild
+            </p>
+            <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">Choose how you want to earn.</h1>
+            <p className="mt-2 max-w-xl text-sm leading-6 text-white/70">Find paid projects here, or jump to a dedicated page for surveys, offerwalls, and your active work.</p>
+          </div>
+          <div className="flex items-center gap-4 rounded-2xl border border-white/10 bg-white/[0.07] px-4 py-3.5 backdrop-blur-sm">
+            <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#d6b66e]/15 text-[#e6c77d]">
+              <ClipboardList className="h-5 w-5" />
+            </span>
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-white/55">Tasks for you</p>
+              <p className="mt-0.5 text-xl font-semibold">{loading ? "—" : filtered.length} <span className="text-xs font-medium text-white/60">available</span></p>
+            </div>
+          </div>
         </div>
-        {!loading && (
-          <span className="flex-shrink-0 inline-flex items-center gap-1.5 rounded-full bg-teal-50 px-3 py-1 text-sm font-semibold text-teal-700 border border-teal-100">
-            {filtered.length} available
-          </span>
-        )}
-      </div>
+      </section>
+
+      <section aria-label="Explore earning options" className="space-y-3">
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-teal-700">Explore NexGuild</p>
+          <h2 className="mt-1 text-lg font-semibold tracking-tight text-slate-900">Your earning options</h2>
+        </div>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          {[
+            { title: "Paid Tasks", description: "Complete paid work and challenges.", href: "#task-list", action: "Browse tasks", icon: ClipboardList, tone: "teal" },
+            { title: "Paid Surveys", description: "Share your opinion and earn NexCoins.", href: "/dashboard/surveys", action: "Find surveys", icon: Sparkles, tone: "amber" },
+            { title: "Apps & Offers", description: "Try apps, play games, and complete partner offers.", href: "/dashboard/offerwalls", action: "Explore offers", icon: Layers, tone: "blue" },
+            { title: "My Work", description: "Continue tasks and track your submissions.", href: "/dashboard/tasks", action: "View my work", icon: CheckCircle2, tone: "slate" },
+          ].map((option) => {
+            const Icon = option.icon;
+            const tones = {
+              teal: "bg-teal-50 text-teal-700 group-hover:border-teal-300",
+              amber: "bg-amber-50 text-amber-700 group-hover:border-amber-300",
+              blue: "bg-sky-50 text-sky-700 group-hover:border-sky-300",
+              slate: "bg-slate-100 text-slate-700 group-hover:border-slate-300",
+            };
+            return (
+              <Link key={option.title} href={option.href} className="group flex min-h-44 flex-col rounded-2xl border border-slate-200/80 bg-white p-5 shadow-[0_4px_18px_rgba(15,23,42,0.04)] transition hover:-translate-y-1 hover:shadow-[0_14px_32px_rgba(15,76,69,0.1)]">
+                <span className={`flex h-11 w-11 items-center justify-center rounded-xl ${tones[option.tone]}`}><Icon className="h-5 w-5" /></span>
+                <span className="mt-4 text-sm font-bold text-slate-900">{option.title}</span>
+                <span className="mt-1 text-xs leading-5 text-slate-500">{option.description}</span>
+                <span className="mt-auto inline-flex items-center gap-1 pt-4 text-xs font-bold text-teal-700">{option.action}<ArrowRight className="h-3.5 w-3.5 transition group-hover:translate-x-1" /></span>
+              </Link>
+            );
+          })}
+        </div>
+      </section>
 
       {/* ── Search + Filter Bar ─────────────────────────────────────── */}
-      <div className="space-y-3">
+      <div id="task-list" className="scroll-mt-28 space-y-3">
+        <div className="flex items-end justify-between gap-3">
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-teal-700">Paid tasks</p>
+            <h2 className="mt-1 text-lg font-semibold tracking-tight text-slate-900">Open opportunities</h2>
+          </div>
+          {!loading && (
+            <span className="hidden flex-shrink-0 items-center gap-1.5 rounded-full border border-teal-100 bg-white px-3 py-1.5 text-xs font-semibold text-teal-800 sm:inline-flex">
+              {filtered.length} available
+            </span>
+          )}
+        </div>
 
         {/* Row 1: Search + Sort */}
         <div className="flex items-center gap-2">
@@ -244,7 +297,7 @@ export default function OpportunitiesPage() {
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search tasks..."
+              placeholder="Search tasks and projects..."
               className="w-full h-10 pl-9 pr-3 rounded-xl border border-slate-200 bg-white text-sm text-slate-800 placeholder:text-slate-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-300 focus:border-teal-300 transition-shadow"
             />
           </div>
@@ -323,7 +376,7 @@ export default function OpportunitiesPage() {
             href="/dashboard/surveys"
             className="mt-2 inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-teal-500 to-teal-600 px-5 py-2.5 text-sm font-semibold text-white transition-all hover:from-teal-600 hover:to-teal-700"
           >
-            Browse Offerwalls →
+            Explore paid surveys →
           </a>
         </div>
       ) : (

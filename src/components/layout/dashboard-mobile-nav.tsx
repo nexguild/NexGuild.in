@@ -9,10 +9,10 @@ import { cn } from "@/lib/utils";
 
 const TABS = [
   { label: "Home",          href: "/dashboard",               icon: LayoutDashboard },
-  { label: "Opportunities", href: "/dashboard/opportunities",  icon: Search },
-  { label: "Tasks",         href: "/dashboard/tasks",          icon: ClipboardList },
+  { label: "Paid Tasks",    href: "/dashboard/opportunities",  icon: Search },
+  { label: "My Work",       href: "/dashboard/tasks",          icon: ClipboardList },
   { label: "Store",         href: "/dashboard/store",          icon: ShoppingBag },
-  { label: "Surveys",       href: "/dashboard/surveys",        icon: Sparkles },
+  { label: "Paid Surveys", href: "/dashboard/surveys",         icon: Sparkles },
   { label: "More",          href: "/dashboard/profile",        icon: MoreHorizontal },
 ];
 

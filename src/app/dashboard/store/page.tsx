@@ -260,38 +260,45 @@ export default function StorePage() {
     <div className="space-y-8">
 
       {/* ── Header ──────────────────────────────────────────────────── */}
-      <div className="flex items-start justify-between gap-4 flex-wrap">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900 mb-1">NexStore</h1>
-          <p className="text-sm text-slate-500">Redeem your NexCoins for real gift vouchers.</p>
-        </div>
-        <div className="flex items-center gap-3">
-          {/* Premium balance card */}
-          <div className="rounded-2xl bg-gradient-to-r from-amber-400 to-amber-500 px-4 py-2 shadow-md">
-            <div className="flex items-center gap-2">
-              <span className="text-xl">🪙</span>
-              <div>
-                <p className="text-white font-bold text-lg leading-tight">
-                  {loading ? "—" : formatNexcoins(nexcoins ?? 0)}
-                  <span className="text-white/80 font-semibold text-sm ml-1">NexCoins</span>
-                </p>
-                <p className="text-white/70 text-xs">Available to redeem</p>
+      <div className="animate-fade-slide-up relative isolate overflow-hidden rounded-[1.6rem] bg-[#103f38] p-6 text-white shadow-[0_18px_45px_rgba(15,76,69,0.14)]">
+        <div aria-hidden className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_82%_0%,rgba(214,182,110,0.22),transparent_35%),radial-gradient(ellipse_at_5%_100%,rgba(20,184,166,0.16),transparent_42%)]" />
+        <div className="relative z-10 flex items-start justify-between gap-4 flex-wrap">
+          <div>
+            <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-white/70">Rewards store</p>
+            <h1 className="text-2xl font-bold text-white mb-1">NexStore</h1>
+            <p className="text-sm text-white/75">Redeem your NexCoins for real gift vouchers.</p>
+            <Link href="/dashboard/vouchers" className="mt-4 inline-flex text-sm font-semibold text-[#e4c787] transition-colors hover:text-white">
+              View my vouchers →
+            </Link>
+          </div>
+          <div className="flex items-center gap-3">
+            {/* Premium balance card */}
+            <div className="rounded-2xl border border-white/15 bg-white/10 px-4 py-2 shadow-md backdrop-blur-sm">
+              <div className="flex items-center gap-2">
+                <span className="text-xl">🪙</span>
+                <div>
+                  <p className="text-white font-bold text-lg leading-tight">
+                    {loading ? "—" : formatNexcoins(nexcoins ?? 0)}
+                    <span className="text-white/80 font-semibold text-sm ml-1">NexCoins</span>
+                  </p>
+                  <p className="text-white/70 text-xs">Available to redeem</p>
+                </div>
               </div>
             </div>
+            {/* Cart button */}
+            <button
+              onClick={() => setCartOpen(true)}
+              className="relative h-10 w-10 flex items-center justify-center rounded-xl border border-white/20 bg-white/10 shadow-sm transition-colors hover:bg-white/20"
+              aria-label="Open cart"
+            >
+              <ShoppingCart className="h-5 w-5 text-white" />
+              {cartCount > 0 && (
+                <span className="absolute -top-1.5 -right-1.5 h-5 min-w-[20px] px-1 rounded-full bg-teal-500 text-white text-[10px] font-bold flex items-center justify-center leading-none">
+                  {cartCount}
+                </span>
+              )}
+            </button>
           </div>
-          {/* Cart button */}
-          <button
-            onClick={() => setCartOpen(true)}
-            className="relative h-10 w-10 flex items-center justify-center rounded-xl border border-slate-200 bg-white shadow-sm hover:bg-slate-50 transition-colors"
-            aria-label="Open cart"
-          >
-            <ShoppingCart className="h-5 w-5 text-slate-500" />
-            {cartCount > 0 && (
-              <span className="absolute -top-1.5 -right-1.5 h-5 min-w-[20px] px-1 rounded-full bg-teal-500 text-white text-[10px] font-bold flex items-center justify-center leading-none">
-                {cartCount}
-              </span>
-            )}
-          </button>
         </div>
       </div>
 

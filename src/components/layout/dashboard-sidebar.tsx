@@ -26,14 +26,14 @@ const NAV_GROUPS = [
   {
     label: "Discover",
     items: [
-      { label: "Opportunities", href: "/dashboard/opportunities", icon: Search },
-      { label: "Surveys & Offers", href: "/dashboard/surveys", icon: Sparkles },
+      { label: "Paid Tasks", href: "/dashboard/opportunities", icon: Search },
+      { label: "Paid Surveys", href: "/dashboard/surveys", icon: Sparkles },
     ],
   },
   {
     label: "Your account",
     items: [
-      { label: "My Tasks", href: "/dashboard/tasks", icon: ClipboardList },
+      { label: "My Work", href: "/dashboard/tasks", icon: ClipboardList },
       { label: "Earnings", href: "/dashboard/earnings", icon: TrendingUp },
       { label: "NexCoins", href: "/dashboard/wallet", icon: Wallet },
       { label: "NexStore", href: "/dashboard/store", icon: ShoppingBag },

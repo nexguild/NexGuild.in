@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ClipboardList, RefreshCw, Search, XCircle } from "lucide-react";
+import { CheckCircle2, ClipboardList, Clock3, RefreshCw, Search, XCircle } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { NexCoinIcon } from "@/components/ui/nexcoin-icon";
@@ -101,18 +101,35 @@ export default function TasksPage() {
     <div className="space-y-5">
 
       {/* ── HERO ─────────────────────────────────────────────────── */}
-      <div className="animate-fade-slide-up relative overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-600 to-teal-500 p-6 shadow-lg" style={{ animationDelay: "0ms" }}>
-        <div aria-hidden className="pointer-events-none absolute -right-10 -top-10 h-36 w-36 rounded-full bg-white/10" />
-        <div aria-hidden className="pointer-events-none absolute -left-6 -bottom-8 h-28 w-28 rounded-full bg-white/5" />
-        <div className="relative z-10">
-          <div className="mb-2 flex items-center gap-2">
-            <ClipboardList className="h-4 w-4 text-white/70" />
-            <span className="text-xs font-semibold uppercase tracking-widest text-white/70">My Work</span>
+      <section className="animate-fade-slide-up relative isolate overflow-hidden rounded-[1.6rem] bg-[#103f38] p-5 text-white shadow-[0_18px_45px_rgba(15,76,69,0.14)] sm:p-7" style={{ animationDelay: "0ms" }}>
+        <div aria-hidden className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_82%_0%,rgba(214,182,110,0.2),transparent_34%),radial-gradient(ellipse_at_5%_100%,rgba(20,184,166,0.18),transparent_42%)]" />
+        <div className="relative flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.07] px-3 py-1.5">
+              <ClipboardList className="h-3.5 w-3.5 text-[#e4d3a8]" />
+              <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#e4d3a8]">Your work</span>
+            </div>
+            <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">My Tasks</h1>
+            <p className="mt-2 max-w-xl text-sm leading-6 text-white/70">Keep track of active work, submissions, and approved rewards.</p>
           </div>
-          <h1 className="text-2xl font-extrabold text-white mb-1">My Tasks</h1>
-          <p className="text-sm text-white/75">Track all your submissions and their review status.</p>
+          <div className="grid grid-cols-3 gap-2 sm:gap-3">
+            {[
+              { label: "In progress", count: tabCount("in_progress"), icon: Clock3 },
+              { label: "In review", count: tabCount("submitted"), icon: ClipboardList },
+              { label: "Approved", count: tabCount("approved"), icon: CheckCircle2 },
+            ].map((stat) => {
+              const Icon = stat.icon;
+              return (
+                <div key={stat.label} className="min-w-0 rounded-xl border border-white/10 bg-white/[0.07] px-3 py-3 backdrop-blur-sm sm:min-w-28 sm:px-4">
+                  <Icon className="h-4 w-4 text-[#e4d3a8]" />
+                  <p className="mt-2 text-xl font-bold">{loading ? "—" : stat.count}</p>
+                  <p className="truncate text-[10px] font-medium text-white/60 sm:text-xs">{stat.label}</p>
+                </div>
+              );
+            })}
+          </div>
         </div>
-      </div>
+      </section>
 
       {/* ── TABS ─────────────────────────────────────────────────── */}
       <div className="animate-fade-slide-up flex gap-1.5 overflow-x-auto pb-1" style={{ scrollbarWidth: "none", animationDelay: "80ms" }}>
@@ -126,9 +143,9 @@ export default function TasksPage() {
               className={`flex flex-shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border px-4 py-2 text-sm font-semibold transition-all ${
                 isActive
                   ? "border-transparent text-white shadow-md"
-                  : "border-slate-200 bg-white text-slate-600 shadow-sm hover:border-indigo-300 hover:text-indigo-600"
+                  : "border-slate-200 bg-white text-slate-600 shadow-sm hover:border-teal-300 hover:text-teal-700"
               }`}
-              style={isActive ? { background: "linear-gradient(135deg, #6366f1 0%, #14b8a6 100%)" } : undefined}
+              style={isActive ? { background: "linear-gradient(135deg, #0f766e 0%, #14b8a6 100%)" } : undefined}
             >
               {tab.label}
               {count > 0 && (
@@ -144,7 +161,7 @@ export default function TasksPage() {
       </div>
 
       {/* ── SEARCH ───────────────────────────────────────────────── */}
-      <div className="animate-fade-slide-up flex h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 shadow-sm transition-all focus-within:border-indigo-300 focus-within:ring-2 focus-within:ring-indigo-100" style={{ animationDelay: "130ms" }}>
+      <div className="animate-fade-slide-up flex h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 shadow-sm transition-all focus-within:border-teal-300 focus-within:ring-2 focus-within:ring-teal-100" style={{ animationDelay: "130ms" }}>
         <Search className="h-4 w-4 flex-shrink-0 text-slate-400" />
         <input
           type="text"

@@ -269,9 +269,8 @@ export default function EarningsPage() {
     <div className="space-y-5">
 
       {/* ── HERO ─────────────────────────────────────────────────── */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-600 to-teal-500 p-6 shadow-lg">
-        <div aria-hidden className="pointer-events-none absolute -right-10 -top-10 h-36 w-36 rounded-full bg-white/10" />
-        <div aria-hidden className="pointer-events-none absolute -left-6 -bottom-8 h-28 w-28 rounded-full bg-white/5" />
+      <div className="relative isolate overflow-hidden rounded-[1.6rem] bg-[#103f38] p-6 text-white shadow-[0_18px_45px_rgba(15,76,69,0.14)]">
+        <div aria-hidden className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_82%_0%,rgba(214,182,110,0.22),transparent_35%),radial-gradient(ellipse_at_5%_100%,rgba(20,184,166,0.16),transparent_42%)]" />
         <div className="relative z-10 flex items-start justify-between gap-4 flex-wrap">
           <div>
             <div className="mb-2 flex items-center gap-2">
@@ -333,7 +332,7 @@ export default function EarningsPage() {
                 key={r}
                 onClick={() => setChartRange(r)}
                 className={`${pillBase} ${chartRange === r ? activePill : inactivePill}`}
-                style={chartRange === r ? { background: "linear-gradient(135deg, #6366f1, #14b8a6)" } : undefined}
+                style={chartRange === r ? { background: "linear-gradient(135deg, #0f766e, #b08b45)" } : undefined}
               >
                 {r === "week" ? "This Week" : r === "month" ? "This Month" : "All Time"}
               </button>
@@ -404,7 +403,7 @@ export default function EarningsPage() {
                 key={s}
                 onClick={() => setSourceFilter(s)}
                 className={`${pillBase} ${sourceFilter === s ? activePill : inactivePill}`}
-                style={sourceFilter === s ? { background: "linear-gradient(135deg, #6366f1, #14b8a6)" } : undefined}
+                style={sourceFilter === s ? { background: "linear-gradient(135deg, #0f766e, #b08b45)" } : undefined}
               >
                 {SOURCE_LABELS[s]}
               </button>
@@ -418,7 +417,7 @@ export default function EarningsPage() {
                 key={r}
                 onClick={() => setDateRange(r)}
                 className={`${pillBase} ${dateRange === r ? activePill : inactivePill}`}
-                style={dateRange === r ? { background: "linear-gradient(135deg, #6366f1, #14b8a6)" } : undefined}
+                style={dateRange === r ? { background: "linear-gradient(135deg, #0f766e, #b08b45)" } : undefined}
               >
                 {DATE_LABELS[r]}
               </button>

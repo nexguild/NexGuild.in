@@ -1,11 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ShoppingBag, TrendingUp, History, ArrowDownLeft, ArrowUpRight } from "lucide-react";
+import { ShoppingBag, TrendingUp, History, ArrowDownLeft, ArrowUpRight, Ticket } from "lucide-react";
 import { NexCoinIcon } from "@/components/ui/nexcoin-icon";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { formatNexcoins } from "@/lib/nexcoins";
+import { CategoryQuickLinks } from "@/components/dashboard/CategoryQuickLinks";
 
 interface Transaction {
   id: string;
@@ -80,20 +81,19 @@ export default function NexCoinsPage() {
     <div className="space-y-5">
 
       {/* ── HERO ─────────────────────────────────────────────────── */}
-      <div className="animate-fade-slide-up relative overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-600 to-teal-500 p-6 shadow-lg" style={{ animationDelay: "0ms" }}>
-        <div aria-hidden className="pointer-events-none absolute -right-10 -top-10 h-36 w-36 rounded-full bg-white/10" />
-        <div aria-hidden className="pointer-events-none absolute -left-6 -bottom-8 h-28 w-28 rounded-full bg-white/5" />
+      <div className="animate-fade-slide-up relative isolate overflow-hidden rounded-[1.6rem] bg-[#103f38] p-6 text-white shadow-[0_18px_45px_rgba(15,76,69,0.14)] sm:p-8" style={{ animationDelay: "0ms" }}>
+        <div aria-hidden className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_82%_0%,rgba(214,182,110,0.22),transparent_35%),radial-gradient(ellipse_at_5%_100%,rgba(20,184,166,0.16),transparent_42%)]" />
         <div className="relative z-10 flex flex-wrap items-center justify-between gap-5">
           <div>
             <div className="mb-2 flex items-center gap-2">
               <NexCoinIcon size={16} />
-              <span className="text-xs font-semibold uppercase tracking-widest text-white/70">Wallet</span>
+              <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#e4d3a8]">Your rewards</span>
             </div>
-            <p className="mb-1 text-sm text-white/75">Available Balance</p>
-            <p className="text-5xl font-extrabold text-white">
+            <h1 className="mb-1 text-lg font-semibold text-white/75">Your NexCoins balance</h1>
+            <p className="text-4xl font-extrabold tracking-tight text-white sm:text-5xl">
               {loading ? "—" : formatNexcoins(nexcoins ?? 0)}
             </p>
-            <p className="mt-1 text-sm text-white/60">NexCoins</p>
+            <p className="mt-1 text-sm text-white/60">Use your coins to redeem rewards in the store.</p>
           </div>
           <Link
             href="/dashboard/store"
@@ -103,6 +103,21 @@ export default function NexCoinsPage() {
           </Link>
         </div>
       </div>
+
+      <section aria-label="Rewards pages" className="space-y-3">
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-teal-700">Rewards center</p>
+          <h2 className="mt-1 text-lg font-semibold tracking-tight text-slate-900">Manage your rewards</h2>
+        </div>
+        <CategoryQuickLinks
+          label="Rewards pages"
+          links={[
+            { title: "Earnings history", description: "See your earnings over time.", href: "/dashboard/earnings", icon: TrendingUp },
+            { title: "Rewards store", description: "Redeem NexCoins for vouchers.", href: "/dashboard/store", icon: ShoppingBag },
+            { title: "My vouchers", description: "View requests and voucher codes.", href: "/dashboard/vouchers", icon: Ticket },
+          ]}
+        />
+      </section>
 
       {/* ── STAT CARDS ───────────────────────────────────────────── */}
       <div className="animate-fade-slide-up grid grid-cols-2 gap-3" style={{ animationDelay: "100ms" }}>
@@ -114,13 +129,13 @@ export default function NexCoinsPage() {
           <p className="text-xl font-extrabold text-green-700">{loading ? "—" : formatNexcoins(totalEarned)}</p>
           <p className="mt-0.5 text-xs text-green-500">From tasks &amp; offers</p>
         </div>
-        <div className="rounded-2xl border border-indigo-100 bg-indigo-50 p-4 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
+        <div className="rounded-2xl border border-amber-100 bg-amber-50 p-4 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
           <div className="mb-2 flex items-center gap-1.5">
-            <ShoppingBag className="h-3.5 w-3.5 text-indigo-500" />
-            <span className="text-xs text-indigo-600">Total Spent</span>
+            <ShoppingBag className="h-3.5 w-3.5 text-amber-700" />
+            <span className="text-xs text-amber-700">Total Spent</span>
           </div>
-          <p className="text-xl font-extrabold text-indigo-700">{loading ? "—" : formatNexcoins(totalSpent)}</p>
-          <p className="mt-0.5 text-xs text-indigo-400">Redeemed for vouchers</p>
+          <p className="text-xl font-extrabold text-amber-800">{loading ? "—" : formatNexcoins(totalSpent)}</p>
+          <p className="mt-0.5 text-xs text-amber-700/70">Redeemed for vouchers</p>
         </div>
       </div>
 
@@ -129,7 +144,7 @@ export default function NexCoinsPage() {
         <div className="animate-fade-slide-up overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm" style={{ animationDelay: "150ms" }}>
           <div
             className="border-b border-slate-50 px-5 py-4"
-            style={{ background: "linear-gradient(135deg, rgba(99,102,241,0.05), rgba(20,184,166,0.03))" }}
+            style={{ background: "linear-gradient(135deg, rgba(214,182,110,0.12), rgba(20,184,166,0.04))" }}
           >
             <h2 className="font-bold text-slate-800">Voucher Requests</h2>
           </div>
@@ -156,9 +171,9 @@ export default function NexCoinsPage() {
       <div className="animate-fade-slide-up overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm" style={{ animationDelay: "200ms" }}>
         <div
           className="flex items-center gap-2 border-b border-slate-50 px-5 py-4"
-          style={{ background: "linear-gradient(135deg, rgba(99,102,241,0.04), rgba(20,184,166,0.02))" }}
+          style={{ background: "linear-gradient(135deg, rgba(214,182,110,0.1), rgba(20,184,166,0.04))" }}
         >
-          <History className="h-4 w-4 text-indigo-400" />
+          <History className="h-4 w-4 text-teal-700" />
           <h2 className="font-bold text-slate-800">Transaction History</h2>
         </div>
 

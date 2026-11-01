@@ -8,24 +8,21 @@ interface BlogTipCardProps {
 
 export function BlogTipCard({ slug, title, excerpt }: BlogTipCardProps) {
   return (
-    <div
-      className="flex items-start gap-4 rounded-xl px-5 py-4 bg-white shadow-sm"
-      style={{ border: "1px solid #E5E7EB", borderLeft: "3px solid #02b491" }}
-    >
-      <span className="text-xl flex-shrink-0 mt-0.5">📚</span>
-      <div className="min-w-0 flex-1">
-        <p className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-0.5">Helpful Guide</p>
-        <p className="text-sm font-bold text-[var(--text-primary)] leading-snug">{title}</p>
-        <p className="text-xs text-[var(--text-secondary)] mt-0.5 leading-relaxed">{excerpt}</p>
+    <div className="relative isolate flex flex-col gap-4 overflow-hidden rounded-[1.4rem] border border-[#dce9e3] bg-[linear-gradient(110deg,#f1f8f4,#ffffff_72%)] p-5 shadow-[0_8px_28px_rgba(15,76,69,0.045)] sm:flex-row sm:items-center sm:p-6">
+      <div aria-hidden className="absolute -right-10 -top-20 h-44 w-44 rounded-full border border-teal-900/[0.06]" />
+      <span className="relative flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl bg-[#123f39] text-xl text-[#e2c47c] shadow-sm">✦</span>
+      <div className="relative min-w-0 flex-1">
+        <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.16em] text-teal-700">A little knowledge goes a long way</p>
+        <p className="text-base font-semibold leading-snug tracking-tight text-slate-900">{title}</p>
+        <p className="mt-1 text-xs leading-relaxed text-slate-500">{excerpt}</p>
       </div>
       <Link
         href={`/blog/${slug}`}
         target="_blank"
         rel="noopener noreferrer"
-        className="flex-shrink-0 text-xs font-semibold whitespace-nowrap mt-0.5 hover:opacity-75 transition-opacity"
-        style={{ color: "#02b491" }}
+        className="group relative inline-flex flex-shrink-0 items-center justify-center gap-2 rounded-xl bg-[#0f766e] px-4 py-2.5 text-xs font-bold text-white transition hover:-translate-y-0.5 hover:bg-[#0b625c]"
       >
-        Read Guide →
+        Read the guide <span aria-hidden className="transition-transform group-hover:translate-x-0.5">→</span>
       </Link>
     </div>
   );

@@ -41,7 +41,7 @@ const STATUS_META: Record<string, { label: string; style: string; icon: React.Re
 };
 
 const inputClass =
-  "w-full px-3 rounded-xl border border-slate-200 bg-white text-slate-800 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-100 focus:border-indigo-300 transition-colors shadow-sm";
+  "w-full px-3 rounded-xl border border-slate-200 bg-white text-slate-800 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-100 focus:border-teal-300 transition-colors shadow-sm";
 
 function fmtTime(ts: string) {
   return new Date(ts).toLocaleString("en-IN", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
@@ -223,7 +223,7 @@ export default function SupportPage() {
             <div className="max-w-[82%] sm:max-w-[70%]">
               <div
                 className="px-4 py-2.5 rounded-2xl rounded-tr-sm text-white"
-                style={{ background: "linear-gradient(135deg, #6366f1 0%, #14b8a6 100%)" }}
+                style={{ background: "linear-gradient(135deg, #0f766e 0%, #14b8a6 100%)" }}
               >
                 <p className="text-sm whitespace-pre-wrap leading-relaxed">{openTicket.message}</p>
               </div>
@@ -234,7 +234,7 @@ export default function SupportPage() {
           {/* Thread messages */}
           {loadingMsgs ? (
             <div className="flex justify-center py-4">
-              <Loader2 className="h-5 w-5 animate-spin text-indigo-400" />
+              <Loader2 className="h-5 w-5 animate-spin text-teal-500" />
             </div>
           ) : (
             <>
@@ -263,7 +263,7 @@ export default function SupportPage() {
                       {isContributor ? (
                         <div
                           className="px-4 py-2.5 rounded-2xl rounded-tr-sm text-white"
-                          style={{ background: "linear-gradient(135deg, #6366f1 0%, #14b8a6 100%)" }}
+                          style={{ background: "linear-gradient(135deg, #0f766e 0%, #14b8a6 100%)" }}
                         >
                           <p className="text-sm whitespace-pre-wrap leading-relaxed">{msg.message}</p>
                         </div>
@@ -298,13 +298,13 @@ export default function SupportPage() {
                 onChange={(e) => setReplyText(e.target.value)}
                 onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendReply(); } }}
                 placeholder="Type a message… (Enter to send, Shift+Enter for new line)"
-                className="flex-1 resize-none rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100 transition-all"
+                className="flex-1 resize-none rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-teal-300 focus:ring-2 focus:ring-teal-100 transition-all"
               />
               <button
                 onClick={sendReply}
                 disabled={!replyText.trim() || sending}
                 className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl text-white shadow-md transition-all disabled:opacity-40 hover:opacity-90"
-                style={{ background: "linear-gradient(135deg, #6366f1 0%, #14b8a6 100%)" }}
+                style={{ background: "linear-gradient(135deg, #0f766e 0%, #14b8a6 100%)" }}
               >
                 {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
               </button>
@@ -322,9 +322,8 @@ export default function SupportPage() {
     <div className="space-y-5">
 
       {/* ── HERO ─────────────────────────────────────────────────── */}
-      <div className="animate-fade-slide-up relative overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-600 to-teal-500 p-6 shadow-lg" style={{ animationDelay: "0ms" }}>
-        <div aria-hidden className="pointer-events-none absolute -right-10 -top-10 h-36 w-36 rounded-full bg-white/10" />
-        <div aria-hidden className="pointer-events-none absolute -left-6 -bottom-8 h-28 w-28 rounded-full bg-white/5" />
+      <div className="animate-fade-slide-up relative isolate overflow-hidden rounded-[1.6rem] bg-[#103f38] p-6 text-white shadow-[0_18px_45px_rgba(15,76,69,0.14)]" style={{ animationDelay: "0ms" }}>
+        <div aria-hidden className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_82%_0%,rgba(214,182,110,0.22),transparent_35%),radial-gradient(ellipse_at_5%_100%,rgba(20,184,166,0.16),transparent_42%)]" />
         <div className="relative z-10 flex flex-wrap items-center justify-between gap-4">
           <div>
             <div className="mb-2 flex items-center gap-2">
@@ -349,10 +348,10 @@ export default function SupportPage() {
 
       {/* New ticket form */}
       {showForm && (
-        <div className="overflow-hidden rounded-2xl border border-indigo-100 bg-white shadow-sm">
+        <div className="overflow-hidden rounded-2xl border border-teal-100 bg-white shadow-sm">
           <div
             className="flex items-center justify-between border-b border-slate-50 px-5 py-4"
-            style={{ background: "linear-gradient(135deg, rgba(99,102,241,0.05), rgba(20,184,166,0.03))" }}
+            style={{ background: "linear-gradient(135deg, rgba(20,184,166,0.05), rgba(214,182,110,0.06))" }}
           >
             <h2 className="font-bold text-slate-800">New Support Ticket</h2>
             <button onClick={() => setShowForm(false)} className="text-slate-400 hover:text-slate-700 transition-colors">
@@ -403,7 +402,7 @@ export default function SupportPage() {
                     type="submit"
                     disabled={submitting}
                     className="flex flex-1 items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-bold text-white shadow-md transition-all hover:opacity-90 disabled:opacity-50"
-                    style={{ background: "linear-gradient(135deg, #6366f1 0%, #14b8a6 100%)" }}
+                    style={{ background: "linear-gradient(135deg, #0f766e 0%, #14b8a6 100%)" }}
                   >
                     {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Submit Ticket"}
                   </button>
@@ -423,9 +422,9 @@ export default function SupportPage() {
         <div className="flex flex-col items-center gap-4 rounded-2xl border border-slate-100 bg-white px-6 py-20 text-center shadow-sm">
           <div
             className="flex h-14 w-14 items-center justify-center rounded-full"
-            style={{ background: "linear-gradient(135deg, rgba(99,102,241,0.1), rgba(20,184,166,0.1))" }}
+            style={{ background: "linear-gradient(135deg, rgba(20,184,166,0.12), rgba(214,182,110,0.12))" }}
           >
-            <Headphones className="h-7 w-7 text-indigo-500" />
+            <Headphones className="h-7 w-7 text-teal-600" />
           </div>
           <div>
             <p className="mb-1 font-bold text-slate-800">No support tickets yet</p>
@@ -439,7 +438,7 @@ export default function SupportPage() {
             return (
               <li key={t.id}>
                 <button
-                  className="group w-full rounded-2xl border border-slate-100 bg-white px-5 py-4 flex items-center gap-4 text-left shadow-sm hover:border-indigo-200 hover:-translate-y-0.5 hover:shadow-md transition-all duration-150"
+                  className="group w-full rounded-2xl border border-slate-100 bg-white px-5 py-4 flex items-center gap-4 text-left shadow-sm hover:border-teal-200 hover:-translate-y-0.5 hover:shadow-md transition-all duration-150"
                   onClick={() => setOpenTicket(t)}
                 >
                   <div className="min-w-0 flex-1">

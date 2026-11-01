@@ -1,5 +1,5 @@
-import { redirect } from "next/navigation";
+import { SurveyOfferwallSections } from "@/components/dashboard/SurveyOfferwallSections";
 
 export default function OfferwallsPage() {
-  redirect("/dashboard/surveys");
+  return <SurveyOfferwallSections mode="offerwalls" />;
 }

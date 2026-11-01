@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import {
   ClipboardList, Layers, ArrowRight,
-  RefreshCw, Flame, Star, Lock, Trophy, CheckCircle2, Clock,
+  RefreshCw, Flame, Star, Lock, Trophy, CheckCircle2, Clock, Sparkles,
 } from "lucide-react";
 import Link from "next/link";
 import { NexCoinIcon } from "@/components/ui/nexcoin-icon";
@@ -30,6 +30,7 @@ interface Task {
   id: string; title: string; description: string | null;
   task_type: string | null; pay_per_task: number | null;
   xp_reward: number | null; required_level: number | null;
+  is_featured: boolean | null;
 }
 interface OfferwallProvider { id: string; name: string; slug: string; is_ad_network: boolean; description: string | null; logo_url: string | null; isLive: boolean; }
 interface SubmissionMeta { status: string; feedback: string | null; }
@@ -75,16 +76,16 @@ function EarningsChart({ data }: { data: { label: string; value: number }[] }) {
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-28" preserveAspectRatio="none">
         <defs>
           <linearGradient id="earnGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#6366f1" stopOpacity="0.25" />
+            <stop offset="0%" stopColor="#0f766e" stopOpacity="0.25" />
             <stop offset="100%" stopColor="#14b8a6" stopOpacity="0" />
           </linearGradient>
         </defs>
         <path d={areaPath} fill="url(#earnGrad)" />
-        <polyline points={polyline} fill="none" stroke="#6366f1" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+        <polyline points={polyline} fill="none" stroke="#0f766e" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
         {data.map((d, i) => {
           const x = pad + (i / (data.length - 1)) * (W - 2 * pad);
           const y = H - pad - ((d.value / max) * (H - 2 * pad));
-          return <circle key={i} cx={x} cy={y} r="3.5" fill="#6366f1" />;
+          return <circle key={i} cx={x} cy={y} r="3.5" fill="#b08b45" stroke="white" strokeWidth="1.5" />;
         })}
       </svg>
       <div className="flex justify-between mt-1">
@@ -105,8 +106,8 @@ function ProgressRing({ value, max, label, sub }: { value: number; max: number; 
     <div className="flex flex-col items-center gap-1">
       <div className="relative w-24 h-24">
         <svg viewBox="0 0 88 88" className="w-full h-full -rotate-90">
-          <circle cx="44" cy="44" r={r} fill="none" stroke="#e0e7ff" strokeWidth="8" />
-          <circle cx="44" cy="44" r={r} fill="none" stroke="#6366f1" strokeWidth="8"
+          <circle cx="44" cy="44" r={r} fill="none" stroke="#e5eee9" strokeWidth="8" />
+          <circle cx="44" cy="44" r={r} fill="none" stroke="#0f766e" strokeWidth="8"
             strokeDasharray={`${dash} ${circ}`} strokeLinecap="round"
             style={{ transition: "stroke-dasharray 0.6s ease" }} />
         </svg>
@@ -164,17 +165,37 @@ function StreakGrid({
   const canClaim = (todayRow?.target_met ?? false) && !(todayRow?.reward_claimed ?? false) && !claimResult;
 
   return (
-    <div className="rounded-2xl bg-white border border-slate-100 shadow-sm p-5">
-      <div className="flex items-center justify-between mb-5">
-        <div className="flex items-center gap-2">
-          <span className="text-lg font-bold text-orange-500">🔥 {streak}</span>
-          <h2 className="text-sm font-bold text-slate-700 uppercase tracking-wider">Day Streak</h2>
+    <div className="relative isolate overflow-hidden rounded-[1.5rem] border border-[#dce9e3] bg-white shadow-[0_8px_28px_rgba(15,76,69,0.06)]">
+      <div className="relative overflow-hidden bg-[linear-gradient(110deg,#12483f,#0f766e)] px-5 py-5 text-white sm:px-7">
+        <div aria-hidden className="absolute -right-10 -top-20 h-48 w-48 rounded-full border border-white/10" />
+        <div aria-hidden className="absolute -right-2 -top-14 h-36 w-36 rounded-full border border-white/[0.08]" />
+        <div className="relative flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <span className="flex h-11 w-11 items-center justify-center rounded-2xl border border-[#e6c77d]/20 bg-[#e6c77d]/10 text-[#e6c77d]">
+              <Flame className="h-5 w-5" />
+            </span>
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-white/55">Consistency pays off</p>
+              <h2 className="mt-0.5 text-lg font-semibold tracking-tight">Your weekly streak</h2>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.08] px-3 py-1.5">
+            <Flame className="h-4 w-4 text-[#e6c77d]" />
+            <span className="text-sm font-bold">{streak} day{streak === 1 ? "" : "s"}</span>
+          </div>
         </div>
-        <span className="text-xs text-slate-400">Day 7 = +{day7Bonus} bonus coins</span>
       </div>
+      <div className="p-5 sm:px-7 sm:py-6">
+        <div className="mb-5 flex items-center justify-between gap-3">
+          <p className="text-xs font-medium text-slate-500">Complete tasks each day to keep your momentum.</p>
+          <span className="hidden items-center gap-1.5 rounded-full bg-[#f7f1e4] px-3 py-1.5 text-[11px] font-bold text-[#806323] sm:inline-flex">
+            <NexCoinIcon size={14} /> Day 7 bonus +{day7Bonus}
+          </span>
+        </div>
 
       {/* 7-day circles */}
-      <div className="flex items-start justify-between gap-1 mb-5">
+      <div className="relative mb-5 grid grid-cols-7 gap-1">
+        <div aria-hidden className="absolute left-[7%] right-[7%] top-[42px] h-px bg-slate-100" />
         {weekDates.map((date, i) => {
           const row      = dayMap[date];
           const isToday  = date === todayIST;
@@ -212,7 +233,7 @@ function StreakGrid({
               circleClass   = "bg-amber-400 text-white animate-pulse";
               circleContent = "!";
             } else {
-              circleClass   = "border-2 border-indigo-400 text-indigo-600 bg-indigo-50 animate-pulse";
+              circleClass   = "border-2 border-teal-400 text-teal-700 bg-teal-50 animate-pulse";
               circleContent = <span className="text-[10px] font-bold">{completed}/{tasksRequired}</span>;
             }
           } else {
@@ -222,16 +243,16 @@ function StreakGrid({
           }
 
           return (
-            <div key={date} className="flex flex-col items-center gap-1.5 flex-1">
-              <span className={`text-[9px] font-bold leading-none ${
-                claimed ? "text-teal-500" : isToday && targetMet ? "text-amber-500" : "text-slate-400"
+            <div key={date} className="relative z-10 flex min-w-0 flex-col items-center gap-2">
+              <span className={`text-[9px] font-bold leading-none sm:text-[10px] ${
+                claimed ? "text-teal-600" : isToday && targetMet ? "text-amber-600" : "text-slate-400"
               }`}>
-                {rewardLabel}
+                {rewardLabel} <span className="hidden sm:inline">NC</span>
               </span>
-              <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold transition-all ${circleClass}`}>
+              <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-bold shadow-sm ring-4 ring-white transition sm:h-12 sm:w-12 ${circleClass}`}>
                 {circleContent}
               </div>
-              <span className={`text-[10px] font-medium ${isToday ? "text-indigo-500" : "text-gray-400"}`}>
+              <span className={`text-[10px] font-semibold ${isToday ? "text-teal-800" : "text-slate-400"}`}>
                 {STREAK_DAY_NAMES[i]}
               </span>
             </div>
@@ -241,7 +262,7 @@ function StreakGrid({
 
       {/* Claim / status area */}
       {claimResult ? (
-        <div className="flex items-center justify-center gap-2 py-2.5 rounded-xl bg-green-50 border border-green-100 text-sm font-bold text-green-700">
+        <div className="flex items-center justify-center gap-2 rounded-xl border border-teal-100 bg-teal-50 py-3 text-sm font-bold text-teal-800">
           <NexCoinIcon size={16} />
           +{claimResult.awarded} coins claimed!{claimResult.is_day7_bonus ? " 🔥 7-Day Bonus!" : " Keep it up!"}
         </div>
@@ -249,8 +270,8 @@ function StreakGrid({
         <button
           onClick={onClaim}
           disabled={claimingDay}
-          className="w-full py-3 rounded-xl text-sm font-bold text-white transition-all disabled:opacity-60 hover:opacity-90"
-          style={{ background: "linear-gradient(90deg,#14b8a6,#0891B2)" }}
+          className="w-full rounded-xl py-3 text-sm font-bold text-white shadow-[0_6px_18px_rgba(15,118,110,0.18)] transition-all hover:-translate-y-0.5 hover:opacity-95 disabled:opacity-60"
+          style={{ background: "linear-gradient(90deg,#0f766e,#12483f)" }}
         >
           {claimingDay ? "Claiming…" : `🎉 Claim Today's Reward — +${dailyBonus} NexCoins`}
         </button>
@@ -259,24 +280,25 @@ function StreakGrid({
           {claimError}
         </div>
       ) : (todayRow?.reward_claimed) ? (
-        <div className="py-2.5 rounded-xl bg-green-50 border border-green-100 text-xs text-center font-semibold text-green-600">
-          ✓ Claimed today — come back tomorrow!
+        <div className="rounded-xl border border-teal-100 bg-teal-50 py-3 text-center text-xs font-semibold text-teal-800">
+          ✓ Reward claimed today — come back tomorrow!
         </div>
       ) : (
-        <div className="space-y-2">
-          <div className="flex items-center justify-between text-xs text-slate-500">
-            <span>Today&apos;s tasks</span>
-            <span className="font-bold text-slate-700">{todayRow?.tasks_completed ?? 0} / {tasksRequired}</span>
+        <div className="rounded-xl border border-slate-100 bg-[#f8faf9] p-4">
+          <div className="mb-2 flex items-center justify-between text-xs">
+            <span className="font-semibold text-slate-600">Today&apos;s progress</span>
+            <span className="font-bold text-teal-800">{todayRow?.tasks_completed ?? 0} / {tasksRequired} tasks</span>
           </div>
-          <div className="h-1.5 rounded-full bg-slate-100 overflow-hidden">
+          <div className="h-2 overflow-hidden rounded-full bg-slate-200/70">
             <div className="h-full rounded-full transition-all duration-500"
-              style={{ width: `${Math.min(100, ((todayRow?.tasks_completed ?? 0) / tasksRequired) * 100)}%`, background: "linear-gradient(90deg, #6366f1, #14b8a6)" }} />
+            style={{ width: `${Math.min(100, ((todayRow?.tasks_completed ?? 0) / tasksRequired) * 100)}%`, background: "linear-gradient(90deg, #0f766e, #c4a15a)" }} />
           </div>
-          <p className="text-xs text-slate-400 text-center">
+          <p className="mt-2 text-center text-[11px] text-slate-500">
             {Math.max(0, tasksRequired - (todayRow?.tasks_completed ?? 0))} more task{Math.max(0, tasksRequired - (todayRow?.tasks_completed ?? 0)) !== 1 ? "s" : ""} needed to unlock today&apos;s streak reward
           </p>
         </div>
       )}
+      </div>
     </div>
   );
 }
@@ -423,7 +445,7 @@ export default function DashboardHome() {
         offerRes,
       ] = await Promise.all([
         supabase.from("profiles").select("full_name, nexcoins, xp, level, current_streak, longest_streak, last_streak_claim_date, last_task_approved_date, tasks_approved_today").eq("id", user.id).single(),
-        supabase.from("tasks").select("id, title, description, task_type, pay_per_task, xp_reward, required_level").eq("status", "active").or("is_private.eq.false,is_private.is.null").order("created_at", { ascending: false }).limit(20),
+        supabase.from("tasks").select("id, title, description, task_type, pay_per_task, xp_reward, required_level, is_featured").eq("status", "active").or("is_private.eq.false,is_private.is.null").is("deleted_at", null).order("created_at", { ascending: false }).limit(20),
         supabase.from("submissions").select("task_id, status, feedback").eq("contributor_id", user.id),
         supabase.from("submissions").select("*", { count: "exact", head: true }).eq("contributor_id", user.id).eq("status", "approved"),
         supabase.from("submissions").select("*", { count: "exact", head: true }).eq("contributor_id", user.id).in("status", ["approved", "rejected"]),
@@ -573,7 +595,6 @@ export default function DashboardHome() {
   const todayIST     = getISTDate();
   const weekDatesUI  = getWeekDates();
   const todayRow     = streakDays.find(d => d.day_date === todayIST);
-  const tasksToday   = todayRow?.tasks_completed ?? 0;
   const hour         = new Date().getHours();
   const greeting     = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
 
@@ -582,6 +603,12 @@ export default function DashboardHome() {
   const countEarned = useCountUp(totalEarned);
   const countDone   = useCountUp(tasksDone);
   const estimatedUsd = (profile?.nexcoins ?? 0) / nexcoinPerUsd;
+  const featuredTasks = tasks
+    .filter((task) => (task.required_level ?? 1) <= userLevel)
+    .sort((a, b) => Number(b.is_featured) - Number(a.is_featured) || (b.pay_per_task ?? 0) - (a.pay_per_task ?? 0))
+    .slice(0, 2);
+  const featuredTaskIds = new Set(featuredTasks.map((task) => task.id));
+  const moreTasks = tasks.filter((task) => !featuredTaskIds.has(task.id));
 
   const notifTypeIcon: Record<string, string> = {
     submission_approved: "✅", submission_rejected: "❌", assignment_approved: "✅",
@@ -605,7 +632,7 @@ export default function DashboardHome() {
     .cpx-campaign-banner {
       background-size: 220% 220%;
       animation: cpx-campaign-gradient 10s ease infinite;
-      box-shadow: 0 12px 30px rgba(124, 58, 237, 0.2);
+      box-shadow: 0 12px 30px rgba(15, 76, 69, 0.2);
     }
 
     .cpx-campaign-banner::before {
@@ -654,22 +681,22 @@ export default function DashboardHome() {
     }
 
     @keyframes cpx-campaign-cta {
-      0%, 100% { box-shadow: 0 5px 18px rgba(255,255,255,0.2); }
-      50% { box-shadow: 0 7px 25px rgba(255,255,255,0.4); }
+      0%, 100% { box-shadow: 0 5px 18px rgba(214,182,110,0.2); }
+      50% { box-shadow: 0 7px 25px rgba(214,182,110,0.4); }
     }
   `;
 
   return (
     /* FIX 8 — page background gradient */
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/20 space-y-5 pb-8">
+    <div className="min-h-screen flex flex-col gap-5 pb-8">
       <style>{PULSE_STYLE}</style>
 
       {showDashboardPromotion && promotion && (
         <div
-          className="cpx-campaign-banner relative isolate overflow-hidden rounded-2xl border border-white/35 bg-[linear-gradient(115deg,#4f46e5_0%,#9333ea_35%,#ec4899_68%,#f97316_100%)] p-5 text-white sm:p-6"
+          className="cpx-campaign-banner order-1 relative isolate overflow-hidden rounded-2xl border border-white/35 bg-[linear-gradient(115deg,#0f766e_0%,#0f4c45_48%,#b9893c_100%)] p-5 text-white sm:p-6"
         >
           <div aria-hidden className="cpx-campaign-orb pointer-events-none absolute -right-8 -top-14 h-44 w-44 rounded-full border border-white/20 bg-white/10" />
-          <div aria-hidden className="cpx-campaign-orb pointer-events-none absolute bottom-[-4rem] right-40 h-32 w-32 rounded-full bg-fuchsia-200/15" style={{ animationDelay: "1.2s" }} />
+          <div aria-hidden className="cpx-campaign-orb pointer-events-none absolute bottom-[-4rem] right-40 h-32 w-32 rounded-full bg-amber-200/15" style={{ animationDelay: "1.2s" }} />
           <span aria-hidden className="cpx-campaign-sparkle pointer-events-none absolute right-[37%] top-5 hidden text-2xl text-yellow-100/90 sm:block">✦</span>
           <div className="relative z-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="max-w-2xl">
@@ -689,7 +716,7 @@ export default function DashboardHome() {
                 href={promotion.primaryUrl}
                 target={promotion.primaryUrl.startsWith("https://") ? "_blank" : undefined}
                 rel={promotion.primaryUrl.startsWith("https://") ? "noopener noreferrer" : undefined}
-                className="cpx-campaign-cta group inline-flex items-center justify-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-extrabold text-indigo-700 transition hover:-translate-y-1 hover:bg-yellow-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+                className="cpx-campaign-cta group inline-flex items-center justify-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-extrabold text-teal-800 transition hover:-translate-y-1 hover:bg-amber-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
               >
                 {promotion.primaryLabel} <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
               </a>
@@ -708,139 +735,190 @@ export default function DashboardHome() {
         </div>
       )}
 
-      {/* ── FIX 1: HERO BANNER ──────────────────────────────────────── */}
-      <div
-        className="animate-fade-slide-up relative rounded-2xl overflow-hidden"
-        style={{ background: "linear-gradient(135deg,#4F46E5 0%,#0891B2 100%)", animationDelay: "0ms" }}
-      >
-        {/* noise texture overlay */}
-        <div className="absolute inset-0 bg-white/5 pointer-events-none" />
-
-        <div className="relative p-6 sm:p-8 flex flex-col md:flex-row gap-6 items-start">
-
-          {/* ── Left: greeting + balance + XP ───────────────────────── */}
-          <div className="flex-1 min-w-0">
-            <div className="flex items-start justify-between gap-4 flex-wrap">
-              <div>
-                <p className="text-white/60 text-xs font-medium tracking-widest uppercase mb-1">{greeting}</p>
-                <h1 className="text-3xl font-bold text-white">
-                  {loading ? "Welcome back!" : `${displayName}!`}
-                </h1>
-                <p className="text-white/70 text-sm mt-1">Here&apos;s your overview for today.</p>
-              </div>
-              {!loading && streak > 0 && (
-                <div className="flex items-center gap-1.5 bg-white/20 backdrop-blur-sm rounded-full px-4 py-2 flex-shrink-0">
-                  <Flame className="h-4 w-4 text-orange-300" />
-                  <span className="text-white font-bold text-sm">{streak} day streak</span>
-                </div>
-              )}
+      <section className="order-2 animate-fade-slide-up relative isolate overflow-hidden rounded-lg bg-[#0e3c36] text-white shadow-[0_24px_60px_rgba(15,76,69,0.2)] sm:rounded-[1.75rem]" style={{ animationDelay: "0ms" }}>
+        <div aria-hidden className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_78%_10%,rgba(214,182,110,0.2),transparent_35%),radial-gradient(ellipse_at_5%_100%,rgba(20,184,166,0.18),transparent_42%)]" />
+        <div aria-hidden className="pointer-events-none absolute -right-24 -top-48 h-[26rem] w-[26rem] rounded-full border border-white/[0.08]" />
+        <div aria-hidden className="pointer-events-none absolute -right-10 -top-36 h-[19rem] w-[19rem] rounded-full border border-white/[0.08]" />
+        <div className="relative grid gap-8 p-6 sm:p-8 lg:min-h-[260px] lg:grid-cols-[1fr_0.85fr] lg:items-center lg:p-10">
+          <div className="max-w-xl">
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.07] px-3 py-1.5">
+              <span className="h-1.5 w-1.5 rounded-full bg-[#d6b66e] shadow-[0_0_10px_rgba(214,182,110,0.9)]" />
+              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#e4d3a8]">Your NexGuild dashboard</p>
             </div>
+            <p className="text-sm font-medium text-white/65">{greeting}, {loading ? "welcome back" : displayName}</p>
+            <h1 className="mt-1 text-3xl font-semibold leading-tight tracking-[-0.035em] sm:text-4xl">Your next reward<br className="hidden sm:block" /> starts here.</h1>
+            <p className="mt-3 max-w-md text-sm leading-6 text-white/65">Pick a task, share your opinion, and watch your effort add up.</p>
+            <div className="mt-6 flex flex-wrap items-center gap-3">
+              <Link href="/dashboard/opportunities" className="group inline-flex items-center gap-2 rounded-xl bg-[#d6b66e] px-5 py-3 text-sm font-bold text-[#183d36] shadow-[0_6px_20px_rgba(214,182,110,0.2)] transition hover:-translate-y-0.5 hover:bg-[#e2c47c] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white">
+                Find your next task <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+              </Link>
+              <Link href="/dashboard/surveys" className="inline-flex items-center gap-2 rounded-xl border border-white/20 bg-white/[0.06] px-4 py-3 text-sm font-semibold text-white/85 transition hover:bg-white/10">
+                <Sparkles className="h-4 w-4 text-[#e4c875]" /> Try a survey
+              </Link>
+            </div>
+          </div>
 
-            {!loading && (
-              <div className="mt-6 flex items-center gap-3 flex-wrap">
-                {/* NexCoins pill */}
-                <div className="flex items-center gap-3 bg-white/15 backdrop-blur-sm rounded-2xl border border-white/20 px-5 py-3">
-                  <NexCoinIcon size={22} />
-                  <div>
-                    <p className="text-white/60 text-xs font-medium">NexCoins Balance</p>
-                    <p className="text-white font-bold text-2xl leading-tight">{formatNexcoins(countCoins)}</p>
-                    <p className="text-white/70 text-xs mt-0.5">(${estimatedUsd.toFixed(2)} estimated value)</p>
+          <div className="relative mx-auto w-full max-w-[390px] lg:ml-auto">
+            <div aria-hidden className="absolute -inset-4 rounded-[2rem] bg-[#d6b66e]/10 blur-2xl" />
+            <div className="relative overflow-hidden rounded-[1.5rem] border border-white/15 bg-[linear-gradient(145deg,rgba(255,255,255,0.14),rgba(255,255,255,0.055))] p-5 shadow-[0_18px_45px_rgba(0,0,0,0.16)] backdrop-blur-md sm:p-6">
+              <div className="flex items-center justify-between">
+                <p className="text-xs font-semibold text-white/65">Your available balance</p>
+                <Link href="/dashboard/wallet" className="rounded-full border border-white/15 p-2 text-white/75 transition hover:bg-white/10 hover:text-white" aria-label="Open wallet">
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+              </div>
+              <div className="mt-3 flex items-center gap-3">
+                <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#d6b66e]/15 ring-1 ring-[#e2c47c]/25">
+                  <NexCoinIcon size={30} />
+                </span>
+                <div>
+                  <p className="text-3xl font-semibold tracking-tight">{loading ? "—" : formatNexcoins(countCoins)} <span className="text-sm font-medium text-white/60">NC</span></p>
+                  <p className="mt-0.5 text-xs text-white/55">{loading ? "Your NexCoin balance" : `≈ $${estimatedUsd.toFixed(2)} estimated value`}</p>
+                </div>
+              </div>
+              <div className="mt-5 border-t border-white/10 pt-4">
+                <div className="mb-2 flex items-center justify-between text-xs">
+                  <span className="font-semibold text-white/80">Level {level}</span>
+                  <span className="text-white/55">{xpInLevel.toLocaleString()} / 1,000 XP</span>
+                </div>
+                <div className="h-2 overflow-hidden rounded-full bg-black/20">
+                  <div className="h-full rounded-full bg-gradient-to-r from-[#c5a352] to-[#f0d48b] shadow-[0_0_12px_rgba(214,182,110,0.35)] transition-all duration-700" style={{ width: `${xpPct}%` }} />
+                </div>
+                <div className="mt-4 grid grid-cols-2 gap-3">
+                  <div className="rounded-xl border border-white/10 bg-black/[0.12] px-3 py-2.5">
+                    <p className="text-[10px] font-medium uppercase tracking-wider text-white/45">Lifetime earned</p>
+                    <p className="mt-1 flex items-center gap-1.5 text-sm font-bold text-white/90"><NexCoinIcon size={15} />{loading ? "—" : formatNexcoins(countEarned)}</p>
+                  </div>
+                  <div className="rounded-xl border border-white/10 bg-black/[0.12] px-3 py-2.5">
+                    <p className="text-[10px] font-medium uppercase tracking-wider text-white/45">Current streak</p>
+                    <p className="mt-1 flex items-center gap-1.5 text-sm font-bold text-white/90"><Flame className="h-4 w-4 text-[#e9b86c]" />{loading ? "—" : `${streak} day${streak === 1 ? "" : "s"}`}</p>
                   </div>
                 </div>
-                {/* Level badge */}
-                <div className="bg-white/20 rounded-full px-3 py-1">
-                  <p className="text-white/70 text-[10px] font-medium">LEVEL</p>
-                  <p className="text-white font-bold text-xl leading-tight text-center">{level}</p>
-                </div>
-                {/* XP bar */}
-                <div className="flex-1 min-w-[160px]">
-                  <div className="flex justify-between text-[11px] text-white/60 mb-2">
-                    <span>XP Progress</span>
-                    <span>{xpInLevel.toLocaleString()} / 1,000</span>
-                  </div>
-                  <div className="h-2 rounded-full bg-white/20 overflow-hidden">
-                    <div
-                      className="h-full rounded-full bg-white transition-all duration-1000"
-                      style={{ width: `${xpPct}%` }}
-                    />
-                  </div>
-                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="order-3 animate-fade-slide-up" style={{ animationDelay: "100ms" }}>
+        <div className="mb-3 flex items-end justify-between gap-3">
+          <div>
+            <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-teal-700">Featured opportunities</p>
+            <h2 className="mt-1 text-lg font-semibold tracking-tight text-slate-900">Start earning today</h2>
+          </div>
+          <Link href="/dashboard/opportunities" className="inline-flex items-center gap-1 text-sm font-semibold text-teal-700 transition hover:text-teal-900">
+            Browse all <ArrowRight className="h-4 w-4" />
+          </Link>
+        </div>
+        <div className="grid gap-4 lg:grid-cols-[1.5fr_1fr]">
+          <div className="grid gap-4 sm:grid-cols-2">
+            {loading ? (
+              [1, 2].map((item) =>               <div key={item} className="h-64 animate-pulse rounded-2xl border border-slate-200 bg-white" />)
+            ) : featuredTasks.length > 0 ? (
+              featuredTasks.map((task, index) => {
+                const needsResub = submissionMeta[task.id]?.status === "resubmit_requested";
+                const taskHref = needsResub ? `/dashboard/tasks/${task.id}/work` : `/dashboard/tasks/${task.id}`;
+                const reward = task.pay_per_task != null ? Math.floor(task.pay_per_task * 0.66) : null;
+                return (
+                  <Link
+                    key={task.id}
+                    href={taskHref}
+                    className="group relative flex min-h-[250px] flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-[0_5px_20px_rgba(15,23,42,0.045)] transition duration-300 hover:-translate-y-1 hover:border-teal-200 hover:shadow-[0_18px_36px_rgba(15,76,69,0.12)]"
+                  >
+                    <div className={`relative flex min-h-[105px] items-start justify-between overflow-hidden p-4 ${index === 0 ? "bg-[linear-gradient(135deg,#0f766e,#12483f)]" : "bg-[linear-gradient(135deg,#886b32,#b08b45)]"}`}>
+                      <div aria-hidden className="absolute -right-6 -top-12 h-36 w-36 rounded-full border border-white/15" />
+                      <div aria-hidden className="absolute -right-1 -top-7 h-24 w-24 rounded-full border border-white/10" />
+                      <span className="relative flex h-10 w-10 items-center justify-center rounded-xl border border-white/20 bg-white/10 text-white shadow-sm backdrop-blur-sm">
+                        <ClipboardList className="h-5 w-5" />
+                      </span>
+                      <div className="relative flex flex-col items-end gap-2">
+                        {task.is_featured && (
+                          <span className="inline-flex items-center gap-1 rounded-full border border-white/20 bg-black/10 px-2.5 py-1 text-[9px] font-bold uppercase tracking-[0.12em] text-white/90">
+                            <Sparkles className="h-3 w-3" /> Featured
+                          </span>
+                        )}
+                        {reward !== null && (
+                          <span className="inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 text-sm font-extrabold text-[#624b1d] shadow-sm">
+                            <NexCoinIcon size={16} />{reward} <span className="text-[10px] font-bold text-[#806323]">NC</span>
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="relative flex flex-1 flex-col p-4">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-teal-700">{task.task_type ?? "Task"}</span>
+                        {needsResub && <span className="rounded-full bg-orange-50 px-2 py-0.5 text-[10px] font-bold text-orange-700">Resubmit</span>}
+                      </div>
+                      <h3 className="mt-2 line-clamp-2 text-base font-semibold leading-6 tracking-tight text-slate-900">{task.title}</h3>
+                      {task.description && <p className="mt-1.5 line-clamp-2 text-xs leading-5 text-slate-500">{task.description}</p>}
+                      <div className="mt-auto flex items-center justify-between border-t border-slate-100 pt-3">
+                        <span className="inline-flex items-center gap-1.5 text-xs font-bold text-teal-800">
+                          View opportunity <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
+                        </span>
+                        {(task.xp_reward ?? 0) > 0 && <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-1 text-[10px] font-bold text-[#806323]"><Star className="h-3 w-3" />+{task.xp_reward} XP</span>}
+                      </div>
+                    </div>
+                  </Link>
+                );
+              })
+            ) : (
+              <div className="flex min-h-64 flex-col items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-white p-5 text-center sm:col-span-2">
+                <ClipboardList className="h-7 w-7 text-slate-300" />
+                <p className="mt-2 text-sm font-semibold text-slate-700">No featured tasks right now</p>
+                <p className="mt-1 text-xs text-slate-500">Browse all opportunities to see what’s available.</p>
+                <Link href="/dashboard/opportunities" className="mt-3 text-xs font-bold text-teal-700 hover:underline">Explore tasks</Link>
               </div>
             )}
           </div>
 
-          {/* ── Right: Today's Snapshot (desktop only) ──────────────── */}
-          {!loading && (
-            <div className="hidden md:block w-64 flex-shrink-0 bg-white/15 backdrop-blur-sm rounded-2xl p-4">
-              <p className="text-white/60 text-xs font-medium tracking-widest uppercase mb-3">Today&apos;s Snapshot</p>
-              <div className="space-y-2.5">
-                <div className="flex items-center gap-2">
-                  <span className="text-lg leading-none">🔥</span>
-                  <span className="text-white/70 text-sm flex-1">Day Streak</span>
-                  <span className="text-white font-bold text-sm">{streak}</span>
+          <div className="relative overflow-hidden rounded-2xl border border-[#dcebe5] bg-[linear-gradient(155deg,#eff8f4_0%,#e6f1ec_100%)] p-5 shadow-[0_5px_20px_rgba(15,76,69,0.05)]">
+            <div aria-hidden className="absolute -right-12 -top-16 h-40 w-40 rounded-full bg-[#d6b66e]/20 blur-sm" />
+            <div className="relative flex h-full flex-col">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-teal-800">Surveys &amp; partner offers</p>
+                  <h3 className="mt-1.5 text-base font-semibold leading-6 text-[#173f38]">Explore partner offers</h3>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-lg leading-none">✅</span>
-                  <span className="text-white/70 text-sm flex-1">Tasks Today</span>
-                  <span className="text-white font-bold text-sm">{tasksToday} / {tasksRequired}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-lg leading-none">💰</span>
-                  <span className="text-white/70 text-sm flex-1">NC Earned Today</span>
-                  <span className="text-white font-bold text-sm">
-                    {chartData.find(d => d.label === new Date().toLocaleDateString("en-IN", { weekday: "short" }))?.value ?? 0}
-                  </span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-lg leading-none">⭐</span>
-                  <span className="text-white/70 text-sm flex-1">Level {level}</span>
-                  <span className="text-white font-bold text-sm">{xpInLevel.toLocaleString()} / 1,000 XP</span>
-                </div>
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-white bg-white/80 text-teal-700 shadow-sm">
+                  <Layers className="h-5 w-5" />
+                </span>
               </div>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* ── QUICK ACTIONS GRID ──────────────────────────────────────── */}
-      <div className="animate-fade-slide-up grid grid-cols-2 sm:grid-cols-3 gap-3" style={{ animationDelay: "100ms" }}>
-        <Link href="/dashboard/surveys" className="rounded-2xl px-4 py-3 text-sm font-semibold flex items-center gap-2 w-full justify-center transition-all duration-200 hover:-translate-y-0.5 bg-gradient-to-r from-teal-500 to-teal-600 text-white shadow-md hover:shadow-lg">
-          <span>🎯</span><span>Complete a Survey</span>
-        </Link>
-        <Link href="/dashboard/opportunities" className="rounded-2xl px-4 py-3 text-sm font-semibold flex items-center gap-2 w-full justify-center transition-all duration-200 hover:-translate-y-0.5 bg-gradient-to-r from-indigo-500 to-indigo-600 text-white shadow-md hover:shadow-lg">
-          <span>📋</span><span>Browse Tasks</span>
-        </Link>
-        <Link href="/dashboard/store" className="rounded-2xl px-4 py-3 text-sm font-semibold flex items-center gap-2 w-full justify-center transition-all duration-200 hover:-translate-y-0.5 bg-gradient-to-r from-purple-500 to-purple-600 text-white shadow-md hover:shadow-lg">
-          <span>🛍️</span><span>NexStore</span>
-        </Link>
-      </div>
-
-      {/* ── OFFERWALL SPOTLIGHT ───────────────────────────────────── */}
-      {!loading && liveOfferwalls.length > 0 && (
-        <div className="animate-fade-slide-up relative overflow-hidden rounded-2xl border border-teal-200 bg-gradient-to-r from-teal-600 via-cyan-600 to-indigo-600 p-5 text-white shadow-md" style={{ animationDelay: "140ms" }}>
-          <div className="absolute -right-10 -top-12 h-40 w-40 rounded-full bg-white/10" />
-          <div className="absolute -bottom-20 right-24 h-48 w-48 rounded-full bg-white/10" />
-          <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="max-w-2xl">
-              <div className="mb-1 flex items-center gap-2">
-                <span className="text-xl">🎁</span>
-                <p className="text-xs font-bold uppercase tracking-[0.18em] text-white/75">More ways to earn</p>
+              <p className="mt-2 text-xs leading-5 text-slate-600">A fresh mix of surveys, app installs, and partner offers. Rewards vary by activity.</p>
+              {!loading && liveOfferwalls.length > 0 ? (
+                <div className="mt-4 space-y-2">
+                  {liveOfferwalls.slice(0, 3).map((provider) => (
+                    <Link key={provider.id} href="/dashboard/surveys" className="group flex items-center gap-2.5 rounded-xl border border-white/80 bg-white/80 p-2.5 transition hover:bg-white">
+                      <span className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-teal-50">
+                        {provider.logo_url
+                          ? <img src={provider.logo_url} alt="" className="h-full w-full object-contain p-1" />
+                          : <Layers className="h-4 w-4 text-teal-700" />}
+                      </span>
+                      <span className="min-w-0 flex-1 truncate text-xs font-semibold text-slate-800">{provider.name}</span>
+                      <ArrowRight className="h-3.5 w-3.5 shrink-0 text-slate-400 transition group-hover:translate-x-0.5 group-hover:text-teal-700" />
+                    </Link>
+                  ))}
+                </div>
+              ) : (
+                <div className="mt-4 rounded-xl border border-white/80 bg-white/70 px-3 py-3 text-xs text-slate-600">
+                  {loading ? "Checking available partners…" : "Browse surveys to check today’s availability."}
+                </div>
+              )}
+              <div className="mt-4 flex flex-wrap gap-2">
+                <span className="rounded-full border border-teal-900/5 bg-white/70 px-2.5 py-1 text-[10px] font-semibold text-teal-900/70">Surveys</span>
+                <span className="rounded-full border border-teal-900/5 bg-white/70 px-2.5 py-1 text-[10px] font-semibold text-teal-900/70">App offers</span>
+                <span className="rounded-full border border-teal-900/5 bg-white/70 px-2.5 py-1 text-[10px] font-semibold text-teal-900/70">More to explore</span>
               </div>
-              <h2 className="text-xl font-extrabold sm:text-2xl">Earn NexCoins with offers and surveys</h2>
-              <p className="mt-1 text-sm text-white/80">
-                {liveOfferwalls.length} offerwall{liveOfferwalls.length === 1 ? "" : "s"} available now. Complete surveys, app installs, and offers at your convenience.
-              </p>
+              <Link href="/dashboard/surveys" className="mt-auto inline-flex items-center justify-center gap-2 rounded-xl bg-[#0f766e] px-4 py-3 text-sm font-bold text-white shadow-[0_6px_16px_rgba(15,118,110,0.18)] transition hover:-translate-y-0.5 hover:bg-[#0b625c] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-800">
+                Explore all surveys &amp; offers <ArrowRight className="h-4 w-4" />
+              </Link>
             </div>
-            <Link href="/dashboard/surveys" className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-bold text-teal-700 shadow-sm transition hover:-translate-y-0.5 hover:bg-teal-50">
-              View offerwalls <ArrowRight className="h-4 w-4" />
-            </Link>
           </div>
         </div>
-      )}
+      </section>
 
       {/* ── DAILY LOGIN REWARD ──────────────────────────────────────── */}
       {!loading && loginRewardClaimed !== null && (
-        <div className="animate-fade-slide-up" style={{ animationDelay: "150ms" }}>
+        <div className="order-5 animate-fade-slide-up" style={{ animationDelay: "150ms" }}>
           <div className={`rounded-2xl border px-5 py-3.5 flex items-center gap-4 transition-all duration-300 ${
             loginRewardClaimed
               ? "bg-emerald-50/80 border-emerald-200/60 dark:bg-emerald-950/30 dark:border-emerald-800/40"
@@ -878,21 +956,21 @@ export default function DashboardHome() {
       )}
 
       {/* ── FIX 3: STAT CARDS ───────────────────────────────────────── */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      <div className="order-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
         {[
           {
-            label: "NexCoins Balance",
-            value: loading ? "—" : formatNexcoins(countCoins),
-            sub: "Available to redeem",
-            icon: <NexCoinIcon size={18} />,
-            topBorder: "border-t-teal-400",
+            label: "Approved Today",
+            value: loading ? "—" : todayApproved.toLocaleString(),
+            sub: "Tasks reviewed today",
+            icon: <CheckCircle2 className="h-[18px] w-[18px] text-teal-700" />,
+            topBorder: "border-t-teal-500",
           },
           {
             label: "Total Earned",
             value: loading ? "—" : formatNexcoins(countEarned),
             sub: "Lifetime coins earned",
             icon: <NexCoinIcon size={18} />,
-            topBorder: "border-t-indigo-400",
+            topBorder: "border-t-[#c4a15a]",
           },
           {
             label: "Tasks Completed",
@@ -911,21 +989,22 @@ export default function DashboardHome() {
         ].map((s, i) => (
           <div
             key={s.label}
-            className={`animate-fade-slide-up bg-white/70 backdrop-blur-md rounded-2xl border border-white/50 border-t-2 ${s.topBorder} shadow-[0_4px_24px_rgba(0,0,0,0.06)] hover:-translate-y-1 hover:shadow-[0_8px_32px_rgba(0,0,0,0.1)] transition-all duration-300 p-4`}
+            className={`animate-fade-slide-up group rounded-2xl border border-slate-200/70 border-t-2 ${s.topBorder} bg-white p-4 shadow-[0_4px_18px_rgba(15,23,42,0.035)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_14px_28px_rgba(15,76,69,0.08)] sm:p-5`}
             style={{ animationDelay: `${200 + i * 50}ms` }}
           >
-            <div className="flex items-center gap-2 mb-2">
-              {s.icon}
-              <p className="text-xs text-slate-500 uppercase tracking-wide truncate">{s.label}</p>
+            <div className="mb-3 flex items-center justify-between gap-2">
+              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#f1f7f4]">{s.icon}</span>
+              <ArrowRight className="h-4 w-4 text-slate-200 transition group-hover:translate-x-0.5 group-hover:text-teal-700" />
             </div>
-            <p className="text-2xl font-bold text-slate-800">{s.value}</p>
-            <p className="text-sm text-slate-400 mt-0.5">{s.sub}</p>
+            <p className="truncate text-[10px] font-bold uppercase tracking-[0.12em] text-slate-500">{s.label}</p>
+            <p className="mt-1 text-2xl font-semibold tracking-tight text-slate-900">{s.value}</p>
+            <p className="mt-1 text-[11px] text-slate-400">{s.sub}</p>
           </div>
         ))}
       </div>
 
       {/* ── STREAK GRID ─────────────────────────────────────────────── */}
-      <div className="animate-fade-slide-up" style={{ animationDelay: "300ms" }}>
+      <div className="order-7 animate-fade-slide-up" style={{ animationDelay: "300ms" }}>
         <StreakGrid
           weekDates={weekDatesUI}
           streakDays={streakDays}
@@ -942,31 +1021,35 @@ export default function DashboardHome() {
       </div>
 
       {/* ── FIX 7: AVAILABLE NOW + DAILY PROGRESS ───────────────────── */}
-      <div className="animate-fade-slide-up grid grid-cols-1 lg:grid-cols-5 gap-4" style={{ animationDelay: "400ms" }}>
+      <div className="order-4 animate-fade-slide-up grid grid-cols-1 gap-4 lg:grid-cols-5" style={{ animationDelay: "400ms" }}>
 
-        {/* Available Tasks — 3/5 */}
-        <div className="lg:col-span-3 rounded-2xl bg-white border border-gray-100 shadow-sm p-5">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wider">Available Now</h2>
-            <Link href="/dashboard/tasks" className="text-xs font-bold text-indigo-500 hover:underline flex items-center gap-1">
+        {/* More tasks and daily progress */}
+        <div className="overflow-hidden rounded-[1.4rem] border border-slate-200/80 bg-white shadow-[0_8px_28px_rgba(15,23,42,0.04)] lg:col-span-3">
+          <div className="flex items-center justify-between gap-3 border-b border-slate-100 bg-[linear-gradient(100deg,#f5faf7,#ffffff)] px-5 py-4 sm:px-6">
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-teal-700">Keep the momentum</p>
+              <h2 className="mt-1 text-base font-semibold tracking-tight text-slate-900">More opportunities</h2>
+            </div>
+            <Link href="/dashboard/tasks" className="flex shrink-0 items-center gap-1 rounded-full border border-teal-100 bg-white px-3 py-2 text-xs font-bold text-teal-800 transition hover:bg-teal-50">
               Browse all <ArrowRight className="h-3 w-3" />
             </Link>
           </div>
+          <div className="p-5 sm:p-6">
           {loading ? (
             <div className="space-y-3">
               {[1, 2, 3].map(i => <div key={i} className="h-16 rounded-xl bg-slate-50 animate-pulse" />)}
             </div>
-          ) : tasks.length === 0 && liveOfferwalls.length === 0 ? (
+          ) : moreTasks.length === 0 ? (
             <div className="py-10 flex flex-col items-center gap-2 text-center">
               <ClipboardList className="h-8 w-8 text-slate-200" />
-              <p className="text-sm font-semibold text-slate-500">No tasks available yet</p>
-              <p className="text-xs text-slate-400">Check back soon.</p>
+              <p className="text-sm font-semibold text-slate-600">{tasks.length > 0 ? "You’re all caught up" : "No tasks available yet"}</p>
+              <p className="text-xs text-slate-400">{tasks.length > 0 ? "Check back soon for more opportunities." : "Check back soon."}</p>
             </div>
           ) : (
             <>
-              {tasks.length > 0 && (
+              {moreTasks.length > 0 && (
                 <div className="space-y-3">
-                  {tasks.map((task) => {
+                  {moreTasks.map((task) => {
                     const sub        = submissionMeta[task.id];
                     const needsResub = sub?.status === "resubmit_requested";
                     const taskLevel  = task.required_level ?? 1;
@@ -977,20 +1060,20 @@ export default function DashboardHome() {
                         key={task.id}
                         href={href}
                         onClick={e => locked && e.preventDefault()}
-                        className={`group flex items-stretch overflow-hidden rounded-xl border shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 ${
+                        className={`group flex items-stretch overflow-hidden rounded-xl border shadow-[0_2px_8px_rgba(15,23,42,0.025)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md ${
                           locked
                             ? "border-gray-100 bg-white opacity-60 cursor-not-allowed"
                             : needsResub
                             ? "border-orange-200 bg-orange-50/30"
-                            : "border-gray-100 bg-white"
+                            : "border-slate-200/80 bg-white"
                         }`}
                       >
                         {/* Teal left accent bar */}
                         {!locked && !needsResub && (
                           <div className="w-1 bg-teal-400 self-stretch flex-shrink-0" />
                         )}
-                        <div className="flex items-start gap-3 p-3.5 flex-1 min-w-0">
-                          <div className={`h-8 w-8 rounded-lg flex items-center justify-center flex-shrink-0 ${locked ? "bg-slate-100" : "bg-teal-50"}`}>
+                        <div className="flex min-w-0 flex-1 items-center gap-3 p-3.5">
+                          <div className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl ${locked ? "bg-slate-100" : "bg-teal-50"}`}>
                             {locked
                               ? <Lock className="h-3.5 w-3.5 text-slate-400" />
                               : <ClipboardList className="h-3.5 w-3.5 text-teal-600" />}
@@ -1005,7 +1088,7 @@ export default function DashboardHome() {
                                 </span>
                               )}
                             </div>
-                            <p className={`text-sm font-semibold truncate ${locked ? "text-slate-500" : "text-slate-800"}`}>{task.title}</p>
+                            <p className={`truncate text-sm font-semibold ${locked ? "text-slate-500" : "text-slate-800"}`}>{task.title}</p>
                           </div>
                           <div className="flex flex-col items-end gap-1 flex-shrink-0">
                             {task.pay_per_task != null && (
@@ -1029,153 +1112,151 @@ export default function DashboardHome() {
                 </div>
               )}
 
-              {liveOfferwalls.length > 0 && (
-                <div className={tasks.length > 0 ? "mt-4 pt-4 border-t border-slate-100" : ""}>
-                  <div className="flex items-center gap-1.5 mb-2.5">
-                    <Layers className="h-3.5 w-3.5 text-indigo-400" />
-                    <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Earn via Offerwalls</p>
-                  </div>
-                  <div className="space-y-2">
-                    {liveOfferwalls.map((p) => (
-                      <Link key={p.id} href="/dashboard/surveys"
-                        className="group flex items-stretch overflow-hidden rounded-xl border border-indigo-100 bg-white shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200">
-                        <div className="w-1 bg-indigo-400 self-stretch flex-shrink-0" />
-                        <div className="flex items-center gap-3 p-3 flex-1 min-w-0">
-                          <div className="h-8 w-8 rounded-lg flex items-center justify-center flex-shrink-0 bg-indigo-50 overflow-hidden">
-                            {p.logo_url
-                              ? <img src={p.logo_url} alt={p.name} className="h-full w-full object-contain p-1" />
-                              : <Layers className="h-3.5 w-3.5 text-indigo-500" />}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-semibold text-slate-800 truncate">{p.name}</p>
-                            {p.description && <p className="text-xs text-slate-400 truncate">{p.description}</p>}
-                          </div>
-                          <span className="text-xs font-bold text-indigo-500 flex items-center gap-0.5 flex-shrink-0">
-                            Start Earning <ArrowRight className="h-3 w-3 group-hover:translate-x-1 transition-transform" />
-                          </span>
-                        </div>
-                      </Link>
-                    ))}
-                  </div>
-                </div>
-              )}
             </>
           )}
+          </div>
         </div>
 
         {/* Daily Progress — 2/5 */}
-        <div className="lg:col-span-2 rounded-2xl bg-white border border-gray-100 shadow-sm p-5">
-          <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wider mb-5">Today&apos;s Progress</h2>
+        <div className="relative isolate overflow-hidden rounded-[1.4rem] border border-[#dce9e3] bg-[linear-gradient(150deg,#f1f8f4,#ffffff_70%)] p-5 shadow-[0_8px_28px_rgba(15,76,69,0.05)] lg:col-span-2 sm:p-6">
+          <div aria-hidden className="absolute -right-10 -top-14 h-36 w-36 rounded-full bg-[#d6b66e]/10 blur-xl" />
+          <div className="relative">
+          <div className="mb-5">
+            <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-teal-700">Your day at a glance</p>
+            <h2 className="mt-1 text-base font-semibold tracking-tight text-slate-900">Today&apos;s progress</h2>
+          </div>
           {loading ? (
             <div className="flex flex-col items-center gap-4">
-              <div className="h-24 w-24 rounded-full bg-slate-50 animate-pulse" />
+              <div className="h-28 w-28 rounded-full bg-slate-100 animate-pulse" />
             </div>
           ) : (
             <div className="flex flex-col items-center gap-5">
-              <ProgressRing value={todayApproved} max={Math.max(todayApproved, 3)} label="Tasks approved today" sub="tasks" />
-              <div className="w-full space-y-2.5">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-slate-500 flex items-center gap-1.5"><Clock className="h-3.5 w-3.5" />Streak</span>
-                  <span className="font-bold text-slate-700">{streak} day{streak !== 1 ? "s" : ""}</span>
+              <ProgressRing value={todayApproved} max={Math.max(todayApproved, 3)} label="Tasks approved" sub="today" />
+              <div className="w-full space-y-2">
+                <div className="flex items-center justify-between rounded-xl border border-white bg-white/80 px-3 py-2.5 text-xs">
+                  <span className="flex items-center gap-2 text-slate-500"><Clock className="h-3.5 w-3.5 text-teal-700" />Streak</span>
+                  <span className="font-bold text-slate-800">{streak} day{streak !== 1 ? "s" : ""}</span>
                 </div>
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-slate-500 flex items-center gap-1.5"><Star className="h-3.5 w-3.5 text-cyan-500" />Level</span>
-                  <span className="font-bold text-slate-700">{level}</span>
+                <div className="flex items-center justify-between rounded-xl border border-white bg-white/80 px-3 py-2.5 text-xs">
+                  <span className="flex items-center gap-2 text-slate-500"><Star className="h-3.5 w-3.5 text-[#b08b45]" />Level</span>
+                  <span className="font-bold text-slate-800">{level}</span>
                 </div>
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-slate-500 flex items-center gap-1.5"><NexCoinIcon size={13} />Today&apos;s Earnings</span>
-                  <span className="font-bold text-slate-700">
-                    {chartData.find(d => d.label === new Date().toLocaleDateString("en-IN", { weekday: "short" }))?.value ?? 0} coins
+                <div className="flex items-center justify-between rounded-xl border border-white bg-white/80 px-3 py-2.5 text-xs">
+                  <span className="flex items-center gap-2 text-slate-500"><NexCoinIcon size={14} />Today&apos;s earnings</span>
+                  <span className="font-bold text-slate-800">
+                    {chartData.find(d => d.label === new Date().toLocaleDateString("en-IN", { weekday: "short" }))?.value ?? 0} NC
                   </span>
                 </div>
               </div>
             </div>
           )}
+          </div>
         </div>
       </div>
 
       {/* ── EARNINGS CHART ──────────────────────────────────────────── */}
       <div
-        className="animate-fade-slide-up rounded-2xl bg-white/70 backdrop-blur-md border border-white/50 shadow-[0_4px_24px_rgba(0,0,0,0.06)] p-5"
+        className="order-9 animate-fade-slide-up overflow-hidden rounded-[1.4rem] border border-slate-200/80 bg-white shadow-[0_8px_28px_rgba(15,23,42,0.04)]"
         style={{ animationDelay: "500ms" }}
       >
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between gap-3 border-b border-slate-100 bg-[linear-gradient(100deg,#f5faf7,#ffffff)] px-5 py-4 sm:px-6">
           <div>
-            <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wider">Earnings Overview</h2>
-            <p className="text-xs text-slate-400 mt-0.5">NexCoins earned — last 7 days</p>
+            <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-teal-700">Your momentum</p>
+            <h2 className="mt-1 text-base font-semibold tracking-tight text-slate-900">Earnings overview</h2>
+            <p className="mt-0.5 text-xs text-slate-500">NexCoins earned over the last 7 days</p>
           </div>
-          <Link href="/dashboard/earnings" className="text-xs font-bold text-indigo-500 hover:underline">View All</Link>
+          <div className="flex items-center gap-3">
+            {!loading && <div className="hidden text-right sm:block"><p className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">This week</p><p className="mt-0.5 text-sm font-bold text-teal-800">{formatNexcoins(chartData.reduce((sum, day) => sum + day.value, 0))} NC</p></div>}
+            <Link href="/dashboard/earnings" className="inline-flex items-center gap-1 rounded-full border border-teal-100 bg-white px-3 py-2 text-xs font-bold text-teal-800 transition hover:bg-teal-50">Details <ArrowRight className="h-3 w-3" /></Link>
+          </div>
         </div>
-        {loading ? (
-          <div className="h-28 rounded-xl bg-slate-50 animate-pulse" />
-        ) : (
-          <EarningsChart data={chartData} />
-        )}
+        <div className="p-5 sm:px-6 sm:py-5">
+          {loading ? <div className="h-28 animate-pulse rounded-xl bg-slate-50" /> : <EarningsChart data={chartData} />}
+        </div>
       </div>
 
       {/* ── RECENT ACTIVITY + TOP CONTRIBUTORS ─────────────────────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div className="order-10 grid grid-cols-1 gap-4 lg:grid-cols-2">
 
-        <div className="rounded-2xl bg-white border border-gray-100 shadow-sm p-5">
-          <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wider mb-4">Recent Activity</h2>
+        <div className="overflow-hidden rounded-[1.4rem] border border-slate-200/80 bg-white shadow-[0_8px_28px_rgba(15,23,42,0.04)]">
+          <div className="border-b border-slate-100 bg-[linear-gradient(100deg,#f5faf7,#ffffff)] px-5 py-4">
+            <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-teal-700">Your account</p>
+            <h2 className="mt-1 text-base font-semibold tracking-tight text-slate-900">Recent activity</h2>
+          </div>
+          <div className="p-5">
           {loading ? (
             <div className="space-y-3">{[1, 2, 3].map(i => <div key={i} className="h-10 rounded-lg bg-slate-50 animate-pulse" />)}</div>
           ) : notifications.length === 0 ? (
-            <div className="py-8 text-center"><p className="text-sm text-slate-400">No activity yet</p></div>
+            <div className="flex flex-col items-center py-8 text-center">
+              <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#f1f7f4] text-teal-700"><Clock className="h-5 w-5" /></span>
+              <p className="mt-3 text-sm font-semibold text-slate-700">Your activity will show up here</p>
+              <p className="mt-1 text-xs text-slate-500">Complete a task or claim a reward to get started.</p>
+            </div>
           ) : (
-            <ul className="space-y-3">
+            <ul className="divide-y divide-slate-100">
               {notifications.slice(0, 6).map((n) => (
-                <li key={n.id} className="flex items-start gap-3">
-                  <span className="text-base flex-shrink-0 mt-0.5">{notifTypeIcon[n.type ?? ""] ?? "ℹ️"}</span>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-semibold text-slate-700 truncate">{n.title}</p>
-                    {n.message && <p className="text-xs text-slate-400 truncate">{n.message}</p>}
+                <li key={n.id} className="flex items-center gap-3 py-3 first:pt-0 last:pb-0">
+                  <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-[#f1f7f4] text-sm">{notifTypeIcon[n.type ?? ""] ?? "ℹ️"}</span>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-xs font-semibold text-slate-800">{n.title}</p>
+                    {n.message && <p className="mt-0.5 truncate text-[11px] text-slate-500">{n.message}</p>}
                   </div>
-                  <p className="text-[10px] text-slate-300 flex-shrink-0">
+                  <p className="flex-shrink-0 text-[10px] font-medium text-slate-400">
                     {new Date(n.created_at).toLocaleDateString("en-IN", { month: "short", day: "numeric" })}
                   </p>
                 </li>
               ))}
             </ul>
           )}
+          </div>
         </div>
 
-        <div className="rounded-2xl bg-white border border-gray-100 shadow-sm p-5">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <Trophy className="h-4 w-4 text-amber-500" />
-              <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wider">Top Contributors</h2>
+        <div className="overflow-hidden rounded-[1.4rem] border border-slate-200/80 bg-white shadow-[0_8px_28px_rgba(15,23,42,0.04)]">
+          <div className="flex items-center justify-between gap-3 border-b border-slate-100 bg-[linear-gradient(100deg,#fbf8ef,#ffffff)] px-5 py-4">
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#927334]">Community highlights</p>
+              <h2 className="mt-1 flex items-center gap-2 text-base font-semibold tracking-tight text-slate-900">
+                <Trophy className="h-4 w-4 text-[#b08b45]" /> Top contributors
+              </h2>
             </div>
-            <Link href="/dashboard/leaderboard" className="text-xs font-bold text-indigo-500 hover:underline">View All</Link>
+            <Link href="/dashboard/leaderboard" className="inline-flex shrink-0 items-center gap-1 rounded-full border border-amber-100 bg-white px-3 py-2 text-xs font-bold text-[#806323] transition hover:bg-amber-50">Leaderboard <ArrowRight className="h-3 w-3" /></Link>
           </div>
+          <div className="p-5">
           {loading ? (
             <div className="space-y-3">{[1, 2, 3, 4, 5].map(i => <div key={i} className="h-8 rounded-lg bg-slate-50 animate-pulse" />)}</div>
           ) : (
-            <ul className="space-y-2.5">
+            <ul className="space-y-2">
               {(leaderboard.length === 0 || (leaderboard[0]?.approved_count ?? 0) < 5 ? FAKE_LEADERBOARD : leaderboard).slice(0, 10).map((entry) => (
-                <li key={entry.id} className="flex items-center gap-3">
-                  <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${
-                    entry.rank === 1 ? "bg-amber-100 text-amber-700" :
-                    entry.rank === 2 ? "bg-slate-100 text-slate-600" :
-                    entry.rank === 3 ? "bg-orange-100 text-orange-700" :
-                    "bg-slate-50 text-slate-500"
+                <li key={entry.id} className={`flex items-center gap-3 rounded-xl px-3 py-2.5 ${entry.rank === 1 ? "bg-[#fbf7eb]" : "bg-slate-50/70"}`}>
+                  <span className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full text-xs font-extrabold ${
+                    entry.rank === 1 ? "bg-[#d6b66e] text-white shadow-sm" :
+                    entry.rank === 2 ? "bg-slate-300 text-white" :
+                    entry.rank === 3 ? "bg-[#c89468] text-white" :
+                    "bg-white text-slate-500"
                   }`}>{entry.rank}</span>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-slate-700 truncate">{entry.full_name}</p>
+                  <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full border border-white bg-white text-xs font-bold text-teal-800 shadow-sm">
+                    {entry.full_name.split(/\s+/).map((part) => part[0]).slice(0, 2).join("")}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-xs font-semibold text-slate-800">{entry.full_name}</p>
+                    <p className="mt-0.5 text-[10px] text-slate-400">Community contributor</p>
                   </div>
-                  <span className="text-xs font-bold text-indigo-500 flex-shrink-0">{entry.approved_count} tasks</span>
+                  <span className="flex-shrink-0 rounded-full border border-teal-100 bg-white px-2.5 py-1 text-[10px] font-bold text-teal-800">{entry.approved_count} tasks</span>
                 </li>
               ))}
             </ul>
           )}
+          </div>
         </div>
       </div>
 
-      <BlogTipCard
-        slug="tips-get-approved-faster-task-platforms"
-        title="Tips to Get Approved Faster on Task Platforms"
-        excerpt="Simple habits that help you earn more approvals and build your reputation."
-      />
+      <div className="order-11">
+        <BlogTipCard
+          slug="tips-get-approved-faster-task-platforms"
+          title="Tips to Get Approved Faster on Task Platforms"
+          excerpt="Simple habits that help you earn more approvals and build your reputation."
+        />
+      </div>
     </div>
   );
 }

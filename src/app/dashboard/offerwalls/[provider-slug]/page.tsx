@@ -44,8 +44,8 @@ export default function ProviderExperiencePage({
 }) {
   const { "provider-slug": providerSlug } = use(params);
   const router = useRouter();
-  const [returnTo, setReturnTo] = useState("/dashboard/surveys");
-  const returnLabel = returnTo === "/dashboard/surveys" ? "Surveys & Offers" : "Offerwall Hub";
+  const [returnTo, setReturnTo] = useState("/dashboard/offerwalls");
+  const returnLabel = returnTo === "/dashboard/surveys" ? "Paid Surveys" : "Apps & Offers";
 
   const [provider, setProvider] = useState<Provider | null>(null);
   const [userId, setUserId]     = useState<string | null>(null);
@@ -76,8 +76,8 @@ export default function ProviderExperiencePage({
       if (!savedReturn) return;
       sessionStorage.removeItem("nexguild:offerwall-return");
       const parsed = JSON.parse(savedReturn) as { slug?: unknown; path?: unknown };
-      if (parsed.slug === providerSlug && parsed.path === "/dashboard/surveys") {
-        setReturnTo("/dashboard/surveys");
+      if (parsed.slug === providerSlug && (parsed.path === "/dashboard/surveys" || parsed.path === "/dashboard/offerwalls")) {
+        setReturnTo(parsed.path);
       }
     } catch {
       return;
@@ -105,7 +105,7 @@ export default function ProviderExperiencePage({
       const { providers } = await res.json() as { providers: Provider[] };
       const found = providers.find((p) => p.slug === providerSlug && !p.is_ad_network);
       if (!found) { setNotFound(true); setLoading(false); return; }
-      if (!found.isLive) { router.replace("/dashboard/surveys"); return; }
+      if (!found.isLive) { router.replace("/dashboard/offerwalls"); return; }
       setProvider(found);
       setLoading(false);
     }

@@ -1,483 +1,305 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
-import { motion } from "framer-motion";
+import {
+  ArrowDownRight,
+  ArrowRight,
+  AudioLines,
+  BadgeCheck,
+  Check,
+  ChevronRight,
+  CircleDollarSign,
+  ClipboardCheck,
+  Globe2,
+  Layers3,
+  Smartphone,
+  Sparkles,
+  Wallet,
+} from "lucide-react";
+import { NexGuildLogo } from "@/components/ui/nexguild-logo";
 
-/* ── Arrow icon ────────────────────────────────────────────────── */
-function Arrow() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
-      stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M5 12h14M12 5l7 7-7 7" />
-    </svg>
-  );
-}
+const earningWays = [
+  {
+    icon: ClipboardCheck,
+    title: "Flexible tasks",
+    description: "Put your skills to work on research, content, and project-based tasks.",
+    href: "/earn/tasks",
+    label: "Explore tasks",
+    tone: "mint",
+  },
+  {
+    icon: Sparkles,
+    title: "Surveys & offers",
+    description: "Discover partner surveys, app offers, and other activities in one place.",
+    href: "/earn/tasks",
+    label: "See opportunities",
+    tone: "blue",
+  },
+  {
+    icon: Smartphone,
+    title: "Remote jobs",
+    description: "Find flexible remote roles and work-from-home opportunities.",
+    href: "/earn/jobs",
+    label: "Browse jobs",
+    tone: "amber",
+  },
+];
 
-/* ── Page ──────────────────────────────────────────────────────── */
+const steps = [
+  { number: "01", title: "Create your account", description: "Join for free and set up your contributor profile." },
+  { number: "02", title: "Find your next opportunity", description: "Explore work that matches your interests and availability." },
+  { number: "03", title: "Earn and redeem", description: "Get NexCoins for approved activity and explore available rewards." },
+];
+
 export default function LandingPage() {
-  const [hov, setHov] = useState<"left" | "right" | null>(null);
-
   return (
-    <div className="root">
+    <main className="min-h-screen overflow-hidden bg-[#f7faf9] text-slate-900">
+      <header className="relative z-20 border-b border-[#0f3d36]/10 bg-white/85 backdrop-blur-xl">
+        <div className="mx-auto flex h-[76px] max-w-7xl items-center justify-between px-5 sm:px-8">
+          <NexGuildLogo theme="light" href="/" />
+          <nav aria-label="Main navigation" className="hidden items-center gap-8 md:flex">
+            <Link href="#opportunities" className="text-sm text-slate-600 transition hover:text-[#0f766e]">Ways to earn</Link>
+            <Link href="#how-it-works" className="text-sm text-slate-600 transition hover:text-[#0f766e]">How it works</Link>
+            <Link href="/client" className="text-sm text-slate-600 transition hover:text-[#0f766e]">For organizations</Link>
+          </nav>
+          <div className="flex items-center gap-2 sm:gap-4">
+            <Link href="/login" className="rounded-full px-3 py-2 text-sm font-medium text-slate-600 transition hover:text-slate-900">
+              Log in
+            </Link>
+            <Link
+              href="/signup"
+              className="inline-flex h-10 items-center gap-2 rounded-full bg-[#14b8a6] px-4 text-sm font-semibold text-[#041b1b] shadow-[0_8px_28px_rgba(20,184,166,0.2)] transition hover:-translate-y-0.5 hover:bg-[#5eead4] sm:px-5"
+            >
+              Join free <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
+        </div>
+      </header>
 
-      {/* ── Logo Container (Added logo-wrap class) ────────────────── */}
-      <div className="logo-wrap">
-        <div
-          className="logo-box"
-          style={{
-            background: "rgba(255, 255, 255, 0.82)",
-            backdropFilter: "blur(14px)",
-            border: "1px solid rgba(0, 0, 0, 0.07)",
-            borderRadius: "999px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <Link
-            href="/"
-            aria-label="NexGuild — Home"
-            style={{ display: "inline-flex", flexShrink: 0, textDecoration: "none" }}
-          >
-            <svg className="logo-svg" viewBox="0 0 180 95" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-              <g transform="translate(90, 38)">
-                <circle cx="0" cy="0" r="13" fill="none" stroke="#F59E0B" strokeWidth="1.5"/>
-                <circle cx="0" cy="-5" r="5.5" fill="#F59E0B"/>
-                <rect x="-5.5" y="1" width="11" height="11" rx="5.5" fill="#F59E0B"/>
-                <circle cx="-22" cy="6" r="10" fill="none" stroke="#F59E0B" strokeWidth="1.2" opacity="0.85"/>
-                <circle cx="-22" cy="2" r="4" fill="#F59E0B" opacity="0.85"/>
-                <rect x="-26" y="7" width="8" height="8" rx="4" fill="#F59E0B" opacity="0.85"/>
-                <circle cx="22" cy="6" r="10" fill="none" stroke="#F59E0B" strokeWidth="1.2" opacity="0.85"/>
-                <circle cx="22" cy="2" r="4" fill="#F59E0B" opacity="0.85"/>
-                <rect x="18" y="7" width="8" height="8" rx="4" fill="#F59E0B" opacity="0.85"/>
-                <circle cx="-38" cy="14" r="7" fill="none" stroke="#F59E0B" strokeWidth="1" opacity="0.5"/>
-                <circle cx="-38" cy="11" r="3" fill="#F59E0B" opacity="0.5"/>
-                <circle cx="38" cy="14" r="7" fill="none" stroke="#F59E0B" strokeWidth="1" opacity="0.5"/>
-                <circle cx="38" cy="11" r="3" fill="#F59E0B" opacity="0.5"/>
-                <line x1="-10" y1="4" x2="-13" y2="5" stroke="#F59E0B" strokeWidth="1" opacity="0.4"/>
-                <line x1="10" y1="4" x2="13" y2="5" stroke="#F59E0B" strokeWidth="1" opacity="0.4"/>
-              </g>
-              <text x="90" y="78" textAnchor="middle" fontFamily="Arial, sans-serif" fontWeight="900" fontSize="26" fill="#1C1917">
-                Nex<tspan fill="#F59E0B">Guild</tspan>
-              </text>
-            </svg>
+      <section className="relative">
+        <div aria-hidden className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_55%_55%_at_78%_22%,rgba(20,184,166,0.17),transparent_72%)]" />
+        <div className="relative mx-auto grid max-w-7xl items-center gap-12 px-5 pb-20 pt-16 sm:px-8 sm:pb-24 sm:pt-24 lg:grid-cols-[1.02fr_0.98fr] lg:gap-10 lg:pt-28">
+          <div className="max-w-2xl">
+            <div className="mb-7 inline-flex items-center gap-2 rounded-full border border-[#14b8a6]/25 bg-[#14b8a6]/[0.08] px-3.5 py-2 text-xs font-semibold tracking-wide text-[#0f766e]">
+              <span className="h-1.5 w-1.5 rounded-full bg-[#5eead4] shadow-[0_0_12px_rgba(94,234,212,0.8)]" />
+              A better way to put your time to work
+            </div>
+            <h1 className="max-w-[720px] text-balance text-5xl font-semibold leading-[1.04] tracking-[-0.055em] sm:text-6xl lg:text-[4.35rem]">
+              Make your time
+              <span className="mt-1 block bg-gradient-to-r from-[#0f766e] via-[#0d9488] to-[#b7791f] bg-clip-text text-transparent">
+                count for more.
+              </span>
+            </h1>
+            <p className="mt-7 max-w-xl text-base leading-7 text-slate-600 sm:text-lg sm:leading-8">
+              Find tasks, surveys, and remote opportunities in one simple workspace.
+              Build momentum at your pace and track your NexCoins in one place.
+            </p>
+            <div className="mt-9 flex flex-col gap-3 sm:flex-row">
+              <Link
+                href="/signup"
+                className="group inline-flex h-12 items-center justify-center gap-2 rounded-full bg-[#14b8a6] px-7 text-sm font-bold text-[#041b1b] shadow-[0_12px_34px_rgba(20,184,166,0.24)] transition hover:-translate-y-0.5 hover:bg-[#5eead4]"
+              >
+                Get started for free
+                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+              </Link>
+              <Link
+                href="/opportunities"
+                className="inline-flex h-12 items-center justify-center gap-2 rounded-full border border-[#0f3d36]/15 bg-white px-7 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-[#0f766e]/40 hover:bg-[#eff9f6]"
+              >
+                Explore opportunities <ArrowDownRight className="h-4 w-4" />
+              </Link>
+            </div>
+            <div className="mt-7 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-slate-400">
+              <span className="inline-flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-[#0f766e]" /> Free to join</span>
+              <span className="inline-flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-[#0f766e]" /> Work at your pace</span>
+              <span className="inline-flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-[#0f766e]" /> Clear reward tracking</span>
+            </div>
+          </div>
+
+          <div className="relative mx-auto w-full max-w-[560px] lg:ml-auto">
+            <div aria-hidden className="absolute -inset-8 rounded-[3rem] bg-[#14b8a6]/10 blur-3xl" />
+            <div className="relative overflow-hidden rounded-[1.75rem] border border-[#0f3d36]/10 bg-white p-4 shadow-[0_28px_75px_rgba(15,61,54,0.12)] sm:p-6">
+              <div className="flex items-center justify-between border-b border-[#0f3d36]/10 pb-4">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#14b8a6]/10 text-[#0f766e]">
+                    <Layers3 className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-slate-900">Your contributor space</p>
+                    <p className="mt-0.5 text-xs text-slate-500">A quick look at NexGuild</p>
+                  </div>
+                </div>
+                <span className="rounded-full border border-[#14b8a6]/20 bg-[#14b8a6]/[0.08] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-[#0f766e]">
+                  Preview
+                </span>
+              </div>
+
+              <div className="mt-5 rounded-2xl border border-[#14b8a6]/15 bg-gradient-to-br from-[#effaf7] to-[#fff8e9] p-5 sm:p-6">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <p className="text-xs font-medium text-slate-500">One place for your progress</p>
+                    <p className="mt-2 text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">Find your next win.</p>
+                  </div>
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#14b8a6]/15 text-[#0f766e]">
+                    <CircleDollarSign className="h-5 w-5" />
+                  </div>
+                </div>
+                <div className="mt-6 grid grid-cols-3 gap-2">
+                  {[
+                    { icon: AudioLines, label: "Tasks" },
+                    { icon: Sparkles, label: "Surveys" },
+                    { icon: Smartphone, label: "Offers" },
+                  ].map(({ icon: Icon, label }) => (
+                    <div key={label} className="flex flex-col items-center gap-2 rounded-xl border border-[#0f3d36]/10 bg-white px-2 py-3.5 shadow-sm">
+                      <Icon className="h-4 w-4 text-[#0f766e]" />
+                      <span className="text-[11px] font-medium text-slate-600">{label}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="mt-4 space-y-2.5">
+                <div className="flex items-center gap-3 rounded-xl border border-[#0f3d36]/10 bg-white p-3.5">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#14b8a6]/10 text-[#0f766e]">
+                    <BadgeCheck className="h-4 w-4" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs font-semibold text-slate-900">Choose what fits you</p>
+                    <p className="mt-0.5 text-[11px] text-slate-500">Availability can vary by location</p>
+                  </div>
+                  <ChevronRight className="h-4 w-4 text-slate-500" />
+                </div>
+                <div className="flex items-center gap-3 rounded-xl border border-[#0f3d36]/10 bg-white p-3.5">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-400/10 text-amber-300">
+                    <Wallet className="h-4 w-4" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs font-semibold text-slate-900">See your activity clearly</p>
+                    <p className="mt-0.5 text-[11px] text-slate-500">Track NexCoins and reward history</p>
+                  </div>
+                  <ChevronRight className="h-4 w-4 text-slate-500" />
+                </div>
+              </div>
+            </div>
+            <div className="absolute -bottom-5 -left-3 hidden items-center gap-2.5 rounded-2xl border border-[#0f3d36]/10 bg-white px-4 py-3 shadow-xl sm:flex lg:-left-8">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#14b8a6]/10 text-[#5eead4]">
+                <Globe2 className="h-4 w-4" />
+              </div>
+              <div>
+                <p className="text-xs font-semibold text-slate-900">A global community</p>
+                <p className="text-[10px] text-slate-500">Opportunities for contributors worldwide</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="border-y border-[#0f3d36]/10 bg-[#edf6f3]">
+        <div className="mx-auto grid max-w-7xl grid-cols-1 gap-5 px-5 py-6 sm:grid-cols-3 sm:px-8 sm:py-7">
+          {[
+            { icon: Layers3, title: "One workspace", text: "Tasks, surveys, and offers together" },
+            { icon: Wallet, title: "Clear tracking", text: "Follow your NexCoins and activity" },
+            { icon: Globe2, title: "Flexible access", text: "Explore what is available to you" },
+          ].map(({ icon: Icon, title, text }) => (
+            <div key={title} className="flex items-center gap-3 sm:justify-center">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#0f3d36]/10 bg-white text-[#0f766e]">
+                <Icon className="h-4 w-4" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-slate-900">{title}</p>
+                <p className="mt-0.5 text-xs text-slate-500">{text}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section id="opportunities" className="mx-auto max-w-7xl scroll-mt-8 px-5 py-20 sm:px-8 sm:py-28">
+        <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
+          <div className="max-w-2xl">
+            <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#0f766e]">Find your fit</p>
+            <h2 className="mt-4 text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl">More ways to make progress.</h2>
+            <p className="mt-4 max-w-xl text-sm leading-6 text-slate-600 sm:text-base">
+              Explore different kinds of opportunities from a single account. Choose what works for your skills, schedule, and location.
+            </p>
+          </div>
+          <Link href="/opportunities" className="inline-flex items-center gap-2 text-sm font-semibold text-[#5eead4] transition hover:gap-3">
+            View opportunities <ArrowRight className="h-4 w-4" />
           </Link>
         </div>
-      </div>
 
-      {/* ── Split ──────────────────────────────────────────────── */}
-      <div className="split">
-
-        {/* LEFT — Organizations (gold) */}
-        <section
-          className={`panel p-left${hov === "left" ? " hov" : hov === "right" ? " shrink" : ""}`}
-          onMouseEnter={() => setHov("left")}
-          onMouseLeave={() => setHov(null)}
-        >
-          <motion.div
-            className="aurora aurora-gold-1"
-            animate={{
-              transform: [
-                "translate(0px, 0px)",
-                "translate(50px, -60px)",
-                "translate(-30px, 40px)",
-                "translate(0px, 0px)"
-              ]
-            }}
-            transition={{
-              duration: 4,
-              repeat: Infinity,
-              ease: "easeInOut"
-            }}
-          />
-
-          <motion.div
-            className="aurora aurora-gold-2"
-            animate={{
-              transform: [
-                "translate(0px, 0px)",
-                "translate(-40px, 50px)",
-                "translate(60px, -40px)",
-                "translate(0px, 0px)"
-              ]
-            }}
-            transition={{
-              duration: 5,
-              repeat: Infinity,
-              ease: "easeInOut"
-            }}
-          />
-          <div className="vig" />
-
-          <div className="body">
-            <span className="tag tg-gold">For Organizations</span>
-            <motion.h2
-              className="hl"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
+        <div className="mt-10 grid gap-4 md:grid-cols-3">
+          {earningWays.map(({ icon: Icon, title, description, href, label, tone }) => (
+            <Link
+              key={title}
+              href={href}
+              className="group rounded-2xl border border-[#0f3d36]/10 bg-white p-6 shadow-[0_8px_28px_rgba(15,61,54,0.05)] transition duration-200 hover:-translate-y-1 hover:border-[#14b8a6]/35 hover:bg-[#f5fbf9] hover:shadow-[0_16px_38px_rgba(15,61,54,0.1)]"
             >
-              Scale Your<br />
-              <em className="em-gold">Data Projects.</em>
-            </motion.h2>
-            <motion.div
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
-            >
-              <p className="sub">
-                We recruit, brief, and manage a contributor team for
-                audio, transcription, annotation and more – end to end.
-              </p>
-              <div className="acts">
-                <Link href="/client" className="btn btn-gold"><Arrow /> Explore Services</Link>
-                <Link href="/client/how-it-works" className="lnk lnk-gold">How it works →</Link>
+              <div className={`flex h-12 w-12 items-center justify-center rounded-2xl ${
+                tone === "mint" ? "bg-[#14b8a6]/10 text-[#0f766e]" :
+                tone === "blue" ? "bg-sky-100 text-sky-700" :
+                "bg-amber-100 text-amber-800"
+              }`}>
+                <Icon className="h-5 w-5" />
               </div>
-              <p className="note">No account needed · Contact us directly</p>
-            </motion.div>
-          </div>
-        </section>
-
-        {/* Divider */}
-        <div className="div-wrap" aria-hidden>
-          <div className="div-ln" />
-          <div className="div-badge">NEXGUILD ECOSYSTEM</div>
-          <div className="div-ln" />
+              <h3 className="mt-6 text-lg font-semibold text-slate-900">{title}</h3>
+              <p className="mt-2 min-h-[3rem] text-sm leading-6 text-slate-600">{description}</p>
+              <span className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-[#0f766e]">
+                {label} <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+              </span>
+            </Link>
+          ))}
         </div>
+      </section>
 
-        {/* RIGHT — Contributors (teal) */}
-        <section
-          className={`panel p-right${hov === "right" ? " hov" : hov === "left" ? " shrink" : ""}`}
-          onMouseEnter={() => setHov("right")}
-          onMouseLeave={() => setHov(null)}
-        >
-          <div className="aurora aurora-teal-1" />
-          <div className="aurora aurora-teal-2" />
-          <div className="vig" />
-
-          <div className="body">
-            <span className="tag tg-teal">For Contributors</span>
-
-            <motion.h2
-              className="hl"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-            >
-              Turn Free Time<br />
-              <em className="em-teal">Into Real Money.</em>
-            </motion.h2>
-
-            <motion.div
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
-            >
-              <p className="sub">
-                Complete simple tasks from your phone — recording,
-                testing, transcribing — and redeem NexCoins for gift vouchers.
-              </p>
-              <div className="acts">
-                <Link href="/earn" className="btn btn-teal"><Arrow /> Start Earning</Link>
-                <Link href="/how-it-works" className="lnk lnk-teal">How it works →</Link>
-              </div>
-              <p className="note">Free to join · 100+ active contributors</p>
-            </motion.div>
+      <section id="how-it-works" className="border-y border-[#0f3d36]/10 bg-[#edf6f3]">
+        <div className="mx-auto max-w-7xl px-5 py-20 sm:px-8 sm:py-24">
+          <div className="mx-auto max-w-2xl text-center">
+            <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#0f766e]">A straightforward start</p>
+            <h2 className="mt-4 text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl">From sign-up to your first task.</h2>
+            <p className="mt-4 text-sm leading-6 text-slate-600 sm:text-base">
+              Get set up, explore what is available, and keep your progress together in one place.
+            </p>
           </div>
-        </section>
-      </div>
+          <div className="mt-12 grid gap-4 md:grid-cols-3">
+            {steps.map((step, index) => (
+              <div key={step.number} className="relative rounded-2xl border border-[#0f3d36]/10 bg-white p-6 shadow-[0_8px_28px_rgba(15,61,54,0.05)]">
+                <span className="text-xs font-bold tracking-[0.18em] text-[#0f766e]">{step.number}</span>
+                <h3 className="mt-5 text-lg font-semibold text-slate-900">{step.title}</h3>
+                <p className="mt-2 text-sm leading-6 text-slate-600">{step.description}</p>
+                {index < steps.length - 1 && <ArrowRight className="absolute right-5 top-6 hidden h-4 w-4 text-slate-600 md:block" />}
+              </div>
+            ))}
+          </div>
+          <p className="mt-6 text-center text-xs text-slate-600">
+            Opportunity availability, eligibility, and rewards can vary by country and provider.
+          </p>
+        </div>
+      </section>
 
-      <style>{`
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+      <section className="mx-auto max-w-7xl px-5 py-16 sm:px-8 sm:py-20">
+        <div className="flex flex-col items-start justify-between gap-6 rounded-[1.75rem] border border-[#0f766e]/15 bg-gradient-to-br from-[#e7f7f3] to-[#fff7e6] p-7 shadow-[0_12px_36px_rgba(15,61,54,0.08)] sm:flex-row sm:items-center sm:p-10">
+          <div className="max-w-xl">
+            <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#0f766e]">Your next step</p>
+            <h2 className="mt-3 text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">Start with what works for you.</h2>
+            <p className="mt-3 text-sm leading-6 text-slate-600">Create an account to see your workspace and explore current opportunities.</p>
+          </div>
+          <Link href="/signup" className="inline-flex h-12 shrink-0 items-center gap-2 rounded-full bg-[#14b8a6] px-6 text-sm font-bold text-[#041b1b] transition hover:-translate-y-0.5 hover:bg-[#5eead4]">
+            Create your free account <ArrowRight className="h-4 w-4" />
+          </Link>
+        </div>
+      </section>
 
-        .root {
-          height: 100vh;
-          height: 100dvh;
-          overflow: hidden;
-          background: linear-gradient(to right, #FAF6EF 50%, #F0FAFA 50%);
-          font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-          -webkit-font-smoothing: antialiased;
-          position: relative;
-          animation: fadeUpIn 0.9s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-        }
-
-        @keyframes fadeUpIn {
-          from { opacity: 0; transform: translateY(20px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-
-        /* ── Logo Default Styles ─────────────────────────────── */
-        .logo-wrap {
-          position: absolute;
-          top: 24px;
-          left: 50%;
-          transform: translateX(-50%);
-          z-index: 50;
-          display: flex;
-          justify-content: center;
-          width: auto;
-        }
-
-        .logo-box {
-          padding: 8px 24px;
-        }
-
-        .logo-svg {
-          width: 130px;
-          height: 46px;
-        }
-
-        /* ── Split ───────────────────────────────────────────── */
-        .split {
-          display: flex;
-          flex-direction: row;
-          height: 100%; width: 100%;
-        }
-
-        .panel {
-          position: relative;
-          overflow: hidden;
-          display: flex; align-items: center; justify-content: center;
-          cursor: pointer;
-          flex-basis: 50%; flex-shrink: 0; flex-grow: 0;
-          transition: flex-basis 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-          background-clip: padding-box;
-        }
-        .panel.hov    { flex-basis: 62% !important; }
-        .panel.shrink { flex-basis: 38% !important; }
-        .p-left  { background: linear-gradient(135deg, #FAF6EF 0%, #FEF9F0 100%); }
-        .p-right { background: linear-gradient(135deg, #F0FAFA 0%, #F5FCFC 100%); }
-
-        @keyframes auroraDrift {
-          0% { transform: translate(0px, 0px) scale(1); }
-          50% { transform: translate(10%, -15%) scale(1.2); }
-          100% { transform: translate(-5%, 8%) scale(0.9); }
-        }
-
-        .aurora {
-          position: absolute;
-          border-radius: 50%;
-          filter: blur(100px); pointer-events: none;
-          will-change: transform; z-index: 0;
-        }
-
-        .aurora-gold-1, .aurora-gold-2, .aurora-teal-1, .aurora-teal-2 { opacity: 1; }
-
-        .aurora-gold-1 {
-          width: min(60vw, 600px); height: min(60vw, 600px);
-          background: rgba(245, 158, 11, 0.25);
-          bottom: -20%; left: 5%;
-          animation: auroraDrift 25s ease-in-out infinite alternate;
-        }
-        .aurora-gold-2 {
-          width: min(50vw, 500px); height: min(50vw, 500px);
-          background: rgba(245, 158, 11, 0.25);
-          top: -10%; right: 5%;
-          animation: auroraDrift 20s ease-in-out infinite alternate-reverse;
-        }
-
-        .aurora-teal-1 {
-          width: min(60vw, 600px); height: min(60vw, 600px);
-          background: rgba(20, 184, 166, 0.20);
-          bottom: -20%; right: 5%;
-          animation: auroraDrift 25s ease-in-out infinite alternate-reverse;
-        }
-        .aurora-teal-2 {
-          width: min(50vw, 500px); height: min(50vw, 500px);
-          background: rgba(20, 184, 166, 0.20);
-          top: -8%; left: 5%;
-          animation: auroraDrift 22s ease-in-out infinite alternate;
-        }
-
-        .panel.hov .aurora-gold-1, .panel.hov .aurora-gold-2 { filter: blur(96px) brightness(1.15); }
-        .panel.hov .aurora-teal-1, .panel.hov .aurora-teal-2 { filter: blur(96px) brightness(1.15); }
-
-        .vig {
-          position: absolute;
-          inset: 0; z-index: 3; pointer-events: none;
-          background: radial-gradient(ellipse 75% 75% at 50% 50%, transparent 45%, rgba(0,0,0,0.08) 100%);
-        }
-
-        .body {
-          position: relative;
-          z-index: 10;
-          display: flex; flex-direction: column; align-items: center; text-align: center;
-          padding: clamp(16px,4vw,60px) clamp(20px,5vw,64px);
-          max-width: 440px; width: 100%;
-          transition: transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-        }
-        .panel.hov .body { transform: scale(1.025); }
-
-       .tag {
-  font-size: 11px;
-  font-weight: 600; letter-spacing: 0.10em; text-transform: uppercase;
-  padding: 6px 14px; border-radius: 9999px;
-  margin-top: 16px;
-  margin-bottom: 22px;
-  display: inline-block;
-  font-family: 'Inter', sans-serif;
-}
-        .tg-gold { color: #92400E; background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.25); }
-        .tg-teal { color: #134E4A; background: rgba(13,148,136,0.08); border: 1px solid rgba(13,148,136,0.25); }
-
-        .hl {
-          font-family: 'Instrument Serif', serif;
-          font-size: clamp(24px,3vw,46px); font-weight: 600;
-          color: #1C1917;
-          line-height: 1.10; letter-spacing: -0.03em; margin-bottom: 18px;
-        }
-        .em-gold { font-style: italic; color: #92400E; white-space: nowrap; font-weight: 700; }
-        .em-teal { font-style: italic; color: #115E59; white-space: nowrap; font-weight: 700; }
-
-        .sub {
-          font-size: clamp(13px,1.1vw,15px);
-          line-height: 1.72; font-family: 'Inter', sans-serif;
-          color: #44403C; max-width: 276px; margin-bottom: 30px;
-        }
-
-        .acts {
-          display: flex;
-          flex-direction: column; align-items: center; gap: 14px;
-          margin-bottom: 18px; width: 100%;
-        }
-
-        .btn {
-          display: inline-flex;
-          align-items: center; justify-content: center; gap: 9px;
-          width: min(230px,100%); height: 50px; border-radius: 999px;
-          font-weight: 600; font-size: 15px; letter-spacing: -0.01em; text-decoration: none;
-          backdrop-filter: blur(12px);
-          transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-        .btn:hover { transform: translateY(-2px); }
-
-        .btn-gold {
-          background: rgba(255, 255, 255, 0.72);
-          border: 1.5px solid rgba(217, 119, 6, 0.35);
-          color: #92400E;
-        }
-        .btn-gold:hover {
-          border-color: rgba(217, 119, 6, 0.65);
-          box-shadow: 0 4px 12px rgba(245, 158, 11, 0.15);
-        }
-
-        .btn-teal {
-          background: rgba(255, 255, 255, 0.72);
-          border: 1.5px solid rgba(13, 148, 136, 0.35);
-          color: #134E4A;
-        }
-        .btn-teal:hover {
-          border-color: rgba(13, 148, 136, 0.65);
-          box-shadow: 0 4px 12px rgba(13, 148, 136, 0.15);
-        }
-
-        .lnk {
-          font-size: 13px;
-          font-weight: 500; text-decoration: none; font-family: 'Inter', sans-serif;
-          color: #44403C;
-          opacity: 0.90; transition: opacity 0.2s;
-        }
-        .lnk:hover { opacity: 1; }
-        .lnk-gold { color: #92400E; }
-        .lnk-teal { color: #134E4A; }
-
-        .note { font-size: 11px; color: #44403C; letter-spacing: 0.02em; font-family: 'Inter', sans-serif; }
-
-        .div-wrap {
-          width: 1px;
-          flex-shrink: 0; z-index: 20;
-          display: flex; flex-direction: column; align-items: center;
-          background: linear-gradient(to bottom, transparent, rgba(28,25,23,0.12) 50%, transparent);
-        }
-        .div-ln { flex: 1; width: 1px; background: transparent; }
-        .div-badge {
-          padding: 8px 6px;
-          writing-mode: vertical-rl;
-          font-size: 9px; font-weight: 700; letter-spacing: 0.28em; text-transform: uppercase;
-          flex-shrink: 0; user-select: none;
-          background: rgba(255, 255, 255, 0.72);
-          backdrop-filter: blur(12px);
-          border: 1px solid rgba(28, 25, 23, 0.08);
-          border-radius: 999px;
-          color: #78716C;
-          font-family: 'Inter', sans-serif;
-        }
-        .db-n { display: none; }
-        .db-g { display: inline; }
-
-        /* ── Mobile ───────────────────────────────────────────── */
-        @media (max-width: 700px) {
-          .root {
-            display: flex;
-            flex-direction: column;
-            height: auto; min-height: 100dvh;
-            overflow-x: hidden; overflow-y: auto;
-            background: linear-gradient(to bottom, #FAF6EF 50%, #F0FAFA 50%);
-          }
-
-          .logo-wrap {
-            position: relative;
-            top: auto; left: auto; right: auto;
-            transform: none;
-            width: 100%;
-            display: flex;
-            justify-content: center;
-            padding: 08px 0 0px;
-            background: #FAF6EF;
-          }
-
-          .logo-box {
-            padding: 6px 16px;
-          }
-
-          .logo-svg {
-            width: 105px;
-            height: 38px;
-          }
-
-          .split { display: flex; flex-direction: column; flex: none; }
-
-          .panel {
-            flex-basis: auto !important;
-            flex-shrink: 0 !important;
-            flex-grow: 0 !important;
-            min-height: 50vh;
-            height: auto;
-            overflow: hidden;
-            transition: none;
-          }
-          .panel.hov, .panel.shrink { flex-basis: auto !important; }
-          .panel.hov .body { transform: none; }
-
-          .body { padding: 20px 20px 36px; }
-
-          .div-wrap {
-            width: 100%; height: 1px; flex-direction: row;
-            background: linear-gradient(to right, transparent, rgba(28,25,23,0.12) 50%, transparent);
-          }
-          .div-ln { flex: 1; height: 1px; width: auto; background: transparent; }
-          .div-badge { writing-mode: horizontal-tb; padding: 6px 12px; font-size: 8px; }
-
-          .hl   { font-size: clamp(22px,6vw,28px); }
-          .sub  { font-size: 13px; max-width: 250px; margin-bottom: 20px; }
-          .tag  { font-size: 10px; margin-bottom: 14px; }
-          .btn  { height: 44px; font-size: 14px; }
-          .acts { gap: 10px; margin-bottom: 12px; }
-          .note { font-size: 10px; }
-        }
-
-        @media (max-width: 380px) {
-          .hl  { font-size: 20px; }
-          .btn { width: 100%; }
-        }
-
-        @keyframes auroraDrift {
-          0% { transform: translate(0px, 0px) scale(1); }
-          50% { transform: translate(40px, -50px) scale(1.1); }
-          100% { transform: translate(-20px, 30px) scale(0.95); }
-        }
-      `}</style>
-    </div>
+      <footer className="border-t border-[#0f3d36]/10 bg-white/70">
+        <div className="mx-auto flex max-w-7xl flex-col gap-4 px-5 py-7 text-xs text-slate-600 sm:flex-row sm:items-center sm:justify-between sm:px-8">
+          <p>© {new Date().getFullYear()} NexGuild. Earn by contributing. Grow by participating.</p>
+          <div className="flex flex-wrap gap-x-5 gap-y-2">
+            <Link href="/earn/faq" className="transition hover:text-[#0f766e]">Help & FAQ</Link>
+            <Link href="/privacy" className="transition hover:text-[#0f766e]">Privacy</Link>
+            <Link href="/client" className="transition hover:text-[#0f766e]">For organizations</Link>
+          </div>
+        </div>
+      </footer>
+    </main>
   );
 }

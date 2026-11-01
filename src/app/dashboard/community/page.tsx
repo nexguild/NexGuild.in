@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Users } from "lucide-react";
+import { Headphones, Megaphone, Trophy, Users } from "lucide-react";
+import { CategoryQuickLinks } from "@/components/dashboard/CategoryQuickLinks";
 
 export const metadata: Metadata = { title: "Community — NexGuild" };
 
@@ -26,25 +27,38 @@ export default function CommunityPage() {
 
       {/* ── Gradient Hero ─────────────────────────────────────────────── */}
       <div
-        className="relative overflow-hidden rounded-2xl p-6 sm:p-8 text-white shadow-lg"
-        style={{ background: "linear-gradient(135deg, #6366f1 0%, #14b8a6 100%)" }}
+        className="relative isolate overflow-hidden rounded-[1.6rem] bg-[#103f38] p-6 text-white shadow-[0_18px_45px_rgba(15,76,69,0.14)] sm:p-8"
       >
-        {/* Decorative orbs */}
-        <div className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-white/10" />
-        <div className="pointer-events-none absolute -bottom-12 -left-12 h-32 w-32 rounded-full bg-white/5" />
+        <div aria-hidden className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_82%_0%,rgba(214,182,110,0.22),transparent_35%),radial-gradient(ellipse_at_5%_100%,rgba(20,184,166,0.16),transparent_42%)]" />
 
         <div className="relative flex items-center gap-4">
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/20 backdrop-blur-sm flex-shrink-0">
+          <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-white/10 backdrop-blur-sm">
             <Users className="h-7 w-7 text-white" />
           </div>
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-white leading-tight">Community</h1>
-            <p className="text-white/70 text-sm mt-1">
-              Connect with contributors, ask questions, and stay updated on new tasks.
+            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#e4d3a8]">Together at NexGuild</p>
+            <h1 className="mt-1 text-2xl font-bold leading-tight text-white sm:text-3xl">Community</h1>
+            <p className="mt-1 text-sm text-white/70">
+              Meet other contributors, see what is new, and get help when you need it.
             </p>
           </div>
         </div>
       </div>
+
+      <section aria-label="Community pages" className="space-y-3">
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-teal-700">Community hub</p>
+          <h2 className="mt-1 text-lg font-semibold tracking-tight text-slate-900">Stay connected</h2>
+        </div>
+        <CategoryQuickLinks
+          label="Community pages"
+          links={[
+            { title: "Top contributors", description: "See who is climbing the rankings.", href: "/dashboard/leaderboard", icon: Trophy },
+            { title: "News & updates", description: "Read the latest from NexGuild.", href: "/dashboard/announcements", icon: Megaphone },
+            { title: "Help & support", description: "Get help with your account or tasks.", href: "/dashboard/support", icon: Headphones },
+          ]}
+        />
+      </section>
 
       {/* ── Channels ──────────────────────────────────────────────────── */}
       <div className="space-y-3 animate-fade-slide-up" style={{ animationDelay: "80ms" }}>
@@ -66,13 +80,13 @@ export default function CommunityPage() {
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-0.5">
                 <h3 className="font-semibold text-slate-800">{ch.name}</h3>
-                <span className="rounded-full bg-indigo-50 px-2 py-0.5 text-[10px] font-bold text-indigo-600 uppercase tracking-wide">Official</span>
+                <span className="rounded-full bg-teal-50 px-2 py-0.5 text-[10px] font-bold text-teal-700 uppercase tracking-wide">Official</span>
               </div>
               <p className="text-xs text-slate-400 mb-1">{ch.handle}</p>
               <p className="text-sm text-slate-500">{ch.desc}</p>
             </div>
             <svg
-              className="h-4 w-4 text-slate-300 flex-shrink-0 group-hover:text-indigo-400 transition-colors"
+              className="h-4 w-4 text-slate-300 flex-shrink-0 group-hover:text-teal-700 transition-colors"
               viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
             >
               <path d="M7 17L17 7M17 7H7M17 7v10" strokeLinecap="round" strokeLinejoin="round"/>
@@ -86,7 +100,7 @@ export default function CommunityPage() {
         <h2 className="text-sm font-semibold text-slate-700 mb-4 flex items-center gap-2">
           <span
             className="flex h-6 w-6 items-center justify-center rounded-lg text-white text-xs font-bold"
-            style={{ background: "linear-gradient(135deg, #6366f1 0%, #14b8a6 100%)" }}
+            style={{ background: "linear-gradient(135deg, #0f766e 0%, #b08b45 100%)" }}
           >
             ✓
           </span>
@@ -99,15 +113,15 @@ export default function CommunityPage() {
             "Do not share task answers or cheat — it affects everyone's coins.",
           ].map((rule) => (
             <li key={rule} className="flex items-start gap-3 text-sm text-slate-600">
-              <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-indigo-400" />
+              <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-teal-600" />
               <span>{rule}</span>
             </li>
           ))}
           <li className="flex items-start gap-3 text-sm text-slate-600">
-            <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-indigo-400" />
+            <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-teal-600" />
             <span>
               For account issues, use{" "}
-              <Link href="/dashboard/support" className="text-indigo-500 hover:text-indigo-700 underline font-medium">
+              <Link href="/dashboard/support"               className="text-teal-700 hover:text-teal-900 underline font-medium">
                 Support Tickets
               </Link>
               {" "}instead of the community chat.

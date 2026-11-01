@@ -125,9 +125,13 @@ export default function SettingsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-[var(--text-primary)] mb-1">Settings</h1>
-        <p className="text-sm text-[var(--text-secondary)]">Manage your account preferences.</p>
+      <div className="relative isolate overflow-hidden rounded-[1.6rem] bg-[#103f38] p-5 text-white shadow-[0_18px_45px_rgba(15,76,69,0.14)] sm:p-7">
+        <div aria-hidden className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_82%_0%,rgba(214,182,110,0.22),transparent_35%),radial-gradient(ellipse_at_5%_100%,rgba(20,184,166,0.16),transparent_42%)]" />
+        <div className="relative">
+          <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#e4d3a8]">Your account</p>
+          <h1 className="mt-1 text-2xl font-bold tracking-tight sm:text-3xl">Account Settings</h1>
+          <p className="mt-2 text-sm text-white/70">Manage sign-in details, notifications, and account preferences.</p>
+        </div>
       </div>
 
       {/* Two-column layout at lg */}
@@ -137,7 +141,7 @@ export default function SettingsPage() {
         <div className="space-y-6">
 
           {/* Account */}
-          <section className="rounded-lg border border-[var(--border-default)] bg-[var(--surface-card)] divide-y divide-[var(--border-default)]">
+          <section className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm divide-y divide-slate-100">
             <div className="px-6 py-4">
               <h2 className="font-semibold text-[var(--text-primary)]">Account</h2>
             </div>
@@ -158,7 +162,7 @@ export default function SettingsPage() {
           </section>
 
           {/* Notifications */}
-          <section className="rounded-lg border border-[var(--border-default)] bg-[var(--surface-card)] divide-y divide-[var(--border-default)]">
+          <section className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm divide-y divide-slate-100">
             <div className="px-6 py-4">
               <h2 className="font-semibold text-[var(--text-primary)]">Notifications</h2>
             </div>
@@ -196,7 +200,7 @@ export default function SettingsPage() {
         <div className="space-y-6">
 
           {/* Danger Zone */}
-          <section className="rounded-lg border border-[var(--danger-text)] bg-[rgba(239,68,68,0.05)] divide-y divide-[rgba(239,68,68,0.15)]">
+          <section className="overflow-hidden rounded-2xl border border-rose-200 bg-rose-50/60 divide-y divide-rose-100">
             <div className="px-6 py-4">
               <h2 className="font-semibold text-[var(--danger-text)]">Danger Zone</h2>
               <p className="text-xs text-[var(--danger-text)] opacity-70 mt-1">These actions are irreversible.</p>
@@ -211,7 +215,7 @@ export default function SettingsPage() {
           </section>
 
           {/* Help card */}
-          <div className="rounded-lg border border-[var(--border-default)] bg-[var(--surface-card)] p-5">
+          <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
             <p className="text-sm font-semibold text-[var(--text-primary)] mb-1">Need help?</p>
             <p className="text-xs text-[var(--text-muted)] mb-3">Have a question or issue with your account? Our support team is here.</p>
             <a

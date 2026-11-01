@@ -6,7 +6,7 @@ import { OfferwallWidgetLoader } from "@/components/layout/offerwall-widget-load
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
     <AuthGuard>
-      <div className="min-h-screen" style={{ background: "#F1F5F9" }}>
+      <div className="dashboard-glass min-h-screen">
         <DashboardShell>{children}</DashboardShell>
         <SupportButton />
         <OfferwallWidgetLoader />

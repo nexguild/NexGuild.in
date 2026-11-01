@@ -2,12 +2,13 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Camera, X, Loader2, Plus, Star, Copy, CheckCheck, CheckCircle2, Calendar, User } from "lucide-react";
+import { Camera, X, Loader2, Plus, Star, Copy, CheckCheck, CheckCircle2, Calendar, User, Settings } from "lucide-react";
 import { NexCoinIcon } from "@/components/ui/nexcoin-icon";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { getCountryName } from "@/lib/countries";
 import { formatNexcoins } from "@/lib/nexcoins";
+import { CategoryQuickLinks } from "@/components/dashboard/CategoryQuickLinks";
 
 interface Profile {
   full_name: string | null;
@@ -234,6 +235,13 @@ export default function ProfilePage() {
         <p className="text-sm text-slate-500">Your contributor profile and account details.</p>
       </div>
 
+      <CategoryQuickLinks
+        label="Account pages"
+        links={[
+          { title: "Account settings", description: "Manage login and notifications.", href: "/dashboard/settings", icon: Settings },
+        ]}
+      />
+
       {/* ── Two-column layout at lg ──────────────────────────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-6 items-start">
 
@@ -241,17 +249,16 @@ export default function ProfilePage() {
         <div className="space-y-6">
 
           {/* ── Premium Hero Card ──────────────────────────────────────── */}
-          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-indigo-600 to-teal-500 p-5 sm:p-6 text-white shadow-lg">
+          <div className="relative isolate overflow-hidden rounded-[1.6rem] bg-[#103f38] p-5 text-white shadow-[0_18px_45px_rgba(15,76,69,0.14)] sm:p-6">
             {/* Decorative circles */}
-            <div className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-white/10" />
-            <div className="pointer-events-none absolute -bottom-12 -left-12 h-32 w-32 rounded-full bg-white/5" />
+            <div aria-hidden className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_82%_0%,rgba(214,182,110,0.22),transparent_35%),radial-gradient(ellipse_at_5%_100%,rgba(20,184,166,0.16),transparent_42%)]" />
 
             <div className="relative space-y-4">
               {/* Row 1: Avatar + Name/email/badge + Edit button (all inline — no absolute) */}
               <div className="flex items-start gap-4">
                 {/* Avatar */}
                 <div className="relative flex-shrink-0">
-                  <div className="h-20 w-20 sm:h-24 sm:w-24 rounded-full border-4 border-white shadow-xl overflow-hidden bg-gradient-to-br from-indigo-400 to-teal-400 flex items-center justify-center">
+                  <div className="h-20 w-20 sm:h-24 sm:w-24 rounded-full border-4 border-white shadow-xl overflow-hidden bg-gradient-to-br from-teal-500 to-[#d6b66e] flex items-center justify-center">
                     {profile?.avatar_url ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={profile.avatar_url} alt={displayName} className="h-full w-full object-cover" />
@@ -263,7 +270,7 @@ export default function ProfilePage() {
                   <button
                     onClick={() => fileInputRef.current?.click()}
                     disabled={uploading}
-                    className="absolute bottom-0 right-0 h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-white shadow-md border-2 border-indigo-100 flex items-center justify-center hover:bg-slate-50 transition-colors disabled:opacity-60"
+                    className="absolute bottom-0 right-0 h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-white shadow-md border-2 border-teal-100 flex items-center justify-center hover:bg-slate-50 transition-colors disabled:opacity-60"
                     title="Change profile picture"
                   >
                     {uploading
