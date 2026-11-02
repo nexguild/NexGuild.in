@@ -43,7 +43,7 @@ export async function POST(req: NextRequest) {
     // ── Fetch voucher request + contributor profile ───────────────
     const { data: vr, error: fetchErr } = await admin
       .from("voucher_requests")
-      .select("id, voucher_type, coins_spent, contributor_id, status, profiles:profiles!voucher_requests_contributor_id_fkey(full_name, email)")
+      .select("id, voucher_type, coins_spent, charged_coins, contributor_id, status, profiles:profiles!voucher_requests_contributor_id_fkey(full_name, email)")
       .eq("id", requestId)
       .single();
 
@@ -97,7 +97,7 @@ export async function POST(req: NextRequest) {
         from:    "NexGuild <noreply@nexguild.in>",
         to:      email,
         subject: "Your NexGuild Voucher is Ready!",
-        html: voucherDeliveredHtml(name, voucherType, code, vr.coins_spent),
+        html: voucherDeliveredHtml(name, voucherType, code, vr.charged_coins ?? vr.coins_spent),
       });
       if (emailErr) {
         console.error("[deliver-voucher] email error:", emailErr);

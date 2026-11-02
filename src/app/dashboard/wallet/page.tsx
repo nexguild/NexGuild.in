@@ -22,6 +22,7 @@ interface VoucherRequest {
   voucher_type: string;
   voucher_value: number | null;
   coins_spent: number;
+  charged_coins: number | null;
   status: string;
   requested_at: string;
   delivered_at: string | null;
@@ -60,7 +61,7 @@ export default function NexCoinsPage() {
           .limit(20),
         supabase
           .from("voucher_requests")
-          .select("id, voucher_type, voucher_value, coins_spent, status, requested_at, delivered_at")
+          .select("id, voucher_type, voucher_value, coins_spent, charged_coins, status, requested_at, delivered_at")
           .eq("contributor_id", user.id)
           .order("requested_at", { ascending: false }),
       ]);
@@ -154,7 +155,7 @@ export default function NexCoinsPage() {
                 <div className="min-w-0">
                   <p className="truncate text-sm font-semibold text-slate-700">{v.voucher_type}</p>
                   <p className="text-xs text-slate-400">
-                    {v.coins_spent.toLocaleString()} coins ·{" "}
+                    {(v.charged_coins ?? v.coins_spent).toLocaleString()} coins ·{" "}
                     {new Date(v.requested_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
                   </p>
                 </div>

@@ -24,6 +24,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase-server";
 import { notifyAdmins } from "@/lib/email";
 import { getProfileCountryCode } from "@/lib/countries";
+import { getVoucherDiscountedCoins } from "@/lib/voucher-pricing";
 
 interface CartItem {
   voucherId: string;
@@ -35,6 +36,7 @@ interface Voucher {
   value_inr: number | null;
   value_usd: number | null;
   coins_required: number;
+  discount_percent: number;
   country_codes: string[];
   country_codes_verified: boolean;
   is_available: boolean;
@@ -78,7 +80,7 @@ export async function POST(req: NextRequest) {
   const voucherIds = [...new Set(items.map((item) => item.voucherId))];
   const { data: catalog, error: catalogError } = await admin
     .from("voucher_inventory")
-    .select("id, brand_name, value_inr, value_usd, coins_required, country_codes, country_codes_verified, is_available")
+    .select("id, brand_name, value_inr, value_usd, coins_required, discount_percent, country_codes, country_codes_verified, is_available")
     .in("id", voucherIds);
   if (catalogError) {
     console.error("[redeem-cart] voucher catalog lookup failed:", catalogError.message);
@@ -98,6 +100,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: `${voucher.brand_name} is not available in your country.` }, { status: 400 });
     }
     if (!Number.isSafeInteger(voucher.coins_required) || voucher.coins_required <= 0
+      || !Number.isSafeInteger(voucher.discount_percent) || voucher.discount_percent < 0 || voucher.discount_percent > 99
       || typeof voucher.value_inr !== "number" || !Number.isSafeInteger(voucher.value_inr) || voucher.value_inr <= 0
       || voucher.value_usd !== null) {
       console.error("[redeem-cart] invalid catalog price for voucher:", voucher.id);
@@ -123,7 +126,8 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  const totalCoins = selectedVouchers.reduce((sum, voucher) => sum + voucher.coins_required, 0);
+  const salePrices = selectedVouchers.map((voucher) => getVoucherDiscountedCoins(voucher.coins_required, voucher.discount_percent));
+  const totalCoins = salePrices.reduce((sum, coins) => sum + coins, 0);
   if (!Number.isSafeInteger(totalCoins)) {
     return NextResponse.json({ error: "Cart total is too large." }, { status: 400 });
   }
@@ -154,7 +158,7 @@ export async function POST(req: NextRequest) {
   }
 
   const finalTotal = Math.max(0, totalCoins - discountCoins);
-  const chargedCoins = selectedVouchers.map((voucher) => Math.floor(voucher.coins_required * finalTotal / totalCoins));
+  const chargedCoins = salePrices.map((coins) => Math.floor(coins * finalTotal / totalCoins));
   let undistributedCoins = finalTotal - chargedCoins.reduce((sum, coins) => sum + coins, 0);
   for (let index = 0; undistributedCoins > 0; index = (index + 1) % chargedCoins.length) {
     chargedCoins[index] += 1;

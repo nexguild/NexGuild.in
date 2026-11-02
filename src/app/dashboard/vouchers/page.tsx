@@ -9,6 +9,7 @@ interface VoucherRequest {
   id: string;
   voucher_type: string;
   coins_spent: number;
+  charged_coins: number | null;
   status: string;
   voucher_code: string | null;
   requested_at: string;
@@ -32,7 +33,7 @@ export default function MyVouchersPage() {
 
     const { data, error } = await supabase
       .from("voucher_requests")
-      .select("id, voucher_type, coins_spent, status, voucher_code, requested_at, delivered_at, refund_reason, refund_amount, refunded_at")
+      .select("id, voucher_type, coins_spent, charged_coins, status, voucher_code, requested_at, delivered_at, refund_reason, refund_amount, refunded_at")
       .eq("contributor_id", user.id)
       .order("requested_at", { ascending: false });
 
@@ -211,7 +212,7 @@ export default function MyVouchersPage() {
                               <div>
                                 <p className="font-semibold text-slate-800">{r.voucher_type}</p>
                                 <p className="text-xs text-slate-400">
-                                  🪙 {r.coins_spent.toLocaleString()} NexCoins
+                                  🪙 {(r.charged_coins ?? r.coins_spent).toLocaleString()} NexCoins
                                   {r.delivered_at && (
                                     <> · 📅 {new Date(r.delivered_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}</>
                                   )}
@@ -321,7 +322,7 @@ export default function MyVouchersPage() {
                             <div>
                               <p className="font-semibold text-slate-800">{r.voucher_type}</p>
                               <p className="text-xs text-slate-400">
-                                {r.coins_spent.toLocaleString()} coins · {new Date(r.requested_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+                                {(r.charged_coins ?? r.coins_spent).toLocaleString()} coins · {new Date(r.requested_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
                               </p>
                             </div>
                           </div>
@@ -392,7 +393,7 @@ export default function MyVouchersPage() {
                             Requested {new Date(request.requested_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
                           </p>
                           <p className="mt-2 text-sm text-slate-600">
-                            {request.refund_amount?.toLocaleString() ?? request.coins_spent.toLocaleString()} coins refunded
+                            {request.refund_amount?.toLocaleString() ?? (request.charged_coins ?? request.coins_spent).toLocaleString()} coins refunded
                             {request.refunded_at && ` on ${new Date(request.refunded_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}`}
                           </p>
                           {request.refund_reason && (

@@ -13,5 +13,5 @@ export function isValidNexcoinAmount(amount: number): boolean {
 }
 
 export function formatNexcoins(amount: number): string {
-  return amount.toLocaleString(undefined, { maximumFractionDigits: NEXCOIN_DECIMAL_PLACES });
+  return amount.toLocaleString(undefined, { maximumFractionDigits: 2 });
 }

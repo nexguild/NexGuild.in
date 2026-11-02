@@ -3,6 +3,7 @@ import { createServerClient } from "@/lib/supabase-server";
 import { SupabaseClient } from "@supabase/supabase-js";
 import { getVoucherCategoryEmoji, isVoucherCategory } from "@/lib/voucher-categories";
 import { DEFAULT_VOUCHER_HOW_TO_USE, DEFAULT_VOUCHER_TERMS } from "@/lib/voucher-guidance";
+import { getVoucherDiscountedCoins } from "@/lib/voucher-pricing";
 
 // finance role can read and manage the voucher catalog
 const ALLOWED_ROLES = ["owner", "admin", "finance"];
@@ -36,7 +37,7 @@ export async function GET(req: NextRequest) {
 
   const { data, error } = await admin
     .from("voucher_inventory")
-    .select("id, brand_name, description, value_inr, coins_required, category, emoji, how_to_use, terms_and_conditions, is_available, created_at")
+    .select("id, brand_name, description, value_inr, coins_required, discount_percent, category, emoji, how_to_use, terms_and_conditions, is_available, created_at")
     .order("brand_name", { ascending: true })
     .order("coins_required", { ascending: true });
 
@@ -55,7 +56,8 @@ export async function POST(req: NextRequest) {
     description?: string;
     value_inr?: number;
     coins_required?: number;
-    denominations?: Array<{ value_inr?: number; coins_required?: number; is_available?: boolean }>;
+    discount_percent?: number;
+    denominations?: Array<{ value_inr?: number; coins_required?: number; discount_percent?: number; is_available?: boolean }>;
     category?: string;
     how_to_use?: unknown;
     terms_and_conditions?: unknown;
@@ -80,7 +82,7 @@ export async function POST(req: NextRequest) {
     if (!Array.isArray(requestedDenominations) || requestedDenominations.length === 0 || requestedDenominations.length > 20) {
       return NextResponse.json({ error: "Add between 1 and 20 voucher denominations." }, { status: 400 });
     }
-    const normalizedDenominations: Array<{ value_inr: number; coins_required: number; is_available: boolean }> = [];
+    const normalizedDenominations: Array<{ value_inr: number; coins_required: number; discount_percent: number; is_available: boolean }> = [];
     for (const denomination of requestedDenominations) {
       if (!denomination || typeof denomination !== "object") {
         return NextResponse.json({ error: "Each denomination must include a value and NexCoins amount." }, { status: 400 });
@@ -91,12 +93,20 @@ export async function POST(req: NextRequest) {
       if (typeof denomination.coins_required !== "number" || !Number.isSafeInteger(denomination.coins_required) || denomination.coins_required <= 0) {
         return NextResponse.json({ error: "NexCoins required must be a positive whole number for every denomination." }, { status: 400 });
       }
+      const discountPercent = denomination.discount_percent ?? 0;
+      if (!Number.isSafeInteger(discountPercent) || discountPercent < 0 || discountPercent > 99) {
+        return NextResponse.json({ error: "Discount must be a whole percentage from 0 to 99." }, { status: 400 });
+      }
+      if (discountPercent > 0 && getVoucherDiscountedCoins(denomination.coins_required, discountPercent) >= denomination.coins_required) {
+        return NextResponse.json({ error: "The selected discount must reduce the NexCoins price by at least 1 coin." }, { status: 400 });
+      }
       if (denomination.is_available !== undefined && typeof denomination.is_available !== "boolean") {
         return NextResponse.json({ error: "Availability must be selected for every denomination." }, { status: 400 });
       }
       normalizedDenominations.push({
         value_inr: denomination.value_inr,
         coins_required: denomination.coins_required,
+        discount_percent: discountPercent,
         is_available: denomination.is_available ?? true,
       });
     }
@@ -106,12 +116,13 @@ export async function POST(req: NextRequest) {
 
     const { data, error } = await admin
       .from("voucher_inventory")
-      .insert(normalizedDenominations.map(({ value_inr: denominationValue, coins_required: denominationCoins, is_available }) => ({
+      .insert(normalizedDenominations.map(({ value_inr: denominationValue, coins_required: denominationCoins, discount_percent, is_available }) => ({
         brand_name:     brand_name.trim(),
         description:    description?.trim() ?? "",
         value_inr:      denominationValue,
         value_usd:      null,
         coins_required: denominationCoins,
+        discount_percent,
         category:       category ?? "shopping",
         emoji:          getVoucherCategoryEmoji(category ?? "shopping"),
         how_to_use:     howToUse.items,
@@ -147,6 +158,15 @@ export async function POST(req: NextRequest) {
       && (!Number.isSafeInteger(body.coins_required) || body.coins_required <= 0)) {
       return NextResponse.json({ error: "NexCoins required must be a positive whole number." }, { status: 400 });
     }
+    if (body.discount_percent !== undefined
+      && (!Number.isSafeInteger(body.discount_percent) || body.discount_percent < 0 || body.discount_percent > 99)) {
+      return NextResponse.json({ error: "Discount must be a whole percentage from 0 to 99." }, { status: 400 });
+    }
+    if (body.discount_percent !== undefined && body.discount_percent > 0
+      && typeof body.coins_required === "number"
+      && getVoucherDiscountedCoins(body.coins_required, body.discount_percent) >= body.coins_required) {
+      return NextResponse.json({ error: "The selected discount must reduce the NexCoins price by at least 1 coin." }, { status: 400 });
+    }
 
     const updates: Record<string, unknown> = {};
     if (body.brand_name     !== undefined) updates.brand_name     = body.brand_name.trim();
@@ -157,6 +177,7 @@ export async function POST(req: NextRequest) {
     updates.country_codes_verified = true;
     if (body.is_available !== undefined) updates.is_available = body.is_available;
     if (body.coins_required !== undefined) updates.coins_required = body.coins_required;
+    if (body.discount_percent !== undefined) updates.discount_percent = body.discount_percent;
     if (body.category !== undefined) {
       updates.category = body.category;
       updates.emoji = getVoucherCategoryEmoji(body.category);

@@ -11,6 +11,7 @@ import { GlobalPayoutCard } from "@/components/dashboard/GlobalPayoutCard";
 import { formatNexcoins } from "@/lib/nexcoins";
 import { getCountryName, getProfileCountryCode } from "@/lib/countries";
 import { VOUCHER_CATEGORIES } from "@/lib/voucher-categories";
+import { getVoucherDiscountedCoins } from "@/lib/voucher-pricing";
 
 interface DbVoucher {
   id: string;
@@ -18,6 +19,7 @@ interface DbVoucher {
   description: string;
   value_inr: number | null;
   coins_required: number;
+  discount_percent: number;
   category: string;
   emoji: string;
   how_to_use: string[];
@@ -98,7 +100,7 @@ export default function StorePage() {
         supabase.from("profiles").select("nexcoins, country, country_code").eq("id", user.id).single(),
         supabase
           .from("voucher_inventory")
-          .select("id, brand_name, description, value_inr, coins_required, category, emoji, how_to_use, terms_and_conditions, country_codes, country_codes_verified, is_available")
+          .select("id, brand_name, description, value_inr, coins_required, discount_percent, category, emoji, how_to_use, terms_and_conditions, country_codes, country_codes_verified, is_available")
           .order("brand_name", { ascending: true })
           .order("coins_required", { ascending: true }),
       ]);
@@ -147,7 +149,7 @@ export default function StorePage() {
   const modalVouchers   = detailBrand ? brandVouchers(detailBrand) : [];
   const selectedVoucher = vouchers.find((v) => v.id === selectedVoucherId) ?? null;
 
-  const cartTotal  = cart.reduce((s, e) => s + e.voucher.coins_required * e.qty, 0);
+  const cartTotal  = cart.reduce((s, e) => s + getVoucherDiscountedCoins(e.voucher.coins_required, e.voucher.discount_percent) * e.qty, 0);
   const discount   = coupon
     ? coupon.discountPercent > 0
       ? Math.floor(cartTotal * coupon.discountPercent / 100)
@@ -236,7 +238,9 @@ export default function StorePage() {
   const displayedBrands = brandList.filter(({ brand, category }) => {
     if (selectedCategory !== "all" && category !== selectedCategory) return false;
     if (showAffordable) {
-      const minCoins = Math.min(...brandVouchers(brand).map((v) => v.coins_required));
+      const availableVouchers = brandVouchers(brand).filter((voucher) => voucher.is_available);
+      if (availableVouchers.length === 0) return false;
+      const minCoins = Math.min(...availableVouchers.map((v) => getVoucherDiscountedCoins(v.coins_required, v.discount_percent)));
       if ((nexcoins ?? 0) < minCoins) return false;
     }
     return true;
@@ -464,7 +468,7 @@ export default function StorePage() {
             const bv        = brandVouchers(brand);
             const availableVouchers = bv.filter((voucher) => voucher.is_available);
             const available = availableVouchers.length > 0;
-            const minCoins  = Math.min(...(available ? availableVouchers : bv).map((v) => v.coins_required));
+            const minCoins  = Math.min(...(available ? availableVouchers : bv).map((v) => getVoucherDiscountedCoins(v.coins_required, v.discount_percent)));
             const canAfford = available && (nexcoins ?? 0) >= minCoins;
             const needed    = minCoins - (nexcoins ?? 0);
             const category  = VOUCHER_CATEGORIES.find((item) => item.value === bv[0]?.category);
@@ -507,7 +511,8 @@ export default function StorePage() {
                               : "border-[var(--border-default)] bg-[var(--surface-subtle)] text-[var(--text-muted)] line-through"
                           }`}
                         >
-                          {formatValue(v, countryCode)}
+                          <span>{formatValue(v, countryCode)}</span>
+                          {v.discount_percent > 0 && <span className="ml-1 text-[10px] font-bold text-emerald-600 dark:text-emerald-400">{v.discount_percent}% off</span>}
                         </span>
                       ))}
                     </div>
@@ -590,7 +595,13 @@ export default function StorePage() {
                             : "border-[var(--border-default)] text-[var(--text-muted)] opacity-50 cursor-not-allowed line-through"
                         }`}
                       >
-                        {formatValue(v, countryCode)}
+                        <span className="block">{formatValue(v, countryCode)}</span>
+                        {v.discount_percent > 0 ? (
+                          <span className="mt-1 flex items-center justify-center gap-1 text-[10px] font-medium">
+                            <span className="text-[var(--text-muted)] line-through">{v.coins_required.toLocaleString()}</span>
+                            <span className="text-emerald-600 dark:text-emerald-400">{getVoucherDiscountedCoins(v.coins_required, v.discount_percent).toLocaleString()} coins</span>
+                          </span>
+                        ) : <span className="mt-1 block text-[10px] font-medium text-[var(--text-secondary)]">{v.coins_required.toLocaleString()} coins</span>}
                         {!avail && <span className="block text-[10px] font-normal">Sold out</span>}
                       </button>
                     );
@@ -607,7 +618,9 @@ export default function StorePage() {
                   <p className="text-xs text-[var(--text-muted)] mb-1">Coins Required</p>
                   <div className="flex items-center gap-1.5 justify-end">
                     <NexCoinIcon size={16} />
-                    <span className="text-xl font-bold text-[var(--brand-500)]">{selectedVoucher.coins_required.toLocaleString()}</span>
+                    {selectedVoucher.discount_percent > 0 && <span className="text-xs text-[var(--text-muted)] line-through">{selectedVoucher.coins_required.toLocaleString()}</span>}
+                    <span className="text-xl font-bold text-[var(--brand-500)]">{getVoucherDiscountedCoins(selectedVoucher.coins_required, selectedVoucher.discount_percent).toLocaleString()}</span>
+                    {selectedVoucher.discount_percent > 0 && <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400">{selectedVoucher.discount_percent}% off</span>}
                   </div>
                 </div>
               </div>
@@ -643,12 +656,12 @@ export default function StorePage() {
               <Button variant="ghost" className="flex-1" onClick={() => setDetailBrand(null)}>Close</Button>
               <Button
                 className="flex-1"
-                disabled={!selectedVoucher.is_available || (nexcoins ?? 0) < selectedVoucher.coins_required || loading}
+                disabled={!selectedVoucher.is_available || (nexcoins ?? 0) < getVoucherDiscountedCoins(selectedVoucher.coins_required, selectedVoucher.discount_percent) || loading}
                 onClick={() => addToCart(selectedVoucher)}
               >
                 {!selectedVoucher.is_available
                   ? "Sold Out"
-                  : (nexcoins ?? 0) < selectedVoucher.coins_required
+                  : (nexcoins ?? 0) < getVoucherDiscountedCoins(selectedVoucher.coins_required, selectedVoucher.discount_percent)
                   ? "Need more coins"
                   : "Add to Cart"}
               </Button>
@@ -696,7 +709,13 @@ export default function StorePage() {
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium text-[var(--text-primary)] truncate">{entry.voucher.brand_name}</p>
-                          <p className="text-xs text-[var(--text-muted)]">{formatValue(entry.voucher, countryCode)} · {entry.voucher.coins_required.toLocaleString()} coins each</p>
+                          <p className="text-xs text-[var(--text-muted)]">
+                            {formatValue(entry.voucher, countryCode)} ·{" "}
+                            {entry.voucher.discount_percent > 0 && <span className="mr-1 line-through">{entry.voucher.coins_required.toLocaleString()}</span>}
+                            <span className={entry.voucher.discount_percent > 0 ? "font-semibold text-emerald-600 dark:text-emerald-400" : ""}>
+                              {getVoucherDiscountedCoins(entry.voucher.coins_required, entry.voucher.discount_percent).toLocaleString()} coins each
+                            </span>
+                          </p>
                         </div>
                         <div className="flex items-center gap-1 flex-shrink-0">
                           <button onClick={() => updateQty(entry.voucher.id, -1)} className="h-6 w-6 rounded-md border border-[var(--border-default)] flex items-center justify-center hover:bg-[var(--surface-card)]">

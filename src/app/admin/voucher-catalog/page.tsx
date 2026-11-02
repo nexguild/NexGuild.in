@@ -8,6 +8,7 @@ import { usePageGuard } from "@/components/layout/admin-auth-guard";
 import { ADMIN_ROLES } from "@/lib/admin-permissions";
 import { getVoucherCategoryEmoji, VOUCHER_CATEGORIES } from "@/lib/voucher-categories";
 import { DEFAULT_VOUCHER_HOW_TO_USE, DEFAULT_VOUCHER_TERMS } from "@/lib/voucher-guidance";
+import { getVoucherDiscountedCoins } from "@/lib/voucher-pricing";
 
 const CATEGORY_LABELS: Record<string, string> = Object.fromEntries(
   VOUCHER_CATEGORIES.map((category) => [category.value, category.label]),
@@ -19,6 +20,7 @@ interface DbVoucher {
   description: string;
   value_inr: number | null;
   coins_required: number;
+  discount_percent: number;
   category: string;
   emoji: string;
   how_to_use: string[];
@@ -35,6 +37,7 @@ function fmtPrice(v: DbVoucher): string {
 type DenominationForm = {
   value_inr: string;
   coins_required: string;
+  discount_percent: string;
   coins_overridden: boolean;
   is_available: boolean;
 };
@@ -51,7 +54,7 @@ type FormState = {
 const EMPTY_FORM: FormState = {
   brand_name: "",
   description: "",
-  denominations: [{ value_inr: "", coins_required: "", coins_overridden: false, is_available: true }],
+  denominations: [{ value_inr: "", coins_required: "", discount_percent: "0", coins_overridden: false, is_available: true }],
   category: "shopping",
   how_to_use: [...DEFAULT_VOUCHER_HOW_TO_USE],
   terms_and_conditions: [...DEFAULT_VOUCHER_TERMS],
@@ -149,6 +152,7 @@ export default function VoucherCatalogPage() {
       denominations: [{
         value_inr: v.value_inr && v.value_inr > 0 ? String(v.value_inr) : "",
         coins_required: String(v.coins_required),
+        discount_percent: String(v.discount_percent ?? 0),
         coins_overridden: true,
         is_available: v.is_available,
       }],
@@ -170,6 +174,7 @@ export default function VoucherCatalogPage() {
     const denominations = form.denominations.map((denomination) => ({
       value_inr: Number(denomination.value_inr),
       coins_required: Number(denomination.coins_required),
+      discount_percent: Number(denomination.discount_percent),
       is_available: denomination.is_available,
     }));
     if (denominations.some(({ value_inr }) => !Number.isSafeInteger(value_inr) || value_inr <= 0)) {
@@ -177,6 +182,13 @@ export default function VoucherCatalogPage() {
     }
     if (denominations.some(({ coins_required }) => !Number.isSafeInteger(coins_required) || coins_required <= 0)) {
       setFormErr("NexCoins required must be a positive whole number for every denomination."); return;
+    }
+    if (denominations.some(({ discount_percent }) => !Number.isSafeInteger(discount_percent) || discount_percent < 0 || discount_percent > 99)) {
+      setFormErr("Discount must be a whole percentage from 0 to 99 for every denomination."); return;
+    }
+    if (denominations.some(({ coins_required, discount_percent }) => discount_percent > 0
+      && getVoucherDiscountedCoins(coins_required, discount_percent) >= coins_required)) {
+      setFormErr("The selected discount must reduce the NexCoins price by at least 1 coin."); return;
     }
     if (!editId && new Set(denominations.map(({ value_inr }) => value_inr)).size !== denominations.length) {
       setFormErr("Each denomination value must be unique."); return;
@@ -240,11 +252,12 @@ export default function VoucherCatalogPage() {
     });
   }
 
-  function setDenominationField(index: number, field: "value_inr" | "coins_required", value: string) {
+  function setDenominationField(index: number, field: "value_inr" | "coins_required" | "discount_percent", value: string) {
     setForm((prev) => ({
       ...prev,
       denominations: prev.denominations.map((denomination, denominationIndex) => {
         if (denominationIndex !== index) return denomination;
+        if (field === "discount_percent") return { ...denomination, discount_percent: value };
         if (field === "coins_required") {
           return { ...denomination, coins_required: value, coins_overridden: true };
         }
@@ -269,7 +282,7 @@ export default function VoucherCatalogPage() {
   function addDenomination() {
     setForm((prev) => prev.denominations.length >= 20
       ? prev
-      : { ...prev, denominations: [...prev.denominations, { value_inr: "", coins_required: "", coins_overridden: false, is_available: true }] });
+      : { ...prev, denominations: [...prev.denominations, { value_inr: "", coins_required: "", discount_percent: "0", coins_overridden: false, is_available: true }] });
   }
 
   function removeDenomination(index: number) {
@@ -318,7 +331,7 @@ export default function VoucherCatalogPage() {
       {/* Stats row */}
       {loadError && (
         <p role="alert" className="rounded-lg border border-red-500/20 bg-red-500/5 px-4 py-3 text-sm text-red-400">
-          Could not load the catalog: {loadError}. Ensure the latest voucher catalog migrations, including migrations_v44.sql, have been applied.
+          Could not load the catalog: {loadError}. Ensure the latest voucher catalog migrations, including migrations_v46.sql, have been applied.
         </p>
       )}
       <div className="flex items-center gap-4 flex-wrap text-sm text-[var(--text-muted)]">
@@ -348,10 +361,10 @@ export default function VoucherCatalogPage() {
         </div>
       ) : (
         <div className="rounded-xl border border-[var(--border-default)] bg-[var(--surface-card)] overflow-x-auto">
-          <table className="w-full text-sm min-w-[900px]">
+          <table className="w-full text-sm min-w-[960px]">
             <thead>
               <tr className="bg-[var(--surface-subtle)] border-b border-[var(--border-default)]">
-                {["", "Brand", "Description", "Value", "Coins", "Category", "Countries", "Status", "Actions"].map((h) => (
+                {["", "Brand", "Description", "Value", "NexCoins", "Category", "Countries", "Status", "Actions"].map((h) => (
                   <th key={h} className="text-left px-4 py-3 font-medium text-[var(--text-secondary)] whitespace-nowrap">{h}</th>
                 ))}
               </tr>
@@ -363,7 +376,13 @@ export default function VoucherCatalogPage() {
                   <td className="px-4 py-3 font-semibold text-[var(--text-primary)] whitespace-nowrap">{v.brand_name}</td>
                   <td className="px-4 py-3 text-[var(--text-secondary)] max-w-[200px] truncate">{v.description || "—"}</td>
                   <td className="px-4 py-3 font-semibold text-[var(--text-primary)]">{fmtPrice(v)}</td>
-                  <td className="px-4 py-3 text-[var(--brand-500)] font-medium">{v.coins_required.toLocaleString()}</td>
+                  <td className="px-4 py-3">
+                    <span className="font-semibold text-[var(--brand-500)]">{getVoucherDiscountedCoins(v.coins_required, v.discount_percent).toLocaleString()}</span>
+                    {v.discount_percent > 0 && (
+                      <span className="ml-2 text-xs text-[var(--text-muted)] line-through">{v.coins_required.toLocaleString()}</span>
+                    )}
+                    {v.discount_percent > 0 && <span className="ml-2 text-xs font-semibold text-emerald-500">{v.discount_percent}% off</span>}
+                  </td>
                   <td className="px-4 py-3">
                     <span className="text-xs px-2 py-0.5 rounded-full bg-[var(--surface-subtle)] text-[var(--text-secondary)] border border-[var(--border-default)] capitalize">
                       {CATEGORY_LABELS[v.category] ?? v.category}
@@ -477,7 +496,7 @@ export default function VoucherCatalogPage() {
                   </div>
                   <div className="space-y-3">
                     {form.denominations.map((denomination, index) => (
-                      <div key={`denomination-${index}`} className="grid grid-cols-1 sm:grid-cols-[1fr_1fr_auto_auto] items-end gap-3 rounded-lg border border-[var(--border-default)] p-3">
+                      <div key={`denomination-${index}`} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_120px_auto_auto] items-end gap-3 rounded-lg border border-[var(--border-default)] p-3">
                         <div>
                           <label className="block text-xs font-medium text-[var(--text-primary)] mb-1.5">Value in ₹ (INR) *</label>
                           <input
@@ -490,6 +509,20 @@ export default function VoucherCatalogPage() {
                             placeholder="100"
                             aria-label={`Denomination ${index + 1} value in INR`}
                             className="w-full h-10 px-3 rounded-md border border-[var(--border-strong)] bg-[var(--surface-subtle)] text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--border-focus)]"
+                          />
+                        </div>
+                        <div>
+                          <label className="mb-1.5 block text-xs font-medium text-[var(--text-primary)]">Discount %</label>
+                          <input
+                            type="number"
+                            min="0"
+                            max="99"
+                            step="1"
+                            required
+                            value={denomination.discount_percent}
+                            onChange={(event) => setDenominationField(index, "discount_percent", event.target.value)}
+                            aria-label={`Denomination ${index + 1} discount percentage`}
+                            className="h-10 w-full rounded-md border border-[var(--border-strong)] bg-[var(--surface-subtle)] px-3 text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--border-focus)]"
                           />
                         </div>
                         <div>
