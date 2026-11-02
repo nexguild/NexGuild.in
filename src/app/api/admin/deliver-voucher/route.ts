@@ -43,7 +43,7 @@ export async function POST(req: NextRequest) {
     // ── Fetch voucher request + contributor profile ───────────────
     const { data: vr, error: fetchErr } = await admin
       .from("voucher_requests")
-      .select("id, voucher_type, coins_spent, contributor_id, status, profiles(full_name, email)")
+      .select("id, voucher_type, coins_spent, contributor_id, status, profiles:profiles!voucher_requests_contributor_id_fkey(full_name, email)")
       .eq("id", requestId)
       .single();
 
