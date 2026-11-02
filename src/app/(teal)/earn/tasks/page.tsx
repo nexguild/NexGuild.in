@@ -146,7 +146,7 @@ function AuthButton({ href, featured }: { href?: string; featured?: boolean }) {
 
   if (loggedIn === null) return <div style={{ height: 38 }} />;
 
-  const dest = href ?? (loggedIn ? "/dashboard/tasks" : "/signup");
+  const dest = href ?? (loggedIn ? "/dashboard" : "/signup");
   const label = href ? "Browse →" : loggedIn ? "Start Task →" : "Sign Up to Apply →";
 
   if (featured) {

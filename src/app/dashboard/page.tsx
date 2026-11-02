@@ -602,6 +602,10 @@ export default function DashboardHome() {
   const countCoins  = useCountUp(profile?.nexcoins ?? 0);
   const countEarned = useCountUp(totalEarned);
   const countDone   = useCountUp(tasksDone);
+  const displayCoins = countCoins < (profile?.nexcoins ?? 0) ? Math.floor(countCoins) : countCoins;
+  const displayEarned = countEarned < totalEarned
+    ? Math.floor(countEarned)
+    : countEarned;
   const estimatedUsd = (profile?.nexcoins ?? 0) / nexcoinPerUsd;
   const featuredTasks = tasks
     .filter((task) => (task.required_level ?? 1) <= userLevel)
@@ -767,12 +771,12 @@ export default function DashboardHome() {
                   <ArrowRight className="h-4 w-4" />
                 </Link>
               </div>
-              <div className="mt-3 flex items-center gap-3">
-                <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#d6b66e]/15 ring-1 ring-[#e2c47c]/25">
+              <div className="mt-3 flex min-w-0 items-center gap-3">
+                <span className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl bg-[#d6b66e]/15 ring-1 ring-[#e2c47c]/25">
                   <NexCoinIcon size={30} />
                 </span>
-                <div>
-                  <p className="text-3xl font-semibold tracking-tight">{loading ? "—" : formatNexcoins(countCoins)} <span className="text-sm font-medium text-white/60">NC</span></p>
+                <div className="min-w-0 flex-1">
+                  <p className="whitespace-nowrap text-xl font-semibold tabular-nums tracking-tight sm:text-3xl">{loading ? "—" : formatNexcoins(displayCoins)} <span className="hidden text-sm font-medium text-white/60 sm:inline">NC</span></p>
                   <p className="mt-0.5 text-xs text-white/55">{loading ? "Your NexCoin balance" : `≈ $${estimatedUsd.toFixed(2)} estimated value`}</p>
                 </div>
               </div>
@@ -787,7 +791,7 @@ export default function DashboardHome() {
                 <div className="mt-4 grid grid-cols-2 gap-3">
                   <div className="rounded-xl border border-white/10 bg-black/[0.12] px-3 py-2.5">
                     <p className="text-[10px] font-medium uppercase tracking-wider text-white/45">Lifetime earned</p>
-                    <p className="mt-1 flex items-center gap-1.5 text-sm font-bold text-white/90"><NexCoinIcon size={15} />{loading ? "—" : formatNexcoins(countEarned)}</p>
+                    <p className="mt-1 flex min-w-0 items-center gap-1.5 overflow-hidden text-sm font-bold text-white/90"><NexCoinIcon size={15} /><span className="truncate tabular-nums">{loading ? "—" : formatNexcoins(displayEarned)}</span></p>
                   </div>
                   <div className="rounded-xl border border-white/10 bg-black/[0.12] px-3 py-2.5">
                     <p className="text-[10px] font-medium uppercase tracking-wider text-white/45">Current streak</p>
@@ -967,7 +971,7 @@ export default function DashboardHome() {
           },
           {
             label: "Total Earned",
-            value: loading ? "—" : formatNexcoins(countEarned),
+            value: loading ? "—" : formatNexcoins(displayEarned),
             sub: "Lifetime coins earned",
             icon: <NexCoinIcon size={18} />,
             topBorder: "border-t-[#c4a15a]",

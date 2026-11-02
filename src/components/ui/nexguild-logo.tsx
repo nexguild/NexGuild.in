@@ -5,6 +5,7 @@ interface NexGuildLogoProps {
   variant?: "navbar" | "landing" | "footer";
   className?: string;
   href?: string;
+  compactOnMobile?: boolean;
 }
 
 export function NexGuildLogo({
@@ -12,6 +13,7 @@ export function NexGuildLogo({
   variant = "navbar",
   className,
   href = "/",
+  compactOnMobile = false,
 }: NexGuildLogoProps) {
   const accent = theme === "teal" ? "#14b8a6" : theme === "light" ? "#02b491" : "#F59E0B";
   const textColor = theme === "light" ? "#0F172A" : "#ffffff";
@@ -56,10 +58,10 @@ export function NexGuildLogo({
         href={href}
         aria-label="NexGuild — Home"
         className={className}
-        style={{ display: "inline-flex", alignItems: "center", flexShrink: 0, textDecoration: "none", gap: "8px" }}
+        style={{ display: "inline-flex", alignItems: "center", flexShrink: 0, textDecoration: "none", gap: compactOnMobile ? "3px" : "8px" }}
       >
         {/* SVG inlined — no inner component refs, safe across all build optimisations */}
-        <svg width="42" height="40" viewBox="0 0 42 40" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <svg width={compactOnMobile ? "32" : "42"} height={compactOnMobile ? "32" : "40"} viewBox="0 0 42 40" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
           <g transform="translate(20, 20)">
             <circle cx="0" cy="-6" r="6" fill={accent}/>
             <rect x="-6" y="2" width="12" height="10" rx="6" fill={accent}/>
@@ -69,7 +71,10 @@ export function NexGuildLogo({
             <rect x="9" y="4" width="9" height="8" rx="4.5" fill={accent} opacity="0.7"/>
           </g>
         </svg>
-        <span style={{ fontFamily: "Arial, sans-serif", fontWeight: 900, fontSize: "20px", color: textColor, letterSpacing: "0.5px" }}>
+        <span
+          className={compactOnMobile ? "text-[15px] sm:text-xl" : undefined}
+          style={{ fontFamily: "Arial, sans-serif", fontWeight: 900, fontSize: compactOnMobile ? undefined : "20px", color: textColor, letterSpacing: "0.2px" }}
+        >
           Nex<span style={{ color: accent }}>Guild</span>
         </span>
       </Link>

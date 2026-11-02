@@ -439,11 +439,11 @@ if (existingChannel) {
   return (
     <>
     <header className="fixed inset-x-0 top-0 z-30 border-b border-slate-200 bg-white/95 shadow-sm backdrop-blur-md">
-      <div className="mx-auto flex h-16 max-w-[1600px] items-center justify-between gap-3 px-4 sm:px-6 xl:px-10">
-        <div className="flex min-w-0 items-center gap-3">
+      <div className="mx-auto flex h-16 max-w-[1600px] items-center justify-between gap-1 px-2 sm:gap-3 sm:px-6 xl:px-10">
+        <div className="flex min-w-0 items-center gap-1 sm:gap-3">
           <button
             type="button"
-            className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl text-slate-600 transition-colors hover:bg-teal-50 hover:text-teal-800 lg:hidden"
+            className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl text-slate-600 transition-colors hover:bg-teal-50 hover:text-teal-800 sm:h-10 sm:w-10 lg:hidden"
             aria-label="Open dashboard navigation"
             aria-expanded={mobileNavOpen}
             aria-controls="dashboard-mobile-drawer"
@@ -451,7 +451,7 @@ if (existingChannel) {
           >
             <Menu className="h-5 w-5" />
           </button>
-          <NexGuildLogo theme="light" href="/dashboard" />
+          <NexGuildLogo theme="light" href="/dashboard" compactOnMobile />
           <span className="hidden h-7 w-px bg-slate-200 xl:block" />
           <div className="hidden min-w-0 xl:block">
             <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-slate-400">Member space</p>
@@ -466,17 +466,18 @@ if (existingChannel) {
           />
         </div>
 
-        <div className="flex items-center gap-1.5">
+        <div className="flex flex-shrink-0 items-center gap-0.5 sm:gap-1.5">
           <Link
             href="/dashboard/store"
             aria-current={pathname === "/dashboard/store" ? "page" : undefined}
-            className={`inline-flex h-10 items-center gap-2 rounded-xl px-3 text-[13px] font-semibold transition-colors ${
+            aria-label="Cashout"
+            className={`inline-flex h-8 flex-shrink-0 items-center justify-center gap-1 rounded-xl px-2 text-[11px] font-semibold transition-colors sm:h-10 sm:gap-2 sm:px-3 sm:text-[13px] ${
               pathname === "/dashboard/store"
                 ? "bg-teal-700 text-white shadow-sm"
                 : "bg-teal-50 text-teal-800 hover:bg-teal-100"
             }`}
           >
-            <Banknote className="h-4 w-4" />
+            <Banknote className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
             <span>Cashout</span>
           </Link>
           {/* Notification Bell */}
@@ -606,7 +607,7 @@ if (existingChannel) {
             <span className="hidden sm:block text-sm font-semibold text-slate-700 max-w-[100px] truncate">
               {userName ? userName.split(" ")[0] : ""}
             </span>
-            <ChevronDown className={`h-4 w-4 text-slate-400 transition-transform duration-200 ${menuOpen ? "rotate-180" : ""}`} />
+            <ChevronDown className={`hidden h-4 w-4 text-slate-400 transition-transform duration-200 sm:block ${menuOpen ? "rotate-180" : ""}`} />
           </button>
 
           {menuOpen && (

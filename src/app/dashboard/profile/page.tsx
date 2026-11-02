@@ -323,21 +323,21 @@ export default function ProfilePage() {
           </div>
 
           {/* ── NexCoins Balance ────────────────────────────────────────── */}
-          <div className="flex items-center justify-between gap-4 rounded-2xl bg-gradient-to-r from-amber-400 to-amber-500 p-5 shadow-md">
-            <div className="flex items-center gap-4">
-              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/20">
+          <div className="flex flex-col gap-4 rounded-2xl bg-gradient-to-r from-amber-400 to-amber-500 p-4 shadow-md sm:flex-row sm:items-center sm:justify-between sm:p-5">
+            <div className="flex min-w-0 items-center gap-3 sm:gap-4">
+              <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl bg-white/20 sm:h-14 sm:w-14">
                 <NexCoinIcon size={32} />
               </div>
-              <div>
+              <div className="min-w-0">
                 <p className="text-white/80 text-sm font-medium">NexCoins Balance</p>
-                <p className="text-white text-4xl font-bold leading-tight">
+                <p className="whitespace-nowrap text-2xl font-bold leading-tight tabular-nums sm:text-4xl">
                   {loading ? "—" : formatNexcoins(profile?.nexcoins ?? 0)}
                 </p>
               </div>
             </div>
             <Link
               href="/dashboard/store"
-              className="flex-shrink-0 rounded-xl bg-white px-4 py-2 text-sm font-semibold text-amber-600 transition-colors hover:bg-amber-50"
+              className="inline-flex min-h-10 w-full flex-shrink-0 items-center justify-center whitespace-nowrap rounded-xl bg-white px-4 py-2 text-sm font-semibold text-amber-600 transition-colors hover:bg-amber-50 sm:w-auto"
             >
               Redeem in Store →
             </Link>
