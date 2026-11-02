@@ -465,7 +465,7 @@ export default function VoucherCatalogPage() {
       {/* ── Add / Edit Modal ─────────────────────────────────────────── */}
       {showForm && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/60">
-          <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-[var(--surface-card)] rounded-xl border border-[var(--border-default)] p-6 shadow-xl">
+          <div className="w-full max-w-4xl max-h-[90vh] overflow-y-auto bg-[var(--surface-card)] rounded-xl border border-[var(--border-default)] p-6 shadow-xl">
             <div className="flex items-center justify-between mb-5">
               <h2 className="text-lg font-semibold text-[var(--text-primary)]">
                 {editId ? "Edit Voucher" : "Add Voucher"}
@@ -522,9 +522,9 @@ export default function VoucherCatalogPage() {
                       <Plus className="h-3.5 w-3.5" /> Add denomination
                     </button>
                   </div>
-                  <div className="space-y-3">
+                  <div className="space-y-2">
                     {form.denominations.map((denomination, index) => (
-                      <div key={`denomination-${index}`} className="grid grid-cols-1 gap-3 rounded-lg border border-[var(--border-default)] p-3 sm:grid-cols-2">
+                      <div key={`denomination-${index}`} className="grid grid-cols-1 gap-3 rounded-lg border border-[var(--border-default)] bg-[var(--surface-subtle)]/40 p-3 sm:grid-cols-2 lg:grid-cols-[1fr_0.8fr_1.2fr_190px] lg:items-start">
                         <div>
                           <label className="block text-xs font-medium text-[var(--text-primary)] mb-1.5">Value in ₹ (INR) *</label>
                           <input

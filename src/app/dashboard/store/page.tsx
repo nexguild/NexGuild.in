@@ -508,19 +508,28 @@ export default function StorePage() {
                       {bv.map((v) => (
                         <span
                           key={v.id}
-                          className={`inline-flex items-center gap-2 rounded-lg border px-2.5 py-1.5 shadow-sm transition-colors ${
+                          className="inline-flex items-center gap-1.5"
+                        >
+                          <span className={`inline-flex items-center gap-2 rounded-lg border px-2.5 py-1.5 shadow-sm transition-colors ${
                             v.is_available
                               ? v.discount_percent > 0
                                 ? "border-amber-500/30 bg-gradient-to-br from-amber-500/[0.12] via-[var(--surface-card)] to-orange-500/[0.06] text-[var(--text-primary)]"
                                 : "border-[var(--border-default)] bg-[var(--surface-subtle)] text-[var(--text-primary)]"
-                              : "border-[var(--border-default)] bg-[var(--surface-subtle)] text-[var(--text-muted)] line-through"
-                          }`}
-                        >
-                          <span className="text-xs font-bold tracking-tight">{formatValue(v, countryCode)}</span>
-                          {v.discount_percent > 0 && (
-                            <span className="inline-flex -rotate-2 items-center gap-1 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 px-2 py-1 text-[9px] font-extrabold uppercase tracking-wide text-white shadow-md shadow-orange-500/25 ring-1 ring-white/30">
-                              <Sparkles aria-hidden="true" className="h-2.5 w-2.5" />
-                              {v.discount_percent}% OFF COINS
+                              : "border-[var(--border-default)] bg-[var(--surface-subtle)] text-[var(--text-muted)]"
+                          }`}>
+                            <span className={`text-xs font-bold tracking-tight ${!v.is_available ? "line-through" : ""}`}>
+                              {formatValue(v, countryCode)}
+                            </span>
+                            {v.discount_percent > 0 && (
+                              <span className="inline-flex -rotate-2 items-center gap-1 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 px-2 py-1 text-[9px] font-extrabold uppercase tracking-wide text-white shadow-md shadow-orange-500/25 ring-1 ring-white/30">
+                                <Sparkles aria-hidden="true" className="h-2.5 w-2.5" />
+                                {v.discount_percent}% OFF COINS
+                              </span>
+                            )}
+                          </span>
+                          {!v.is_available && (
+                            <span className="whitespace-nowrap text-[10px] font-semibold text-red-500 dark:text-red-400">
+                              Out of stock
                             </span>
                           )}
                         </span>
