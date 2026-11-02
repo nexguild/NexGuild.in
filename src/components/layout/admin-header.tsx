@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Search, ChevronDown, User, Settings, LogOut, Menu } from "lucide-react";
+import { Search, ChevronDown, User, Settings, LogOut, Menu, Download, Share, MoreVertical, X } from "lucide-react";
 import { Avatar } from "@/components/ui/avatar";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
@@ -38,6 +38,11 @@ interface AdminHeaderProps {
   onMenuToggle: () => void;
 }
 
+interface BeforeInstallPromptEvent extends Event {
+  prompt: () => Promise<void>;
+  userChoice: Promise<{ outcome: "accepted" | "dismissed"; platform: string }>;
+}
+
 export function AdminHeader({ onMenuToggle }: AdminHeaderProps) {
   const pathname  = usePathname();
   const router    = useRouter();
@@ -47,6 +52,36 @@ export function AdminHeader({ onMenuToggle }: AdminHeaderProps) {
   const [open, setOpen]       = useState(false);
   const [profile, setProfile] = useState<AdminProfile | null>(null);
   const [search, setSearch] = useState("");
+  const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+  const [installHelpOpen, setInstallHelpOpen] = useState(false);
+  const [isInstalled, setIsInstalled] = useState(false);
+  const [isIOS, setIsIOS] = useState(false);
+  const [installError, setInstallError] = useState("");
+
+  useEffect(() => {
+    const checkInstalled = () => {
+      setIsInstalled(window.localStorage.getItem("nexguild-admin-app-installed") === "1");
+    };
+    const handleInstallPrompt = (event: Event) => {
+      event.preventDefault();
+      setInstallPrompt(event as BeforeInstallPromptEvent);
+    };
+    const handleAppInstalled = () => {
+      window.localStorage.setItem("nexguild-admin-app-installed", "1");
+      setIsInstalled(true);
+      setInstallPrompt(null);
+    };
+
+    setIsIOS(/iPhone|iPad|iPod/i.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1));
+    checkInstalled();
+    window.addEventListener("beforeinstallprompt", handleInstallPrompt);
+    window.addEventListener("appinstalled", handleAppInstalled);
+
+    return () => {
+      window.removeEventListener("beforeinstallprompt", handleInstallPrompt);
+      window.removeEventListener("appinstalled", handleAppInstalled);
+    };
+  }, []);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
@@ -78,12 +113,32 @@ export function AdminHeader({ onMenuToggle }: AdminHeaderProps) {
     router.push("/admin/login");
   }
 
+  async function installAdminApp() {
+    if (!installPrompt) {
+      setInstallHelpOpen(true);
+      return;
+    }
+
+    setInstallError("");
+    try {
+      await installPrompt.prompt();
+      const { outcome } = await installPrompt.userChoice;
+      setInstallPrompt(null);
+      if (outcome === "accepted") setIsInstalled(true);
+    } catch (error) {
+      console.error("[pwa] admin install prompt failed:", error);
+      setInstallError("The install prompt could not be opened. Use your browser menu to add the admin app.");
+      setInstallHelpOpen(true);
+    }
+  }
+
   const displayName = profile?.full_name ?? "Admin";
   const isOwner     = profile?.role === "owner";
   const canSearchContributors = ADMIN_ROLES.USERS.some((role) => role === profile?.role);
   const canManageSettings = ADMIN_ROLES.UPPER.some((role) => role === profile?.role);
 
   return (
+    <>
     <header className="h-16 fixed top-0 right-0 left-0 lg:left-sidebar-admin z-30 flex items-center justify-between px-4 sm:px-6 bg-[var(--surface-card)] border-b border-[var(--border-default)]">
       <div className="flex items-center gap-3">
         {/* Hamburger — mobile only */}
@@ -163,6 +218,18 @@ export function AdminHeader({ onMenuToggle }: AdminHeaderProps) {
 
               {/* Links */}
               <div className="py-1">
+                {!isInstalled && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setOpen(false);
+                      void installAdminApp();
+                    }}
+                    className="flex items-center gap-2.5 w-full px-4 py-2.5 text-sm text-[var(--text-secondary)] hover:bg-[var(--surface-subtle)] hover:text-[var(--text-primary)] transition-colors"
+                  >
+                    <Download className="h-4 w-4" /> Install Admin App
+                  </button>
+                )}
                 <Link
                   href="/dashboard/profile"
                   onClick={() => setOpen(false)}
@@ -192,5 +259,80 @@ export function AdminHeader({ onMenuToggle }: AdminHeaderProps) {
         </div>
       </div>
     </header>
+    {installHelpOpen && (
+      <div
+        className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/55 p-4 backdrop-blur-sm"
+        onClick={(event) => {
+          if (event.target === event.currentTarget) setInstallHelpOpen(false);
+        }}
+      >
+        <section
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="install-admin-app-title"
+          className="w-full max-w-sm overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl"
+        >
+          <div className="flex items-start justify-between gap-4 bg-gradient-to-r from-slate-800 to-slate-700 px-5 py-4 text-white">
+            <div className="flex items-center gap-3">
+              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-400/15 text-amber-300">
+                <Download className="h-5 w-5" />
+              </span>
+              <div>
+                <h2 id="install-admin-app-title" className="font-bold">Install NexGuild Admin</h2>
+                <p className="mt-0.5 text-xs text-slate-300">Keep admin tools one tap away.</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              aria-label="Close install instructions"
+              onClick={() => setInstallHelpOpen(false)}
+              className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg text-white/80 transition-colors hover:bg-white/15 hover:text-white"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+          <div className="space-y-4 p-5">
+            {installError && (
+              <p role="alert" className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+                {installError}
+              </p>
+            )}
+            <ol className="space-y-3 text-sm text-slate-700">
+              {isIOS ? (
+                <>
+                  <li className="flex items-center gap-3">
+                    <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-amber-50 text-amber-700"><Share className="h-4 w-4" /></span>
+                    <span>In Safari, tap the <b>Share</b> button.</span>
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-amber-50 text-amber-700"><span className="text-base font-bold">＋</span></span>
+                    <span>Choose <b>Add to Home Screen</b>, then tap <b>Add</b>.</span>
+                  </li>
+                </>
+              ) : (
+                <>
+                  <li className="flex items-center gap-3">
+                    <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-amber-50 text-amber-700"><MoreVertical className="h-4 w-4" /></span>
+                    <span>Open your browser menu (⋮).</span>
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-amber-50 text-amber-700"><Download className="h-4 w-4" /></span>
+                    <span>Tap <b>Install app</b> or <b>Add to Home screen</b>.</span>
+                  </li>
+                </>
+              )}
+            </ol>
+            <button
+              type="button"
+              onClick={() => setInstallHelpOpen(false)}
+              className="w-full rounded-xl bg-slate-800 px-4 py-2.5 text-sm font-bold text-white transition-colors hover:bg-slate-900"
+            >
+              Got it
+            </button>
+          </div>
+        </section>
+      </div>
+    )}
+    </>
   );
 }

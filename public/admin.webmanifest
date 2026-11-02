@@ -1,0 +1,39 @@
+{
+  "id": "/admin-app",
+  "name": "NexGuild Admin",
+  "short_name": "NG Admin",
+  "description": "Manage the NexGuild contributor platform.",
+  "start_url": "/admin",
+  "scope": "/admin",
+  "display": "standalone",
+  "background_color": "#111827",
+  "theme_color": "#d6b66e",
+  "shortcuts": [
+    {
+      "name": "Review Submissions",
+      "short_name": "Submissions",
+      "description": "Review contributor task submissions.",
+      "url": "/admin/submissions"
+    },
+    {
+      "name": "Manage Tasks",
+      "short_name": "Tasks",
+      "description": "Manage NexGuild tasks.",
+      "url": "/admin/tasks"
+    },
+    {
+      "name": "Contributors",
+      "short_name": "Contributors",
+      "description": "Manage NexGuild contributors.",
+      "url": "/admin/contributors"
+    }
+  ],
+  "icons": [
+    {
+      "src": "/nexguild-admin-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
