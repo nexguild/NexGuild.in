@@ -596,41 +596,51 @@ export default function OpportunitiesPage() {
 
       {/* ── T&C Modal ───────────────────────────────────────────────── */}
       {tncTask && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/70 backdrop-blur-sm">
-          <div className="w-full sm:max-w-lg bg-[var(--surface-card)] rounded-t-2xl sm:rounded-2xl border border-[var(--border-default)] shadow-2xl flex flex-col max-h-[92vh] sm:max-h-[85vh]">
-
-            <div className="flex items-start justify-between px-6 py-4 border-b border-[var(--border-default)] flex-shrink-0">
-              <div>
-                <h2 className="text-base font-bold text-[var(--text-primary)]">Before You Start</h2>
-                <p className="text-xs text-[var(--text-muted)] mt-0.5 line-clamp-1">{tncTask.title}</p>
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/55 p-0 backdrop-blur-sm sm:items-center sm:p-4">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="task-start-dialog-title"
+            className="flex max-h-[92dvh] w-full flex-col overflow-hidden rounded-t-[1.75rem] border border-slate-200 bg-white shadow-[0_24px_80px_rgba(15,23,42,0.28)] sm:max-h-[85dvh] sm:max-w-lg sm:rounded-[1.75rem]"
+          >
+            <div className="flex flex-shrink-0 items-start justify-between border-b border-slate-100 px-5 py-4 sm:px-6">
+              <div className="flex min-w-0 items-start gap-3">
+                <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-teal-50 ring-1 ring-teal-100">
+                  <ClipboardList className="h-5 w-5 text-teal-700" />
+                </div>
+                <div className="min-w-0 pt-0.5">
+                  <h2 id="task-start-dialog-title" className="text-base font-bold text-slate-800">Before You Start</h2>
+                  <p className="mt-0.5 line-clamp-1 text-xs text-slate-500">{tncTask.title}</p>
+                </div>
               </div>
               <button
                 onClick={() => setTncTask(null)}
-                className="text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors ml-3 flex-shrink-0"
+                aria-label="Close dialog"
+                className="ml-3 flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700"
               >
-                <X className="h-5 w-5" />
+                <X className="h-4 w-4" />
               </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
+            <div className="flex-1 space-y-5 overflow-y-auto px-5 py-5 sm:px-6">
               <div>
-                <p className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-3">Rules & Requirements</p>
+                <p className="mb-3 text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400">Rules & Requirements</p>
                 <ul className="space-y-2.5">
                   {DEFAULT_RULES.map((rule, i) => (
-                    <li key={i} className="flex items-start gap-2.5 text-sm text-[var(--text-secondary)]">
-                      <span className="h-1.5 w-1.5 rounded-full bg-[var(--brand-500)] mt-2 flex-shrink-0" />
+                    <li key={i} className="flex items-start gap-2.5 text-[13px] leading-relaxed text-slate-600">
+                      <span className="mt-[7px] h-1.5 w-1.5 flex-shrink-0 rounded-full bg-teal-500" />
                       {rule}
                     </li>
                   ))}
                   {tncTask.terms && tncTask.terms.trim() && (
                     <>
-                      <li className="flex items-start gap-2.5 text-sm font-semibold text-[var(--text-primary)] pt-1">
-                        <span className="h-1.5 w-1.5 rounded-full bg-purple-400 mt-2 flex-shrink-0" />
+                      <li className="flex items-start gap-2.5 pt-1 text-[13px] font-semibold text-slate-800">
+                        <span className="mt-[7px] h-1.5 w-1.5 flex-shrink-0 rounded-full bg-amber-500" />
                         Task-specific conditions:
                       </li>
                       {tncTask.terms.split("\n").filter(Boolean).map((r, i) => (
-                        <li key={`c-${i}`} className="flex items-start gap-2.5 text-sm text-[var(--text-secondary)] pl-4">
-                          <span className="h-1.5 w-1.5 rounded-full bg-purple-400/50 mt-2 flex-shrink-0" />
+                        <li key={`c-${i}`} className="flex items-start gap-2.5 pl-4 text-[13px] leading-relaxed text-slate-600">
+                          <span className="mt-[7px] h-1.5 w-1.5 flex-shrink-0 rounded-full bg-amber-400" />
                           {r.trim()}
                         </li>
                       ))}
@@ -640,52 +650,54 @@ export default function OpportunitiesPage() {
               </div>
 
               {(tncTask.validation_time || tncTask.payment_time) && (
-                <div className="rounded-lg bg-[var(--surface-subtle)] border border-[var(--border-default)] p-4 space-y-2.5">
-                  <p className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider">Expected Timeline</p>
+                <div className="space-y-2.5 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400">Expected Timeline</p>
                   {tncTask.validation_time && (
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-[var(--text-secondary)]">Review time</span>
-                      <span className="text-[var(--text-primary)] font-semibold">{tncTask.validation_time}</span>
+                      <span className="text-slate-500">Review time</span>
+                      <span className="font-semibold text-slate-800">{tncTask.validation_time}</span>
                     </div>
                   )}
                   {tncTask.payment_time && (
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-[var(--text-secondary)]">Payment after approval</span>
-                      <span className="text-[var(--brand-500)] font-semibold">{tncTask.payment_time}</span>
+                      <span className="text-slate-500">Payment after approval</span>
+                      <span className="font-semibold text-teal-700">{tncTask.payment_time}</span>
                     </div>
                   )}
                 </div>
               )}
 
               {tncTask.pay_per_task && (
-                <div className="flex items-center gap-3 rounded-lg bg-[rgba(20,184,166,0.06)] border border-[rgba(20,184,166,0.2)] p-4">
-                  <NexCoinIcon size={20} className="flex-shrink-0" />
+                <div className="flex items-center gap-3 rounded-2xl border border-amber-200/70 bg-gradient-to-r from-amber-50 to-white p-4">
+                  <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl border border-amber-100 bg-white shadow-sm">
+                    <NexCoinIcon size={20} />
+                  </div>
                   <div>
-                    <p className="text-sm font-bold text-[var(--brand-500)]">{Math.floor(tncTask.pay_per_task * 0.66)} NexCoins</p>
-                    <p className="text-xs text-[var(--text-muted)]">Credited after your work is approved</p>
+                    <p className="text-sm font-bold text-amber-700">{Math.floor(tncTask.pay_per_task * 0.66)} NexCoins</p>
+                    <p className="text-xs text-slate-500">Credited after your work is approved</p>
                   </div>
                 </div>
               )}
             </div>
 
-            <div className="px-6 py-4 border-t border-[var(--border-default)] space-y-3 flex-shrink-0">
-              <label className="flex items-start gap-3 cursor-pointer select-none">
+            <div className="flex-shrink-0 space-y-3 border-t border-slate-100 bg-white px-5 py-4 sm:px-6">
+              <label className="flex cursor-pointer select-none items-start gap-3">
                 <input
                   type="checkbox"
                   checked={tncChecked}
                   onChange={(e) => setTncChecked(e.target.checked)}
-                  className="mt-0.5 h-4 w-4 rounded accent-[var(--brand-500)] flex-shrink-0"
+                  className="mt-0.5 h-4 w-4 flex-shrink-0 accent-teal-600"
                 />
-                <span className="text-sm text-[var(--text-secondary)] leading-relaxed">
+                <span className="text-xs leading-relaxed text-slate-600">
                   I have read and agree to the rules and conditions above
                 </span>
               </label>
               <div className="flex gap-3">
-                <Button variant="ghost" className="flex-1" onClick={() => setTncTask(null)}>
+                <Button variant="ghost" className="flex-1 rounded-xl text-slate-600 hover:bg-slate-100" onClick={() => setTncTask(null)}>
                   Cancel
                 </Button>
                 <Button
-                  className="flex-1"
+                  className="flex-1 rounded-xl bg-gradient-to-r from-teal-700 to-teal-600 font-semibold text-white shadow-sm hover:from-teal-800 hover:to-teal-700"
                   disabled={!tncChecked || starting}
                   onClick={agreeAndStart}
                 >

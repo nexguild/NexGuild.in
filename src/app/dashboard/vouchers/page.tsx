@@ -120,46 +120,66 @@ export default function MyVouchersPage() {
         .btn-hide { animation: btn-out 0.2s ease-in both; }
       `}</style>
 
-      <div className="space-y-5">
+      <div className="mx-auto w-full max-w-[1600px] space-y-6">
 
         {/* ── HERO ── */}
-        <div className="relative isolate overflow-hidden rounded-[1.6rem] bg-[#103f38] p-6 text-white shadow-[0_18px_45px_rgba(15,76,69,0.14)]">
-          <div aria-hidden className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_82%_0%,rgba(214,182,110,0.22),transparent_35%),radial-gradient(ellipse_at_5%_100%,rgba(20,184,166,0.16),transparent_42%)]" />
-          <div className="relative z-10 flex flex-wrap items-start justify-between gap-4">
-            <div>
-              <div className="mb-2 flex items-center gap-2">
-                <Gift className="h-4 w-4 text-white/70" />
-                <span className="text-xs font-semibold uppercase tracking-widest text-white/70">Redemptions</span>
+        <div className="relative isolate overflow-hidden rounded-[1.75rem] border border-white/10 bg-gradient-to-br from-[#102b3f] via-[#14504b] to-[#0f766e] p-5 text-white shadow-[0_20px_55px_rgba(15,76,69,0.2)] sm:p-7">
+          <div aria-hidden className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_82%_0%,rgba(245,158,11,0.2),transparent_35%),radial-gradient(ellipse_at_0%_100%,rgba(45,212,191,0.16),transparent_42%)]" />
+          <div aria-hidden className="pointer-events-none absolute -right-14 -top-24 h-64 w-64 rounded-full border border-white/[0.08]" />
+          <div className="relative z-10">
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div>
+                <div className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-teal-100/80">
+                  <span className="flex h-8 w-8 items-center justify-center rounded-xl border border-white/15 bg-white/10">
+                    <Gift className="h-4 w-4" />
+                  </span>
+                  <span>Redemptions</span>
+                </div>
+                <h1 className="mb-1 text-2xl font-extrabold tracking-tight text-white sm:text-3xl">My Vouchers</h1>
+                <p className="text-sm text-teal-50/80">Your voucher codes, requests, and redemption history in one place.</p>
               </div>
-              <h1 className="mb-1 text-2xl font-extrabold text-white">My Vouchers</h1>
-              <p className="text-sm text-white/75">All your voucher requests and delivered codes in one place.</p>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleRefresh}
+                  disabled={refreshing}
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-white/20 bg-white/10 px-3.5 py-2.5 text-xs font-semibold text-white transition-colors hover:bg-white/20 disabled:opacity-50"
+                >
+                  <RefreshCw className={`h-3.5 w-3.5 ${refreshing ? "animate-spin" : ""}`} /> Refresh
+                </button>
+                <Link
+                  href="/dashboard/store"
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-white/20 bg-white/10 px-3.5 py-2.5 text-xs font-semibold text-white transition-colors hover:bg-white/20"
+                >
+                  Redeem More
+                </Link>
+              </div>
             </div>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={handleRefresh}
-                disabled={refreshing}
-                className="inline-flex items-center gap-1.5 rounded-xl border border-white/30 bg-white/15 px-3.5 py-2 text-xs font-semibold text-white transition-colors hover:bg-white/25 disabled:opacity-50"
-              >
-                <RefreshCw className={`h-3.5 w-3.5 ${refreshing ? "animate-spin" : ""}`} /> Refresh
-              </button>
-              <Link
-                href="/dashboard/store"
-                className="inline-flex items-center gap-1.5 rounded-xl border border-white/30 bg-white/15 px-3.5 py-2 text-xs font-semibold text-white transition-colors hover:bg-white/25"
-              >
-                Redeem More
-              </Link>
+            <div className="mt-6 grid grid-cols-3 gap-2 border-t border-white/15 pt-4 sm:max-w-xl sm:gap-3">
+              {[
+                { label: "Ready to use", count: delivered.length, icon: PackageCheck, tone: "text-teal-100" },
+                { label: "In progress", count: pending.length, icon: Clock, tone: "text-amber-200" },
+                { label: "Cancelled", count: cancelled.length, icon: Ban, tone: "text-white/70" },
+              ].map(({ label, count, icon: Icon, tone }) => (
+                <div key={label} className="min-w-0 rounded-xl border border-white/10 bg-white/[0.06] px-3 py-2.5">
+                  <div className={`mb-1 flex items-center gap-1.5 text-xs font-semibold ${tone}`}>
+                    <Icon className="h-3.5 w-3.5" />
+                    <span className="truncate">{label}</span>
+                  </div>
+                  <p className="text-lg font-extrabold leading-none text-white">{count}</p>
+                </div>
+              ))}
             </div>
           </div>
         </div>
 
         {loading ? (
           <div className="flex items-center justify-center py-16">
-            <Loader2 className="h-6 w-6 animate-spin text-indigo-500" />
+            <Loader2 className="h-6 w-6 animate-spin text-teal-600" />
           </div>
         ) : requests.length === 0 ? (
-          <div className="flex flex-col items-center gap-4 rounded-2xl border border-slate-100 bg-white px-6 py-20 text-center shadow-sm">
-            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-indigo-50">
-              <Gift className="h-7 w-7 text-indigo-400" />
+          <div className="flex flex-col items-center gap-4 rounded-2xl border border-slate-200/80 bg-white px-6 py-20 text-center shadow-[0_8px_24px_rgba(15,23,42,0.045)]">
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-teal-50 ring-1 ring-teal-100">
+              <Gift className="h-7 w-7 text-teal-600" />
             </div>
             <div>
               <p className="mb-1 font-bold text-slate-800">No vouchers yet</p>
@@ -167,7 +187,7 @@ export default function MyVouchersPage() {
             </div>
             <Link
               href="/dashboard/store"
-              className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-bold text-white shadow-md transition-all hover:bg-indigo-700"
+              className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-teal-700 to-teal-600 px-5 py-2.5 text-sm font-bold text-white shadow-md transition-all hover:from-teal-800 hover:to-teal-700"
             >
               Browse Store
             </Link>
@@ -179,10 +199,10 @@ export default function MyVouchersPage() {
             {delivered.length > 0 && (
               <section className="space-y-3">
                 <div className="flex items-center gap-2">
-                  <PackageCheck className="h-4 w-4 text-emerald-500" />
-                  <h2 className="text-sm font-bold text-slate-700">
+                  <PackageCheck className="h-4 w-4 text-teal-600" />
+                  <h2 className="text-sm font-bold text-slate-800">
                     Ready to Use
-                    <span className="ml-1.5 rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-600">
+                    <span className="ml-1.5 rounded-full bg-teal-50 px-2 py-0.5 text-xs font-semibold text-teal-700">
                       {delivered.length}
                     </span>
                   </h2>
@@ -197,49 +217,49 @@ export default function MyVouchersPage() {
                     return (
                       <div
                         key={r.id}
-                        className="overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm"
+                        className="group overflow-hidden rounded-[1.5rem] border border-teal-100 bg-gradient-to-br from-white via-white to-teal-50/50 shadow-[0_10px_30px_rgba(15,76,69,0.08)] transition-all duration-200 hover:-translate-y-0.5 hover:border-teal-200 hover:shadow-[0_16px_36px_rgba(15,76,69,0.12)]"
                       >
                         {/* Top accent stripe */}
-                        <div className="h-1 w-full bg-gradient-to-r from-emerald-400 to-teal-500" />
+                        <div className="h-1 w-full bg-gradient-to-r from-teal-700 via-teal-500 to-amber-400" />
 
-                        <div className="p-5">
+                        <div className="p-4 sm:p-6">
                           {/* Header row */}
                           <div className="flex items-start justify-between gap-3">
                             <div className="flex items-center gap-3">
-                              <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-emerald-50">
-                                <Ticket className="h-5 w-5 text-emerald-500" />
+                              <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-teal-50 to-amber-50 ring-1 ring-teal-100">
+                                <Ticket className="h-5 w-5 text-teal-700" />
                               </div>
-                              <div>
-                                <p className="font-semibold text-slate-800">{r.voucher_type}</p>
-                                <p className="text-xs text-slate-400">
-                                  🪙 {(r.charged_coins ?? r.coins_spent).toLocaleString()} NexCoins
+                              <div className="min-w-0">
+                                <p className="font-bold text-slate-800">{r.voucher_type}</p>
+                                <p className="mt-1 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-xs text-slate-500">
+                                  <span className="font-semibold text-amber-700">{(r.charged_coins ?? r.coins_spent).toLocaleString()} NexCoins</span>
                                   {r.delivered_at && (
-                                    <> · 📅 {new Date(r.delivered_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}</>
+                                    <span>· {new Date(r.delivered_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}</span>
                                   )}
                                 </p>
                               </div>
                             </div>
-                            <span className="flex-shrink-0 rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-600">
-                              ✓ Delivered
+                            <span className="inline-flex flex-shrink-0 items-center gap-1.5 rounded-full border border-teal-100 bg-teal-50 px-2.5 py-1 text-[11px] font-bold text-teal-700">
+                              <Check className="h-3 w-3" /> Delivered
                             </span>
                           </div>
 
                           {/* Code reveal section */}
                           {r.voucher_code ? (
                             <div className="mt-4">
-                              <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">
-                                Your Voucher Code
+                              <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400">
+                                Your voucher code
                               </p>
 
-                              <div className={`relative rounded-xl border-2 border-dashed transition-colors duration-300 ${
-                                isRevealed ? "border-emerald-200 bg-emerald-50" : "border-slate-200 bg-slate-50"
+                              <div className={`relative overflow-hidden rounded-2xl border transition-all duration-300 ${
+                                isRevealed ? "border-teal-200 bg-teal-50/80 shadow-inner" : "border-slate-200 bg-slate-50"
                               } ${isSparkling ? "sparkle-active" : ""}`}>
 
                                 {/* The code — blurred until revealed */}
-                                <div className={`flex items-center gap-3 px-4 py-3.5 transition-all duration-500 ${
+                                <div className={`flex min-h-[58px] items-center gap-3 px-4 py-3.5 transition-all duration-500 ${
                                   isRevealed ? "" : "opacity-30 blur-sm pointer-events-none select-none"
                                 }`}>
-                                  <code className={`flex-1 break-all font-mono text-base font-bold tracking-wider text-emerald-700 ${
+                                  <code className={`min-w-0 flex-1 break-all font-mono text-sm font-bold tracking-wide text-teal-800 sm:text-base ${
                                     isRevealed ? "code-reveal" : ""
                                   }`}>
                                     {r.voucher_code}
@@ -247,8 +267,8 @@ export default function MyVouchersPage() {
                                   {isRevealed && (
                                     <button
                                       onClick={() => copyCode(r.id, r.voucher_code!)}
-                                      className={`flex-shrink-0 flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold text-white transition-all active:scale-95 ${
-                                        isCopied ? "bg-emerald-500" : "bg-emerald-600 hover:bg-emerald-700"
+                                      className={`flex-shrink-0 flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-bold text-white shadow-sm transition-all active:scale-95 ${
+                                        isCopied ? "bg-teal-500" : "bg-gradient-to-r from-teal-700 to-teal-600 hover:from-teal-800 hover:to-teal-700"
                                       }`}
                                     >
                                       {isCopied ? (
@@ -264,12 +284,13 @@ export default function MyVouchersPage() {
                                 {!isRevealed && (
                                   <button
                                     onClick={() => revealCode(r.id)}
-                                    className="absolute inset-0 flex items-center justify-center gap-2 rounded-xl transition-all hover:bg-white/50 active:scale-[0.98]"
+                                    aria-label="Reveal voucher code"
+                                    className="absolute inset-0 flex items-center justify-center gap-2 rounded-2xl transition-all hover:bg-white/50 active:scale-[0.98]"
                                   >
-                                    <div className="flex items-center gap-2 rounded-full border border-slate-300 bg-white px-4 py-2 shadow-sm transition-all hover:shadow-md hover:border-emerald-300">
-                                      <Lock className="h-3.5 w-3.5 text-slate-400" />
-                                      <span className="text-xs font-bold text-slate-600">Tap to Reveal Code</span>
-                                      <Eye className="h-3.5 w-3.5 text-slate-400" />
+                                    <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2.5 shadow-sm transition-all group-hover:border-teal-200 group-hover:shadow-md">
+                                      <Lock className="h-3.5 w-3.5 text-teal-700" />
+                                      <span className="text-xs font-bold text-slate-700">Reveal voucher code</span>
+                                      <Eye className="h-3.5 w-3.5 text-teal-600" />
                                     </div>
                                   </button>
                                 )}
@@ -301,7 +322,7 @@ export default function MyVouchersPage() {
               <section className="space-y-3">
                 <div className="flex items-center gap-2">
                   <Clock className="h-4 w-4 text-amber-500" />
-                  <h2 className="text-sm font-bold text-slate-700">
+                  <h2 className="text-sm font-bold text-slate-800">
                     In Progress
                     <span className="ml-1.5 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-600">
                       {pending.length}
@@ -311,9 +332,9 @@ export default function MyVouchersPage() {
 
                 <div className="space-y-3">
                   {pending.map((r) => (
-                    <div key={r.id} className="overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm">
+                    <div key={r.id} className="overflow-hidden rounded-[1.5rem] border border-amber-100 bg-gradient-to-br from-white via-white to-amber-50/50 shadow-[0_8px_24px_rgba(15,23,42,0.045)]">
                       <div className="h-1 w-full bg-gradient-to-r from-amber-400 to-orange-400" />
-                      <div className="p-5">
+                      <div className="p-4 sm:p-6">
                         <div className="flex items-start justify-between gap-3">
                           <div className="flex items-center gap-3">
                             <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-amber-50">
@@ -321,13 +342,13 @@ export default function MyVouchersPage() {
                             </div>
                             <div>
                               <p className="font-semibold text-slate-800">{r.voucher_type}</p>
-                              <p className="text-xs text-slate-400">
-                                {(r.charged_coins ?? r.coins_spent).toLocaleString()} coins · {new Date(r.requested_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+                              <p className="mt-1 text-xs text-slate-500">
+                                <span className="font-semibold text-amber-700">{(r.charged_coins ?? r.coins_spent).toLocaleString()} NexCoins</span> · {new Date(r.requested_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
                               </p>
                             </div>
                           </div>
                           <span className={`flex-shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold ${
-                            r.status === "processing" ? "bg-blue-50 text-blue-600" : "bg-amber-50 text-amber-600"
+                            r.status === "processing" ? "bg-sky-50 text-sky-700" : "bg-amber-50 text-amber-700"
                           }`}>
                             {r.status === "processing" ? "Processing" : "Pending"}
                           </span>
@@ -342,7 +363,7 @@ export default function MyVouchersPage() {
                               <div key={step} className="flex flex-1 items-center">
                                 <div className="flex flex-col items-center gap-1 shrink-0">
                                   <div className={`h-2 w-2 rounded-full ${
-                                    done ? "bg-indigo-500" : active ? "bg-amber-400 ring-2 ring-amber-100" : "bg-slate-200"
+                                    done ? "bg-teal-600" : active ? "bg-amber-400 ring-2 ring-amber-100" : "bg-slate-200"
                                   }`} />
                                   <span className={`text-[9px] font-medium whitespace-nowrap ${done || active ? "text-slate-600" : "text-slate-300"}`}>
                                     {step}
@@ -350,7 +371,7 @@ export default function MyVouchersPage() {
                                 </div>
                                 {i < 2 && (
                                   <div className={`mb-3 flex-1 h-px mx-1 ${
-                                    i === 0 && r.status !== "pending" ? "bg-indigo-300" : "bg-slate-200"
+                                    i === 0 && r.status !== "pending" ? "bg-teal-300" : "bg-slate-200"
                                   }`} />
                                 )}
                               </div>
@@ -384,9 +405,9 @@ export default function MyVouchersPage() {
 
                 <div className="space-y-3">
                   {cancelled.map((request) => (
-                    <div key={request.id} className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+                    <div key={request.id} className="overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white shadow-[0_8px_24px_rgba(15,23,42,0.045)]">
                       <div className="h-1 w-full bg-slate-300" />
-                      <div className="flex flex-wrap items-start justify-between gap-3 p-5">
+                      <div className="flex flex-wrap items-start justify-between gap-3 p-4 sm:p-6">
                         <div>
                           <p className="font-semibold text-slate-800">{request.voucher_type}</p>
                           <p className="mt-1 text-xs text-slate-500">

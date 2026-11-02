@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Trophy, Medal, Loader2 } from "lucide-react";
+import { Trophy, Medal, Loader2, Users } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
 interface LeaderboardEntry {
@@ -84,6 +84,8 @@ const RANK_META: Record<number, {
 export default function LeaderboardPage() {
   const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState(true);
+  const topThree = entries.slice(0, 3);
+  const remainingEntries = entries.slice(3);
 
   useEffect(() => {
     async function load() {
@@ -104,64 +106,118 @@ export default function LeaderboardPage() {
   }, []);
 
   return (
-    <div className="max-w-2xl space-y-5">
+    <div className="mx-auto w-full max-w-[1600px] space-y-6">
 
       {/* ── HERO ─────────────────────────────────────────────────────── */}
-      <div className="animate-fade-slide-up relative isolate overflow-hidden rounded-[1.6rem] bg-[#103f38] p-6 text-white shadow-[0_18px_45px_rgba(15,76,69,0.14)]"
+      <div className="animate-fade-slide-up relative isolate overflow-hidden rounded-[1.75rem] border border-white/10 bg-gradient-to-br from-[#102b3f] via-[#14504b] to-[#0f766e] p-5 text-white shadow-[0_20px_55px_rgba(15,76,69,0.2)] sm:p-7"
         style={{ animationDelay: "0ms" }}
       >
-        <div aria-hidden className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_82%_0%,rgba(214,182,110,0.22),transparent_35%),radial-gradient(ellipse_at_5%_100%,rgba(20,184,166,0.16),transparent_42%)]" />
-        <div className="relative z-10">
-          <div className="mb-2 flex items-center gap-2">
-            <Trophy className="h-4 w-4 text-white/70" />
-            <span className="text-xs font-semibold uppercase tracking-widest text-white/70">All-time Rankings</span>
+        <div aria-hidden className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_82%_0%,rgba(245,158,11,0.2),transparent_35%),radial-gradient(ellipse_at_0%_100%,rgba(45,212,191,0.16),transparent_42%)]" />
+        <div aria-hidden className="pointer-events-none absolute -right-14 -top-24 h-64 w-64 rounded-full border border-white/[0.08]" />
+        <div className="relative z-10 flex flex-wrap items-center justify-between gap-5">
+          <div>
+            <div className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-teal-100/80">
+              <span className="flex h-8 w-8 items-center justify-center rounded-xl border border-white/15 bg-white/10">
+                <Trophy className="h-4 w-4" />
+              </span>
+              <span>All-time rankings</span>
+            </div>
+            <h1 className="mb-1 text-2xl font-extrabold tracking-tight text-white sm:text-3xl">Top Contributors</h1>
+            <p className="max-w-2xl text-sm text-teal-50/80">Celebrating the people making NexGuild better, one approved task at a time.</p>
           </div>
-          <h1 className="mb-1 text-2xl font-extrabold text-white">Top Contributors</h1>
-          <p className="text-sm text-white/75">Ranked by total approved tasks — keep completing to climb higher.</p>
+          <div className="hidden items-center gap-2 rounded-2xl border border-white/15 bg-white/[0.08] px-4 py-3 sm:flex">
+            <Users className="h-4 w-4 text-teal-100" />
+            <span className="text-xs font-medium text-white/80">Ranked by approved tasks</span>
+          </div>
         </div>
       </div>
 
-      {/* ── LIST ─────────────────────────────────────────────────────── */}
-      <div className="animate-fade-slide-up overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm" style={{ animationDelay: "100ms" }}>
-        {loading ? (
-          <div className="flex flex-col items-center gap-3 py-16">
-            <Loader2 className="h-6 w-6 animate-spin text-indigo-500" />
-            <p className="text-sm text-slate-400">Loading leaderboard…</p>
+      {loading ? (
+        <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-slate-200/80 bg-white py-20 shadow-[0_8px_24px_rgba(15,23,42,0.045)]">
+          <Loader2 className="h-6 w-6 animate-spin text-teal-600" />
+          <p className="text-sm text-slate-500">Loading leaderboard…</p>
+        </div>
+      ) : entries.length === 0 ? (
+        <div className="flex flex-col items-center gap-3 rounded-2xl border border-slate-200/80 bg-white px-6 py-20 text-center shadow-[0_8px_24px_rgba(15,23,42,0.045)]">
+          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-50 ring-1 ring-amber-100">
+            <Trophy className="h-7 w-7 text-amber-500" />
           </div>
-        ) : (
-          <ul className="divide-y divide-slate-50">
-            {entries.map((entry) => {
-              const meta = RANK_META[entry.rank];
-              return (
-                <li
-                  key={entry.id}
-                  className={`flex items-center gap-4 px-5 py-3.5 transition-colors ${meta ? meta.rowBg : "hover:bg-slate-50"}`}
-                >
-                  {/* Rank badge */}
-                  <div className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full text-sm font-bold ${
-                    meta ? `${meta.badgeBg} ${meta.badgeText}` : "bg-slate-100 text-slate-500"
-                  }`}>
-                    {meta ? meta.icon : entry.rank}
-                  </div>
+          <h2 className="font-bold text-slate-800">The leaderboard is waiting</h2>
+          <p className="max-w-sm text-sm text-slate-500">Complete and get tasks approved to earn your place among the top contributors.</p>
+        </div>
+      ) : (
+        <div className="space-y-6">
+          {topThree.length > 0 && (
+            <section aria-label="Top three contributors">
+              <div className="mb-3 flex items-center gap-2">
+                <Medal className="h-4 w-4 text-amber-500" />
+                <h2 className="text-sm font-bold text-slate-800">Top contributors</h2>
+              </div>
+              <div className="grid gap-3 md:grid-cols-3 md:items-end md:gap-4">
+                {topThree.map((entry) => {
+                  const meta = RANK_META[entry.rank];
+                  const isFirst = entry.rank === 1;
+                  return (
+                    <article
+                      key={entry.id}
+                      className={`relative overflow-hidden rounded-[1.5rem] border p-5 shadow-[0_10px_30px_rgba(15,23,42,0.06)] transition-transform hover:-translate-y-0.5 ${
+                        isFirst
+                          ? "order-1 border-amber-200 bg-gradient-to-br from-amber-50 via-white to-amber-50/60 md:order-2 md:py-7"
+                          : entry.rank === 2
+                          ? "order-2 border-slate-200 bg-gradient-to-br from-slate-50 via-white to-slate-50 md:order-1"
+                          : "order-3 border-orange-200/80 bg-gradient-to-br from-orange-50/70 via-white to-orange-50/40"
+                      }`}
+                    >
+                      <div aria-hidden className="pointer-events-none absolute -right-8 -top-8 h-24 w-24 rounded-full border border-current opacity-[0.08]" />
+                      <div className="relative flex items-center gap-4">
+                        <div className={`flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl ${meta.badgeBg} ${meta.badgeText}`}>
+                          {meta.icon}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate font-bold text-slate-800">{entry.full_name}</p>
+                          <p className="mt-0.5 text-xs font-medium text-slate-500">{meta.label} · Rank #{entry.rank}</p>
+                        </div>
+                      </div>
+                      <div className="relative mt-5 flex items-end justify-between border-t border-slate-200/70 pt-4">
+                        <div>
+                          <p className="text-2xl font-extrabold tracking-tight text-slate-800">{entry.approved_count}</p>
+                          <p className="text-xs text-slate-500">approved task{entry.approved_count !== 1 ? "s" : ""}</p>
+                        </div>
+                        <Trophy className={`mb-1 h-5 w-5 ${isFirst ? "text-amber-500" : entry.rank === 2 ? "text-slate-400" : "text-orange-500"}`} />
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
+            </section>
+          )}
 
-                  {/* Name */}
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate font-semibold text-slate-800">{entry.full_name}</p>
-                    <p className="text-xs text-slate-400">{entry.approved_count} approved task{entry.approved_count !== 1 ? "s" : ""}</p>
-                  </div>
-
-                  {/* Rank label for top 3 */}
-                  {meta && (
-                    <span className={`flex-shrink-0 rounded-full px-2.5 py-0.5 text-[10px] font-bold ${meta.badgeBg} ${meta.badgeText}`}>
+          {remainingEntries.length > 0 && (
+            <section className="animate-fade-slide-up overflow-hidden rounded-[1.5rem] border border-slate-200/80 bg-white shadow-[0_8px_24px_rgba(15,23,42,0.045)]" style={{ animationDelay: "100ms" }}>
+              <div className="border-b border-slate-100 px-5 py-4 sm:px-6">
+                <h2 className="text-sm font-bold text-slate-800">More contributors</h2>
+                <p className="mt-0.5 text-xs text-slate-500">Keep going — every approved task moves you up.</p>
+              </div>
+              <ol start={4} className="divide-y divide-slate-100">
+                {remainingEntries.map((entry) => (
+                  <li key={entry.id} className="flex items-center gap-3 px-4 py-3.5 transition-colors hover:bg-slate-50/80 sm:gap-4 sm:px-6">
+                    <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-slate-100 text-sm font-bold tabular-nums text-slate-600">
+                      {entry.rank}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-semibold text-slate-800">{entry.full_name}</p>
+                      <p className="mt-0.5 text-xs text-slate-500">{entry.approved_count} approved task{entry.approved_count !== 1 ? "s" : ""}</p>
+                    </div>
+                    <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[10px] font-bold text-slate-500">
                       #{entry.rank}
                     </span>
-                  )}
-                </li>
-              );
-            })}
-          </ul>
-        )}
-      </div>
+                  </li>
+                ))}
+              </ol>
+            </section>
+          )}
+        </div>
+      )}
     </div>
   );
 }

@@ -4,10 +4,11 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import {
-  ArrowLeft, Clock, Users, Coins, CheckCircle2,
+  ArrowLeft, Clock, Users, CheckCircle2, CreditCard,
   XCircle, Loader2, Upload, FileText, AlertCircle, HelpCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { NexCoinIcon } from "@/components/ui/nexcoin-icon";
 import { supabase } from "@/lib/supabase";
 
 interface QuizQuestion {
@@ -328,73 +329,54 @@ export default function TaskDetailPage() {
   }
 
   return (
-    <div className="space-y-6 max-w-2xl">
-      <Link href="/dashboard/opportunities" className="inline-flex items-center gap-1.5 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors">
+    <div className="mx-auto w-full max-w-[1600px] space-y-6">
+      <Link href="/dashboard/opportunities" className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white/80 px-3 py-2 text-sm font-medium text-slate-600 shadow-sm transition-colors hover:border-teal-200 hover:text-teal-700">
         <ArrowLeft className="h-4 w-4" /> Back to Opportunities
       </Link>
 
-      {/* Task Header */}
-      <div className="rounded-xl border border-[var(--border-default)] bg-[var(--surface-card)] p-6 space-y-4">
-        <div className="flex items-start justify-between gap-3 flex-wrap">
-          <span className="text-xs font-bold text-[var(--brand-500)] uppercase tracking-wider">
-            {task.task_type ?? "Task"}
-          </span>
-          <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${
-            task.status === "active" ? "bg-green-500/10 text-green-400" : "bg-[var(--surface-subtle)] text-[var(--text-muted)]"
-          }`}>
-            {task.status}
-          </span>
-        </div>
-
-        <h1 className="text-xl font-bold text-[var(--text-primary)]">{task.title}</h1>
-
-        {task.description && (
-          <p className="text-sm text-[var(--text-secondary)] leading-relaxed">{task.description}</p>
-        )}
-
-        <div className="flex flex-wrap gap-4 text-sm text-[var(--text-muted)]">
-          <span className="flex items-center gap-1.5 text-[var(--brand-500)] font-bold">
-            <Coins className="h-4 w-4" />
-            {task.pay_per_task != null ? `${Math.floor(task.pay_per_task * 0.66)} NexCoins` : "—"}
-          </span>
-          {slotsLeft != null && (
-            <span className="flex items-center gap-1.5">
-              <Users className="h-4 w-4" /> {slotsLeft} slots left
-            </span>
-          )}
-          {task.deadline && (
-            <span className="flex items-center gap-1.5">
-              <Clock className="h-4 w-4" />
-              Due {new Date(task.deadline).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
-            </span>
-          )}
-          {task.validation_time && (
-            <span className="flex items-center gap-1.5">
-              <Clock className="h-4 w-4 text-blue-400" />
-              Review: {task.validation_time}
-            </span>
-          )}
-          {task.payment_time && (
-            <span className="flex items-center gap-1.5">
-              💰 Payment within {task.payment_time} of approval
-            </span>
-          )}
-        </div>
-
-        {task.requirements && (
-          <div className="rounded-lg bg-[var(--surface-subtle)] border border-[var(--border-default)] p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <FileText className="h-4 w-4 text-[var(--brand-500)]" />
-              <span className="text-sm font-bold text-[var(--text-primary)]">Requirements</span>
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_18rem] lg:items-start xl:grid-cols-[minmax(0,1fr)_20rem]">
+        <div className="min-w-0 space-y-5">
+          <section className="relative isolate overflow-hidden rounded-[1.75rem] border border-white/10 bg-gradient-to-br from-[#102b3f] via-[#14504b] to-[#0f766e] p-5 text-white shadow-[0_20px_55px_rgba(15,76,69,0.2)] sm:p-7">
+            <div aria-hidden className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_82%_0%,rgba(245,158,11,0.2),transparent_35%),radial-gradient(ellipse_at_0%_100%,rgba(45,212,191,0.16),transparent_42%)]" />
+            <div aria-hidden className="pointer-events-none absolute -right-14 -top-24 h-64 w-64 rounded-full border border-white/[0.08]" />
+            <div className="relative z-10">
+              <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+                <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-teal-100/85">
+                  <span className="flex h-8 w-8 items-center justify-center rounded-xl border border-white/15 bg-white/10">
+                    <FileText className="h-4 w-4" />
+                  </span>
+                  {task.task_type ?? "Contributor task"}
+                </span>
+                <span className={`rounded-full border px-3 py-1 text-xs font-semibold capitalize ${
+                  task.status === "active"
+                    ? "border-emerald-200/30 bg-emerald-300/15 text-emerald-100"
+                    : "border-white/15 bg-white/[0.08] text-white/80"
+                }`}>
+                  {task.status}
+                </span>
+              </div>
+              <h1 className="max-w-3xl text-2xl font-extrabold leading-tight tracking-tight text-white sm:text-3xl">{task.title}</h1>
+              {task.description && (
+                <p className="mt-4 max-w-3xl whitespace-pre-wrap text-sm leading-relaxed text-teal-50/85">{task.description}</p>
+              )}
             </div>
-            <p className="text-sm text-[var(--text-secondary)] whitespace-pre-wrap leading-relaxed">{task.requirements}</p>
-          </div>
-        )}
-      </div>
+          </section>
+
+          {task.requirements && (
+            <section className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-[0_8px_24px_rgba(15,23,42,0.045)] sm:p-6">
+              <div className="mb-3 flex items-center gap-2">
+                <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-teal-50 ring-1 ring-teal-100">
+                  <FileText className="h-4 w-4 text-teal-700" />
+                </div>
+                <h2 className="text-sm font-bold text-slate-800">Requirements</h2>
+              </div>
+              <p className="whitespace-pre-wrap text-sm leading-relaxed text-slate-600">{task.requirements}</p>
+            </section>
+          )}
 
       {/* ── ASSIGNMENT GATE ──────────────────────────────────────────────────── */}
       {task.assignment_required && (
-        <div className="rounded-xl border border-[var(--border-default)] bg-[var(--surface-card)] p-6 space-y-4">
+        <section className="space-y-4 rounded-2xl border border-slate-200/80 bg-white p-5 shadow-[0_8px_24px_rgba(15,23,42,0.045)] sm:p-6">
           <div>
             <h2 className="font-bold text-[var(--text-primary)] flex items-center gap-2">
               {aType === "quiz"
@@ -451,13 +433,18 @@ export default function TaskDetailPage() {
               </div>
             </div>
           )}
-        </div>
+        </section>
       )}
 
       {/* ── SUBMISSION SECTION ───────────────────────────────────────────────── */}
       {canWork && (
-        <div className="rounded-xl border border-[var(--border-default)] bg-[var(--surface-card)] p-6 space-y-4">
-          <h2 className="font-bold text-[var(--text-primary)]">Your Work</h2>
+        <section className="space-y-4 rounded-2xl border border-slate-200/80 bg-white p-5 shadow-[0_8px_24px_rgba(15,23,42,0.045)] sm:p-6">
+          <div className="flex items-center gap-3">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-teal-50 ring-1 ring-teal-100">
+              <CheckCircle2 className="h-4 w-4 text-teal-700" />
+            </div>
+            <h2 className="font-bold text-slate-800">Your Work</h2>
+          </div>
 
           {!submission && (
             <div className="space-y-3">
@@ -537,8 +524,91 @@ export default function TaskDetailPage() {
               </Button>
             </div>
           )}
-        </div>
+        </section>
       )}
+        </div>
+
+        <aside className="space-y-4 lg:sticky lg:top-20">
+          {task.pay_per_task != null && (
+            <div className="relative overflow-hidden rounded-2xl border border-amber-200/70 bg-gradient-to-br from-amber-50 via-white to-white p-4 shadow-[0_8px_24px_rgba(15,23,42,0.045)]">
+              <div aria-hidden className="pointer-events-none absolute -right-7 -top-8 h-24 w-24 rounded-full border border-amber-200/50" />
+              <p className="relative mb-3 text-[10px] font-bold uppercase tracking-[0.16em] text-amber-700/70">Your reward</p>
+              <div className="flex items-center gap-3">
+                <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl border border-amber-200/70 bg-white shadow-sm">
+                  <NexCoinIcon size={22} />
+                </div>
+                <div>
+                  <p className="text-2xl font-extrabold tracking-tight text-slate-800">{Math.floor(task.pay_per_task * 0.66)}</p>
+                  <p className="text-xs font-medium text-slate-500">NexCoins on approval</p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-[0_8px_24px_rgba(15,23,42,0.045)]">
+            <p className="mb-4 text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400">Task details</p>
+            <div className="space-y-3.5">
+              {slotsLeft != null && (
+                <div className="flex items-center gap-2.5">
+                  <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl bg-indigo-50 ring-1 ring-indigo-100">
+                    <Users className="h-3.5 w-3.5 text-indigo-600" />
+                  </div>
+                  <div>
+                    <p className="text-[9px] font-bold uppercase tracking-[0.12em] text-slate-400">Availability</p>
+                    <p className="mt-0.5 text-xs font-semibold text-slate-700">{slotsLeft} slots left</p>
+                  </div>
+                </div>
+              )}
+              {task.deadline && (
+                <div className="flex items-center gap-2.5">
+                  <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl bg-teal-50 ring-1 ring-teal-100">
+                    <Clock className="h-3.5 w-3.5 text-teal-700" />
+                  </div>
+                  <div>
+                    <p className="text-[9px] font-bold uppercase tracking-[0.12em] text-slate-400">Deadline</p>
+                    <p className="mt-0.5 text-xs font-semibold text-slate-700">{new Date(task.deadline).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}</p>
+                  </div>
+                </div>
+              )}
+              {task.validation_time && (
+                <div className="flex items-center gap-2.5">
+                  <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl bg-sky-50 ring-1 ring-sky-100">
+                    <Clock className="h-3.5 w-3.5 text-sky-600" />
+                  </div>
+                  <div>
+                    <p className="text-[9px] font-bold uppercase tracking-[0.12em] text-slate-400">Review time</p>
+                    <p className="mt-0.5 text-xs font-semibold text-slate-700">{task.validation_time}</p>
+                  </div>
+                </div>
+              )}
+              {task.payment_time && (
+                <div className="flex items-center gap-2.5">
+                  <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl bg-amber-50 ring-1 ring-amber-100">
+                    <CreditCard className="h-3.5 w-3.5 text-amber-700" />
+                  </div>
+                  <div>
+                    <p className="text-[9px] font-bold uppercase tracking-[0.12em] text-slate-400">Payment</p>
+                    <p className="mt-0.5 text-xs font-semibold text-slate-700">Within {task.payment_time} of approval</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-teal-100 bg-gradient-to-b from-teal-50/70 via-white to-white p-4 shadow-[0_8px_24px_rgba(15,23,42,0.045)]">
+            <p className="mb-3 text-[10px] font-bold uppercase tracking-[0.15em] text-slate-700">Getting started</p>
+            <p className="text-xs leading-relaxed text-slate-600">
+              {task.assignment_required && assignment?.status !== "approved"
+                ? "Submit the required assignment. Once it is approved, you can start working on this task."
+                : submission?.status === "in_progress"
+                ? "Continue your task and follow each instruction carefully before submitting your work."
+                : submission
+                ? "Check your work status here. If changes are requested, use the task workspace to resubmit."
+                : "Review the task details and requirements, then select Start Task to begin."}
+            </p>
+          </div>
+        </aside>
+      </div>
     </div>
   );
 }

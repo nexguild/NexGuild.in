@@ -738,72 +738,63 @@ export default function TaskWorkPage() {
 
   return (
     <>
-      <div className={`lg:flex lg:gap-6 lg:items-start ${hasSteps ? "pb-28 lg:pb-28" : ""}`}>
+      <div className={`mx-auto w-full max-w-[1600px] lg:flex lg:items-start lg:gap-6 ${hasSteps ? "pb-28 lg:pb-28" : ""}`}>
       {/* ── LEFT: main content ───────────────────────────────────────── */}
-      <div className="flex-1 min-w-0 space-y-5">
+      <div className="min-w-0 flex-1 space-y-5">
 
         {/* ── HERO HEADER CARD ─────────────────────────────────────── */}
-        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-600 to-teal-500 p-6 shadow-lg">
-          {/* Decorative circles */}
-          <div aria-hidden className="pointer-events-none absolute -right-10 -top-10 h-36 w-36 rounded-full bg-white/10" />
-          <div aria-hidden className="pointer-events-none absolute -left-6 -bottom-8 h-28 w-28 rounded-full bg-white/5" />
+        <div className="relative isolate overflow-hidden rounded-[1.75rem] border border-white/10 bg-gradient-to-br from-[#102b3f] via-[#14504b] to-[#0f766e] p-5 text-white shadow-[0_20px_55px_rgba(15,76,69,0.2)] sm:p-7">
+          <div aria-hidden className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_82%_0%,rgba(245,158,11,0.2),transparent_35%),radial-gradient(ellipse_at_0%_100%,rgba(45,212,191,0.16),transparent_42%)]" />
+          <div aria-hidden className="pointer-events-none absolute -right-14 -top-24 h-64 w-64 rounded-full border border-white/[0.08]" />
+          <div aria-hidden className="pointer-events-none absolute -right-3 -top-12 h-44 w-44 rounded-full border border-white/[0.08]" />
 
-          {/* Back link */}
           <Link
             href="/dashboard/opportunities"
-            className="relative z-10 mb-4 inline-flex items-center gap-1.5 text-sm text-white/80 hover:text-white transition-colors"
+            className="relative z-10 mb-6 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.07] px-3 py-1.5 text-xs font-semibold text-white/80 transition-colors hover:bg-white/[0.13] hover:text-white"
           >
-            <ArrowLeft className="h-4 w-4" /> Back to Opportunities
+            <ArrowLeft className="h-3.5 w-3.5" /> Back to opportunities
           </Link>
 
-          {/* Task title */}
-          <div className="relative z-10 mb-4">
-            <h1 className="text-xl font-extrabold leading-tight text-white">{task.title}</h1>
+          <div className="relative z-10 mb-5">
+            <div className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-teal-100/80">
+              <span className="flex h-7 w-7 items-center justify-center rounded-lg border border-white/15 bg-white/10 text-base">{taskEmoji}</span>
+              <span>{task.task_type || "Contributor task"}</span>
+            </div>
+            <h1 className="max-w-3xl text-2xl font-extrabold leading-tight tracking-tight text-white sm:text-3xl">{task.title}</h1>
           </div>
 
-          {/* Countdown pill */}
-          {task.deadline && (
-            <div className="relative z-10 mb-4">
-              <span className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-sm font-medium ${
-                countdown === "Ended"
-                  ? "border-red-300/40 bg-red-400/20 text-red-100"
-                  : "border-white/25 bg-white/15 text-white"
-              }`}>
-                <Clock className="h-3.5 w-3.5" />
-                {countdown === "Ended" ? "Task Ended" : `${countdown} remaining`}
-              </span>
-            </div>
-          )}
-
-          {/* Unified pills row */}
-          <div className="relative z-10 flex flex-wrap gap-2">
+          <div className="relative z-10 flex flex-wrap items-center gap-2">
             {contributorCoins != null && (
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-300/40 bg-amber-400/20 px-3 py-1 text-xs font-bold text-amber-100">
-                <NexCoinIcon size={12} /> {contributorCoins} NexCoins
+              <span className="inline-flex items-center gap-2 rounded-full border border-amber-200/30 bg-amber-300/15 px-3 py-1.5 text-xs font-bold text-amber-100">
+                <NexCoinIcon size={14} /> {contributorCoins} NexCoins reward
               </span>
             )}
-            {task.task_type && (
-              <span className="inline-flex items-center rounded-full border border-indigo-300/40 bg-indigo-400/20 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-indigo-100">
-                {task.task_type}
+            {task.deadline && (
+              <span className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold ${
+                countdown === "Ended"
+                  ? "border-red-300/30 bg-red-400/15 text-red-100"
+                  : "border-white/15 bg-white/[0.08] text-white/85"
+              }`}>
+                <Clock className="h-3.5 w-3.5" /> {countdown === "Ended" ? "Task ended" : `${countdown} remaining`}
               </span>
             )}
             {task.validation_time && (
-              <span className="inline-flex items-center gap-1 rounded-full border border-blue-300/40 bg-blue-400/20 px-3 py-1 text-xs font-medium text-blue-100">
-                <Clock className="h-3 w-3" /> Review: {task.validation_time}
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/[0.08] px-3 py-1.5 text-xs font-medium text-white/80">
+                <Clock className="h-3.5 w-3.5" /> Review {task.validation_time}
               </span>
             )}
             {task.payment_time && (
-              <span className="inline-flex items-center gap-1 rounded-full border border-orange-300/40 bg-orange-400/20 px-3 py-1 text-xs font-medium text-orange-100">
-                <CreditCard className="h-3 w-3" /> Payment: {task.payment_time}
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/[0.08] px-3 py-1.5 text-xs font-medium text-white/80">
+                <CreditCard className="h-3.5 w-3.5" /> Payment {task.payment_time}
               </span>
             )}
             {task.total_slots != null && (
-              <span className="inline-flex items-center gap-1 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-medium text-white/80">
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/[0.08] px-3 py-1.5 text-xs font-medium text-white/80">
                 <Users className="h-3 w-3" /> {task.filled_slots ?? 0}/{task.total_slots} slots
               </span>
             )}
             {isPrivate && (
-              <span className="inline-flex items-center gap-1 rounded-full border border-purple-300/40 bg-purple-400/20 px-3 py-1 text-xs font-medium text-purple-100">
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/[0.08] px-3 py-1.5 text-xs font-medium text-white/80">
                 <Lock className="h-3 w-3" /> Private
               </span>
             )}
@@ -815,24 +806,29 @@ export default function TaskWorkPage() {
           <div className="space-y-4">
 
             {/* Progress card */}
-            <div className="rounded-2xl border border-slate-100 bg-white px-5 py-4 shadow-sm">
-              <div className="mb-2.5 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="h-2 w-2 rounded-full bg-indigo-500" />
-                  <span className="text-sm font-bold text-slate-700">Your Progress</span>
+            <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-[0_8px_24px_rgba(15,23,42,0.045)] sm:p-6">
+              <div className="mb-4 flex items-end justify-between gap-4">
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-teal-700">Task progress</p>
+                  <p className="mt-1 text-base font-bold tracking-tight text-slate-800">
+                    {completedCount === steps.length ? "All stages complete" : `${steps.length - completedCount} stages to go`}
+                  </p>
                 </div>
-                <span className="text-sm font-bold text-indigo-600">{Math.round(progressPct)}%</span>
+                <span className="text-2xl font-extrabold tabular-nums tracking-tight text-slate-800">{Math.round(progressPct)}<span className="text-base text-slate-400">%</span></span>
               </div>
-              <div className="h-3 w-full overflow-hidden rounded-full bg-slate-100">
+              <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100">
                 <div
                   className="h-full rounded-full transition-all duration-700"
                   style={{
                     width: `${progressPct}%`,
-                    background: "linear-gradient(90deg, #6366f1, #14b8a6)",
+                    background: "linear-gradient(90deg, #0f766e, #2dd4bf)",
                   }}
                 />
               </div>
-              <p className="mt-2 text-xs text-slate-400">{completedCount}/{steps.length} stages completed</p>
+              <div className="mt-3 flex items-center justify-between text-xs">
+                <span className="font-medium text-slate-500">{completedCount} of {steps.length} stages completed</span>
+                <span className="font-semibold text-teal-700">{allDone ? "Ready to submit" : "Keep going"}</span>
+              </div>
             </div>
 
             {/* Step cards */}
@@ -856,17 +852,17 @@ export default function TaskWorkPage() {
                   return (
                     <div
                       key={idx}
-                      className="overflow-hidden rounded-2xl border border-slate-100 bg-white/60 backdrop-blur-sm"
-                      style={{ borderLeft: "4px solid #e2e8f0" }}
+                      className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white/75 shadow-sm"
                     >
-                      <div className="flex cursor-not-allowed items-center gap-3 px-5 py-4 opacity-55">
-                        <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-slate-100">
+                      <div className="flex cursor-not-allowed items-center gap-3 px-4 py-4 sm:px-5">
+                        <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-slate-100 ring-1 ring-slate-200/80">
                           <Lock className="h-4 w-4 text-slate-400" />
                         </div>
-                        <div>
-                          <p className="text-sm font-bold text-slate-500">Stage {idx + 1}: {step.title}</p>
-                          <p className="mt-0.5 text-xs text-slate-400">Complete stage {idx} first</p>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-bold text-slate-600">Stage {idx + 1}: {step.title}</p>
+                          <p className="mt-1 text-xs text-slate-500">Complete stage {idx} to unlock this step</p>
                         </div>
+                        <span className="flex-shrink-0 rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-slate-500">Locked</span>
                       </div>
                     </div>
                   );
@@ -875,18 +871,18 @@ export default function TaskWorkPage() {
                 /* ── COMPLETED ── */
                 if (isCompleted) {
                   return (
-                    <div key={idx} className="overflow-hidden rounded-2xl border border-green-200/60 shadow-sm">
+                    <div key={idx} className="overflow-hidden rounded-2xl border border-emerald-200/80 bg-white shadow-[0_8px_24px_rgba(15,23,42,0.04)]">
                       <div
                         onClick={toggleCollapse}
-                        className="flex cursor-pointer items-center gap-3 bg-green-50 px-5 py-3 transition-colors hover:bg-green-100/60"
+                        className="flex cursor-pointer items-center gap-3 bg-gradient-to-r from-emerald-50 to-white px-4 py-3.5 transition-colors hover:from-emerald-100/70 hover:to-white sm:px-5"
                       >
-                        <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-green-100">
-                          <CheckCircle2 className="h-5 w-5 text-green-500" />
+                        <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-emerald-100 ring-1 ring-emerald-200/70">
+                          <CheckCircle2 className="h-5 w-5 text-emerald-600" />
                         </div>
                         <div className="min-w-0 flex-1">
-                          <p className="text-sm font-bold text-slate-700">Stage {idx + 1}: {step.title}</p>
+                          <p className="text-sm font-bold text-slate-800">Stage {idx + 1}: {step.title}</p>
                           {stepSub && (
-                            <p className="mt-0.5 truncate text-xs text-green-600">
+                            <p className="mt-1 truncate text-xs text-emerald-700">
                               {stepSub.text_value
                                 ? `"${stepSub.text_value.slice(0, 55)}${stepSub.text_value.length > 55 ? "…" : ""}"`
                                 : stepSub.file_url ? "File uploaded ✓" : "Completed ✓"}
@@ -896,11 +892,11 @@ export default function TaskWorkPage() {
                         <ChevronDown className={`h-5 w-5 flex-shrink-0 text-slate-400 transition-transform ${isOpen ? "rotate-180" : ""}`} />
                       </div>
                       <div className={`overflow-hidden transition-all duration-300 ${isOpen ? "max-h-60" : "max-h-0"}`}>
-                        <div className="space-y-3 border-t border-green-100 bg-white px-5 py-4">
+                        <div className="space-y-3 border-t border-emerald-100 bg-white px-5 py-4">
                           {step.description && (
                             <p className="text-sm leading-relaxed text-slate-500">{step.description}</p>
                           )}
-                          <div className="flex items-center gap-2 text-sm font-semibold text-green-600">
+                          <div className="flex items-center gap-2 text-sm font-semibold text-emerald-700">
                             <CheckCircle2 className="h-4 w-4" /> Stage completed
                           </div>
                         </div>
@@ -913,36 +909,34 @@ export default function TaskWorkPage() {
                 return (
                   <div
                     key={idx}
-                    className="overflow-hidden rounded-2xl bg-white shadow-sm"
-                    style={{ border: isOpen ? "1.5px solid rgba(99,102,241,0.4)" : "1px solid #e2e8f0" }}
+                    className={`overflow-hidden rounded-2xl border bg-white shadow-[0_10px_30px_rgba(15,23,42,0.06)] transition-shadow ${
+                      isOpen ? "border-teal-300 shadow-[0_12px_34px_rgba(15,118,110,0.12)]" : "border-slate-200/80"
+                    }`}
                   >
-                    {/* Indigo→teal gradient header — always visible */}
                     <div
                       onClick={toggleCollapse}
-                      className="flex cursor-pointer items-center gap-3 px-5 py-4"
-                      style={{ background: "linear-gradient(135deg, #6366f1 0%, #14b8a6 100%)" }}
+                      className="flex cursor-pointer items-center gap-3 bg-gradient-to-r from-teal-50 via-white to-white px-4 py-4 transition-colors hover:from-teal-100/70 sm:px-5"
                     >
                       <div
-                        className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full text-sm font-bold"
-                        style={{ background: "rgba(255,255,255,0.2)", border: "1.5px solid rgba(255,255,255,0.35)", color: "#ffffff" }}
+                        className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-teal-700 to-teal-500 text-sm font-extrabold text-white shadow-sm shadow-teal-900/15"
                       >
                         {idx + 1}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-bold leading-snug text-white">Stage {idx + 1}: {step.title}</p>
+                        <p className="text-sm font-bold leading-snug text-slate-800">Stage {idx + 1}: {step.title}</p>
                         {!isOpen && (step.description || step.url) && (
-                          <p className="mt-0.5 text-xs text-white/55">Tap to view instructions</p>
+                          <p className="mt-1 text-xs text-slate-500">View instructions and continue</p>
                         )}
                       </div>
                       <ChevronDown
-                        className={`h-5 w-5 flex-shrink-0 text-white/80 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
+                        className={`h-5 w-5 flex-shrink-0 text-slate-400 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
                       />
                     </div>
 
                     {/* Collapsible middle — description + Open Link */}
                     <div className={`overflow-hidden transition-all duration-300 ${isOpen ? "max-h-64" : "max-h-0"}`}>
                       {(step.description || step.url) && (
-                        <div className="flex items-start justify-between gap-4 bg-white px-5 py-4" style={{ borderTop: "1px solid rgba(99,102,241,0.1)" }}>
+                        <div className="flex flex-col items-start justify-between gap-4 border-t border-slate-100 bg-white px-5 py-4 sm:flex-row">
                           {step.description && (
                             <p className="flex-1 text-sm leading-relaxed text-slate-600 pt-0.5">{step.description}</p>
                           )}
@@ -952,8 +946,7 @@ export default function TaskWorkPage() {
                                 href={buildStepUrl(step.url)}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors whitespace-nowrap"
-                                style={{ border: "1px solid rgba(99,102,241,0.3)", background: "rgba(99,102,241,0.06)", color: "#6366f1" }}
+                                className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg border border-teal-200 bg-teal-50 px-3 py-2 text-xs font-semibold text-teal-800 transition-colors hover:border-teal-300 hover:bg-teal-100"
                               >
                                 <ExternalLink className="h-3 w-3" /> Open Link
                               </a>
@@ -963,11 +956,10 @@ export default function TaskWorkPage() {
                       )}
                     </div>
 
-                    {/* Fixed bottom — gradient strip with button inside */}
-                    <div className="px-5 py-3.5" style={{ background: "linear-gradient(135deg, #6366f1 0%, #14b8a6 100%)" }}>
+                    <div className="border-t border-slate-100 bg-slate-50/70 px-4 py-3 sm:px-5">
                       <button
                         onClick={() => openModal(idx)}
-                        className="flex w-full items-center justify-center gap-2 rounded-xl border border-white/25 bg-white/15 py-2.5 text-sm font-bold text-white transition-colors hover:bg-white/25"
+                        className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-teal-700 to-teal-600 py-3 text-sm font-bold text-white shadow-sm shadow-teal-900/15 transition-all hover:-translate-y-0.5 hover:from-teal-800 hover:to-teal-700 hover:shadow-md active:translate-y-0"
                       >
                         <Send className="h-4 w-4" />
                         {step.submitType === "none"               ? "Mark as Complete"
@@ -1791,80 +1783,81 @@ export default function TaskWorkPage() {
       )}
 
       {/* ── RIGHT: sticky task-info panel (desktop only) ─────────────── */}
-      <div className="hidden lg:flex flex-col gap-4 w-64 xl:w-72 flex-shrink-0 sticky top-20">
+      <div className="hidden w-64 flex-shrink-0 flex-col gap-4 self-start lg:flex xl:w-72">
 
         {/* Reward card */}
         {contributorCoins != null && (
-          <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
-            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-3">Your Reward</p>
+          <div className="relative flex-shrink-0 overflow-hidden rounded-2xl border border-amber-200/70 bg-gradient-to-br from-amber-50 via-white to-white p-4 shadow-[0_8px_24px_rgba(15,23,42,0.045)]">
+            <div aria-hidden className="pointer-events-none absolute -right-7 -top-8 h-24 w-24 rounded-full border border-amber-200/50" />
+            <p className="relative mb-3 text-[10px] font-bold uppercase tracking-[0.16em] text-amber-700/70">Your reward</p>
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50 border border-amber-100 flex-shrink-0">
+              <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl border border-amber-200/70 bg-white shadow-sm">
                 <NexCoinIcon size={22} />
               </div>
               <div>
-                <p className="text-xl font-extrabold text-slate-800">{contributorCoins}</p>
-                <p className="text-xs text-slate-400">NexCoins</p>
+                <p className="text-2xl font-extrabold tracking-tight text-slate-800">{contributorCoins}</p>
+                <p className="text-xs font-medium text-slate-500">NexCoins on approval</p>
               </div>
             </div>
           </div>
         )}
 
         {/* Task details card */}
-        <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
-          <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-3">Task Details</p>
-          <div className="space-y-3">
+        <div className="flex-shrink-0 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-[0_8px_24px_rgba(15,23,42,0.045)]">
+          <p className="mb-4 text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400">Task details</p>
+          <div className="space-y-3.5">
             {task.deadline && (
               <div className="flex items-center gap-2.5">
-                <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-50 flex-shrink-0">
-                  <Clock className="h-3.5 w-3.5 text-indigo-500" />
+                <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl bg-teal-50 ring-1 ring-teal-100">
+                  <Clock className="h-3.5 w-3.5 text-teal-700" />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-[10px] text-slate-400 font-medium uppercase tracking-wide">Deadline</p>
-                  <p className={`text-xs font-semibold truncate ${countdown === "Ended" ? "text-red-500" : "text-slate-700"}`}>{countdown === "Ended" ? "Ended" : `${countdown} left`}</p>
+                  <p className="text-[9px] font-bold uppercase tracking-[0.12em] text-slate-400">Deadline</p>
+                  <p className={`mt-0.5 truncate text-xs font-semibold ${countdown === "Ended" ? "text-red-500" : "text-slate-700"}`}>{countdown === "Ended" ? "Ended" : `${countdown} left`}</p>
                 </div>
               </div>
             )}
             {task.total_slots != null && (
               <div className="flex items-center gap-2.5">
-                <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-50 flex-shrink-0">
-                  <Users className="h-3.5 w-3.5 text-indigo-500" />
+                <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl bg-indigo-50 ring-1 ring-indigo-100">
+                  <Users className="h-3.5 w-3.5 text-indigo-600" />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-[10px] text-slate-400 font-medium uppercase tracking-wide">Slots</p>
-                  <p className="text-xs font-semibold text-slate-700">{task.filled_slots ?? 0} / {task.total_slots} filled</p>
+                  <p className="text-[9px] font-bold uppercase tracking-[0.12em] text-slate-400">Slots</p>
+                  <p className="mt-0.5 text-xs font-semibold text-slate-700">{task.filled_slots ?? 0} / {task.total_slots} filled</p>
                 </div>
               </div>
             )}
             {task.validation_time && (
               <div className="flex items-center gap-2.5">
-                <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-50 flex-shrink-0">
-                  <Clock className="h-3.5 w-3.5 text-blue-500" />
+                <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl bg-sky-50 ring-1 ring-sky-100">
+                  <Clock className="h-3.5 w-3.5 text-sky-600" />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-[10px] text-slate-400 font-medium uppercase tracking-wide">Review Time</p>
-                  <p className="text-xs font-semibold text-slate-700 truncate">{task.validation_time}</p>
+                  <p className="text-[9px] font-bold uppercase tracking-[0.12em] text-slate-400">Review time</p>
+                  <p className="mt-0.5 truncate text-xs font-semibold text-slate-700">{task.validation_time}</p>
                 </div>
               </div>
             )}
             {task.payment_time && (
               <div className="flex items-center gap-2.5">
-                <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-teal-50 flex-shrink-0">
-                  <CreditCard className="h-3.5 w-3.5 text-teal-500" />
+                <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl bg-teal-50 ring-1 ring-teal-100">
+                  <CreditCard className="h-3.5 w-3.5 text-teal-700" />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-[10px] text-slate-400 font-medium uppercase tracking-wide">Payment</p>
-                  <p className="text-xs font-semibold text-slate-700 truncate">{task.payment_time}</p>
+                  <p className="text-[9px] font-bold uppercase tracking-[0.12em] text-slate-400">Payment</p>
+                  <p className="mt-0.5 truncate text-xs font-semibold text-slate-700">{task.payment_time}</p>
                 </div>
               </div>
             )}
             {task.task_type && (
               <div className="flex items-center gap-2.5">
-                <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-purple-50 flex-shrink-0">
-                  <FileText className="h-3.5 w-3.5 text-purple-500" />
+                <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl bg-violet-50 ring-1 ring-violet-100">
+                  <FileText className="h-3.5 w-3.5 text-violet-600" />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-[10px] text-slate-400 font-medium uppercase tracking-wide">Task Type</p>
-                  <p className="text-xs font-semibold text-slate-700 capitalize">{task.task_type}</p>
+                  <p className="text-[9px] font-bold uppercase tracking-[0.12em] text-slate-400">Task type</p>
+                  <p className="mt-0.5 text-xs font-semibold capitalize text-slate-700">{task.task_type}</p>
                 </div>
               </div>
             )}
@@ -1872,12 +1865,12 @@ export default function TaskWorkPage() {
         </div>
 
         {/* How-to guide card */}
-        <div className="rounded-2xl border border-indigo-100 bg-gradient-to-b from-indigo-50/60 to-white p-4 shadow-sm">
+        <div className="flex-shrink-0 rounded-2xl border border-teal-100 bg-gradient-to-b from-teal-50/70 via-white to-white p-4 shadow-[0_8px_24px_rgba(15,23,42,0.045)]">
           <div className="flex items-center gap-2 mb-4">
-            <div className="flex h-6 w-6 items-center justify-center rounded-lg flex-shrink-0" style={{ background: "linear-gradient(135deg, #6366f1 0%, #14b8a6 100%)" }}>
+            <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg bg-teal-700 shadow-sm shadow-teal-900/15">
               <ListChecks className="h-3.5 w-3.5 text-white" />
             </div>
-            <p className="text-xs font-bold text-slate-700 uppercase tracking-wide">How to Complete</p>
+            <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-slate-700">How to complete</p>
           </div>
           <ol className="space-y-3.5">
             {[
@@ -1904,27 +1897,26 @@ export default function TaskWorkPage() {
 
       {/* ── FIXED BOTTOM BAR ─────────────────────────────────────────── */}
       {hasSteps && (
-        <div className="fixed bottom-0 left-0 right-0 lg:left-[240px] z-30 bg-white/95 backdrop-blur-md shadow-[0_-1px_0_0_rgba(99,102,241,0.12),0_-4px_16px_0_rgba(0,0,0,0.06)]">
-          {/* Gradient accent line at top */}
-          <div className="h-[2px] w-full" style={{ background: "linear-gradient(90deg, #6366f1, #14b8a6)" }} />
-          <div className="px-4 sm:px-6 py-3 lg:pr-[280px] xl:pr-[312px]">
+        <div className="fixed bottom-0 left-0 right-0 z-30 border-t border-teal-100 bg-white/95 shadow-[0_-8px_28px_rgba(15,23,42,0.08)] backdrop-blur-xl">
+        <div className="h-1 w-full bg-gradient-to-r from-teal-700 via-teal-500 to-amber-400" />
+          <div className="mx-auto max-w-[1600px] px-4 py-3 sm:px-6 lg:pr-[280px] xl:pr-[328px]">
             {allDone ? (
-              /* All stages complete — single row: reward pill + submit button */
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 sm:gap-5">
                 {contributorCoins != null && (
-                  <div className="flex flex-1 items-center gap-2 min-w-0">
-                    <div className="flex items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50 px-3 py-1.5 flex-shrink-0">
-                      <NexCoinIcon size={14} />
-                      <span className="text-xs font-bold text-amber-600 whitespace-nowrap">{contributorCoins} NexCoins</span>
+                  <div className="flex min-w-0 flex-1 items-center gap-3">
+                    <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-amber-50 ring-1 ring-amber-200/80">
+                      <NexCoinIcon size={18} />
                     </div>
-                    <span className="hidden sm:block text-xs text-slate-400 truncate">Ready to submit all stages</span>
+                    <div className="min-w-0">
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-400">Task reward</p>
+                      <p className="truncate text-sm font-bold text-slate-800">{contributorCoins} NexCoins</p>
+                    </div>
                   </div>
                 )}
                 <button
                   onClick={finalSubmit}
                   disabled={finalSubmitting}
-                  className="flex flex-shrink-0 items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold text-white transition-all hover:opacity-90 active:scale-95 disabled:opacity-50"
-                  style={{ background: "linear-gradient(135deg, #6366f1 0%, #14b8a6 100%)" }}
+                  className="flex flex-shrink-0 items-center gap-2 rounded-xl bg-gradient-to-r from-teal-700 to-teal-600 px-4 py-2.5 text-sm font-bold text-white shadow-md shadow-teal-900/20 transition-all hover:-translate-y-0.5 hover:from-teal-800 hover:to-teal-700 hover:shadow-lg active:translate-y-0 disabled:opacity-50 sm:px-5"
                 >
                   {finalSubmitting
                     ? <><Loader2 className="h-4 w-4 animate-spin" /> Submitting…</>
@@ -1932,26 +1924,42 @@ export default function TaskWorkPage() {
                 </button>
               </div>
             ) : (
-              /* In progress — reward pill + step progress */
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 sm:gap-5">
                 {contributorCoins != null && (
-                  <div className="flex items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50 px-3 py-1.5 flex-shrink-0">
-                    <NexCoinIcon size={14} />
-                    <span className="text-xs font-bold text-amber-600 whitespace-nowrap">{contributorCoins} NexCoins</span>
+                  <div className="flex min-w-0 flex-shrink-0 items-center gap-2.5 rounded-xl border border-amber-100 bg-gradient-to-r from-amber-50 to-white px-3 py-2 shadow-sm sm:px-3.5">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white shadow-sm ring-1 ring-amber-100">
+                      <NexCoinIcon size={16} />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-[9px] font-bold uppercase tracking-[0.12em] text-amber-700/70">Reward</p>
+                      <p className="whitespace-nowrap text-xs font-extrabold text-amber-700">{contributorCoins} <span className="font-semibold">NexCoins</span></p>
+                    </div>
                   </div>
                 )}
-                <div className="flex flex-1 items-center justify-end gap-2.5">
-                  <div className="flex items-center gap-1">
+                <div className="flex min-w-0 flex-1 items-center justify-end gap-3 sm:gap-4">
+                  <div className="hidden min-w-0 flex-1 items-center gap-3 sm:flex">
+                    <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-slate-100">
+                      <div
+                        className="h-full rounded-full bg-gradient-to-r from-teal-700 to-teal-400 transition-all duration-500"
+                        style={{ width: `${progressPct}%` }}
+                      />
+                    </div>
+                    <span className="whitespace-nowrap text-[11px] font-semibold text-slate-500">
+                      {completedCount} of {steps.length} stages
+                    </span>
+                  </div>
+                  <div className="flex flex-shrink-0 items-center gap-1.5 sm:hidden">
                     {steps.map((_, i) => (
                       <div
                         key={i}
+                        aria-label={`Stage ${i + 1} ${doneSet.has(i) ? "completed" : "not completed"}`}
                         className={`rounded-full transition-all duration-300 ${
-                          doneSet.has(i) ? "h-2 w-5 bg-indigo-500" : "h-2 w-2 bg-slate-200"
+                          doneSet.has(i) ? "h-2 w-4 bg-teal-600" : "h-2 w-2 bg-slate-200"
                         }`}
                       />
                     ))}
                   </div>
-                  <span className="whitespace-nowrap text-xs font-medium text-slate-400">
+                  <span className="whitespace-nowrap text-xs font-bold tabular-nums text-slate-600 sm:hidden">
                     {completedCount}/{steps.length}
                   </span>
                 </div>
