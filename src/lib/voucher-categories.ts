@@ -14,3 +14,7 @@ export type VoucherCategory = (typeof VOUCHER_CATEGORIES)[number]["value"];
 export function isVoucherCategory(value: string): value is VoucherCategory {
   return VOUCHER_CATEGORIES.some((category) => category.value === value);
 }
+
+export function getVoucherCategoryEmoji(value: string): string {
+  return VOUCHER_CATEGORIES.find((category) => category.value === value)?.emoji ?? "🎁";
+}

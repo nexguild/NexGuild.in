@@ -23,7 +23,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase-server";
 import { notifyAdmins } from "@/lib/email";
-import { isCountryCode } from "@/lib/countries";
+import { getProfileCountryCode } from "@/lib/countries";
 
 interface CartItem {
   voucherId: string;
@@ -63,14 +63,14 @@ export async function POST(req: NextRequest) {
 
   const { data: profile, error: profileError } = await admin
     .from("profiles")
-    .select("joined_at, country_code")
+    .select("joined_at, country, country_code")
     .eq("id", user.id)
     .single();
   if (profileError || !profile) {
     console.error("[redeem-cart] contributor profile lookup failed:", profileError?.message ?? "No profile row returned.");
     return NextResponse.json({ error: "Unable to verify your account details." }, { status: 500 });
   }
-  const countryCode = isCountryCode(profile.country_code) ? profile.country_code : null;
+  const countryCode = getProfileCountryCode(profile.country_code, profile.country);
   if (countryCode !== "IN") {
     return NextResponse.json({ error: "Gift-card vouchers are currently available only to contributors in India." }, { status: 403 });
   }

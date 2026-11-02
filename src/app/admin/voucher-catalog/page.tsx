@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
 import { usePageGuard } from "@/components/layout/admin-auth-guard";
 import { ADMIN_ROLES } from "@/lib/admin-permissions";
-import { VOUCHER_CATEGORIES } from "@/lib/voucher-categories";
+import { getVoucherCategoryEmoji, VOUCHER_CATEGORIES } from "@/lib/voucher-categories";
+import { DEFAULT_VOUCHER_HOW_TO_USE, DEFAULT_VOUCHER_TERMS } from "@/lib/voucher-guidance";
 
 const CATEGORY_LABELS: Record<string, string> = Object.fromEntries(
   VOUCHER_CATEGORIES.map((category) => [category.value, category.label]),
@@ -20,6 +21,8 @@ interface DbVoucher {
   coins_required: number;
   category: string;
   emoji: string;
+  how_to_use: string[];
+  terms_and_conditions: string[];
   is_available: boolean;
   created_at: string;
 }
@@ -29,18 +32,29 @@ function fmtPrice(v: DbVoucher): string {
   return "—";
 }
 
+type DenominationForm = {
+  value_inr: string;
+  coins_required: string;
+  coins_overridden: boolean;
+  is_available: boolean;
+};
+
 type FormState = {
   brand_name: string;
   description: string;
-  value_inr: string;
-  coins_required: string;
-  coins_overridden: boolean; // true = admin manually set coins, skip auto-calc
+  denominations: DenominationForm[];
   category: string;
-  emoji: string;
+  how_to_use: string[];
+  terms_and_conditions: string[];
 };
 
 const EMPTY_FORM: FormState = {
-  brand_name: "", description: "", value_inr: "", coins_required: "", coins_overridden: false, category: "shopping", emoji: "🎁",
+  brand_name: "",
+  description: "",
+  denominations: [{ value_inr: "", coins_required: "", coins_overridden: false, is_available: true }],
+  category: "shopping",
+  how_to_use: [...DEFAULT_VOUCHER_HOW_TO_USE],
+  terms_and_conditions: [...DEFAULT_VOUCHER_TERMS],
 };
 
 export default function VoucherCatalogPage() {
@@ -132,11 +146,15 @@ export default function VoucherCatalogPage() {
     setForm({
       brand_name:       v.brand_name,
       description:      v.description,
-      value_inr:        v.value_inr && v.value_inr > 0 ? String(v.value_inr) : "",
-      coins_required:   String(v.coins_required),
-      coins_overridden: true,
+      denominations: [{
+        value_inr: v.value_inr && v.value_inr > 0 ? String(v.value_inr) : "",
+        coins_required: String(v.coins_required),
+        coins_overridden: true,
+        is_available: v.is_available,
+      }],
       category:         v.category,
-      emoji:            v.emoji,
+      how_to_use:       v.how_to_use?.length ? v.how_to_use : [...DEFAULT_VOUCHER_HOW_TO_USE],
+      terms_and_conditions: v.terms_and_conditions?.length ? v.terms_and_conditions : [...DEFAULT_VOUCHER_TERMS],
     });
     setFormErr(null);
     setSaveOk(false);
@@ -147,29 +165,37 @@ export default function VoucherCatalogPage() {
     e.preventDefault();
     setFormErr(null);
 
-    const inrVal  = parseFloat(form.value_inr);
-    const hasInr  = Number.isSafeInteger(inrVal) && inrVal > 0;
-    const coins   = Number(form.coins_required);
-
     if (!form.brand_name.trim())    { setFormErr("Brand name is required."); return; }
-    if (!hasInr)                    { setFormErr("Enter a valid voucher value in INR."); return; }
-    if (!Number.isSafeInteger(coins) || coins <= 0) { setFormErr("NexCoins required must be a positive whole number."); return; }
+    if (form.denominations.length === 0) { setFormErr("Add at least one voucher denomination."); return; }
+    const denominations = form.denominations.map((denomination) => ({
+      value_inr: Number(denomination.value_inr),
+      coins_required: Number(denomination.coins_required),
+      is_available: denomination.is_available,
+    }));
+    if (denominations.some(({ value_inr }) => !Number.isSafeInteger(value_inr) || value_inr <= 0)) {
+      setFormErr("Enter a valid whole-number value in INR for every denomination."); return;
+    }
+    if (denominations.some(({ coins_required }) => !Number.isSafeInteger(coins_required) || coins_required <= 0)) {
+      setFormErr("NexCoins required must be a positive whole number for every denomination."); return;
+    }
+    if (!editId && new Set(denominations.map(({ value_inr }) => value_inr)).size !== denominations.length) {
+      setFormErr("Each denomination value must be unique."); return;
+    }
     setSaving(true);
     const base = {
       brand_name:     form.brand_name,
       description:    form.description,
-      value_inr:      Math.round(inrVal),
-      coins_required: coins,
       category:       form.category,
-      emoji:          form.emoji,
+      how_to_use:     form.how_to_use.map((item) => item.trim()).filter(Boolean),
+      terms_and_conditions: form.terms_and_conditions.map((item) => item.trim()).filter(Boolean),
       country_codes:  ["IN"],
     };
     const body = editId
-      ? { action: "update", id: editId, ...base }
-      : { action: "create", ...base };
+      ? { action: "update", id: editId, ...base, ...denominations[0] }
+      : { action: "create", ...base, denominations };
 
     const res  = await callApi(body);
-    const data = await res.json() as { voucher?: DbVoucher; error?: string };
+    const data = await res.json() as { voucher?: DbVoucher; vouchers?: DbVoucher[]; error?: string };
 
     if (!res.ok || data.error) {
       setFormErr(data.error ?? "Save failed.");
@@ -178,8 +204,9 @@ export default function VoucherCatalogPage() {
       if (editId) {
         setVouchers((prev) => prev.map((v) => v.id === editId ? data.voucher! : v));
       } else {
-        setVouchers((prev) => [...prev, data.voucher!].sort((a, b) =>
-          a.brand_name.localeCompare(b.brand_name) || (a.coins_required - b.coins_required)
+        const createdVouchers = data.vouchers ?? (data.voucher ? [data.voucher] : []);
+        setVouchers((prev) => [...prev, ...createdVouchers].sort((a, b) =>
+          a.brand_name.localeCompare(b.brand_name) || ((a.value_inr ?? 0) - (b.value_inr ?? 0))
         ));
       }
       setTimeout(() => setShowForm(false), 800);
@@ -209,23 +236,70 @@ export default function VoucherCatalogPage() {
   function setField(k: keyof FormState, val: string) {
     setForm((prev) => {
       const next = { ...prev, [k]: val };
-      if (k === "value_inr" && !prev.coins_overridden) {
-        const auto = calcCoins(val);
-        if (auto) next.coins_required = auto;
-      }
       return next;
     });
   }
 
-  function setCoinsManually(val: string) {
-    setForm((prev) => ({ ...prev, coins_required: val, coins_overridden: true }));
+  function setDenominationField(index: number, field: "value_inr" | "coins_required", value: string) {
+    setForm((prev) => ({
+      ...prev,
+      denominations: prev.denominations.map((denomination, denominationIndex) => {
+        if (denominationIndex !== index) return denomination;
+        if (field === "coins_required") {
+          return { ...denomination, coins_required: value, coins_overridden: true };
+        }
+        return {
+          ...denomination,
+          value_inr: value,
+          coins_required: denomination.coins_overridden ? denomination.coins_required : calcCoins(value),
+        };
+      }),
+    }));
   }
 
-  function resetCoinsAutoCalc() {
-    setForm((prev) => {
-      const auto = calcCoins(prev.value_inr);
-      return { ...prev, coins_required: auto || prev.coins_required, coins_overridden: false };
-    });
+  function toggleDenominationAvailability(index: number) {
+    setForm((prev) => ({
+      ...prev,
+      denominations: prev.denominations.map((denomination, denominationIndex) => denominationIndex === index
+        ? { ...denomination, is_available: !denomination.is_available }
+        : denomination),
+    }));
+  }
+
+  function addDenomination() {
+    setForm((prev) => prev.denominations.length >= 20
+      ? prev
+      : { ...prev, denominations: [...prev.denominations, { value_inr: "", coins_required: "", coins_overridden: false, is_available: true }] });
+  }
+
+  function removeDenomination(index: number) {
+    setForm((prev) => prev.denominations.length <= 1
+      ? prev
+      : { ...prev, denominations: prev.denominations.filter((_, denominationIndex) => denominationIndex !== index) });
+  }
+
+  function resetDenominationCoins(index: number) {
+    setForm((prev) => ({
+      ...prev,
+      denominations: prev.denominations.map((denomination, denominationIndex) => denominationIndex === index
+        ? { ...denomination, coins_required: calcCoins(denomination.value_inr), coins_overridden: false }
+        : denomination),
+    }));
+  }
+
+  function setGuidanceItem(field: "how_to_use" | "terms_and_conditions", index: number, value: string) {
+    setForm((prev) => ({
+      ...prev,
+      [field]: prev[field].map((item, itemIndex) => itemIndex === index ? value : item),
+    }));
+  }
+
+  function addGuidanceItem(field: "how_to_use" | "terms_and_conditions") {
+    setForm((prev) => prev[field].length >= 12 ? prev : { ...prev, [field]: [...prev[field], ""] });
+  }
+
+  function removeGuidanceItem(field: "how_to_use" | "terms_and_conditions", index: number) {
+    setForm((prev) => ({ ...prev, [field]: prev[field].filter((_, itemIndex) => itemIndex !== index) }));
   }
 
   if (!allowed) return null;
@@ -244,7 +318,7 @@ export default function VoucherCatalogPage() {
       {/* Stats row */}
       {loadError && (
         <p role="alert" className="rounded-lg border border-red-500/20 bg-red-500/5 px-4 py-3 text-sm text-red-400">
-          Could not load the catalog: {loadError}. Apply the latest database migration if the country column is missing.
+          Could not load the catalog: {loadError}. Ensure the latest voucher catalog migrations, including migrations_v44.sql, have been applied.
         </p>
       )}
       <div className="flex items-center gap-4 flex-wrap text-sm text-[var(--text-muted)]">
@@ -342,7 +416,7 @@ export default function VoucherCatalogPage() {
       {/* ── Add / Edit Modal ─────────────────────────────────────────── */}
       {showForm && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/60">
-          <div className="w-full max-w-md max-h-[90vh] overflow-y-auto bg-[var(--surface-card)] rounded-xl border border-[var(--border-default)] p-6 shadow-xl">
+          <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-[var(--surface-card)] rounded-xl border border-[var(--border-default)] p-6 shadow-xl">
             <div className="flex items-center justify-between mb-5">
               <h2 className="text-lg font-semibold text-[var(--text-primary)]">
                 {editId ? "Edit Voucher" : "Add Voucher"}
@@ -359,29 +433,16 @@ export default function VoucherCatalogPage() {
               </div>
             ) : (
               <form onSubmit={handleSave} className="space-y-4">
-                {/* Emoji + Brand row */}
-                <div className="flex gap-3">
-                  <div className="w-20 flex-shrink-0">
-                    <label className="block text-xs font-medium text-[var(--text-primary)] mb-1.5">Emoji</label>
-                    <input
-                      type="text"
-                      value={form.emoji}
-                      onChange={(e) => setField("emoji", e.target.value)}
-                      maxLength={4}
-                      className="w-full h-10 px-2 text-center text-xl rounded-md border border-[var(--border-strong)] bg-[var(--surface-subtle)] focus:outline-none focus:ring-2 focus:ring-[var(--border-focus)]"
-                    />
-                  </div>
-                  <div className="flex-1">
-                    <label className="block text-xs font-medium text-[var(--text-primary)] mb-1.5">Brand Name *</label>
-                    <input
-                      type="text"
-                      required
-                      value={form.brand_name}
-                      onChange={(e) => setField("brand_name", e.target.value)}
-                      placeholder="e.g. Amazon"
-                      className="w-full h-10 px-3 rounded-md border border-[var(--border-strong)] bg-[var(--surface-subtle)] text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--border-focus)]"
-                    />
-                  </div>
+                <div>
+                  <label className="block text-xs font-medium text-[var(--text-primary)] mb-1.5">Brand Name *</label>
+                  <input
+                    type="text"
+                    required
+                    value={form.brand_name}
+                    onChange={(e) => setField("brand_name", e.target.value)}
+                    placeholder="e.g. Amazon"
+                    className="w-full h-10 px-3 rounded-md border border-[var(--border-strong)] bg-[var(--surface-subtle)] text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--border-focus)]"
+                  />
                 </div>
 
                 {/* Description */}
@@ -397,73 +458,193 @@ export default function VoucherCatalogPage() {
                   />
                 </div>
 
-                {/* India-only voucher price */}
                 <div>
-                  <label className="block text-xs font-medium text-[var(--text-primary)] mb-1.5">Voucher value in ₹ (INR) *</label>
-                  <input
-                    type="number"
-                    min="1"
-                    step="1"
-                    required
-                    value={form.value_inr}
-                    onChange={(e) => setField("value_inr", e.target.value)}
-                    placeholder="100"
-                    className="w-full h-10 px-3 rounded-md border border-[var(--border-strong)] bg-[var(--surface-subtle)] text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--border-focus)]"
-                  />
-                </div>
-                {/* NexCoins Required — auto-calculated, manually overridable */}
-                <div>
-                  <div className="flex items-center justify-between mb-1.5">
-                    <label className="block text-xs font-medium text-[var(--text-primary)]">
-                      NexCoins Required *
-                      {!form.coins_overridden && (
-                        <span className="ml-1.5 text-[10px] font-normal px-1.5 py-0.5 rounded bg-[var(--brand-500)]/15 text-[var(--brand-500)]">
-                          Auto-calculated
-                        </span>
-                      )}
-                      {form.coins_overridden && (
-                        <span className="ml-1.5 text-[10px] font-normal px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-400">
-                          Manual override
-                        </span>
-                      )}
-                    </label>
-                    {form.coins_overridden && (
+                  <div className="flex items-center justify-between gap-3 mb-2">
+                    <div>
+                      <label className="block text-xs font-medium text-[var(--text-primary)]">Voucher denominations</label>
+                      <p className="mt-1 text-[11px] text-[var(--text-muted)]">Availability is set separately for each value.</p>
+                    </div>
+                    {!editId && (
                       <button
                         type="button"
-                        onClick={resetCoinsAutoCalc}
-                        className="text-[10px] text-[var(--text-muted)] hover:text-[var(--brand-500)] transition-colors underline"
+                        onClick={addDenomination}
+                        disabled={form.denominations.length >= 20}
+                        className="inline-flex items-center gap-1 text-xs font-medium text-[var(--brand-500)] hover:underline disabled:opacity-50"
                       >
-                        Reset to auto
+                        <Plus className="h-3.5 w-3.5" /> Add denomination
                       </button>
                     )}
                   </div>
-                  <input
-                    type="number"
-                    required
-                    min="1"
-                    value={form.coins_required}
-                    onChange={(e) => setCoinsManually(e.target.value)}
-                    placeholder={calcCoins(form.value_inr) || "1250"}
-                    className="w-full h-10 px-3 rounded-md border border-[var(--border-strong)] bg-[var(--surface-subtle)] text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--border-focus)]"
-                  />
+                  <div className="space-y-3">
+                    {form.denominations.map((denomination, index) => (
+                      <div key={`denomination-${index}`} className="grid grid-cols-1 sm:grid-cols-[1fr_1fr_auto_auto] items-end gap-3 rounded-lg border border-[var(--border-default)] p-3">
+                        <div>
+                          <label className="block text-xs font-medium text-[var(--text-primary)] mb-1.5">Value in ₹ (INR) *</label>
+                          <input
+                            type="number"
+                            min="1"
+                            step="1"
+                            required
+                            value={denomination.value_inr}
+                            onChange={(event) => setDenominationField(index, "value_inr", event.target.value)}
+                            placeholder="100"
+                            aria-label={`Denomination ${index + 1} value in INR`}
+                            className="w-full h-10 px-3 rounded-md border border-[var(--border-strong)] bg-[var(--surface-subtle)] text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--border-focus)]"
+                          />
+                        </div>
+                        <div>
+                          <div className="flex items-center justify-between gap-2 mb-1.5">
+                            <label className="block text-xs font-medium text-[var(--text-primary)]">NexCoins *</label>
+                            {denomination.coins_overridden ? (
+                              <button
+                                type="button"
+                                onClick={() => resetDenominationCoins(index)}
+                                className="text-[10px] text-[var(--text-muted)] hover:text-[var(--brand-500)] underline"
+                              >
+                                Reset
+                              </button>
+                            ) : (
+                              <span className="text-[10px] text-[var(--brand-500)]">Auto</span>
+                            )}
+                          </div>
+                          <input
+                            type="number"
+                            required
+                            min="1"
+                            value={denomination.coins_required}
+                            onChange={(event) => setDenominationField(index, "coins_required", event.target.value)}
+                            placeholder={calcCoins(denomination.value_inr) || "1250"}
+                            aria-label={`Denomination ${index + 1} NexCoins required`}
+                            className="w-full h-10 px-3 rounded-md border border-[var(--border-strong)] bg-[var(--surface-subtle)] text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--border-focus)]"
+                          />
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => toggleDenominationAvailability(index)}
+                          aria-label={`Mark denomination ${index + 1} ${denomination.is_available ? "out of stock" : "in stock"}`}
+                          aria-pressed={denomination.is_available}
+                          className={`flex h-10 items-center justify-center gap-1.5 whitespace-nowrap rounded-md border px-3 text-xs font-medium transition-colors ${
+                            denomination.is_available
+                              ? "border-green-500/30 bg-green-500/10 text-green-400 hover:bg-green-500/20"
+                              : "border-red-500/30 bg-red-500/10 text-red-400 hover:bg-red-500/20"
+                          }`}
+                        >
+                          {denomination.is_available ? <CheckCircle2 className="h-4 w-4" /> : <X className="h-4 w-4" />}
+                          {denomination.is_available ? "In stock" : "Out of stock"}
+                        </button>
+                        {!editId && (
+                          <button
+                            type="button"
+                            onClick={() => removeDenomination(index)}
+                            disabled={form.denominations.length <= 1}
+                            aria-label={`Remove denomination ${index + 1}`}
+                            className="flex h-10 w-10 items-center justify-center rounded-md text-[var(--text-muted)] hover:bg-red-500/10 hover:text-red-400 disabled:opacity-40"
+                          >
+                            <X className="h-4 w-4" />
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
                   <p className="text-xs text-[var(--text-muted)] mt-1">
                     Rate: ₹1 = {nexcoinPerInr} coins
                     {" "}(set in <span className="text-[var(--brand-500)]">Settings → Exchange Rates</span>)
                   </p>
                 </div>
 
-                {/* Category */}
-                <div>
-                  <label className="block text-xs font-medium text-[var(--text-primary)] mb-1.5">Category</label>
-                  <select
-                    value={form.category}
-                    onChange={(e) => setField("category", e.target.value)}
-                    className="w-full h-10 px-3 rounded-md border border-[var(--border-strong)] bg-[var(--surface-subtle)] text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--border-focus)]"
-                  >
-                    {VOUCHER_CATEGORIES.map((category) => (
-                      <option key={category.value} value={category.value}>{category.emoji} {category.label}</option>
-                    ))}
-                  </select>
+                <div className="grid grid-cols-[1fr_auto] items-end gap-3">
+                  <div>
+                    <label className="block text-xs font-medium text-[var(--text-primary)] mb-1.5">Category</label>
+                    <select
+                      value={form.category}
+                      onChange={(e) => setField("category", e.target.value)}
+                      className="w-full h-10 px-3 rounded-md border border-[var(--border-strong)] bg-[var(--surface-subtle)] text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--border-focus)]"
+                    >
+                      {VOUCHER_CATEGORIES.map((category) => (
+                        <option key={category.value} value={category.value}>{category.label}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-[var(--text-primary)] mb-1.5">Category icon</label>
+                    <div className="flex h-10 w-14 items-center justify-center rounded-md border border-[var(--border-strong)] bg-[var(--surface-subtle)] text-xl" aria-label="Icon selected automatically from category">
+                      {getVoucherCategoryEmoji(form.category)}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between gap-3">
+                    <label className="block text-xs font-medium text-[var(--text-primary)]">How to use</label>
+                    <button
+                      type="button"
+                      onClick={() => addGuidanceItem("how_to_use")}
+                      disabled={form.how_to_use.length >= 12}
+                      className="inline-flex items-center gap-1 text-xs font-medium text-[var(--brand-500)] hover:underline disabled:opacity-50"
+                    >
+                      <Plus className="h-3.5 w-3.5" /> Add step
+                    </button>
+                  </div>
+                  {form.how_to_use.map((step, index) => (
+                    <div key={`how-to-${index}`} className="flex items-center gap-2">
+                      <span className="w-5 flex-shrink-0 text-right text-xs text-[var(--text-muted)]">{index + 1}.</span>
+                      <input
+                        type="text"
+                        value={step}
+                        onChange={(event) => setGuidanceItem("how_to_use", index, event.target.value)}
+                        maxLength={300}
+                        aria-label={`How to use step ${index + 1}`}
+                        placeholder="Describe a step"
+                        className="h-10 min-w-0 flex-1 rounded-md border border-[var(--border-strong)] bg-[var(--surface-subtle)] px-3 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--border-focus)]"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeGuidanceItem("how_to_use", index)}
+                        aria-label={`Remove how to use step ${index + 1}`}
+                        className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-md text-[var(--text-muted)] hover:bg-red-500/10 hover:text-red-400"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+                  ))}
+                  {form.how_to_use.length === 0 && <p className="text-xs text-[var(--text-muted)]">No usage steps added.</p>}
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between gap-3">
+                    <label className="block text-xs font-medium text-[var(--text-primary)]">Terms &amp; Conditions</label>
+                    <button
+                      type="button"
+                      onClick={() => addGuidanceItem("terms_and_conditions")}
+                      disabled={form.terms_and_conditions.length >= 12}
+                      className="inline-flex items-center gap-1 text-xs font-medium text-[var(--brand-500)] hover:underline disabled:opacity-50"
+                    >
+                      <Plus className="h-3.5 w-3.5" /> Add term
+                    </button>
+                  </div>
+                  {form.terms_and_conditions.map((term, index) => (
+                    <div key={`term-${index}`} className="flex items-center gap-2">
+                      <span className="w-5 flex-shrink-0 text-right text-xs text-[var(--text-muted)]">{index + 1}.</span>
+                      <input
+                        type="text"
+                        value={term}
+                        onChange={(event) => setGuidanceItem("terms_and_conditions", index, event.target.value)}
+                        maxLength={300}
+                        aria-label={`Terms and conditions item ${index + 1}`}
+                        placeholder="Add a term or condition"
+                        className="h-10 min-w-0 flex-1 rounded-md border border-[var(--border-strong)] bg-[var(--surface-subtle)] px-3 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--border-focus)]"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeGuidanceItem("terms_and_conditions", index)}
+                        aria-label={`Remove terms and conditions item ${index + 1}`}
+                        className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-md text-[var(--text-muted)] hover:bg-red-500/10 hover:text-red-400"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+                  ))}
+                  {form.terms_and_conditions.length === 0 && <p className="text-xs text-[var(--text-muted)]">No terms added.</p>}
                 </div>
 
                 {formErr && <p className="text-sm text-red-400 bg-red-500/10 px-3 py-2 rounded-md">{formErr}</p>}

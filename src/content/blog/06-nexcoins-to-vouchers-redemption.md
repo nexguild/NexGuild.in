@@ -1,72 +1,94 @@
-﻿---
-title: "NexCoins to Vouchers: How Redemption Works on NexGuild"
+---
+title: "How to Redeem NexCoins for Gift Vouchers or Global Payouts"
 slug: "nexcoins-to-vouchers-redemption"
-description: "Everything you need to know about earning NexCoins and redeeming them for real rewards in NexStore."
+description: "Learn how NexCoins work, where to find Cashout & Rewards, and how to request India-only gift vouchers or a manually reviewed global USDT payout."
 category: "NexGuild"
 date: "2026-06-21"
-tags: ["NexGuild", "gift vouchers", "online earning", "rewards"]
+tags: ["NexGuild", "NexCoins", "gift vouchers", "global payouts", "rewards"]
+faqs:
+  - q: "Where do I redeem NexCoins on NexGuild?"
+    a: "Sign in to your contributor account, open Cashout from the dashboard, and choose Gift vouchers or Global Payout."
+  - q: "Are NexGuild gift vouchers available worldwide?"
+    a: "Gift-card vouchers are currently available only in India, and the available brands and denominations depend on current catalog stock. Contributors elsewhere can check the Global Payout option."
+  - q: "What is the minimum NexGuild global payout?"
+    a: "The minimum global payout request is 10 USDT, equivalent to 10,000 NexCoins at the displayed rate of 1,000 NexCoins per USDT."
+  - q: "Which payout methods can I use?"
+    a: "The Cashout page currently lists Binance Pay and USDT through TRC20, BEP20, or ERC20. Confirm the selected method and destination carefully before submitting."
+  - q: "How long does a payout take?"
+    a: "Global payout requests are manually reviewed. Processing times can vary, and the site does not promise a fixed completion time."
 ---
 
+NexCoins are the rewards balance you earn on NexGuild. You can use them in **Cashout & Rewards** to request a gift voucher or a global USDT payout. The options are separate tabs on the same page, and availability, minimums, and processing depend on the reward type.
 
-NexCoins you earn redeem directly for gift vouchers in NexStore — Amazon, Steam, Google Play, and more. There's no minimum balance required, no conversion fee, and voucher codes are delivered digitally. Here's the complete earning-to-redemption flow so you know exactly what to expect.
-
-> 🎁 **Have NexCoins Ready to Redeem?**
-> Head to NexStore in your dashboard and pick your voucher — Amazon, Steam, Google Play, and more available now.
-> 👉 **[Redeem Your NexCoins — Join NexGuild Free](/signup)**
+> **Ready to check your options?**
+> Sign in and open **Cashout** from your dashboard to see the current rewards available to your account.
+> 👉 **[Join NexGuild free](/signup)**
 
 <figure>
-  <img src="https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?w=800&auto=format&fit=crop&q=80" alt="focused person working independently on a laptop" width="800" height="450" />
-  <figcaption>NexCoins accumulate with every approved task and survey — and redeem directly for Amazon, Flipkart, Google Play, and Zomato vouchers. Photo via Unsplash</figcaption>
+  <img src="https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?w=800&auto=format&fit=crop&q=80" alt="Person working independently on a laptop" width="800" height="450" />
+  <figcaption>Earn NexCoins through eligible NexGuild activities, then choose an available redemption option in Cashout &amp; Rewards. Photo via Unsplash</figcaption>
 </figure>
 
 ## What Are NexCoins?
 
-NexCoins are NexGuild's in-platform currency. You earn them by completing approved tasks, participating in offerwall activities, and through daily streak bonuses. They're not a cryptocurrency and they're not directly cash — instead, they're a points system designed specifically to be redeemed for real rewards through NexStore.
+NexCoins are NexGuild's in-platform rewards balance. They are not cryptocurrency and are not cash by themselves. Eligible NexCoins can be redeemed through the options shown in your account.
 
-## Why a Coin System Instead of Direct Cash Payouts?
+You can earn NexCoins from approved NexGuild tasks and from surveys or offerwall activities after the relevant partner confirms completion. Check the activity details for its requirements and reward rules.
 
-This was a deliberate choice. A coin-to-voucher model keeps the platform simple, predictable, and fast — there's no complicated bank transfer process, no waiting on payment gateways, and no minimum cash-out thresholds that lock up small earnings indefinitely. Instead, your NexCoins are always visible, always trackable, and redeemable the moment you have enough for something you want.
+## Where to Find Cashout & Rewards
 
-It also lets us focus entirely on getting the task and reward experience right, without the added complexity that comes with handling direct monetary transactions for every individual task completion.
+1. Sign in to your **contributor account**.
+2. Open **Cashout** from the dashboard navigation.
+3. Check your available NexCoins balance.
+4. Choose either **Gift vouchers** or **Global Payout**.
 
-## How You Earn NexCoins
+Cashout requests are available to contributor accounts. If you have an owner or another account role, contact support about using or setting up a contributor account.
 
-There are a few ways NexCoins make it into your balance:
+## Option 1: Redeem NexCoins for Gift Vouchers
 
-**Completing tasks.** Every task has a NexCoin reward, clearly shown before you start. Once your submission is approved, the coins are credited to your account.
+Gift vouchers are currently available only in India. The brands, denominations, and NexCoin costs depend on the live catalog and stock, so check the Cashout page for the options currently available to your account.
 
-**Offerwall activity.** NexGuild partners with several offerwall providers offering surveys, app installs, and other third-party offers. Completing these earns you NexCoins as well, credited automatically once the provider confirms completion.
+To request a voucher:
 
-**Daily streak bonuses.** If you complete at least one approved task in a day, you can claim a daily streak bonus on top of your regular task earnings. Keep your streak going for a full week and you'll earn a larger bonus on day seven before the cycle resets.
+1. Open the **Gift vouchers** tab.
+2. Browse the catalog and check the NexCoin cost for the voucher you want. Use the affordability filter if helpful.
+3. Add vouchers to your cart and review the request before submitting it.
+4. Follow the request in **My Vouchers**. The voucher appears there after it has been processed and delivered.
 
-## Tracking Your Balance
+Submitting a request does not mean the voucher is delivered immediately. Processing and availability can vary. Check the issuer's terms and conditions before using a voucher code.
 
-Your dashboard and Earnings page give you a complete view of your NexCoins activity: current available balance, total lifetime earned, a breakdown by source (tasks, offerwall, streak bonuses), and a full transaction history you can filter and export.
+## Option 2: Request a Global USDT Payout
 
-<figure>
-  <img src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&auto=format&fit=crop&q=80" alt="analytics and data charts on a laptop screen" width="800" height="450" />
-  <figcaption>Tracking your NexCoin balance and choosing the right redemption option is how you turn online task work into real purchasing power. Photo via Unsplash</figcaption>
-</figure>
+The **Global Payout** tab lets eligible contributors request a payout through the listed methods. The current rate is **1,000 NexCoins = 1 USDT**, with request options of **10, 20, or 50 USDT**. That means the minimum request is 10,000 NexCoins.
 
-## Redeeming NexCoins in NexStore
+The available methods are:
 
-NexStore is where your NexCoins actually become something tangible. It currently offers vouchers from several popular brands, including Amazon, Flipkart, Google Play, and Zomato, with multiple denomination options for each.
+- Binance Pay
+- USDT on TRC20
+- USDT on BEP20
+- USDT on ERC20
 
-Here's how redemption works:
+Choose the exact method that matches your Binance Pay UID or wallet address. Blockchain networks are not interchangeable; sending a payout to an incompatible destination can result in lost funds.
 
-1. **Browse NexStore** and find a voucher you want. Each listing clearly shows the NexCoin cost.
-2. **Confirm you have enough balance.** NexStore includes an "I can afford" filter that shows you only the vouchers within reach of your current balance — useful if you'd rather not browse things you can't yet redeem.
-3. **Submit your redemption request.** This moves into a review and fulfillment queue.
-4. **Receive your voucher code.** Once processed, your voucher code becomes visible in My Vouchers, where you can copy it directly for use.
+To submit a request:
 
-## Checking Your Redemption Status
+1. Select an available payout amount.
+2. Choose the payout method and enter its matching UID or wallet address.
+3. Carefully verify the destination and confirm the payout details.
+4. Submit the request for finance review.
 
-Every voucher request you make is tracked with a clear status: Pending, Processing, or Delivered. You can check this at any time in My Vouchers, so you always know exactly where your redemption stands.
+Payout requests are manually reviewed. NexCoins for an open request are reserved while it is being reviewed, and you cannot submit another request while one is awaiting review. Check **Payout history** in the Global Payout tab for its status and any review notes. Transfer availability, fees, identity checks, processing times, and local rules may vary.
 
-## A Note on Fair Use
+## Which Option Should I Choose?
 
-Because NexCoins are tied directly to genuine task completion and platform activity, we ask contributors not to attempt to exploit, automate, or game the earning system. Submissions go through a review process specifically to keep the NexCoins economy fair and sustainable for everyone participating — and maintaining that integrity is what allows us to keep offering real, valuable rewards in NexStore.
+Choose **Gift vouchers** if your account is eligible for the India catalog and you want one of the currently stocked gift cards. Choose **Global Payout** if you meet its NexCoin minimum and can receive funds through one of the listed payout methods.
 
-## Final Thoughts
+Review the amount, destination, country availability, and any terms before submitting a request. If an option is not shown for your account, it may not currently be available to you.
 
-The NexCoins-to-voucher system is built to be simple and transparent: do real work, earn real coins, redeem for real rewards. As NexGuild grows, we're continuing to expand the range of vouchers and reward options available — so the more you contribute, the more choice you'll have in how to spend what you've earned.
+## Keep Your Account in Good Standing
+
+Complete tasks and partner activities according to their instructions. Do not automate, misrepresent, or attempt to manipulate activity. NexGuild reviews activity to maintain fair reward access for contributors.
+
+## In Summary
+
+NexCoins can be used through two options in one place: India-only gift vouchers or manually reviewed global USDT payout requests. Open **Cashout** in your dashboard to see the current catalog, payout methods, balance requirements, and request history.

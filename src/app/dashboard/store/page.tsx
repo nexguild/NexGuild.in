@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ShoppingCart, X, Loader2, CheckCircle, Tag, Plus, Minus, Trash2, Gift, Globe2 } from "lucide-react";
+import { ShoppingCart, X, Loader2, CheckCircle, Tag, Plus, Minus, Trash2, Gift, Globe2, ArrowUpRight, Sparkles, TicketCheck } from "lucide-react";
 import { NexCoinIcon } from "@/components/ui/nexcoin-icon";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -9,7 +9,7 @@ import { supabase } from "@/lib/supabase";
 import { BlogTipCard } from "@/components/dashboard/BlogTipCard";
 import { GlobalPayoutCard } from "@/components/dashboard/GlobalPayoutCard";
 import { formatNexcoins } from "@/lib/nexcoins";
-import { getCountryName, isCountryCode } from "@/lib/countries";
+import { getCountryName, getProfileCountryCode } from "@/lib/countries";
 import { VOUCHER_CATEGORIES } from "@/lib/voucher-categories";
 
 interface DbVoucher {
@@ -20,6 +20,8 @@ interface DbVoucher {
   coins_required: number;
   category: string;
   emoji: string;
+  how_to_use: string[];
+  terms_and_conditions: string[];
   country_codes: string[];
   country_codes_verified: boolean;
   is_available: boolean;
@@ -47,21 +49,8 @@ const BRAND_COLORS: Record<string, { bg: string; text: string }> = {
   "Steam":       { bg: "bg-sky-500/15",    text: "text-sky-400" },
 };
 
-// Card top-banner gradients
-const BRAND_GRADIENTS: Record<string, string> = {
-  "Amazon":      "from-orange-400 to-orange-500",
-  "Amazon.com":  "from-orange-400 to-orange-500",
-  "Flipkart":    "from-blue-500 to-blue-600",
-  "Google Play": "from-green-400 to-green-500",
-  "Zomato":      "from-red-400 to-red-500",
-  "Steam":       "from-sky-500 to-sky-600",
-};
-
 function brandColor(brand: string) {
   return BRAND_COLORS[brand] ?? { bg: "bg-[var(--brand-500)]/15", text: "text-[var(--brand-500)]" };
-}
-function brandGradient(brand: string): string {
-  return BRAND_GRADIENTS[brand] ?? "from-teal-400 to-teal-500";
 }
 function formatValue(v: DbVoucher, countryCode: string | null): string {
   if (countryCode === "IN" && v.value_inr && v.value_inr > 0) return `₹${v.value_inr}`;
@@ -69,20 +58,6 @@ function formatValue(v: DbVoucher, countryCode: string | null): string {
 }
 
 const CATEGORIES = [{ value: "all", label: "All", emoji: "🎁" }, ...VOUCHER_CATEGORIES];
-
-const HOW_TO_USE = [
-  "Click Redeem in your cart to submit a request",
-  "Our team reviews the request; processing times vary",
-  "Your voucher code appears in My Vouchers",
-  "Check the issuer's terms before using your code",
-];
-
-const TERMS = [
-  "Vouchers are non-refundable once redeemed",
-  "Validity and usage follow the issuer's terms",
-  "Cannot be exchanged for NexCoins or cash",
-  "One voucher code per redemption request",
-];
 
 export default function StorePage() {
   const tokenRef = useRef<string | null>(null);
@@ -120,10 +95,10 @@ export default function StorePage() {
       tokenRef.current = session?.access_token ?? null;
 
       const [profileResult, voucherResult] = await Promise.all([
-        supabase.from("profiles").select("nexcoins, country_code").eq("id", user.id).single(),
+        supabase.from("profiles").select("nexcoins, country, country_code").eq("id", user.id).single(),
         supabase
           .from("voucher_inventory")
-          .select("id, brand_name, description, value_inr, coins_required, category, emoji, country_codes, country_codes_verified, is_available")
+          .select("id, brand_name, description, value_inr, coins_required, category, emoji, how_to_use, terms_and_conditions, country_codes, country_codes_verified, is_available")
           .order("brand_name", { ascending: true })
           .order("coins_required", { ascending: true }),
       ]);
@@ -140,9 +115,9 @@ export default function StorePage() {
         setLoading(false);
         return;
       }
-      const profile = profileResult.data as { nexcoins: number; country_code: string | null };
+      const profile = profileResult.data as { nexcoins: number; country: string | null; country_code: string | null };
       setNexcoins(profile?.nexcoins ?? 0);
-      const contributorCountry = isCountryCode(profile?.country_code) ? profile.country_code : null;
+      const contributorCountry = getProfileCountryCode(profile?.country_code, profile?.country);
       setCountryCode(contributorCountry);
       setVouchers(contributorCountry === "IN"
         ? ((voucherResult.data as DbVoucher[]) ?? []).filter((voucher) =>
@@ -160,9 +135,6 @@ export default function StorePage() {
 
   function brandVouchers(brand: string) {
     return vouchers.filter((v) => v.brand_name === brand);
-  }
-  function isBrandAvailable(brand: string) {
-    return brandVouchers(brand).some((v) => v.is_available);
   }
   function openBrandModal(brand: string) {
     const bv = brandVouchers(brand);
@@ -271,44 +243,46 @@ export default function StorePage() {
   });
 
   return (
-    <div className="space-y-8">
+    <div className="mx-auto max-w-7xl space-y-7 pb-8">
 
       {/* ── Header ──────────────────────────────────────────────────── */}
-      <div className="animate-fade-slide-up relative isolate overflow-hidden rounded-[1.6rem] bg-[#103f38] p-6 text-white shadow-[0_18px_45px_rgba(15,76,69,0.14)]">
-        <div aria-hidden className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_82%_0%,rgba(214,182,110,0.22),transparent_35%),radial-gradient(ellipse_at_5%_100%,rgba(20,184,166,0.16),transparent_42%)]" />
-        <div className="relative z-10 flex items-start justify-between gap-4 flex-wrap">
+      <div className="animate-fade-slide-up relative isolate overflow-hidden rounded-[1.75rem] border border-white/10 bg-[linear-gradient(120deg,#0d2929_0%,#10443e_52%,#0b2738_100%)] p-6 text-white shadow-[0_24px_70px_rgba(4,20,34,0.32)] sm:p-8">
+        <div aria-hidden className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_82%_0%,rgba(214,182,110,0.2),transparent_34%),radial-gradient(ellipse_at_5%_100%,rgba(20,184,166,0.18),transparent_42%)]" />
+        <div aria-hidden className="pointer-events-none absolute -right-14 -top-20 h-64 w-64 rounded-full border border-white/5" />
+        <div aria-hidden className="pointer-events-none absolute -right-3 -top-9 h-44 w-44 rounded-full border border-white/5" />
+        <div className="relative z-10 flex items-center justify-between gap-6 flex-wrap">
           <div>
-            <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-white/70">Cashout</p>
-            <h1 className="text-2xl font-bold text-white mb-1">Cashout &amp; Rewards</h1>
-            <p className="text-sm text-white/75">Redeem NexCoins for vouchers or request a global USDT payout.</p>
-            <p className="mt-1 text-xs text-white/60">
+            <p className="mb-3 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.07] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-teal-100">
+              <Sparkles className="h-3.5 w-3.5 text-amber-200" /> Rewards &amp; cashout
+            </p>
+            <h1 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">Make your NexCoins count.</h1>
+            <p className="mt-2 max-w-xl text-sm leading-6 text-white/75 sm:text-base">Choose a gift voucher or request a global USDT payout — all from one place.</p>
+            <p className="mt-2 text-xs text-white/55">
               Gift vouchers are limited to India. Showing options for {countryCode ? getCountryName(countryCode) : "your account"}.
             </p>
-            <div className="mt-4 flex flex-wrap gap-4">
-              <Link href="/dashboard/vouchers" className="inline-flex text-sm font-semibold text-[#e4c787] transition-colors hover:text-white">
-                View my vouchers →
+            <div className="mt-5 flex flex-wrap gap-3">
+              <Link href="/dashboard/vouchers" className="inline-flex items-center gap-1.5 rounded-xl border border-white/15 bg-white/[0.07] px-3.5 py-2 text-sm font-semibold text-white/90 transition-colors hover:bg-white/[0.13]">
+                View my vouchers <ArrowUpRight className="h-4 w-4" />
               </Link>
             </div>
           </div>
           <div className="flex items-center gap-3">
-            {/* Premium balance card */}
-            <div className="rounded-2xl border border-white/15 bg-white/10 px-4 py-2 shadow-md backdrop-blur-sm">
+            <div className="min-w-[220px] rounded-2xl border border-white/15 bg-slate-950/25 px-4 py-3 shadow-lg backdrop-blur-sm">
               <div className="flex items-center gap-2">
-                <span className="text-xl">🪙</span>
+                <NexCoinIcon size={20} />
                 <div>
-                  <p className="text-white font-bold text-lg leading-tight">
+                  <p className="text-white font-bold text-xl leading-tight">
                     {loading ? "—" : formatNexcoins(nexcoins ?? 0)}
                     <span className="text-white/80 font-semibold text-sm ml-1">NexCoins</span>
                   </p>
-                  <p className="text-white/70 text-xs">Available to redeem</p>
+                  <p className="mt-1 text-xs text-white/60">Your available balance</p>
                 </div>
               </div>
             </div>
-            {/* Cart button */}
             {activeSection === "rewards" && <button
               type="button"
               onClick={() => setCartOpen(true)}
-              className="relative h-10 w-10 flex items-center justify-center rounded-xl border border-white/20 bg-white/10 shadow-sm transition-colors hover:bg-white/20"
+              className="relative flex h-12 w-12 items-center justify-center rounded-2xl border border-white/20 bg-white/[0.08] shadow-sm transition-colors hover:bg-white/[0.15]"
               aria-label="Open cart"
             >
               <ShoppingCart className="h-5 w-5 text-white" />
@@ -322,7 +296,7 @@ export default function StorePage() {
         </div>
       </div>
 
-      <div role="tablist" aria-label="Cashout and rewards options" className="grid grid-cols-2 gap-2 rounded-2xl border border-[var(--border-default)] bg-[var(--surface-subtle)] p-1.5">
+      <div role="tablist" aria-label="Cashout and rewards options" className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <button
           type="button"
           role="tab"
@@ -330,15 +304,31 @@ export default function StorePage() {
           aria-controls="store-rewards-panel"
           aria-selected={activeSection === "rewards"}
           onClick={() => { setActiveSection("rewards"); setDetailBrand(null); }}
-          className={`flex min-h-12 items-center justify-center gap-2 rounded-xl px-3 text-sm font-semibold transition ${
+          className={`group relative flex min-h-[92px] items-center gap-4 overflow-hidden rounded-2xl border p-4 text-left transition-all duration-200 sm:p-5 ${
             activeSection === "rewards"
-              ? "bg-[var(--surface-card)] text-[var(--text-primary)] shadow-sm"
-              : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+              ? "border-teal-700 bg-gradient-to-r from-teal-700 to-teal-600 text-white shadow-[0_8px_24px_rgba(15,118,110,0.24)]"
+              : "border-[var(--border-default)] bg-[var(--surface-card)] hover:border-teal-400/35 hover:bg-[var(--surface-subtle)]"
           }`}
         >
-          <Gift className="h-4 w-4" />
-          Gift vouchers
-          <span className="rounded-full bg-[var(--surface-subtle)] px-2 py-0.5 text-[10px]">{brandList.length}</span>
+          <span className={`flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl border transition-colors ${
+            activeSection === "rewards"
+              ? "border-white/20 bg-white/15 text-white shadow-sm"
+              : "border-[var(--border-default)] bg-[var(--surface-subtle)] text-[var(--text-secondary)] group-hover:text-teal-300"
+          }`}>
+            <Gift className="h-5 w-5" />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className={`block text-base font-bold ${activeSection === "rewards" ? "text-white" : "text-[var(--text-secondary)] group-hover:text-[var(--text-primary)]"}`}>Gift vouchers</span>
+            <span className={`mt-1 block text-xs leading-4 ${activeSection === "rewards" ? "text-white/85" : "text-[var(--text-secondary)]"}`}>Shop available brands and redeem NexCoins</span>
+          </span>
+          <span className="flex flex-shrink-0 flex-col items-end gap-1">
+            <span className={`rounded-full px-2.5 py-1 text-[10px] font-semibold ${
+              activeSection === "rewards"
+                ? "bg-white/15 text-white"
+                : "bg-[var(--surface-subtle)] text-[var(--text-secondary)]"
+            }`}>{brandList.length} {brandList.length === 1 ? "brand" : "brands"}</span>
+            <span className={`text-[10px] font-semibold ${activeSection === "rewards" ? "text-white" : "text-[var(--text-secondary)]"}`}>{activeSection === "rewards" ? "Selected" : "Explore"}</span>
+          </span>
         </button>
         <button
           type="button"
@@ -347,31 +337,55 @@ export default function StorePage() {
           aria-controls="store-payouts-panel"
           aria-selected={activeSection === "payouts"}
           onClick={() => { setActiveSection("payouts"); setDetailBrand(null); }}
-          className={`flex min-h-12 items-center justify-center gap-2 rounded-xl px-3 text-sm font-semibold transition ${
+          className={`group relative flex min-h-[92px] items-center gap-4 overflow-hidden rounded-2xl border p-4 text-left transition-all duration-200 sm:p-5 ${
             activeSection === "payouts"
-              ? "bg-[var(--surface-card)] text-[var(--text-primary)] shadow-sm"
-              : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+              ? "border-cyan-800 bg-gradient-to-r from-cyan-800 to-blue-800 text-white shadow-[0_8px_24px_rgba(8,145,178,0.24)]"
+              : "border-[var(--border-default)] bg-[var(--surface-card)] hover:border-cyan-400/35 hover:bg-[var(--surface-subtle)]"
           }`}
         >
-          <Globe2 className="h-4 w-4" />
-          Global Payout
+          <span className={`flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl border transition-colors ${
+            activeSection === "payouts"
+              ? "border-white/20 bg-white/15 text-white shadow-sm"
+              : "border-[var(--border-default)] bg-[var(--surface-subtle)] text-[var(--text-secondary)] group-hover:text-cyan-300"
+          }`}>
+            <Globe2 className="h-5 w-5" />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className={`block text-base font-bold ${activeSection === "payouts" ? "text-white" : "text-[var(--text-secondary)] group-hover:text-[var(--text-primary)]"}`}>Global Payout</span>
+            <span className={`mt-1 block text-xs leading-4 ${activeSection === "payouts" ? "text-white/85" : "text-[var(--text-secondary)]"}`}>Request a USDT payout from anywhere</span>
+          </span>
+          <span className="flex flex-shrink-0 flex-col items-end gap-1">
+            <span className={`rounded-full px-2.5 py-1 text-[10px] font-semibold ${
+              activeSection === "payouts"
+                ? "bg-white/15 text-white"
+                : "bg-[var(--surface-subtle)] text-[var(--text-secondary)]"
+            }`}>USDT</span>
+            <span className={`text-[10px] font-semibold ${activeSection === "payouts" ? "text-white" : "text-[var(--text-secondary)]"}`}>{activeSection === "payouts" ? "Selected" : "Worldwide"}</span>
+          </span>
         </button>
       </div>
 
       {activeSection === "rewards" && (
       <div id="store-rewards-panel" role="tabpanel" aria-labelledby="store-rewards-tab" tabIndex={0} className="space-y-8">
       {/* ── Filters ─────────────────────────────────────────────────── */}
-      <div className="space-y-3">
+      <div className="space-y-4 rounded-2xl border border-[var(--border-default)] bg-[var(--surface-card)] p-4 shadow-sm sm:p-5">
+        <div className="flex items-end justify-between gap-4">
+          <div>
+            <h2 className="text-lg font-bold text-[var(--text-primary)]">Gift vouchers</h2>
+            <p className="mt-1 text-xs text-[var(--text-secondary)]">Pick a brand to compare available values and redeem.</p>
+          </div>
+          <span className="hidden items-center gap-1.5 text-xs text-[var(--text-muted)] sm:flex"><TicketCheck className="h-4 w-4" /> {brandList.length} {brandList.length === 1 ? "brand" : "brands"}</span>
+        </div>
         {/* Category pills */}
         <div className="flex items-center gap-2 flex-wrap">
           {CATEGORIES.map((cat) => (
             <button
               key={cat.value}
               onClick={() => setSelectedCategory(cat.value)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium border transition-all ${
+              className={`flex items-center gap-1.5 rounded-full border px-3.5 py-2 text-xs font-semibold transition-all ${
                 selectedCategory === cat.value
-                  ? "bg-[var(--brand-500)] text-white border-[var(--brand-500)]"
-                  : "bg-[var(--surface-card)] text-[var(--text-secondary)] border-[var(--border-default)] hover:border-[var(--brand-500)] hover:text-[var(--brand-500)]"
+                  ? "border-[var(--brand-500)] bg-[var(--brand-500)]/15 text-[var(--brand-400)] shadow-[inset_0_0_0_1px_rgba(20,184,166,0.12)]"
+                  : "border-[var(--border-default)] bg-[var(--surface-subtle)] text-[var(--text-secondary)] hover:border-[var(--brand-500)]/60 hover:text-[var(--text-primary)]"
               }`}
             >
               <span aria-hidden="true">{cat.emoji}</span> {cat.label}
@@ -380,26 +394,31 @@ export default function StorePage() {
         </div>
 
         {/* Affordability toggle */}
-        <div className="flex items-center justify-end gap-2.5">
-          <span className="text-sm text-[var(--text-secondary)] select-none">Show only what I can afford</span>
+        <div className="flex items-center justify-between gap-3 border-t border-[var(--border-default)] pt-3">
+          <span className="text-xs text-[var(--text-secondary)] select-none">Show rewards within my balance</span>
           <button
             type="button"
             role="switch"
+            aria-label="Show only vouchers I can afford"
             aria-checked={showAffordable}
             disabled={loading}
             onClick={() => setShowAffordable(!showAffordable)}
-            className={`relative h-6 w-10 flex-shrink-0 rounded-full transition-colors duration-200 ${
+            className={`flex h-6 w-10 flex-shrink-0 items-center rounded-full p-[2px] transition-colors duration-200 ${
               showAffordable ? "bg-[var(--brand-500)]" : "bg-[var(--border-strong)]"
-            } ${loading ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
+            } ${loading ? "opacity-50 cursor-not-allowed" : "cursor-pointer"} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--border-focus)] focus-visible:ring-offset-2`}
+            style={{ justifyContent: showAffordable ? "flex-end" : "flex-start" }}
           >
-            <span className={`absolute top-[2px] h-5 w-5 rounded-full bg-white shadow-sm transition-transform duration-200 ${showAffordable ? "translate-x-[18px]" : "translate-x-[2px]"}`} />
+            <span
+              aria-hidden="true"
+              className="h-5 w-5 rounded-full bg-white shadow-sm"
+            />
           </button>
         </div>
       </div>
 
       {/* ── Brand Grid ──────────────────────────────────────────────── */}
       {loading ? (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid justify-start gap-4" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 280px), 360px))" }}>
           {[1, 2, 3, 4].map((i) => (
             <div key={i} className="h-64 rounded-2xl border border-[var(--border-default)] bg-[var(--surface-card)] animate-pulse shadow-sm" />
           ))}
@@ -440,15 +459,15 @@ export default function StorePage() {
           )}
         </div>
       ) : (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid justify-start gap-4" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 280px), 360px))" }}>
           {displayedBrands.map(({ brand }) => {
             const bv        = brandVouchers(brand);
-            const available = isBrandAvailable(brand);
-            const minCoins  = Math.min(...bv.map((v) => v.coins_required));
-            const emoji     = bv[0]?.emoji ?? "🎁";
+            const availableVouchers = bv.filter((voucher) => voucher.is_available);
+            const available = availableVouchers.length > 0;
+            const minCoins  = Math.min(...(available ? availableVouchers : bv).map((v) => v.coins_required));
             const canAfford = available && (nexcoins ?? 0) >= minCoins;
-            const gradient  = brandGradient(brand);
             const needed    = minCoins - (nexcoins ?? 0);
+            const category  = VOUCHER_CATEGORIES.find((item) => item.value === bv[0]?.category);
 
             return (
               <button
@@ -456,62 +475,58 @@ export default function StorePage() {
                 key={brand}
                 onClick={() => !loading && openBrandModal(brand)}
                 aria-label={`View ${brand} voucher options`}
-                className={`flex w-full flex-col overflow-hidden rounded-2xl border border-[var(--border-default)] bg-[var(--surface-card)] text-left
-                  shadow-sm hover:shadow-lg
-                  hover:-translate-y-1 transition-all duration-200 cursor-pointer
-                  ${!available ? "opacity-60" : ""}`}
+                className={`group relative flex min-h-[206px] w-full overflow-hidden rounded-2xl border border-[var(--border-default)] bg-[var(--surface-card)] text-left shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-[var(--brand-500)]/50 hover:shadow-lg focus-visible:ring-2 focus-visible:ring-[var(--border-focus)] ${!available ? "opacity-70" : ""}`}
               >
-                {/* Top gradient banner */}
-                <div className={`h-20 bg-gradient-to-r ${gradient} flex items-center justify-center flex-shrink-0`}>
-                  <div className="h-12 w-12 rounded-xl bg-white/20 flex items-center justify-center text-2xl">
-                    {emoji}
-                  </div>
+                <div className="flex w-[68px] flex-shrink-0 flex-col items-center justify-between bg-[var(--brand-700)] px-2 py-4 text-white">
+                  <span aria-hidden="true" className="flex h-10 w-10 items-center justify-center rounded-xl border border-[var(--brand-700)] bg-white text-xl shadow-inner">
+                    {category?.emoji ?? "🎁"}
+                  </span>
+                  <span className="text-[9px] font-semibold uppercase tracking-[0.18em] text-[var(--brand-200)]">Reward</span>
                 </div>
+                <div className="flex min-w-0 flex-1 flex-col p-4">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="truncate text-[11px] font-medium text-[var(--text-secondary)]">{category?.label ?? "Reward"}</p>
+                      <h3 className="mt-1 truncate text-lg font-bold leading-tight text-[var(--text-primary)]">{brand}</h3>
+                    </div>
+                    <span className={`mt-0.5 inline-flex flex-shrink-0 items-center gap-1.5 text-[11px] font-semibold ${available ? "text-emerald-700 dark:text-emerald-300" : "text-[var(--text-muted)]"}`}>
+                      <span className={`h-1.5 w-1.5 rounded-full ${available ? "bg-emerald-500" : "bg-[var(--text-muted)]"}`} />
+                      {available ? "In stock" : "Sold out"}
+                    </span>
+                  </div>
 
-                {/* Content */}
-                <div className="p-4 flex flex-col gap-3 flex-1">
-                  <h3 className="font-bold text-[var(--text-primary)] text-base leading-tight">{brand}</h3>
+                  <div className="mt-4">
+                    <p className="mb-2 text-[11px] font-semibold text-[var(--text-secondary)]">Available values</p>
+                    <div className="flex min-h-8 flex-wrap gap-1.5">
+                      {bv.map((v) => (
+                        <span
+                          key={v.id}
+                          className={`rounded-md border px-2.5 py-1 text-xs font-semibold ${
+                            v.is_available
+                              ? "border-[var(--border-default)] bg-[var(--surface-subtle)] text-[var(--text-primary)]"
+                              : "border-[var(--border-default)] bg-[var(--surface-subtle)] text-[var(--text-muted)] line-through"
+                          }`}
+                        >
+                          {formatValue(v, countryCode)}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
 
-                  {/* Denomination pills */}
-                  <div className="flex flex-wrap gap-1.5">
-                    {bv.map((v) => (
-                      <span
-                        key={v.id}
-                        className={`rounded-full px-2.5 py-0.5 text-xs font-semibold border ${
-                          v.is_available
-                            ? "bg-[var(--surface-subtle)] text-[var(--text-secondary)] border-[var(--border-default)]"
-                            : "bg-[var(--surface-subtle)] text-[var(--text-muted)] border-[var(--border-default)] line-through"
-                        }`}
-                      >
-                        {formatValue(v, countryCode)}
+                  <div className="mt-auto flex items-center justify-between gap-2 border-t border-[var(--border-default)] pt-3">
+                    <div className="min-w-0">
+                      <span className="block text-[10px] font-medium text-[var(--text-secondary)]">From</span>
+                      <span className="mt-0.5 flex items-center gap-1">
+                        <NexCoinIcon size={16} />
+                        <span className="text-sm font-bold text-[var(--text-primary)]">{minCoins.toLocaleString()}</span>
+                        <span className="text-[10px] font-medium text-[var(--text-secondary)]">NexCoins</span>
                       </span>
-                    ))}
+                    </div>
+                    <span className={`flex flex-shrink-0 items-center gap-1 rounded-md px-2.5 py-2 text-[11px] font-semibold transition-colors ${!available ? "border border-[var(--border-default)] bg-[var(--surface-subtle)] text-[var(--text-muted)]" : !canAfford ? "border border-[var(--border-default)] bg-[var(--surface-subtle)] text-[var(--text-secondary)]" : "bg-[var(--brand-700)] text-white group-hover:bg-[var(--brand-600)]"}`}>
+                      {!available ? "Unavailable" : !canAfford ? `Need ${needed.toLocaleString()}` : "View"}
+                      {available && <ArrowUpRight className="h-3 w-3" />}
+                    </span>
                   </div>
-
-                  {/* Coin cost — prominent */}
-                  <div className="flex items-center gap-1.5">
-                    <NexCoinIcon size={18} />
-                    <span className="text-xl font-bold text-[var(--text-primary)]">{minCoins.toLocaleString()}</span>
-                    <span className="text-sm text-[var(--text-muted)]">NexCoins</span>
-                  </div>
-
-                  {/* Spacer */}
-                  <div className="flex-1" />
-
-                  {/* CTA — visual only, card click opens modal */}
-                  {!available ? (
-                    <div className="w-full rounded-xl bg-[var(--surface-subtle)] text-[var(--text-muted)] text-sm font-semibold text-center py-2.5">
-                      Sold Out
-                    </div>
-                  ) : !canAfford ? (
-                    <div className="w-full rounded-xl bg-[var(--surface-subtle)] text-[var(--text-muted)] text-sm font-medium text-center py-2.5 leading-tight">
-                      Need {needed.toLocaleString()} more coins
-                    </div>
-                  ) : (
-                    <div className="w-full rounded-xl bg-[var(--brand-500)] text-white text-sm font-semibold text-center py-2.5">
-                      Redeem Now →
-                    </div>
-                  )}
                 </div>
               </button>
             );
@@ -597,10 +612,10 @@ export default function StorePage() {
                 </div>
               </div>
 
-              <div>
+              {selectedVoucher.how_to_use?.length > 0 && <div>
                 <p className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-3">How to use</p>
                 <ol className="space-y-2.5">
-                  {HOW_TO_USE.map((step, i) => (
+                  {selectedVoucher.how_to_use.map((step, i) => (
                     <li key={i} className="flex items-start gap-3">
                       <span className="h-5 w-5 rounded-full bg-[var(--brand-500)]/15 text-[var(--brand-500)] text-xs font-bold flex items-center justify-center flex-shrink-0 mt-0.5">
                         {i + 1}
@@ -609,19 +624,19 @@ export default function StorePage() {
                     </li>
                   ))}
                 </ol>
-              </div>
+              </div>}
 
-              <div className="rounded-lg bg-[var(--surface-subtle)] p-4">
+              {selectedVoucher.terms_and_conditions?.length > 0 && <div className="rounded-lg bg-[var(--surface-subtle)] p-4">
                 <p className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-3">Terms &amp; Conditions</p>
                 <ul className="space-y-1.5">
-                  {TERMS.map((t, i) => (
+                  {selectedVoucher.terms_and_conditions.map((t, i) => (
                     <li key={i} className="flex items-start gap-2 text-xs text-[var(--text-muted)]">
                       <span className="mt-0.5 flex-shrink-0">·</span>
                       {t}
                     </li>
                   ))}
                 </ul>
-              </div>
+              </div>}
             </div>
 
             <div className="px-6 py-4 border-t border-[var(--border-default)] flex gap-3 flex-shrink-0">
@@ -768,8 +783,8 @@ export default function StorePage() {
 
       {activeSection === "rewards" && <BlogTipCard
         slug="nexcoins-to-vouchers-redemption"
-        title="How to Redeem NexCoins for Vouchers"
-        excerpt="A step-by-step guide to converting your NexCoins into real gift vouchers."
+        title="How to Redeem NexCoins for Rewards"
+        excerpt="Compare India-only gift vouchers with global USDT payout requests."
       />}
 
       {/* ── Success Modal ────────────────────────────────────────────── */}

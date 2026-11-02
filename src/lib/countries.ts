@@ -41,3 +41,15 @@ export function getCountryName(code: string): string {
 export function isCountryCode(value: unknown): value is (typeof COUNTRY_CODES)[number] {
   return typeof value === "string" && countryCodeSet.has(value);
 }
+
+export function getProfileCountryCode(code: unknown, countryName: unknown): (typeof COUNTRY_CODES)[number] | null {
+  if (typeof code === "string") {
+    const normalizedCode = code.toUpperCase();
+    if (isCountryCode(normalizedCode)) return normalizedCode;
+  }
+  if (typeof countryName !== "string") return null;
+
+  const normalizedName = countryName.trim().toLocaleLowerCase("en");
+  if (!normalizedName) return null;
+  return COUNTRY_OPTIONS.find((country) => country.name.toLocaleLowerCase("en") === normalizedName)?.code ?? null;
+}
