@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { MessageCircle, X, Loader2, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
@@ -19,12 +19,66 @@ const inputClass =
 
 export function SupportButton() {
   const [open, setOpen]         = useState(false);
+  const [position, setPosition] = useState<{ x: number; y: number } | null>(null);
   const [category, setCategory] = useState("general");
   const [subject, setSubject]   = useState("");
   const [message, setMessage]   = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess]   = useState(false);
   const [error, setError]       = useState<string | null>(null);
+  const dragRef = useRef<{ pointerId: number; startX: number; startY: number; originX: number; originY: number; moved: boolean } | null>(null);
+  const suppressClickRef = useRef(false);
+
+  useEffect(() => {
+    if (!position) return;
+    function keepInViewport() {
+      setPosition((current) => current && ({
+        x: Math.max(8, Math.min(current.x, window.innerWidth - 64)),
+        y: Math.max(8, Math.min(current.y, window.innerHeight - 64)),
+      }));
+    }
+    window.addEventListener("resize", keepInViewport);
+    return () => window.removeEventListener("resize", keepInViewport);
+  }, [position]);
+
+  function handlePointerDown(event: React.PointerEvent<HTMLButtonElement>) {
+    if (event.button !== 0) return;
+    const rect = event.currentTarget.getBoundingClientRect();
+    dragRef.current = {
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      startY: event.clientY,
+      originX: rect.left,
+      originY: rect.top,
+      moved: false,
+    };
+    event.currentTarget.setPointerCapture(event.pointerId);
+  }
+
+  function handlePointerMove(event: React.PointerEvent<HTMLButtonElement>) {
+    const drag = dragRef.current;
+    if (!drag || drag.pointerId !== event.pointerId) return;
+    const deltaX = event.clientX - drag.startX;
+    const deltaY = event.clientY - drag.startY;
+    if (!drag.moved && Math.hypot(deltaX, deltaY) < 5) return;
+    drag.moved = true;
+    setPosition({
+      x: Math.max(8, Math.min(drag.originX + deltaX, window.innerWidth - 64)),
+      y: Math.max(8, Math.min(drag.originY + deltaY, window.innerHeight - 64)),
+    });
+  }
+
+  function handlePointerUp(event: React.PointerEvent<HTMLButtonElement>) {
+    const drag = dragRef.current;
+    if (!drag || drag.pointerId !== event.pointerId) return;
+    suppressClickRef.current = event.type === "pointerup" && drag.moved;
+    if (suppressClickRef.current) {
+      window.setTimeout(() => {
+        suppressClickRef.current = false;
+      }, 0);
+    }
+    dragRef.current = null;
+  }
 
   function handleOpen() { setOpen(true); setSuccess(false); setError(null); }
 
@@ -67,10 +121,21 @@ export function SupportButton() {
     <>
       {/* Floating contact button */}
       <button
-        onClick={handleOpen}
+        onClick={() => {
+          if (suppressClickRef.current) {
+            suppressClickRef.current = false;
+            return;
+          }
+          handleOpen();
+        }}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onPointerCancel={handlePointerUp}
         aria-label="Contact Support"
-        title="Contact Support"
-        className="fixed bottom-24 right-5 lg:bottom-24 lg:right-6 z-50 h-14 w-14 rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition-transform duration-200 bg-[#f59e0b]"
+        title="Drag to move · click to contact support"
+        style={position ? { left: position.x, top: position.y } : undefined}
+        className={`fixed ${position ? "" : "bottom-24 right-5 lg:right-6"} z-40 flex h-14 w-14 touch-none select-none items-center justify-center rounded-full bg-[#f59e0b] shadow-lg transition-transform duration-200 hover:scale-110 active:cursor-grabbing cursor-grab`}
       >
         <MessageCircle className="h-6 w-6 text-[#0c0c10]" />
       </button>
