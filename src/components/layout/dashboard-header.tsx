@@ -14,6 +14,9 @@ import {
   Users,
   Menu,
   X,
+  Download,
+  Share,
+  MoreVertical,
 } from "lucide-react";
 import { Avatar } from "@/components/ui/avatar";
 import Link from "next/link";
@@ -245,6 +248,11 @@ interface Notification {
   created_at: string;
 }
 
+interface BeforeInstallPromptEvent extends Event {
+  prompt: () => Promise<void>;
+  userChoice: Promise<{ outcome: "accepted" | "dismissed"; platform: string }>;
+}
+
 export function DashboardHeader() {
   const pathname = usePathname();
   const router   = useRouter();
@@ -257,9 +265,41 @@ export function DashboardHeader() {
   const [userName, setUserName]           = useState<string | null>(null);
   const [userInitials, setUserInitials]   = useState("?");
   const [avatarUrl, setAvatarUrl]         = useState<string | null>(null);
+  const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+  const [installHelpOpen, setInstallHelpOpen] = useState(false);
+  const [installError, setInstallError] = useState("");
+  const [isInstalled, setIsInstalled] = useState(false);
+  const [isIOS, setIsIOS] = useState(false);
   const userIdRef                         = useRef<string | null>(null);
   const bellRef                           = useRef<HTMLDivElement>(null);
   const menuRef                           = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const standaloneQuery = window.matchMedia("(display-mode: standalone)");
+    const checkInstalled = () => {
+      setIsInstalled(standaloneQuery.matches || (navigator as Navigator & { standalone?: boolean }).standalone === true);
+    };
+    const handleInstallPrompt = (event: Event) => {
+      event.preventDefault();
+      setInstallPrompt(event as BeforeInstallPromptEvent);
+    };
+    const handleAppInstalled = () => {
+      setIsInstalled(true);
+      setInstallPrompt(null);
+    };
+
+    setIsIOS(/iPhone|iPad|iPod/i.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1));
+    checkInstalled();
+    standaloneQuery.addEventListener("change", checkInstalled);
+    window.addEventListener("beforeinstallprompt", handleInstallPrompt);
+    window.addEventListener("appinstalled", handleAppInstalled);
+
+    return () => {
+      standaloneQuery.removeEventListener("change", checkInstalled);
+      window.removeEventListener("beforeinstallprompt", handleInstallPrompt);
+      window.removeEventListener("appinstalled", handleAppInstalled);
+    };
+  }, []);
 
   // Fetch once on mount: notifications + user name for avatar
   useEffect(() => {
@@ -366,9 +406,10 @@ if (existingChannel) {
       if (e.key === "Escape") {
         setOpen(false);
         setMenuOpen(false);
+        setInstallHelpOpen(false);
       }
     }
-    if (open || menuOpen) {
+    if (open || menuOpen || installHelpOpen) {
       document.addEventListener("mousedown", handleClick);
       document.addEventListener("keydown", handleKeyDown);
     }
@@ -376,7 +417,7 @@ if (existingChannel) {
       document.removeEventListener("mousedown", handleClick);
       document.removeEventListener("keydown", handleKeyDown);
     };
-  }, [open, menuOpen]);
+  }, [open, menuOpen, installHelpOpen]);
 
   // Close menus on route change
   useEffect(() => { setOpen(false); setMenuOpen(false); setMobileNavOpen(false); }, [pathname]);
@@ -429,6 +470,25 @@ if (existingChannel) {
       const { error } = await supabase.from("notifications").update({ is_read: true }).eq("id", id);
       if (error) console.error("[notifications] markRead DB error:", error.message);
     })();
+  }
+
+  async function addToHomeScreen() {
+    if (!installPrompt) {
+      setInstallHelpOpen(true);
+      return;
+    }
+
+    setInstallError("");
+    try {
+      await installPrompt.prompt();
+      const { outcome } = await installPrompt.userChoice;
+      setInstallPrompt(null);
+      if (outcome === "accepted") setIsInstalled(true);
+    } catch (error) {
+      console.error("[pwa] install prompt failed:", error);
+      setInstallError("The install prompt could not be opened. Use your browser menu to add NexGuild to your home screen.");
+      setInstallHelpOpen(true);
+    }
   }
 
   async function handleSignOut() {
@@ -739,10 +799,97 @@ if (existingChannel) {
             })}
           </nav>
           <div className="flex-shrink-0 border-t border-teal-900/10 p-4">
+            {!isInstalled && (
+              <button
+                type="button"
+                onClick={() => {
+                  setMobileNavOpen(false);
+                  void addToHomeScreen();
+                }}
+                className="mb-3 flex min-h-11 w-full items-center gap-3 rounded-xl border border-teal-200 bg-teal-50 px-3 text-left text-sm font-semibold text-teal-800 transition-colors hover:bg-teal-100"
+              >
+                <Download className="h-4 w-4 flex-shrink-0" />
+                Add NexGuild to Home Screen
+              </button>
+            )}
             <p className="text-xs font-medium text-slate-500">{userName || "NexGuild Member"}</p>
             <p className="mt-1 text-[10px] text-slate-400">Contributor workspace</p>
           </div>
         </aside>
+      </div>
+    )}
+    {installHelpOpen && (
+      <div
+        className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/55 p-4 backdrop-blur-sm"
+        onClick={(event) => {
+          if (event.target === event.currentTarget) setInstallHelpOpen(false);
+        }}
+      >
+        <section
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="install-nexguild-title"
+          className="w-full max-w-sm overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl"
+        >
+          <div className="flex items-start justify-between gap-4 bg-gradient-to-r from-teal-800 to-teal-600 px-5 py-4 text-white">
+            <div className="flex items-center gap-3">
+              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/15">
+                <Download className="h-5 w-5" />
+              </span>
+              <div>
+                <h2 id="install-nexguild-title" className="font-bold">Add NexGuild to your home screen</h2>
+                <p className="mt-0.5 text-xs text-teal-50/80">Open it like an app, right from your phone.</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              aria-label="Close install instructions"
+              onClick={() => setInstallHelpOpen(false)}
+              className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg text-white/80 transition-colors hover:bg-white/15 hover:text-white"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+          <div className="space-y-4 p-5">
+            {installError && (
+              <p role="alert" className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+                {installError}
+              </p>
+            )}
+            <ol className="space-y-3 text-sm text-slate-700">
+              {isIOS ? (
+                <>
+                  <li className="flex items-center gap-3">
+                    <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-teal-50 text-teal-700"><Share className="h-4 w-4" /></span>
+                    <span>In Safari, tap the <b>Share</b> button.</span>
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-teal-50 text-teal-700"><span className="text-base font-bold">＋</span></span>
+                    <span>Choose <b>Add to Home Screen</b>, then tap <b>Add</b>.</span>
+                  </li>
+                </>
+              ) : (
+                <>
+                  <li className="flex items-center gap-3">
+                    <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-teal-50 text-teal-700"><MoreVertical className="h-4 w-4" /></span>
+                    <span>Open your browser menu (⋮).</span>
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-teal-50 text-teal-700"><Download className="h-4 w-4" /></span>
+                    <span>Tap <b>Install app</b> or <b>Add to Home screen</b>.</span>
+                  </li>
+                </>
+              )}
+            </ol>
+            <button
+              type="button"
+              onClick={() => setInstallHelpOpen(false)}
+              className="w-full rounded-xl bg-teal-700 px-4 py-2.5 text-sm font-bold text-white transition-colors hover:bg-teal-800"
+            >
+              Got it
+            </button>
+          </div>
+        </section>
       </div>
     )}
     </>
