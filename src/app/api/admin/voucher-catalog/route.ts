@@ -21,12 +21,12 @@ async function verifyAdmin(req: NextRequest): Promise<SupabaseClient | null> {
 }
 
 function validateGuidanceList(value: unknown, label: string): { items: string[]; error?: string } {
-  if (!Array.isArray(value) || value.length > 12) {
-    return { items: [], error: `${label} must contain up to 12 items, each no longer than 300 characters.` };
+  if (!Array.isArray(value) || value.length > 100) {
+    return { items: [], error: `${label} must contain up to 100 items, each no longer than 2,000 characters.` };
   }
   const items: unknown[] = value;
-  if (!items.every((item): item is string => typeof item === "string" && item.length <= 300)) {
-    return { items: [], error: `${label} must contain up to 12 items, each no longer than 300 characters.` };
+  if (!items.every((item): item is string => typeof item === "string" && item.length <= 2000)) {
+    return { items: [], error: `${label} must contain up to 100 items, each no longer than 2,000 characters.` };
   }
   return { items: items.map((item) => item.trim()).filter(Boolean) };
 }
@@ -50,14 +50,14 @@ export async function POST(req: NextRequest) {
   if (!admin) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   const body = await req.json() as {
-    action: "create" | "update" | "delete" | "toggle";
+    action: "create" | "update" | "update-denominations" | "delete" | "toggle";
     id?: string;
     brand_name?: string;
     description?: string;
     value_inr?: number;
     coins_required?: number;
     discount_percent?: number;
-    denominations?: Array<{ value_inr?: number; coins_required?: number; discount_percent?: number; is_available?: boolean }>;
+    denominations?: Array<{ id?: string; value_inr?: number; coins_required?: number; discount_percent?: number; is_available?: boolean }>;
     category?: string;
     how_to_use?: unknown;
     terms_and_conditions?: unknown;
@@ -135,6 +135,123 @@ export async function POST(req: NextRequest) {
 
     if (error) return NextResponse.json({ error: error.message }, { status: 400 });
     return NextResponse.json({ vouchers: data ?? [], voucher: data?.[0] });
+  }
+
+  if (body.action === "update-denominations") {
+    if (!body.id) return NextResponse.json({ error: "id required" }, { status: 400 });
+    if (!body.brand_name?.trim()) return NextResponse.json({ error: "Brand name is required." }, { status: 400 });
+    const brandName = body.brand_name.trim();
+    if (body.category !== undefined && !isVoucherCategory(body.category)) {
+      return NextResponse.json({ error: "Select a valid voucher category." }, { status: 400 });
+    }
+    const requestedDenominations = body.denominations;
+    if (!Array.isArray(requestedDenominations) || requestedDenominations.length === 0 || requestedDenominations.length > 20) {
+      return NextResponse.json({ error: "Add between 1 and 20 voucher denominations." }, { status: 400 });
+    }
+    const howToUse = body.how_to_use === undefined
+      ? { items: [...DEFAULT_VOUCHER_HOW_TO_USE] }
+      : validateGuidanceList(body.how_to_use, "How to use");
+    const terms = body.terms_and_conditions === undefined
+      ? { items: [...DEFAULT_VOUCHER_TERMS] }
+      : validateGuidanceList(body.terms_and_conditions, "Terms and Conditions");
+    if (howToUse.error) return NextResponse.json({ error: howToUse.error }, { status: 400 });
+    if (terms.error) return NextResponse.json({ error: terms.error }, { status: 400 });
+
+    const { data: anchor, error: anchorError } = await admin
+      .from("voucher_inventory")
+      .select("id, brand_name")
+      .eq("id", body.id)
+      .single();
+    if (anchorError || !anchor) return NextResponse.json({ error: "Voucher brand was not found." }, { status: 404 });
+
+    const { data: existing, error: existingError } = await admin
+      .from("voucher_inventory")
+      .select("id")
+      .eq("brand_name", anchor.brand_name);
+    if (existingError) return NextResponse.json({ error: existingError.message }, { status: 500 });
+
+    const existingIds = new Set((existing ?? []).map((voucher) => voucher.id as string));
+    const submittedIds = requestedDenominations.flatMap((denomination) => denomination?.id ? [denomination.id] : []);
+    if (new Set(submittedIds).size !== submittedIds.length
+      || submittedIds.length !== existingIds.size
+      || submittedIds.some((id) => !existingIds.has(id))) {
+      return NextResponse.json({ error: "Voucher denominations changed. Refresh the catalog and try again." }, { status: 409 });
+    }
+
+    const normalizedDenominations: Array<{
+      id?: string;
+      value_inr: number;
+      coins_required: number;
+      discount_percent: number;
+      is_available: boolean;
+    }> = [];
+    for (const denomination of requestedDenominations) {
+      if (!denomination || typeof denomination !== "object") {
+        return NextResponse.json({ error: "Each denomination must include a value and NexCoins amount." }, { status: 400 });
+      }
+      if (denomination.id !== undefined && (typeof denomination.id !== "string" || !existingIds.has(denomination.id))) {
+        return NextResponse.json({ error: "A denomination does not belong to this voucher brand." }, { status: 400 });
+      }
+      if (typeof denomination.value_inr !== "number" || !Number.isSafeInteger(denomination.value_inr) || denomination.value_inr <= 0) {
+        return NextResponse.json({ error: "Enter a valid whole-number value in INR for every denomination." }, { status: 400 });
+      }
+      if (typeof denomination.coins_required !== "number" || !Number.isSafeInteger(denomination.coins_required) || denomination.coins_required <= 0) {
+        return NextResponse.json({ error: "NexCoins required must be a positive whole number for every denomination." }, { status: 400 });
+      }
+      const discountPercent = denomination.discount_percent ?? 0;
+      if (!Number.isSafeInteger(discountPercent) || discountPercent < 0 || discountPercent > 99) {
+        return NextResponse.json({ error: "Discount must be a whole percentage from 0 to 99." }, { status: 400 });
+      }
+      if (discountPercent > 0 && getVoucherDiscountedCoins(denomination.coins_required, discountPercent) >= denomination.coins_required) {
+        return NextResponse.json({ error: "The selected discount must reduce the NexCoins price by at least 1 coin." }, { status: 400 });
+      }
+      if (typeof denomination.is_available !== "boolean") {
+        return NextResponse.json({ error: "Availability must be selected for every denomination." }, { status: 400 });
+      }
+      normalizedDenominations.push({
+        ...(denomination.id ? { id: denomination.id } : {}),
+        value_inr: denomination.value_inr,
+        coins_required: denomination.coins_required,
+        discount_percent: discountPercent,
+        is_available: denomination.is_available,
+      });
+    }
+    if (new Set(normalizedDenominations.map(({ value_inr }) => value_inr)).size !== normalizedDenominations.length) {
+      return NextResponse.json({ error: "Each denomination value must be unique." }, { status: 400 });
+    }
+
+    const category = body.category ?? "shopping";
+    const voucherRows = normalizedDenominations.map(({ id, value_inr, coins_required, discount_percent, is_available }) => ({
+      ...(id ? { id } : {}),
+      brand_name: brandName,
+      description: body.description?.trim() ?? "",
+      value_inr,
+      value_usd: null,
+      coins_required,
+      discount_percent,
+      category,
+      emoji: getVoucherCategoryEmoji(category),
+      how_to_use: howToUse.items,
+      terms_and_conditions: terms.items,
+      country_codes: ["IN"],
+      country_codes_verified: true,
+      is_available,
+    }));
+    const existingRows = voucherRows.filter((row) => row.id);
+    const newRows = voucherRows.filter((row) => !row.id);
+    const [updated, inserted] = await Promise.all([
+      existingRows.length
+        ? admin.from("voucher_inventory").upsert(existingRows).select()
+        : Promise.resolve({ data: [], error: null }),
+      newRows.length
+        ? admin.from("voucher_inventory").insert(newRows).select()
+        : Promise.resolve({ data: [], error: null }),
+    ]);
+
+    if (updated.error) return NextResponse.json({ error: updated.error.message }, { status: 400 });
+    if (inserted.error) return NextResponse.json({ error: inserted.error.message }, { status: 400 });
+    const savedVouchers = [...(updated.data ?? []), ...(inserted.data ?? [])];
+    return NextResponse.json({ vouchers: savedVouchers, voucher: savedVouchers[0] });
   }
 
   if (body.action === "update") {

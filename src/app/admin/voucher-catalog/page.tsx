@@ -35,6 +35,7 @@ function fmtPrice(v: DbVoucher): string {
 }
 
 type DenominationForm = {
+  id?: string;
   value_inr: string;
   coins_required: string;
   discount_percent: string;
@@ -47,17 +48,33 @@ type FormState = {
   description: string;
   denominations: DenominationForm[];
   category: string;
-  how_to_use: string[];
-  terms_and_conditions: string[];
 };
+
+type GuidanceText = {
+  how_to_use: string;
+  terms_and_conditions: string;
+};
+
+function parseGuidanceText(text: string): string[] {
+  return text
+    .split(/\r?\n/)
+    .map((line) => line
+      .trim()
+      .replace(/^(?:(?:\d+|[a-z])[.)]\s+|[-*•▪‣]\s+)/i, "")
+      .trim())
+    .filter(Boolean);
+}
 
 const EMPTY_FORM: FormState = {
   brand_name: "",
   description: "",
   denominations: [{ value_inr: "", coins_required: "", discount_percent: "0", coins_overridden: false, is_available: true }],
   category: "shopping",
-  how_to_use: [...DEFAULT_VOUCHER_HOW_TO_USE],
-  terms_and_conditions: [...DEFAULT_VOUCHER_TERMS],
+};
+
+const EMPTY_GUIDANCE_TEXT: GuidanceText = {
+  how_to_use: DEFAULT_VOUCHER_HOW_TO_USE.join("\n"),
+  terms_and_conditions: DEFAULT_VOUCHER_TERMS.join("\n"),
 };
 
 export default function VoucherCatalogPage() {
@@ -77,6 +94,7 @@ export default function VoucherCatalogPage() {
   const [showForm, setShowForm]     = useState(false);
   const [editId, setEditId]         = useState<string | null>(null);
   const [form, setForm]             = useState<FormState>(EMPTY_FORM);
+  const [guidanceText, setGuidanceText] = useState<GuidanceText>(EMPTY_GUIDANCE_TEXT);
   const [saving, setSaving]         = useState(false);
   const [formErr, setFormErr]       = useState<string | null>(null);
   const [saveOk, setSaveOk]         = useState(false);
@@ -139,26 +157,33 @@ export default function VoucherCatalogPage() {
   function openAdd() {
     setEditId(null);
     setForm(EMPTY_FORM);
+    setGuidanceText(EMPTY_GUIDANCE_TEXT);
     setFormErr(null);
     setSaveOk(false);
     setShowForm(true);
   }
 
   function openEdit(v: DbVoucher) {
+    const brandDenominations = vouchers
+      .filter((voucher) => voucher.brand_name === v.brand_name)
+      .sort((a, b) => (a.value_inr ?? 0) - (b.value_inr ?? 0));
     setEditId(v.id);
     setForm({
       brand_name:       v.brand_name,
       description:      v.description,
-      denominations: [{
-        value_inr: v.value_inr && v.value_inr > 0 ? String(v.value_inr) : "",
-        coins_required: String(v.coins_required),
-        discount_percent: String(v.discount_percent ?? 0),
+      denominations: brandDenominations.map((denomination) => ({
+        id: denomination.id,
+        value_inr: denomination.value_inr && denomination.value_inr > 0 ? String(denomination.value_inr) : "",
+        coins_required: String(denomination.coins_required),
+        discount_percent: String(denomination.discount_percent ?? 0),
         coins_overridden: true,
-        is_available: v.is_available,
-      }],
+        is_available: denomination.is_available,
+      })),
       category:         v.category,
-      how_to_use:       v.how_to_use?.length ? v.how_to_use : [...DEFAULT_VOUCHER_HOW_TO_USE],
-      terms_and_conditions: v.terms_and_conditions?.length ? v.terms_and_conditions : [...DEFAULT_VOUCHER_TERMS],
+    });
+    setGuidanceText({
+      how_to_use: (v.how_to_use?.length ? v.how_to_use : DEFAULT_VOUCHER_HOW_TO_USE).join("\n"),
+      terms_and_conditions: (v.terms_and_conditions?.length ? v.terms_and_conditions : DEFAULT_VOUCHER_TERMS).join("\n"),
     });
     setFormErr(null);
     setSaveOk(false);
@@ -190,7 +215,12 @@ export default function VoucherCatalogPage() {
       && getVoucherDiscountedCoins(coins_required, discount_percent) >= coins_required)) {
       setFormErr("The selected discount must reduce the NexCoins price by at least 1 coin."); return;
     }
-    if (!editId && new Set(denominations.map(({ value_inr }) => value_inr)).size !== denominations.length) {
+    const howToUse = parseGuidanceText(guidanceText.how_to_use);
+    const terms = parseGuidanceText(guidanceText.terms_and_conditions);
+    if ([howToUse, terms].some((items) => items.length > 100 || items.some((item) => item.length > 2000))) {
+      setFormErr("Each section can contain up to 100 lines, with a maximum of 2,000 characters per line."); return;
+    }
+    if (new Set(denominations.map(({ value_inr }) => value_inr)).size !== denominations.length) {
       setFormErr("Each denomination value must be unique."); return;
     }
     setSaving(true);
@@ -198,12 +228,20 @@ export default function VoucherCatalogPage() {
       brand_name:     form.brand_name,
       description:    form.description,
       category:       form.category,
-      how_to_use:     form.how_to_use.map((item) => item.trim()).filter(Boolean),
-      terms_and_conditions: form.terms_and_conditions.map((item) => item.trim()).filter(Boolean),
+      how_to_use: howToUse,
+      terms_and_conditions: terms,
       country_codes:  ["IN"],
     };
     const body = editId
-      ? { action: "update", id: editId, ...base, ...denominations[0] }
+      ? {
+          action: "update-denominations",
+          id: editId,
+          ...base,
+          denominations: form.denominations.map((denomination, index) => ({
+            ...denominations[index],
+            ...(denomination.id ? { id: denomination.id } : {}),
+          })),
+        }
       : { action: "create", ...base, denominations };
 
     const res  = await callApi(body);
@@ -214,7 +252,14 @@ export default function VoucherCatalogPage() {
     } else {
       setSaveOk(true);
       if (editId) {
-        setVouchers((prev) => prev.map((v) => v.id === editId ? data.voucher! : v));
+        const updatedVouchers = data.vouchers ?? (data.voucher ? [data.voucher] : []);
+        const updatedIds = new Set(updatedVouchers.map((voucher) => voucher.id));
+        setVouchers((prev) => [
+          ...prev.filter((voucher) => !updatedIds.has(voucher.id)),
+          ...updatedVouchers,
+        ].sort((a, b) =>
+          a.brand_name.localeCompare(b.brand_name) || ((a.value_inr ?? 0) - (b.value_inr ?? 0))
+        ));
       } else {
         const createdVouchers = data.vouchers ?? (data.voucher ? [data.voucher] : []);
         setVouchers((prev) => [...prev, ...createdVouchers].sort((a, b) =>
@@ -298,21 +343,6 @@ export default function VoucherCatalogPage() {
         ? { ...denomination, coins_required: calcCoins(denomination.value_inr), coins_overridden: false }
         : denomination),
     }));
-  }
-
-  function setGuidanceItem(field: "how_to_use" | "terms_and_conditions", index: number, value: string) {
-    setForm((prev) => ({
-      ...prev,
-      [field]: prev[field].map((item, itemIndex) => itemIndex === index ? value : item),
-    }));
-  }
-
-  function addGuidanceItem(field: "how_to_use" | "terms_and_conditions") {
-    setForm((prev) => prev[field].length >= 12 ? prev : { ...prev, [field]: [...prev[field], ""] });
-  }
-
-  function removeGuidanceItem(field: "how_to_use" | "terms_and_conditions", index: number) {
-    setForm((prev) => ({ ...prev, [field]: prev[field].filter((_, itemIndex) => itemIndex !== index) }));
   }
 
   if (!allowed) return null;
@@ -483,16 +513,14 @@ export default function VoucherCatalogPage() {
                       <label className="block text-xs font-medium text-[var(--text-primary)]">Voucher denominations</label>
                       <p className="mt-1 text-[11px] text-[var(--text-muted)]">Availability is set separately for each value.</p>
                     </div>
-                    {!editId && (
-                      <button
-                        type="button"
-                        onClick={addDenomination}
-                        disabled={form.denominations.length >= 20}
-                        className="inline-flex items-center gap-1 text-xs font-medium text-[var(--brand-500)] hover:underline disabled:opacity-50"
-                      >
-                        <Plus className="h-3.5 w-3.5" /> Add denomination
-                      </button>
-                    )}
+                    <button
+                      type="button"
+                      onClick={addDenomination}
+                      disabled={form.denominations.length >= 20}
+                      className="inline-flex items-center gap-1 text-xs font-medium text-[var(--brand-500)] hover:underline disabled:opacity-50"
+                    >
+                      <Plus className="h-3.5 w-3.5" /> Add denomination
+                    </button>
                   </div>
                   <div className="space-y-3">
                     {form.denominations.map((denomination, index) => (
@@ -574,7 +602,7 @@ export default function VoucherCatalogPage() {
                             {denomination.is_available ? <CheckCircle2 className="h-4 w-4" /> : <X className="h-4 w-4" />}
                             {denomination.is_available ? "In stock" : "Out of stock"}
                           </button>
-                          {!editId && (
+                          {(!editId || !denomination.id) && (
                             <button
                               type="button"
                               onClick={() => removeDenomination(index)}
@@ -617,77 +645,35 @@ export default function VoucherCatalogPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <div className="flex items-center justify-between gap-3">
-                    <label className="block text-xs font-medium text-[var(--text-primary)]">How to use</label>
-                    <button
-                      type="button"
-                      onClick={() => addGuidanceItem("how_to_use")}
-                      disabled={form.how_to_use.length >= 12}
-                      className="inline-flex items-center gap-1 text-xs font-medium text-[var(--brand-500)] hover:underline disabled:opacity-50"
-                    >
-                      <Plus className="h-3.5 w-3.5" /> Add step
-                    </button>
-                  </div>
-                  {form.how_to_use.map((step, index) => (
-                    <div key={`how-to-${index}`} className="flex items-center gap-2">
-                      <span className="w-5 flex-shrink-0 text-right text-xs text-[var(--text-muted)]">{index + 1}.</span>
-                      <input
-                        type="text"
-                        value={step}
-                        onChange={(event) => setGuidanceItem("how_to_use", index, event.target.value)}
-                        maxLength={300}
-                        aria-label={`How to use step ${index + 1}`}
-                        placeholder="Describe a step"
-                        className="h-10 min-w-0 flex-1 rounded-md border border-[var(--border-strong)] bg-[var(--surface-subtle)] px-3 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--border-focus)]"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => removeGuidanceItem("how_to_use", index)}
-                        aria-label={`Remove how to use step ${index + 1}`}
-                        className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-md text-[var(--text-muted)] hover:bg-red-500/10 hover:text-red-400"
-                      >
-                        <X className="h-4 w-4" />
-                      </button>
-                    </div>
-                  ))}
-                  {form.how_to_use.length === 0 && <p className="text-xs text-[var(--text-muted)]">No usage steps added.</p>}
+                  <label htmlFor="voucher-how-to-use" className="block text-xs font-medium text-[var(--text-primary)]">How to use</label>
+                  <textarea
+                    id="voucher-how-to-use"
+                    value={guidanceText.how_to_use}
+                    onChange={(event) => setGuidanceText((current) => ({ ...current, how_to_use: event.target.value }))}
+                    rows={5}
+                    aria-label="How to use instructions"
+                    placeholder={"Paste instructions here, one step per line.\nNumbered and bulleted lists are formatted automatically."}
+                    className="w-full rounded-md border border-[var(--border-strong)] bg-[var(--surface-subtle)] px-3 py-2.5 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--border-focus)]"
+                  />
+                  <p className="text-xs text-[var(--text-muted)]">
+                    {parseGuidanceText(guidanceText.how_to_use).length} steps · paste numbered or bulleted text; list markers are cleaned automatically.
+                  </p>
                 </div>
 
                 <div className="space-y-2">
-                  <div className="flex items-center justify-between gap-3">
-                    <label className="block text-xs font-medium text-[var(--text-primary)]">Terms &amp; Conditions</label>
-                    <button
-                      type="button"
-                      onClick={() => addGuidanceItem("terms_and_conditions")}
-                      disabled={form.terms_and_conditions.length >= 12}
-                      className="inline-flex items-center gap-1 text-xs font-medium text-[var(--brand-500)] hover:underline disabled:opacity-50"
-                    >
-                      <Plus className="h-3.5 w-3.5" /> Add term
-                    </button>
-                  </div>
-                  {form.terms_and_conditions.map((term, index) => (
-                    <div key={`term-${index}`} className="flex items-center gap-2">
-                      <span className="w-5 flex-shrink-0 text-right text-xs text-[var(--text-muted)]">{index + 1}.</span>
-                      <input
-                        type="text"
-                        value={term}
-                        onChange={(event) => setGuidanceItem("terms_and_conditions", index, event.target.value)}
-                        maxLength={300}
-                        aria-label={`Terms and conditions item ${index + 1}`}
-                        placeholder="Add a term or condition"
-                        className="h-10 min-w-0 flex-1 rounded-md border border-[var(--border-strong)] bg-[var(--surface-subtle)] px-3 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--border-focus)]"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => removeGuidanceItem("terms_and_conditions", index)}
-                        aria-label={`Remove terms and conditions item ${index + 1}`}
-                        className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-md text-[var(--text-muted)] hover:bg-red-500/10 hover:text-red-400"
-                      >
-                        <X className="h-4 w-4" />
-                      </button>
-                    </div>
-                  ))}
-                  {form.terms_and_conditions.length === 0 && <p className="text-xs text-[var(--text-muted)]">No terms added.</p>}
+                  <label htmlFor="voucher-terms" className="block text-xs font-medium text-[var(--text-primary)]">Terms &amp; Conditions</label>
+                  <textarea
+                    id="voucher-terms"
+                    value={guidanceText.terms_and_conditions}
+                    onChange={(event) => setGuidanceText((current) => ({ ...current, terms_and_conditions: event.target.value }))}
+                    rows={6}
+                    aria-label="Terms and conditions"
+                    placeholder={"Paste terms and conditions here, one item per line.\nNumbered and bulleted lists are formatted automatically."}
+                    className="w-full rounded-md border border-[var(--border-strong)] bg-[var(--surface-subtle)] px-3 py-2.5 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--border-focus)]"
+                  />
+                  <p className="text-xs text-[var(--text-muted)]">
+                    {parseGuidanceText(guidanceText.terms_and_conditions).length} items · paste numbered or bulleted text; list markers are cleaned automatically.
+                  </p>
                 </div>
 
                 {formErr && <p className="text-sm text-red-400 bg-red-500/10 px-3 py-2 rounded-md">{formErr}</p>}
