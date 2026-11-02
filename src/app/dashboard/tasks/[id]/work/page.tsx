@@ -1366,29 +1366,39 @@ export default function TaskWorkPage() {
       {/* ── SUBMIT STEP MODAL ────────────────────────────────────────── */}
       {modalStep !== null && activeStep && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/55 p-3 backdrop-blur-sm sm:p-4"
           onClick={(e) => { if (e.target === e.currentTarget) closeModal(); }}
         >
-          <div className="w-full max-w-md rounded-2xl border border-slate-100 bg-white shadow-2xl overflow-hidden">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="submit-stage-title"
+            className="flex max-h-[min(90dvh,48rem)] w-full max-w-md flex-col overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white shadow-[0_24px_80px_rgba(15,23,42,0.28)]"
+          >
             {/* Modal header */}
             <div
-              className="flex items-start justify-between gap-3 px-6 py-4"
-              style={{ background: "linear-gradient(135deg, #6366f1 0%, #14b8a6 100%)" }}
+              className="flex flex-shrink-0 items-start justify-between gap-3 border-b border-white/10 bg-gradient-to-r from-teal-800 via-teal-700 to-teal-600 px-5 py-4 sm:px-6"
             >
-              <div>
-                <h2 className="text-base font-bold text-white">Submit Stage {modalStep + 1}</h2>
-                <p className="text-sm text-white/70 mt-0.5">{activeStep.title}</p>
+              <div className="flex min-w-0 items-center gap-3">
+                <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl border border-white/15 bg-white/10 text-xs font-bold text-white">
+                  {modalStep + 1}
+                </span>
+                <div className="min-w-0">
+                  <h2 id="submit-stage-title" className="text-base font-bold text-white">Submit Stage {modalStep + 1}</h2>
+                  <p className="mt-0.5 truncate text-sm text-teal-50/80">{activeStep.title}</p>
+                </div>
               </div>
               <button
                 onClick={closeModal}
                 disabled={submittingModal}
-                className="h-8 w-8 flex-shrink-0 flex items-center justify-center rounded-lg bg-white/15 border border-white/25 text-white/80 hover:text-white hover:bg-white/25 transition-colors disabled:opacity-50"
+                aria-label="Close stage submission"
+                className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl border border-white/15 bg-white/10 text-white/80 transition-colors hover:bg-white/20 hover:text-white disabled:opacity-50"
               >
                 <X className="h-4 w-4" />
               </button>
             </div>
 
-            <div className="p-6 space-y-5">
+            <div className="min-h-0 space-y-5 overflow-y-auto p-5 sm:p-6">
               {activeStep.submitType === "text" && (
                 <div className="space-y-1.5">
                   <label className="text-sm font-semibold text-slate-700">Your Response</label>
@@ -1397,7 +1407,7 @@ export default function TaskWorkPage() {
                     onChange={(e) => setModalText(e.target.value)}
                     rows={5}
                     placeholder={activeStep.placeholder ?? "Enter your response here…"}
-                    className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-300 resize-none"
+                    className="w-full resize-none rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-800 placeholder:text-slate-400 focus:border-teal-300 focus:outline-none focus:ring-2 focus:ring-teal-200"
                     autoFocus
                   />
                 </div>
@@ -1408,7 +1418,11 @@ export default function TaskWorkPage() {
                   <label className="text-sm font-semibold text-slate-700">Upload File</label>
                   <label
                     htmlFor="modal-file-input"
-                    className="flex flex-col items-center gap-3 border-2 border-dashed border-slate-200 rounded-xl p-8 cursor-pointer hover:border-indigo-300 transition-colors text-center"
+                    className={`flex min-h-36 flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed p-6 text-center transition-colors sm:min-h-40 sm:p-8 ${
+                      modalFile
+                        ? "cursor-pointer border-teal-200 bg-teal-50/70 hover:border-teal-300"
+                        : "cursor-pointer border-slate-200 bg-slate-50/70 hover:border-teal-300 hover:bg-teal-50/40"
+                    }`}
                     onDragOver={(e) => e.preventDefault()}
                     onDrop={(e) => {
                       e.preventDefault();
@@ -1418,16 +1432,20 @@ export default function TaskWorkPage() {
                   >
                     {modalFile ? (
                       <>
-                        <FileText className="h-8 w-8 text-indigo-500" />
-                        <span className="text-sm font-semibold text-slate-700">{modalFile.name}</span>
-                        <span className="text-xs text-slate-400">Click to change</span>
+                        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white text-teal-700 shadow-sm ring-1 ring-teal-100">
+                          <FileText className="h-5 w-5" />
+                        </div>
+                        <span className="max-w-full break-all text-sm font-semibold text-slate-700">{modalFile.name}</span>
+                        <span className="text-xs text-slate-500">Click to choose a different file</span>
                       </>
                     ) : (
                       <>
-                        <Upload className="h-8 w-8 text-slate-400" />
-                        <span className="text-sm text-slate-500">Click to select or drag & drop</span>
+                        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white text-teal-700 shadow-sm ring-1 ring-slate-200">
+                          <Upload className="h-5 w-5" />
+                        </div>
+                        <span className="text-sm font-semibold text-slate-700">Choose a file or drag it here</span>
                         {activeStep.acceptedFiles && (
-                          <span className="text-xs text-slate-400">Accepted: {activeStep.acceptedFiles}</span>
+                          <span className="rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-medium text-amber-800">Accepted: {activeStep.acceptedFiles}</span>
                         )}
                       </>
                     )}
@@ -1446,7 +1464,7 @@ export default function TaskWorkPage() {
               )}
 
               {activeStep.submitType === "none" && (
-                <p className="text-sm text-slate-500 bg-slate-50 border border-slate-100 rounded-xl px-4 py-3">
+                <p className="rounded-xl border border-teal-100 bg-teal-50/70 px-4 py-3 text-sm text-slate-600">
                   Confirm to mark this stage as complete.
                 </p>
               )}
@@ -1457,7 +1475,7 @@ export default function TaskWorkPage() {
                     <div className="flex items-center gap-2 mb-2">
                       {telegramLinked
                         ? <CheckCircle2 className="h-4 w-4 flex-shrink-0 text-green-500" />
-                        : <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-indigo-100 text-xs font-bold text-indigo-600">1</span>
+                        : <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-teal-100 text-xs font-bold text-teal-700">1</span>
                       }
                       <span className="text-sm font-semibold text-slate-700">
                         {telegramLinked ? "Bot started — account linked ✓" : "Start @NexGuildBot"}
@@ -1482,7 +1500,7 @@ export default function TaskWorkPage() {
                               const { data } = await supabase.from("telegram_accounts").select("telegram_id").eq("contributor_id", userId!).maybeSingle();
                               setTelegramLinked(!!data);
                             }}
-                            className="text-xs font-semibold text-indigo-500 hover:text-indigo-700 transition-colors"
+                            className="text-xs font-semibold text-teal-700 transition-colors hover:text-teal-900"
                           >
                             I&apos;ve started it — refresh ↺
                           </button>
@@ -1663,7 +1681,7 @@ export default function TaskWorkPage() {
                     placeholder="ABCD1234"
                     maxLength={8}
                     autoFocus
-                    className="w-full px-3 py-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-300 font-mono tracking-[.35em] text-center text-xl uppercase"
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 text-center font-mono text-xl uppercase tracking-[.35em] text-slate-800 focus:border-teal-300 focus:outline-none focus:ring-2 focus:ring-teal-200"
                   />
                   <p className="text-xs text-slate-400">
                     Enter the 8-character code shown in the NexGuild verification widget on the site you visited.
@@ -1674,30 +1692,29 @@ export default function TaskWorkPage() {
               {modalError && (
                 <p className="text-sm text-red-500 bg-red-50 border border-red-100 px-3 py-2 rounded-lg">{modalError}</p>
               )}
+            </div>
 
-              <div className="flex gap-2 justify-end">
-                <Button variant="ghost" onClick={closeModal} disabled={submittingModal}>Cancel</Button>
-                <button
-                  onClick={handleStepSubmit}
-                  disabled={
-                    submittingModal
-                    || ((activeStep.submitType === "telegram_join" || activeStep.submitType === "telegram_bot") && !telegramLinked)
-                  }
-                  className="inline-flex items-center gap-1.5 rounded-xl px-5 py-2 text-sm font-bold text-white transition-all hover:opacity-90 disabled:opacity-50"
-                  style={{ background: "linear-gradient(135deg, #6366f1 0%, #14b8a6 100%)" }}
-                >
-                  {submittingModal
-                    ? <><Loader2 className="h-4 w-4 animate-spin" /> Submitting…</>
-                    : <><Send className="h-3.5 w-3.5" /> {
-                        activeStep.submitType === "none"               ? "Confirm"
-                      : activeStep.submitType === "proof_code"         ? "Verify →"
-                      : activeStep.submitType === "telegram_join"      ? "Verify Join →"
-                      : activeStep.submitType === "telegram_bot"       ? "Verify Bot Start →"
-                      : activeStep.submitType === "youtube_subscribe"  ? "Submit Screenshot →"
-                      : "Submit"
-                    }</>}
-                </button>
-              </div>
+            <div className="flex flex-shrink-0 flex-col-reverse gap-2 border-t border-slate-100 bg-slate-50/80 px-5 py-3.5 sm:flex-row sm:justify-end sm:px-6">
+              <Button variant="ghost" onClick={closeModal} disabled={submittingModal} className="rounded-xl text-slate-600 hover:bg-white">Cancel</Button>
+              <button
+                onClick={handleStepSubmit}
+                disabled={
+                  submittingModal
+                  || ((activeStep.submitType === "telegram_join" || activeStep.submitType === "telegram_bot") && !telegramLinked)
+                }
+                className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-teal-700 to-teal-600 px-5 py-2.5 text-sm font-bold text-white shadow-sm transition-all hover:from-teal-800 hover:to-teal-700 disabled:opacity-50"
+              >
+                {submittingModal
+                  ? <><Loader2 className="h-4 w-4 animate-spin" /> Submitting…</>
+                  : <><Send className="h-3.5 w-3.5" /> {
+                      activeStep.submitType === "none"               ? "Confirm"
+                    : activeStep.submitType === "proof_code"         ? "Verify →"
+                    : activeStep.submitType === "telegram_join"      ? "Verify Join →"
+                    : activeStep.submitType === "telegram_bot"       ? "Verify Bot Start →"
+                    : activeStep.submitType === "youtube_subscribe"  ? "Submit Screenshot →"
+                    : "Submit"
+                  }</>}
+              </button>
             </div>
           </div>
         </div>
@@ -1706,73 +1723,75 @@ export default function TaskWorkPage() {
       {/* ── STAGE SUCCESS MODAL ──────────────────────────────────────── */}
       {stageSuccessModal && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/55 p-3 backdrop-blur-sm sm:p-4"
           onClick={() => router.push("/dashboard/tasks")}
         >
           <div
-            className="w-full max-w-md rounded-2xl bg-white shadow-xl overflow-hidden"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="submission-received-title"
+            className="w-full max-w-md overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white shadow-[0_24px_80px_rgba(15,23,42,0.28)]"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Gradient accent bar */}
-            <div className="h-1.5 w-full" style={{ background: "linear-gradient(90deg, #6366f1, #14b8a6)" }} />
+            <div className="h-1.5 w-full bg-gradient-to-r from-teal-700 via-teal-500 to-amber-400" />
 
-            <div className="p-5 sm:p-8 space-y-5 text-center">
+            <div className="space-y-5 p-5 text-center sm:p-8">
               {/* Check icon */}
-              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-green-100">
-                <CheckCircle2 className="h-8 w-8 text-green-500" />
+              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-teal-50 ring-1 ring-teal-100">
+                <CheckCircle2 className="h-8 w-8 text-teal-600" />
               </div>
 
               {/* Title + body */}
               <div>
-                <h2 className="text-xl font-bold text-slate-800 mb-2">Submission Received!</h2>
-                <p className="text-sm text-slate-500 leading-relaxed">
+                <h2 id="submission-received-title" className="mb-2 text-xl font-extrabold tracking-tight text-slate-800">Submission Received!</h2>
+                <p className="text-sm leading-relaxed text-slate-500">
                   Our admin team will review your work and get back to you.
                 </p>
               </div>
 
               {/* Info grid */}
-              <div className="grid grid-cols-3 gap-3">
+              <div className={`grid gap-2.5 sm:gap-3 ${[contributorCoins != null, !!task.validation_time, !!task.payment_time].filter(Boolean).length === 2 ? "grid-cols-2" : "grid-cols-3"}`}>
                 {contributorCoins != null && (
-                  <div className="flex flex-col items-center gap-1.5 rounded-xl bg-amber-50 border border-amber-100 p-3">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-100">
+                  <div className="flex min-w-0 flex-col items-center gap-1.5 rounded-2xl border border-amber-200/70 bg-gradient-to-br from-amber-50 to-white p-3">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white shadow-sm ring-1 ring-amber-100">
                       <NexCoinIcon size={18} />
                     </div>
-                    <p className="text-[10px] font-medium text-slate-400 uppercase tracking-wide">Reward</p>
-                    <p className="text-xs font-bold text-slate-700 text-center leading-tight">{contributorCoins} NexCoins</p>
+                    <p className="text-[10px] font-bold uppercase tracking-wide text-amber-700/70">Reward</p>
+                    <p className="text-center text-xs font-bold leading-tight text-slate-700">{contributorCoins} NexCoins</p>
                   </div>
                 )}
                 {task.validation_time && (
-                  <div className="flex flex-col items-center gap-1.5 rounded-xl bg-indigo-50 border border-indigo-100 p-3">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-100">
-                      <Clock className="h-4 w-4 text-indigo-500" />
+                  <div className="flex min-w-0 flex-col items-center gap-1.5 rounded-2xl border border-teal-100 bg-teal-50/60 p-3">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white shadow-sm ring-1 ring-teal-100">
+                      <Clock className="h-4 w-4 text-teal-700" />
                     </div>
-                    <p className="text-[10px] font-medium text-slate-400 uppercase tracking-wide">Review</p>
-                    <p className="text-xs font-bold text-slate-700 text-center leading-tight">{task.validation_time}</p>
+                    <p className="text-[10px] font-bold uppercase tracking-wide text-teal-700/70">Review</p>
+                    <p className="text-center text-xs font-bold leading-tight text-slate-700">{task.validation_time}</p>
                   </div>
                 )}
                 {task.payment_time && (
-                  <div className="flex flex-col items-center gap-1.5 rounded-xl bg-teal-50 border border-teal-100 p-3">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-teal-100">
-                      <CreditCard className="h-4 w-4 text-teal-500" />
+                  <div className="flex min-w-0 flex-col items-center gap-1.5 rounded-2xl border border-sky-100 bg-sky-50/70 p-3">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white shadow-sm ring-1 ring-sky-100">
+                      <CreditCard className="h-4 w-4 text-sky-700" />
                     </div>
-                    <p className="text-[10px] font-medium text-slate-400 uppercase tracking-wide">Payment</p>
-                    <p className="text-xs font-bold text-slate-700 text-center leading-tight">{task.payment_time}</p>
+                    <p className="text-[10px] font-bold uppercase tracking-wide text-sky-700/70">Payment</p>
+                    <p className="text-center text-xs font-bold leading-tight text-slate-700">{task.payment_time}</p>
                   </div>
                 )}
               </div>
 
               {/* Action buttons */}
-              <div className="flex gap-3">
+              <div className="flex flex-col gap-2.5 sm:flex-row sm:gap-3">
                 <button
                   onClick={() => router.push("/dashboard/tasks")}
-                  className="flex-1 rounded-xl py-2.5 text-sm font-bold text-white transition-all hover:opacity-90"
-                  style={{ background: "linear-gradient(135deg, #6366f1 0%, #14b8a6 100%)" }}
+                  className="flex-1 rounded-xl bg-gradient-to-r from-teal-700 to-teal-600 py-2.5 text-sm font-bold text-white shadow-sm transition-all hover:from-teal-800 hover:to-teal-700"
                 >
                   My Tasks
                 </button>
                 <button
                   onClick={() => router.push("/dashboard/opportunities")}
-                  className="flex-1 rounded-xl border border-slate-200 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-colors"
+                  className="flex-1 rounded-xl border border-slate-200 py-2.5 text-sm font-semibold text-slate-600 transition-colors hover:border-teal-200 hover:bg-teal-50/50 hover:text-teal-800"
                 >
                   Browse More
                 </button>
