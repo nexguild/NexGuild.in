@@ -466,7 +466,7 @@ export default function StorePage() {
           )}
         </div>
       ) : (
-        <div className="grid justify-start gap-4" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 280px), 360px))" }}>
+        <div className="flex flex-wrap justify-center gap-4">
           {displayedBrands.map(({ brand }) => {
             const bv        = brandVouchers(brand);
             const availableVouchers = bv.filter((voucher) => voucher.is_available);
@@ -482,7 +482,7 @@ export default function StorePage() {
                 key={brand}
                 onClick={() => !loading && openBrandModal(brand)}
                 aria-label={`View ${brand} voucher options`}
-                className={`group relative flex min-h-[206px] w-full overflow-hidden rounded-2xl border border-[var(--border-default)] bg-[var(--surface-card)] text-left shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-[var(--brand-500)]/50 hover:shadow-lg focus-visible:ring-2 focus-visible:ring-[var(--border-focus)] ${!available ? "opacity-70" : ""}`}
+                className={`group relative flex min-h-[206px] w-full min-w-0 max-w-[360px] flex-[0_1_360px] overflow-hidden rounded-2xl border border-[var(--border-default)] bg-[var(--surface-card)] text-left shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-[var(--brand-500)]/50 hover:shadow-lg focus-visible:ring-2 focus-visible:ring-[var(--border-focus)] ${!available ? "opacity-70" : ""}`}
               >
                 <div className="flex w-[68px] flex-shrink-0 flex-col items-center justify-between bg-[var(--brand-700)] px-2 py-4 text-white">
                   <span aria-hidden="true" className="flex h-10 w-10 items-center justify-center rounded-xl border border-[var(--brand-700)] bg-white text-xl shadow-inner">
