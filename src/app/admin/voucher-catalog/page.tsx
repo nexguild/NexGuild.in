@@ -496,7 +496,7 @@ export default function VoucherCatalogPage() {
                   </div>
                   <div className="space-y-3">
                     {form.denominations.map((denomination, index) => (
-                      <div key={`denomination-${index}`} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_120px_auto_auto] items-end gap-3 rounded-lg border border-[var(--border-default)] p-3">
+                      <div key={`denomination-${index}`} className="grid grid-cols-1 gap-3 rounded-lg border border-[var(--border-default)] p-3 sm:grid-cols-2">
                         <div>
                           <label className="block text-xs font-medium text-[var(--text-primary)] mb-1.5">Value in ₹ (INR) *</label>
                           <input
@@ -526,8 +526,8 @@ export default function VoucherCatalogPage() {
                           />
                         </div>
                         <div>
-                          <div className="flex items-center justify-between gap-2 mb-1.5">
-                            <label className="block text-xs font-medium text-[var(--text-primary)]">NexCoins *</label>
+                          <div className="mb-1.5 flex min-h-[18px] items-center justify-between gap-2">
+                            <label className="block text-xs font-medium text-[var(--text-primary)]">Base NexCoins *</label>
                             {denomination.coins_overridden ? (
                               <button
                                 type="button"
@@ -550,32 +550,42 @@ export default function VoucherCatalogPage() {
                             aria-label={`Denomination ${index + 1} NexCoins required`}
                             className="w-full h-10 px-3 rounded-md border border-[var(--border-strong)] bg-[var(--surface-subtle)] text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--border-focus)]"
                           />
+                          {Number(denomination.coins_required) > 0 && Number(denomination.discount_percent) > 0 ? (
+                            <p className="mt-1.5 min-h-6 text-[10px] font-medium leading-3 text-emerald-500">
+                              Sale price: {getVoucherDiscountedCoins(
+                                Number(denomination.coins_required),
+                                Number(denomination.discount_percent),
+                              ).toLocaleString()} NexCoins
+                            </p>
+                          ) : <p className="mt-1.5 min-h-6" aria-hidden="true" />}
                         </div>
-                        <button
-                          type="button"
-                          onClick={() => toggleDenominationAvailability(index)}
-                          aria-label={`Mark denomination ${index + 1} ${denomination.is_available ? "out of stock" : "in stock"}`}
-                          aria-pressed={denomination.is_available}
-                          className={`flex h-10 items-center justify-center gap-1.5 whitespace-nowrap rounded-md border px-3 text-xs font-medium transition-colors ${
-                            denomination.is_available
-                              ? "border-green-500/30 bg-green-500/10 text-green-400 hover:bg-green-500/20"
-                              : "border-red-500/30 bg-red-500/10 text-red-400 hover:bg-red-500/20"
-                          }`}
-                        >
-                          {denomination.is_available ? <CheckCircle2 className="h-4 w-4" /> : <X className="h-4 w-4" />}
-                          {denomination.is_available ? "In stock" : "Out of stock"}
-                        </button>
-                        {!editId && (
+                        <div className="flex items-start gap-2 sm:pt-6">
                           <button
                             type="button"
-                            onClick={() => removeDenomination(index)}
-                            disabled={form.denominations.length <= 1}
-                            aria-label={`Remove denomination ${index + 1}`}
-                            className="flex h-10 w-10 items-center justify-center rounded-md text-[var(--text-muted)] hover:bg-red-500/10 hover:text-red-400 disabled:opacity-40"
+                            onClick={() => toggleDenominationAvailability(index)}
+                            aria-label={`Mark denomination ${index + 1} ${denomination.is_available ? "out of stock" : "in stock"}`}
+                            aria-pressed={denomination.is_available}
+                            className={`flex h-10 flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-md border px-3 text-xs font-medium transition-colors ${
+                              denomination.is_available
+                                ? "border-green-500/30 bg-green-500/10 text-green-400 hover:bg-green-500/20"
+                                : "border-red-500/30 bg-red-500/10 text-red-400 hover:bg-red-500/20"
+                            }`}
                           >
-                            <X className="h-4 w-4" />
+                            {denomination.is_available ? <CheckCircle2 className="h-4 w-4" /> : <X className="h-4 w-4" />}
+                            {denomination.is_available ? "In stock" : "Out of stock"}
                           </button>
-                        )}
+                          {!editId && (
+                            <button
+                              type="button"
+                              onClick={() => removeDenomination(index)}
+                              disabled={form.denominations.length <= 1}
+                              aria-label={`Remove denomination ${index + 1}`}
+                              className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-md text-[var(--text-muted)] hover:bg-red-500/10 hover:text-red-400 disabled:opacity-40"
+                            >
+                              <X className="h-4 w-4" />
+                            </button>
+                          )}
+                        </div>
                       </div>
                     ))}
                   </div>

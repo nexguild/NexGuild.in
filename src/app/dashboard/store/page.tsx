@@ -149,7 +149,10 @@ export default function StorePage() {
   const modalVouchers   = detailBrand ? brandVouchers(detailBrand) : [];
   const selectedVoucher = vouchers.find((v) => v.id === selectedVoucherId) ?? null;
 
-  const cartTotal  = cart.reduce((s, e) => s + getVoucherDiscountedCoins(e.voucher.coins_required, e.voucher.discount_percent) * e.qty, 0);
+  const originalCartTotal = cart.reduce((sum, entry) => sum + entry.voucher.coins_required * entry.qty, 0);
+  const cartTotal = cart.reduce((sum, entry) =>
+    sum + getVoucherDiscountedCoins(entry.voucher.coins_required, entry.voucher.discount_percent) * entry.qty, 0);
+  const voucherDiscount = originalCartTotal - cartTotal;
   const discount   = coupon
     ? coupon.discountPercent > 0
       ? Math.floor(cartTotal * coupon.discountPercent / 100)
@@ -764,8 +767,14 @@ export default function StorePage() {
                   <div className="space-y-1.5 text-sm">
                     <div className="flex items-center justify-between">
                       <span className="text-[var(--text-muted)]">Subtotal</span>
-                      <span className="text-[var(--text-primary)]">{cartTotal.toLocaleString()} coins</span>
+                      <span className="text-[var(--text-primary)]">{originalCartTotal.toLocaleString()} coins</span>
                     </div>
+                    {voucherDiscount > 0 && (
+                      <div className="flex items-center justify-between">
+                        <span className="text-emerald-600 dark:text-emerald-400">Voucher discount</span>
+                        <span className="text-emerald-600 dark:text-emerald-400">−{voucherDiscount.toLocaleString()} coins</span>
+                      </div>
+                    )}
                     {discount > 0 && (
                       <div className="flex items-center justify-between">
                         <span className="text-green-400">Coupon discount</span>
