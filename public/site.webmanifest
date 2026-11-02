@@ -29,15 +29,10 @@
   ],
   "icons": [
     {
-      "src": "/nexguild_logo_final.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "/favicon.svg",
+      "src": "/nexguild-app-icon.svg",
       "sizes": "any",
-      "type": "image/svg+xml"
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
     }
   ]
 }

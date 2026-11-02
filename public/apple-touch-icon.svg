@@ -1,14 +1,22 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180">
-  <rect width="180" height="180" rx="38" fill="#0d1f38"/>
-  <g transform="translate(90,95)">
-    <!-- centre person -->
-    <circle cx="0" cy="-34" r="26" fill="#14b8a6"/>
-    <rect x="-26" y="0" width="52" height="46" rx="26" fill="#14b8a6"/>
-    <!-- left person -->
-    <circle cx="-57" cy="-18" r="19" fill="#14b8a6" opacity="0.75"/>
-    <rect x="-76" y="11" width="38" height="34" rx="19" fill="#14b8a6" opacity="0.75"/>
-    <!-- right person -->
-    <circle cx="57" cy="-18" r="19" fill="#14b8a6" opacity="0.75"/>
-    <rect x="38" y="11" width="38" height="34" rx="19" fill="#14b8a6" opacity="0.75"/>
+  <defs>
+    <linearGradient id="background" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#123b46"/>
+      <stop offset="1" stop-color="#0b1f33"/>
+    </linearGradient>
+    <linearGradient id="mark" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffc34d"/>
+      <stop offset="1" stop-color="#f59e0b"/>
+    </linearGradient>
+  </defs>
+  <rect width="180" height="180" fill="url(#background)"/>
+  <circle cx="90" cy="90" r="65" fill="#ffffff" opacity=".035"/>
+  <g fill="url(#mark)">
+    <circle cx="90" cy="58" r="15"/>
+    <path d="M64 116c0-15 12-28 26-28s26 13 26 28v6H64z"/>
+    <circle cx="45" cy="79" r="11" opacity=".88"/>
+    <path d="M27 121c0-13 8-23 18-23s18 10 18 23v4H27z" opacity=".88"/>
+    <circle cx="135" cy="79" r="11" opacity=".88"/>
+    <path d="M117 121c0-13 8-23 18-23s18 10 18 23v4h-36z" opacity=".88"/>
   </g>
 </svg>
