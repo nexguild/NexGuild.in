@@ -255,10 +255,12 @@ export default function AdminPremiumTasksPage() {
             <p className="mt-2 break-all rounded-lg bg-[var(--surface-subtle)] p-2 font-mono text-[10px] leading-5 text-[var(--text-secondary)]">
               {partner === "gemiad"
                 ? "https://nexguild.in/api/premium-tasks/postback/gemiad?userId={USER_ID}&offerId={OFFER_ID}&eventId={EVENT_ID}&txid={TXID}&status={STATUS}&hash={HASH}"
-                : "https://nexguild.in/api/premium-tasks/postback/notik?user_id={user_id}&offer_id={offer_id}&trans_id={trans_id}&status={status}&s1={s1}&hash={hash}"}
+                : "https://nexguild.in/api/offerwall/postback/notik"}
             </p>
             <p className="mt-2 text-xs leading-5 text-[var(--text-muted)]">
-              Add this callback in the partner dashboard and store its callback secret in Admin → Offerwalls. GemiAd uses its documented SHA-256 signature; Notik uses its signed callback URL.
+              {partner === "gemiad"
+                ? "Add this callback in the partner dashboard and store its callback secret in Admin → Offerwalls. GemiAd uses its documented SHA-256 signature."
+                : "Keep the existing Notik App Details callback URL unchanged. It is shared with the offerwall; signed callbacks with a tracked Premium Task click ID in s1 are routed to this task. Keep the Notik callback secret configured in Admin → Offerwalls."}
             </p>
           </div>
         ))}
@@ -278,7 +280,7 @@ export default function AdminPremiumTasksPage() {
       ) : (
         <div className="overflow-x-auto rounded-xl border border-[var(--border-default)] bg-[var(--surface-card)]">
           <table className="w-full min-w-[760px] text-left text-sm">
-            <thead className="border-b border-[var(--border-default)] bg-[var(--surface-subtle)] text-xs text-[var(--text-muted)]">
+            <thead className="border-b border-[var(--border-default)] bg-[var(--surface-subtle)] text-xs font-semibold text-[var(--text-secondary)]">
               <tr>
                 <th className="px-4 py-3">Advertiser / offer</th>
                 <th className="px-4 py-3">Type</th>
@@ -305,7 +307,7 @@ export default function AdminPremiumTasksPage() {
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
-                      <button type="button" onClick={() => editOffer(offer)} className="inline-flex items-center gap-1 rounded-md border border-[var(--border-default)] px-2.5 py-1.5 text-xs hover:bg-[var(--surface-subtle)]">
+                      <button type="button" onClick={() => editOffer(offer)} className="inline-flex items-center gap-1 rounded-md border border-[var(--border-strong)] px-2.5 py-1.5 text-xs font-medium text-[var(--text-primary)] hover:bg-[var(--surface-subtle)]">
                         <Edit2 className="h-3 w-3" /> Edit
                       </button>
                       {offer.is_active && (
