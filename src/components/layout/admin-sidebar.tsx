@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import {
   LayoutDashboard, Users, FolderOpen,
   ClipboardCheck, Layers, Gift, BarChart3,
-  Settings, LogOut, ClipboardList, GraduationCap, Megaphone, Headphones, Tag, X, Activity, Newspaper, TrendingUp, Briefcase, ShieldAlert, WalletCards, History, UserCheck,
+  Settings, LogOut, ClipboardList, GraduationCap, Megaphone, Headphones, Tag, X, Activity, Newspaper, TrendingUp, Briefcase, ShieldAlert, WalletCards, History, UserCheck, Target,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { NexGuildLogo } from "@/components/ui/nexguild-logo";
@@ -76,6 +76,7 @@ export function AdminSidebar({ open, onClose }: AdminSidebarProps) {
         { label: "Tasks", href: "/admin/tasks", icon: ClipboardList, badge: 0, roles: ADMIN_ROLES.CONTENT },
         { label: "Projects", href: "/admin/projects", icon: FolderOpen, badge: 0, roles: ADMIN_ROLES.UPPER },
         { label: "Offerwalls", href: "/admin/offerwalls", icon: Layers, badge: 0, roles: ADMIN_ROLES.UPPER },
+        { label: "Premium Tasks", href: "/admin/premium-tasks", icon: Target, badge: 0, roles: ADMIN_ROLES.UPPER },
         { label: "Voucher Catalog", href: "/admin/voucher-catalog", icon: Tag, badge: 0, roles: ADMIN_ROLES.FINANCE },
         { label: "Finances", href: "/admin/finances", icon: BarChart3, badge: 0, roles: ADMIN_ROLES.FINANCE },
       ],

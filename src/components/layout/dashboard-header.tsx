@@ -28,6 +28,7 @@ import { NexGuildLogo } from "@/components/ui/nexguild-logo";
 const PAGE_TITLES: Record<string, string> = {
   "/dashboard":               "Dashboard",
   "/dashboard/opportunities": "Earn",
+  "/dashboard/premium-tasks": "Premium Tasks",
   "/dashboard/surveys":       "Paid Surveys",
   "/dashboard/tasks":         "My Work",
   "/dashboard/offerwalls":    "Apps & Offers",
@@ -85,6 +86,7 @@ const NAV_CATEGORIES = [
     href: "/dashboard/opportunities",
     items: [
       { label: "Paid Tasks", href: "/dashboard/opportunities" },
+      { label: "Premium Tasks", href: "/dashboard/premium-tasks" },
       { label: "Paid Surveys", href: "/dashboard/surveys" },
       { label: "Apps & Offers", href: "/dashboard/offerwalls" },
       { label: "My Work", href: "/dashboard/tasks" },
