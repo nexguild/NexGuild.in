@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   AlertCircle,
   Clock3,
@@ -75,6 +75,18 @@ export default function PremiumTasksPage() {
   const [selectedOffer, setSelectedOffer] = useState<PremiumTask | null>(null);
   const [starting, setStarting] = useState(false);
   const [startError, setStartError] = useState<string | null>(null);
+  const startRequestRef = useRef<AbortController | null>(null);
+  const offerWindowRef = useRef<Window | null>(null);
+
+  const closeOffer = useCallback(() => {
+    startRequestRef.current?.abort();
+    startRequestRef.current = null;
+    offerWindowRef.current?.close();
+    offerWindowRef.current = null;
+    setStarting(false);
+    setSelectedOffer(null);
+    setStartError(null);
+  }, []);
 
   const loadOffers = useCallback(async (signal?: AbortSignal, refresh = false) => {
     if (refresh) setRefreshing(true);
@@ -114,6 +126,15 @@ export default function PremiumTasksPage() {
     return () => controller.abort();
   }, [loadOffers]);
 
+  useEffect(() => {
+    if (!selectedOffer) return;
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") closeOffer();
+    }
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [closeOffer, selectedOffer]);
+
   const visibleOffers = useMemo(() => {
     const query = search.trim().toLowerCase();
     return offers
@@ -127,6 +148,11 @@ export default function PremiumTasksPage() {
 
   async function startOffer() {
     if (!selectedOffer || starting) return;
+    const offerWindow = window.open("about:blank", "_blank");
+    const request = new AbortController();
+    startRequestRef.current = request;
+    offerWindowRef.current = offerWindow;
+    if (offerWindow) offerWindow.opener = null;
     setStarting(true);
     setStartError(null);
     try {
@@ -139,15 +165,33 @@ export default function PremiumTasksPage() {
           Authorization: "Bearer " + session.access_token,
         },
         body: JSON.stringify({ offerId: selectedOffer.id }),
+        signal: request.signal,
       });
       const result = await response.json() as { trackingUrl?: string; error?: string };
+      if (request.signal.aborted) return;
       if (!response.ok || !result.trackingUrl) {
         throw new Error(result.error ?? "This offer could not be started. Please try again.");
       }
-      window.location.assign(result.trackingUrl);
+      if (offerWindow) {
+        offerWindow.location.replace(result.trackingUrl);
+        offerWindowRef.current = null;
+        startRequestRef.current = null;
+        setStarting(false);
+        setSelectedOffer(null);
+      } else {
+        window.location.assign(result.trackingUrl);
+      }
     } catch (startFailure) {
-      setStartError(startFailure instanceof Error ? startFailure.message : "This offer could not be started. Please try again.");
-      setStarting(false);
+      offerWindow?.close();
+      if (!request.signal.aborted) {
+        setStartError(startFailure instanceof Error ? startFailure.message : "This offer could not be started. Please try again.");
+      }
+    } finally {
+      if (startRequestRef.current === request) {
+        startRequestRef.current = null;
+        offerWindowRef.current = null;
+        setStarting(false);
+      }
     }
   }
 
@@ -292,59 +336,61 @@ export default function PremiumTasksPage() {
       {selectedOffer && (
         <div
           className="fixed inset-0 z-[70] flex items-end justify-center bg-slate-950/60 p-0 backdrop-blur-sm sm:items-center sm:p-4"
-          onMouseDown={(event) => {
-            if (event.target === event.currentTarget && !starting) setSelectedOffer(null);
+          onClick={(event) => {
+            if (event.target === event.currentTarget) closeOffer();
           }}
         >
           <section
             role="dialog"
             aria-modal="true"
             aria-labelledby="premium-offer-title"
-            className="max-h-[92vh] w-full max-w-2xl overflow-y-auto rounded-t-2xl bg-white p-5 shadow-2xl sm:rounded-2xl sm:p-7"
+            className="flex max-h-[calc(100dvh-0.5rem)] w-full max-w-2xl flex-col overflow-hidden rounded-t-2xl bg-white shadow-2xl sm:max-h-[min(88vh,48rem)] sm:rounded-2xl"
           >
-            <div className="mb-5 flex items-start justify-between gap-4">
+            <div className="flex shrink-0 items-start justify-between gap-3 border-b border-slate-100 px-4 py-3 sm:gap-4 sm:px-7 sm:py-5">
               <div className="flex min-w-0 items-center gap-3">
                 {selectedOffer.imageUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={selectedOffer.imageUrl} alt={`${selectedOffer.advertiserName} logo`} className="h-12 w-12 flex-shrink-0 rounded-xl border border-slate-100 object-cover" />
-                ) : <span className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-indigo-700"><Target className="h-5 w-5" /></span>}
+                  <img src={selectedOffer.imageUrl} alt={`${selectedOffer.advertiserName} logo`} className="h-10 w-10 flex-shrink-0 rounded-xl border border-slate-100 object-cover sm:h-12 sm:w-12" />
+                ) : <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-indigo-700 sm:h-12 sm:w-12"><Target className="h-5 w-5" /></span>}
                 <div className="min-w-0">
                   <p className="text-xs font-medium text-slate-500">{selectedOffer.advertiserName}</p>
-                  <h2 id="premium-offer-title" className="truncate text-lg font-bold text-slate-900">{selectedOffer.name}</h2>
+                  <h2 id="premium-offer-title" className="line-clamp-2 text-sm font-bold leading-5 text-slate-900 sm:text-lg">{selectedOffer.name}</h2>
                 </div>
               </div>
-              <button type="button" onClick={() => setSelectedOffer(null)} disabled={starting} aria-label="Close offer details" className="rounded-full bg-slate-100 p-2 text-slate-500 hover:bg-slate-200 disabled:opacity-50">
-                <X className="h-4 w-4" />
+              <button type="button" onClick={closeOffer} aria-label="Close offer details" className="flex h-11 w-11 shrink-0 touch-manipulation items-center justify-center rounded-full bg-slate-100 text-slate-600 transition hover:bg-slate-200 active:bg-slate-300">
+                <X className="h-5 w-5" />
               </button>
             </div>
 
-            <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 p-3">
-              <span className={`rounded-full border px-2 py-1 text-[10px] font-bold ${CATEGORY_STYLES[selectedOffer.category]}`}>{CATEGORY_LABELS[selectedOffer.category]}</span>
-              <span className="inline-flex items-center gap-1 rounded-lg bg-emerald-50 px-3 py-2 text-sm font-extrabold text-emerald-800">
-                <NexCoinIcon size={15} /> ~{formatCoins(selectedOffer.estimatedRewardCoins)} NexCoins
-              </span>
+            <div className="shrink-0 px-4 pt-3 sm:px-7 sm:pt-4">
+              <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-slate-200 p-3">
+                <span className={`rounded-full border px-2 py-1 text-[10px] font-bold ${CATEGORY_STYLES[selectedOffer.category]}`}>{CATEGORY_LABELS[selectedOffer.category]}</span>
+                <span className="inline-flex items-center gap-1 rounded-lg bg-emerald-50 px-2.5 py-2 text-xs font-extrabold text-emerald-800 sm:px-3 sm:text-sm">
+                  <NexCoinIcon size={15} /> ~{formatCoins(selectedOffer.estimatedRewardCoins)} NexCoins
+                </span>
+              </div>
             </div>
 
-            <div className="space-y-4">
-              <div className="rounded-xl border border-slate-200 p-4">
+            <div className="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain px-4 py-3 sm:space-y-4 sm:px-7 sm:py-4">
+              <div className="rounded-xl border border-slate-200 p-3 sm:p-4">
                 <h3 className="text-[10px] font-bold uppercase tracking-wide text-slate-600">Description</h3>
-                <p className="mt-2 whitespace-pre-line text-sm leading-6 text-slate-700">{selectedOffer.description}</p>
+                <p className="mt-2 whitespace-pre-line text-xs leading-5 text-slate-700 sm:text-sm sm:leading-6">{selectedOffer.description}</p>
                 {selectedOffer.terms && <p className="mt-3 whitespace-pre-line text-xs leading-5 text-slate-500"><span className="font-bold">Requirements:</span> {selectedOffer.terms}</p>}
               </div>
 
-              <div className="grid gap-3 sm:grid-cols-2">
-                <div className="rounded-xl border border-slate-200 p-4">
+              <div className="grid grid-cols-1 gap-3 min-[360px]:grid-cols-2">
+                <div className="rounded-xl border border-slate-200 p-3 sm:p-4">
                   <h3 className="text-[10px] font-bold uppercase tracking-wide text-slate-600">Countries</h3>
                   <p className="mt-2 text-sm text-slate-700">{displayList(selectedOffer.countries, "All eligible countries")}</p>
                 </div>
-                <div className="rounded-xl border border-slate-200 p-4">
+                <div className="rounded-xl border border-slate-200 p-3 sm:p-4">
                   <h3 className="text-[10px] font-bold uppercase tracking-wide text-slate-600">Devices</h3>
                   <p className="mt-2 text-sm capitalize text-slate-700">{displayList(selectedOffer.devices, "All supported devices")}</p>
                   {selectedOffer.os && <p className="mt-1 text-xs text-slate-500">OS: {selectedOffer.os}</p>}
                 </div>
               </div>
 
-              <div className="rounded-xl border border-slate-200 p-4">
+              <div className="rounded-xl border border-slate-200 p-3 sm:p-4">
                 <h3 className="text-[10px] font-bold uppercase tracking-wide text-slate-600">
                   Completion steps{selectedOffer.events.length ? ` (${selectedOffer.events.length})` : ""}
                 </h3>
@@ -364,18 +410,20 @@ export default function PremiumTasksPage() {
               </div>
             </div>
 
-            {startError && <p role="alert" className="mt-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">{startError}</p>}
-            <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-4">
-              <p className="max-w-sm text-[10px] leading-4 text-slate-500">Reward is estimated. It is credited after a confirmed partner completion and may be reversed if invalidated.</p>
-              <button
-                type="button"
-                onClick={() => void startOffer()}
-                disabled={starting}
-                className="inline-flex h-10 items-center gap-2 rounded-xl bg-indigo-600 px-4 text-sm font-bold text-white hover:bg-indigo-700 disabled:opacity-60"
-              >
-                {starting ? <Loader2 className="h-4 w-4 animate-spin" /> : <ExternalLink className="h-4 w-4" />}
-                {starting ? "Opening offer…" : "Start offer"}
-              </button>
+            <div className="shrink-0 border-t border-slate-100 bg-white px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 sm:px-7 sm:pb-5 sm:pt-4">
+              {startError && <p role="alert" className="mb-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">{startError}</p>}
+              <div className="flex flex-col gap-3 min-[420px]:flex-row min-[420px]:items-center min-[420px]:justify-between">
+                <p className="max-w-sm text-[10px] leading-4 text-slate-500">Reward is estimated. It is credited after a confirmed partner completion and may be reversed if invalidated.</p>
+                <button
+                  type="button"
+                  onClick={() => void startOffer()}
+                  disabled={starting}
+                  className="inline-flex h-11 w-full touch-manipulation items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 text-sm font-bold text-white hover:bg-indigo-700 disabled:opacity-60 min-[420px]:w-auto"
+                >
+                  {starting ? <Loader2 className="h-4 w-4 animate-spin" /> : <ExternalLink className="h-4 w-4" />}
+                  {starting ? "Opening offer…" : "Start offer"}
+                </button>
+              </div>
             </div>
           </section>
         </div>
