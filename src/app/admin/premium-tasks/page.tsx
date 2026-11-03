@@ -255,7 +255,7 @@ export default function AdminPremiumTasksPage() {
             <p className="mt-2 break-all rounded-lg bg-[var(--surface-subtle)] p-2 font-mono text-[10px] leading-5 text-[var(--text-secondary)]">
               {partner === "gemiad"
                 ? "https://nexguild.in/api/premium-tasks/postback/gemiad?userId={USER_ID}&offerId={OFFER_ID}&eventId={EVENT_ID}&txid={TXID}&status={STATUS}&hash={HASH}"
-                : "https://nexguild.in/api/offerwall/postback/notik"}
+                : "https://www.nexguild.in/api/offerwall/postback/notik"}
             </p>
             <p className="mt-2 text-xs leading-5 text-[var(--text-muted)]">
               {partner === "gemiad"
