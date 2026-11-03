@@ -27,8 +27,7 @@ function extractParams(q: URLSearchParams, body: Record<string, unknown>, paramM
     payout:         parseFloat(get("payout") ?? "0") || 0,
     status:         get("status") ?? (slug === "clixwall" ? get("s") : null),
     offerId:        get("offer_id"),
-    eventId:       get("event_id"),
-    type:          get("type"),
+    type:           get("type"),
     hash:           get("hash"),
     s1:             get("s1"),
     rewardedTxnId:  get("rewarded_txn_id"),
@@ -114,7 +113,7 @@ async function handlePostback(req: NextRequest, slug: string): Promise<Response>
   const paramMap: ParamMap = (provider.postback_param_map as ParamMap | null) ?? {};
   const customCfg = (provider.custom_config as Record<string, unknown> | null) ?? {};
   const gemiadHash = slug === "gemiad" && customCfg.hash_algorithm === "sha256-user-offer-tx-secret";
-  const { userId, transId, amount, userPayoutUsd, payout, status, offerId, eventId, type, hash, s1, rewardedTxnId, incomingSecret } = extractParams(q, bodyObj, paramMap, slug);
+  const { userId, transId, amount, userPayoutUsd, payout, status, offerId, type, hash, s1, rewardedTxnId, incomingSecret } = extractParams(q, bodyObj, paramMap, slug);
   const safeRawParams = {
     ...redactSensitiveParams(Object.fromEntries(q.entries())),
     ...redactSensitiveParams(bodyObj),
@@ -212,91 +211,6 @@ async function handlePostback(req: NextRequest, slug: string): Promise<Response>
     console.warn(`[postback/${slug}] missing contributor ID or trans_id`, { userId, s1, transId });
     await writeLog(admin, slug, Object.fromEntries(q.entries()), "error", hashAuthenticated ? true : null, "Missing user_id or transaction ID");
     return new Response("Bad Request", { status: 400 });
-  }
-
-  const premiumClickId = slug === "notik"
-    ? s1 && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s1) ? s1 : null
-    : slug === "gemiad" && gemiadHash && userId
-      && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userId)
-      ? userId
-      : null;
-
-  if (premiumClickId) {
-    const { data: premiumClick, error: premiumClickError } = await admin
-      .from("premium_task_clicks")
-      .select("click_id, contributor_id, partner_offer_id, advertiser_name, offer_name")
-      .eq("click_id", premiumClickId)
-      .eq("partner_slug", slug)
-      .maybeSingle();
-
-    if (premiumClickError) {
-      console.error(`[postback/${slug}] Premium task click lookup failed:`, premiumClickError.message);
-      await writeLog(admin, slug, safeRawParams, "error", true, premiumClickError.message);
-      return new Response("Internal Server Error", { status: 500 });
-    }
-
-    if (premiumClick) {
-      const userMatchesClick = slug === "gemiad"
-        ? userId?.toLowerCase() === premiumClick.click_id.toLowerCase()
-        : premiumClick.contributor_id === userId;
-      if (!userMatchesClick || !offerId || premiumClick.partner_offer_id !== offerId) {
-        await writeLog(admin, slug, safeRawParams, "error", true, "Premium task callback did not match the stored click");
-        return new Response("Forbidden", { status: 403 });
-      }
-
-      const isPremiumReversal = slug === "gemiad"
-        ? normalizedStatus === "rejected"
-        : normalizedStatus === "2" || ((amount < 0 || payout < 0) && Boolean(rewardedTxnId || transId));
-      if (isPremiumReversal) {
-        const { data: reversed, error: reversalError } = await admin.rpc("reverse_premium_task_conversion", {
-          p_partner_slug: slug,
-          p_partner_transaction_id: slug === "notik" ? rewardedTxnId ?? transId : transId,
-          p_click_id: premiumClick.click_id,
-        });
-        if (reversalError) {
-          console.error(`[postback/${slug}] Premium task reversal failed:`, reversalError.message);
-          await writeLog(admin, slug, safeRawParams, "error", true, reversalError.message);
-          return new Response("Internal Server Error", { status: 500 });
-        }
-        await writeLog(admin, slug, safeRawParams, reversed ? "reversed" : "reversal_ignored", true);
-        return new Response("OK", { status: 200 });
-      }
-
-      const premiumCompletionStatus = slug === "gemiad" ? "completed" : "1";
-      if (normalizedStatus !== premiumCompletionStatus) {
-        await writeLog(admin, slug, safeRawParams, "debug_ignored", true);
-        return new Response("OK", { status: 200 });
-      }
-
-      const { data: credited, error: creditError } = await admin.rpc("credit_premium_task_conversion", {
-        p_partner_slug: slug,
-        p_partner_transaction_id: transId,
-        p_click_id: premiumClick.click_id,
-        p_partner_offer_id: offerId,
-        p_event_id: eventId,
-        p_raw_payload: safeRawParams,
-      });
-      if (creditError) {
-        console.error(`[postback/${slug}] Premium task credit failed:`, creditError.message);
-        await writeLog(admin, slug, safeRawParams, "error", true, creditError.message);
-        return new Response("Internal Server Error", { status: 500 });
-      }
-
-      if (credited) {
-        const { error: notificationError } = await admin.from("notifications").insert({
-          user_id: premiumClick.contributor_id,
-          title: "NexCoins Earned!",
-          message: `Your ${premiumClick.advertiser_name} offer was completed. NexCoins have been added to your balance.`,
-          type: "bonus_coins",
-        });
-        if (notificationError) {
-          console.warn(`[postback/${slug}] Premium task notification insert failed:`, notificationError.message);
-        }
-      }
-
-      await writeLog(admin, slug, safeRawParams, credited ? "credited" : "duplicate", true);
-      return new Response("OK", { status: 200 });
-    }
   }
 
   if (slug === "taprain" && !status) {
