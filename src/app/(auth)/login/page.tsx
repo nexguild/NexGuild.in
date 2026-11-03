@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Eye, EyeOff } from "lucide-react";
+import { ArrowUpRight, CheckCircle2, Coins, Eye, EyeOff, ShieldCheck, Sparkles } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import HCaptcha from "@hcaptcha/react-hcaptcha";
 
@@ -122,17 +122,57 @@ export default function LoginPage() {
     (captchaMode === "visible" && !captchaToken);
 
   return (
-    <div style={{ background: "#EBFBFA", minHeight: "100vh" }} className="w-full flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div
-        className="w-full max-w-md rounded-2xl p-8 transition-all duration-300 hover:shadow-lg"
-        style={{
-          background: "rgba(255, 255, 255, 0.65)",
-          border: "1.5px solid rgba(13,148,136,0.18)",
-          backdropFilter: "blur(12px)",
-        }}
-      >
-        <h1 className="text-2xl font-bold text-[#0F3D36] mb-1 tracking-tight">Welcome back</h1>
-        <p className="text-sm text-stone-600 mb-7">Sign in to your contributor account</p>
+    <div className="signup-page relative isolate flex min-h-screen w-full items-center justify-center overflow-hidden px-4 py-12 sm:px-6 lg:px-8">
+      <div aria-hidden="true" className="signup-ambient pointer-events-none absolute inset-0 overflow-hidden">
+        <span className="signup-orb signup-orb-one" />
+        <span className="signup-orb signup-orb-two" />
+        <span className="signup-orb signup-orb-three" />
+        <span className="signup-floating-coin signup-floating-coin-one" />
+        <span className="signup-floating-coin signup-floating-coin-two" />
+        <span className="signup-floating-coin signup-floating-coin-three" />
+        <span className="signup-floating-coin signup-floating-coin-four" />
+        <span className="signup-floating-coin signup-floating-coin-five" />
+      </div>
+      <div className="auth-card-grid auth-card-login relative z-10 w-full max-w-5xl">
+        <aside className="auth-promo auth-promo-login">
+          <div className="auth-promo-glow auth-promo-glow-top" />
+          <div className="auth-promo-glow auth-promo-glow-bottom" />
+          <div className="relative z-10">
+            <div className="auth-promo-brand"><ShieldCheck className="h-4 w-4" /> YOUR NEXGUILD SPACE</div>
+            <div className="auth-login-emblem" aria-hidden="true">
+              <span className="auth-login-emblem-ring"><Sparkles className="h-8 w-8" /></span>
+              <span className="auth-login-emblem-dot auth-login-emblem-dot-one" />
+              <span className="auth-login-emblem-dot auth-login-emblem-dot-two" />
+            </div>
+            <h1 className="auth-promo-title">Good to have you back.</h1>
+            <p className="auth-promo-copy">Pick up where you left off and see what you can accomplish today.</p>
+            <div className="auth-promo-feature">
+              <span className="auth-promo-feature-icon"><CheckCircle2 className="h-4 w-4" /></span>
+              <span>Your next step is waiting</span>
+            </div>
+          </div>
+          <div className="auth-promo-demo auth-login-demo">
+            <div className="auth-demo-heading">
+              <div>
+                <p className="auth-demo-eyebrow">READY WHEN YOU ARE</p>
+                <p className="auth-demo-title">Your dashboard awaits</p>
+              </div>
+              <span className="auth-demo-badge"><ArrowUpRight className="h-4 w-4" /></span>
+            </div>
+            <div className="auth-login-rewards">
+              <span className="auth-login-reward-icon"><Coins className="h-4 w-4" /></span>
+              <span>Tasks</span><i /><span>Surveys</span><i /><span>Rewards</span>
+            </div>
+          </div>
+          <p className="auth-promo-footnote">Welcome back <span>·</span> Let&apos;s make today count</p>
+        </aside>
+
+        <section className="auth-form-panel auth-form-panel-login">
+          <div className="auth-form-heading">
+            <p className="auth-form-eyebrow">YOUR ACCOUNT</p>
+            <h2 className="text-2xl font-bold tracking-tight text-[#0F3D36]">Welcome back</h2>
+            <p className="mt-1.5 text-sm text-stone-600">Sign in to continue to NexGuild.</p>
+          </div>
 
         <form onSubmit={handleSubmit} className="space-y-5">
           {verified && (
@@ -267,6 +307,7 @@ export default function LoginPage() {
             Sign up free
           </Link>
         </p>
+        </section>
       </div>
     </div>
   );

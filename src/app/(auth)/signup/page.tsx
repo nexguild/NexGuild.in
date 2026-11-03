@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Eye, EyeOff } from "lucide-react";
+import { ArrowUpRight, CheckCircle2, Coins, Eye, EyeOff, Sparkles, Zap } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import HCaptcha from "@hcaptcha/react-hcaptcha";
 import { CountrySelect } from "@/components/forms/CountrySelect";
@@ -165,19 +165,64 @@ export default function SignupPage() {
     (captchaMode === "visible" && !captchaToken);
 
   return (
-    <div style={{ background: "#EBFBFA", minHeight: "100vh" }} className="w-full flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div
-        className="w-full max-w-md rounded-2xl p-8 transition-all duration-300 hover:shadow-lg"
-        style={{
-          background: "rgba(255, 255, 255, 0.65)",
-          border: "1.5px solid rgba(13,148,136,0.18)",
-          backdropFilter: "blur(12px)",
-        }}
-      >
-        <h1 className="text-2xl font-bold text-[#0F3D36] mb-1 tracking-tight">Create your account</h1>
-        <p className="text-sm text-stone-600 mb-7">Free to join. Start earning immediately.</p>
+    <div className="signup-page relative isolate flex min-h-screen w-full items-center justify-center overflow-hidden px-4 py-12 sm:px-6 lg:px-8">
+      <div aria-hidden="true" className="signup-ambient pointer-events-none absolute inset-0 overflow-hidden">
+        <span className="signup-orb signup-orb-one" />
+        <span className="signup-orb signup-orb-two" />
+        <span className="signup-orb signup-orb-three" />
+        <span className="signup-floating-coin signup-floating-coin-one" />
+        <span className="signup-floating-coin signup-floating-coin-two" />
+        <span className="signup-floating-coin signup-floating-coin-three" />
+        <span className="signup-floating-coin signup-floating-coin-four" />
+        <span className="signup-floating-coin signup-floating-coin-five" />
+      </div>
+      <div className="auth-card-grid relative z-10 w-full max-w-5xl">
+        <aside className="auth-promo auth-promo-signup">
+          <div className="auth-promo-glow auth-promo-glow-top" />
+          <div className="auth-promo-glow auth-promo-glow-bottom" />
+          <div className="relative z-10">
+            <div className="auth-promo-brand"><Sparkles className="h-4 w-4" /> WELCOME ABOARD</div>
+            <div className="signup-welcome-art auth-promo-welcome-art" aria-hidden="true">
+              <span className="signup-welcome-halo" />
+              <span className="signup-welcome-hand">👋</span>
+              <Sparkles className="signup-welcome-sparkle" />
+              <span className="signup-welcome-confetti signup-welcome-confetti-one" />
+              <span className="signup-welcome-confetti signup-welcome-confetti-two" />
+            </div>
+            <h1 className="auth-promo-title">Make your spare moments count.</h1>
+            <p className="auth-promo-copy">Discover tasks, surveys, and rewards — all in one place.</p>
+            <div className="auth-promo-feature">
+              <span className="auth-promo-feature-icon"><Zap className="h-4 w-4" /></span>
+              <span>Small steps. Real progress.</span>
+            </div>
+          </div>
+          <div className="auth-promo-demo">
+            <div className="auth-demo-heading">
+              <div>
+                <p className="auth-demo-eyebrow">YOUR PROGRESS</p>
+                <p className="auth-demo-title">A great start</p>
+              </div>
+              <span className="auth-demo-badge"><ArrowUpRight className="h-4 w-4" /></span>
+            </div>
+            <div className="auth-demo-task">
+              <span className="auth-demo-check"><CheckCircle2 className="h-4 w-4" /></span>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-semibold text-white">Complete your first task</p>
+                <div className="auth-demo-progress"><span /></div>
+              </div>
+              <span className="auth-demo-reward"><Coins className="h-3.5 w-3.5" /> +120</span>
+            </div>
+          </div>
+          <p className="auth-promo-footnote">Free to join <span>·</span> Your next opportunity starts here</p>
+        </aside>
 
-        {signedUp ? (
+        <section className="auth-form-panel">
+          <div className="auth-form-heading">
+            <p className="auth-form-eyebrow">GET STARTED FOR FREE</p>
+            <h2 className="text-2xl font-bold tracking-tight text-[#0F3D36]">Create your account</h2>
+            <p className="mt-1.5 text-sm text-stone-600">Join NexGuild and find your next opportunity.</p>
+          </div>
+          {signedUp ? (
           /* ── Email-sent success state ─────────────────────────────── */
           <div className="text-center py-4 space-y-5">
             <div className="text-5xl">✅</div>
@@ -223,11 +268,6 @@ export default function SignupPage() {
                   style={{ background: "rgba(255,255,255,0.7)", borderColor: "rgba(13,148,136,0.25)" }}
                   className="w-full h-10 px-3 rounded-lg border text-stone-800 text-sm placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-[#0D9488] focus:border-transparent transition-all"
                 />
-                <p className="text-xs text-stone-400 mt-1.5">
-                  {signupDomainsLoading
-                    ? "Loading allowed email domains..."
-                    : `Allowed domains: ${signupDomains.map((domain) => `@${domain}`).join(", ")}`}
-                </p>
               </div>
 
               {/* Email */}
@@ -241,6 +281,9 @@ export default function SignupPage() {
                   style={{ background: "rgba(255,255,255,0.7)", borderColor: "rgba(13,148,136,0.25)" }}
                   className="w-full h-10 px-3 rounded-lg border text-stone-800 text-sm placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-[#0D9488] focus:border-transparent transition-all"
                 />
+                <p className="text-xs text-stone-500 mt-1.5">
+                  Allowed domains: @gmail.com, @outlook.com, @nexguild.in
+                </p>
               </div>
 
               {/* Password */}
@@ -374,7 +417,8 @@ export default function SignupPage() {
               <Link href="/login" className="text-[#0D9488] font-semibold hover:underline">Log in</Link>
             </p>
           </>
-        )}
+          )}
+        </section>
       </div>
     </div>
   );
