@@ -214,36 +214,47 @@ async function handlePostback(req: NextRequest, slug: string): Promise<Response>
     return new Response("Bad Request", { status: 400 });
   }
 
-  if (slug === "notik" && s1 && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s1)) {
+  const premiumClickId = slug === "notik"
+    ? s1 && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s1) ? s1 : null
+    : slug === "gemiad" && gemiadHash && userId
+      && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userId)
+      ? userId
+      : null;
+
+  if (premiumClickId) {
     const { data: premiumClick, error: premiumClickError } = await admin
       .from("premium_task_clicks")
       .select("click_id, contributor_id, partner_offer_id, advertiser_name, offer_name")
-      .eq("click_id", s1)
-      .eq("partner_slug", "notik")
+      .eq("click_id", premiumClickId)
+      .eq("partner_slug", slug)
       .maybeSingle();
 
     if (premiumClickError) {
-      console.error("[postback/notik] Premium task click lookup failed:", premiumClickError.message);
+      console.error(`[postback/${slug}] Premium task click lookup failed:`, premiumClickError.message);
       await writeLog(admin, slug, safeRawParams, "error", true, premiumClickError.message);
       return new Response("Internal Server Error", { status: 500 });
     }
 
     if (premiumClick) {
-      if (!userId || !offerId || premiumClick.contributor_id !== userId || premiumClick.partner_offer_id !== offerId) {
+      const userMatchesClick = slug === "gemiad"
+        ? userId?.toLowerCase() === premiumClick.click_id.toLowerCase()
+        : premiumClick.contributor_id === userId;
+      if (!userMatchesClick || !offerId || premiumClick.partner_offer_id !== offerId) {
         await writeLog(admin, slug, safeRawParams, "error", true, "Premium task callback did not match the stored click");
         return new Response("Forbidden", { status: 403 });
       }
 
-      const isPremiumReversal = normalizedStatus === "2"
-        || ((amount < 0 || payout < 0) && Boolean(rewardedTxnId || transId));
+      const isPremiumReversal = slug === "gemiad"
+        ? normalizedStatus === "rejected"
+        : normalizedStatus === "2" || ((amount < 0 || payout < 0) && Boolean(rewardedTxnId || transId));
       if (isPremiumReversal) {
         const { data: reversed, error: reversalError } = await admin.rpc("reverse_premium_task_conversion", {
-          p_partner_slug: "notik",
-          p_partner_transaction_id: rewardedTxnId ?? transId,
+          p_partner_slug: slug,
+          p_partner_transaction_id: slug === "notik" ? rewardedTxnId ?? transId : transId,
           p_click_id: premiumClick.click_id,
         });
         if (reversalError) {
-          console.error("[postback/notik] Premium task reversal failed:", reversalError.message);
+          console.error(`[postback/${slug}] Premium task reversal failed:`, reversalError.message);
           await writeLog(admin, slug, safeRawParams, "error", true, reversalError.message);
           return new Response("Internal Server Error", { status: 500 });
         }
@@ -251,13 +262,14 @@ async function handlePostback(req: NextRequest, slug: string): Promise<Response>
         return new Response("OK", { status: 200 });
       }
 
-      if (normalizedStatus !== "1") {
+      const premiumCompletionStatus = slug === "gemiad" ? "completed" : "1";
+      if (normalizedStatus !== premiumCompletionStatus) {
         await writeLog(admin, slug, safeRawParams, "debug_ignored", true);
         return new Response("OK", { status: 200 });
       }
 
       const { data: credited, error: creditError } = await admin.rpc("credit_premium_task_conversion", {
-        p_partner_slug: "notik",
+        p_partner_slug: slug,
         p_partner_transaction_id: transId,
         p_click_id: premiumClick.click_id,
         p_partner_offer_id: offerId,
@@ -265,7 +277,7 @@ async function handlePostback(req: NextRequest, slug: string): Promise<Response>
         p_raw_payload: safeRawParams,
       });
       if (creditError) {
-        console.error("[postback/notik] Premium task credit failed:", creditError.message);
+        console.error(`[postback/${slug}] Premium task credit failed:`, creditError.message);
         await writeLog(admin, slug, safeRawParams, "error", true, creditError.message);
         return new Response("Internal Server Error", { status: 500 });
       }
@@ -278,7 +290,7 @@ async function handlePostback(req: NextRequest, slug: string): Promise<Response>
           type: "bonus_coins",
         });
         if (notificationError) {
-          console.warn("[postback/notik] Premium task notification insert failed:", notificationError.message);
+          console.warn(`[postback/${slug}] Premium task notification insert failed:`, notificationError.message);
         }
       }
 

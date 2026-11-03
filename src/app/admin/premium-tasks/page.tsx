@@ -254,12 +254,12 @@ export default function AdminPremiumTasksPage() {
             </div>
             <p className="mt-2 break-all rounded-lg bg-[var(--surface-subtle)] p-2 font-mono text-[10px] leading-5 text-[var(--text-secondary)]">
               {partner === "gemiad"
-                ? "https://nexguild.in/api/premium-tasks/postback/gemiad?userId={USER_ID}&offerId={OFFER_ID}&eventId={EVENT_ID}&txid={TXID}&status={STATUS}&hash={HASH}"
+                ? "https://www.nexguild.in/api/offerwall/postback/gemiad?userId={USER_ID}&offerId={OFFER_ID}&offerName={OFFER_NAME}&eventId={EVENT_ID}&eventName={EVENT_NAME}&payout={PAYOUT}&reward={REWARD}&txid={TXID}&status={STATUS}&ip={IPADDR}&sub1={SUB1}&sub2={SUB2}&hash={HASH}"
                 : "https://www.nexguild.in/api/offerwall/postback/notik"}
             </p>
             <p className="mt-2 text-xs leading-5 text-[var(--text-muted)]">
               {partner === "gemiad"
-                ? "Add this callback in the partner dashboard and store its callback secret in Admin → Offerwalls. GemiAd uses its documented SHA-256 signature."
+                ? "Use this as the GemiAd placement Server Postback URL. It preserves regular offerwall callbacks and routes tracked Premium Task clicks after signature verification. Keep the GemiAd secret configured in Admin → Offerwalls."
                 : "Keep the existing Notik App Details callback URL unchanged. It is shared with the offerwall; signed callbacks with a tracked Premium Task click ID in s1 are routed to this task. Keep the Notik callback secret configured in Admin → Offerwalls."}
             </p>
           </div>
