@@ -78,11 +78,23 @@ function isLive(p: Provider) {
     && !!p.postback_secret?.trim()
     && typeof p.custom_config?.offerwall_id === "string"
     && /^[a-zA-Z0-9_-]{8,100}$/.test(p.custom_config.offerwall_id);
-  return (hasNotikConfig || (p.slug !== "notik" && (hasCredentials || hasEmbedUrl)) || hasTapRainWall) && p.is_active;
+  const hasAdBlueMediaConfig = p.slug === "adbluemedia"
+    && p.integration_type === "api"
+    && !p.is_ad_network
+    && hasCredentials
+    && !!p.postback_secret?.trim()
+    && /^\d{1,20}$/.test(String(p.custom_config?.publisher_id ?? ""));
+  return (hasNotikConfig
+    || (p.slug !== "notik" && p.slug !== "adbluemedia" && (hasCredentials || hasEmbedUrl))
+    || hasTapRainWall
+    || hasAdBlueMediaConfig) && p.is_active;
 }
 
 function PostbackUrlCell({ slug }: { slug: string }) {
-  const url = `https://nexguild.in/api/offerwall/postback/${slug}`;
+  const baseUrl = `https://nexguild.in/api/offerwall/postback/${slug}`;
+  const url = slug === "adbluemedia"
+    ? `${baseUrl}?secret=YOUR_SECRET&s1={s1}&trans_id={lead_id}&amount={payout}&status={status}&offer_id={offer_id}`
+    : baseUrl;
   const [copied, setCopied] = useState(false);
   function copy() {
     navigator.clipboard.writeText(url).then(() => { setCopied(true); setTimeout(() => setCopied(false), 2000); });
@@ -166,6 +178,19 @@ export default function AdminOfferwallsPage() {
       setProviders(p);
     }
     setLoading(false);
+  }
+
+  function startPartnerOffersSetup() {
+    setAddForm({
+      name: "Partner Offers",
+      slug: "adbluemedia",
+      is_ad_network: false,
+      integration_type: "api",
+      contributor_share_pct: "66",
+      description: "Browse partner offers and earn NexCoins after confirmed completions.",
+    });
+    setAddError(null);
+    setShowAdd(true);
   }
 
   function openConfigure(p: Provider) {
@@ -327,6 +352,7 @@ export default function AdminOfferwallsPage() {
 
   const taskOfferwalls = providers.filter((p) => !p.is_ad_network);
   const adNetworks     = providers.filter((p) => p.is_ad_network);
+  const hasPartnerOffers = providers.some((p) => p.slug === "adbluemedia");
 
   function ProviderTable({ rows, title }: { rows: Provider[]; title: string }) {
     return (
@@ -406,9 +432,16 @@ export default function AdminOfferwallsPage() {
             Configure offerwall integrations. Setting an API key makes a provider Live — no code changes needed for most providers.
           </p>
         </div>
-        <Button onClick={() => { setShowAdd(true); setAddError(null); }}>
-          <Plus className="h-4 w-4" /> Add Provider
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          {!hasPartnerOffers && (
+            <Button variant="secondary" onClick={startPartnerOffersSetup}>
+              <Link2 className="h-4 w-4" /> Set up Partner Offers
+            </Button>
+          )}
+          <Button onClick={() => { setAddForm({ name: "", slug: "", is_ad_network: false, integration_type: "iframe", contributor_share_pct: "66", description: "" }); setShowAdd(true); setAddError(null); }}>
+            <Plus className="h-4 w-4" /> Add Provider
+          </Button>
+        </div>
       </div>
 
       <ProviderTable rows={taskOfferwalls} title="Task Offerwalls" />
@@ -514,11 +547,23 @@ export default function AdminOfferwallsPage() {
                   placeholder={'{\n  "user_id": "uid",\n  "trans_id": "transaction_id",\n  "amount": "reward"\n}'}
                   className="w-full px-3 py-2 rounded-md border border-[var(--border-strong)] bg-[var(--surface-subtle)] text-xs text-[var(--text-primary)] font-mono focus:outline-none focus:ring-2 focus:ring-[var(--border-focus)] resize-none placeholder:font-sans placeholder:text-[var(--text-muted)]" />
                 <p className="text-xs text-[var(--text-muted)] mt-1">Maps internal field names → provider&apos;s actual param names.</p>
+                {configuring.slug === "adbluemedia" && (
+                  <p className="mt-1 text-xs text-[var(--text-muted)]">
+                    For AdBlueMedia, set: <code>{`{"user_id":"s1","trans_id":"lead_id","amount":"payout"}`}</code>
+                  </p>
+                )}
               </div>
 
               {/* Custom Config */}
               <div>
                 <label className="block text-sm font-medium text-[var(--text-primary)] mb-1.5">Custom Config <span className="text-[var(--text-muted)] font-normal text-xs">JSON — script_tag providers</span></label>
+                {configuring.slug === "adbluemedia" && (
+                  <p className="mb-2 rounded-md border border-amber-500/30 bg-amber-500/10 p-3 text-xs leading-relaxed text-[var(--text-secondary)]">
+                    Add AdBlueMedia as a regular offerwall (not an Ad Network) with integration type API / Server-side. Set this JSON to <code>{`{"publisher_id":"YOUR_NUMERIC_ID","currency_conversion_rate":1000}`}</code>, replacing the publisher ID with the numeric ID from AdBlueMedia&apos;s feed URL. Use its Offers API key above. Set a cryptographically random 64-character hexadecimal value in the Postback Secret field, then configure AdBlueMedia&apos;s Postback URL as:{" "}
+                    <code>https://nexguild.in/api/offerwall/postback/adbluemedia?secret=YOUR_SECRET&amp;s1={"{s1}"}&amp;trans_id={"{lead_id}"}&amp;amount={"{payout}"}&amp;status={"{status}"}&amp;offer_id={"{offer_id}"}</code>
+                    {" "}Replace <code>YOUR_SECRET</code> with the saved Postback Secret. Status 0 reverses a prior lead; status 1 credits it. The default reward is based on 1,000 NexCoins per USD and the provider&apos;s 66% contributor share.
+                  </p>
+                )}
                 <textarea rows={5} value={form.custom_config}
                   onChange={(e) => setForm((f) => ({ ...f, custom_config: e.target.value }))}
                   placeholder={'{\n  "script_url": "https://cdn.provider.com/widget.js",\n  "widget_configs": []\n}'}

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  LayoutDashboard, Search, ClipboardList, Banknote, Sparkles, MoreHorizontal,
+  LayoutDashboard, Search, ClipboardList, Banknote, Sparkles, MoreHorizontal, Coins,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -13,6 +13,7 @@ const TABS = [
   { label: "My Work",       href: "/dashboard/tasks",          icon: ClipboardList },
   { label: "Cashout",       href: "/dashboard/store",           icon: Banknote },
   { label: "Paid Surveys", href: "/dashboard/surveys",         icon: Sparkles },
+  { label: "Offers",       href: "/dashboard/offerwalls/adbluemedia", icon: Coins },
   { label: "More",          href: "/dashboard/profile",        icon: MoreHorizontal },
 ];
 
@@ -35,12 +36,12 @@ export function DashboardMobileNav() {
               key={tab.href}
               href={tab.href}
               className={cn(
-                "flex flex-col items-center gap-1 flex-1 py-2 rounded-md transition-colors",
+                "flex min-w-0 flex-col items-center gap-1 flex-1 py-2 rounded-md transition-colors",
                 active ? "text-[var(--brand-500)]" : "text-[var(--text-muted)]"
               )}
             >
               <Icon className={cn("h-5 w-5", active ? "fill-current" : "")} strokeWidth={active ? 2.5 : 1.5} />
-              <span className="text-xs font-medium">{tab.label}</span>
+              <span className="max-w-full truncate text-[10px] font-medium sm:text-xs">{tab.label}</span>
             </Link>
           );
         })}

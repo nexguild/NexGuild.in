@@ -40,6 +40,12 @@ export async function GET(req: NextRequest) {
       ? !!p.postback_secret?.trim()
         && typeof p.custom_config?.offerwall_id === "string"
         && /^[a-zA-Z0-9_-]{8,100}$/.test(p.custom_config.offerwall_id)
+      : p.slug === "adbluemedia"
+      ? p.integration_type === "api"
+        && !p.is_ad_network
+        && !!p.api_key?.trim()
+        && !!p.postback_secret?.trim()
+        && /^\d{1,20}$/.test(String(p.custom_config?.publisher_id ?? ""))
       : p.slug === "notik"
       ? !!p.api_key?.trim()
         && !!p.postback_secret?.trim()

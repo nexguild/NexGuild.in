@@ -151,6 +151,7 @@ async function handlePostback(req: NextRequest, slug: string): Promise<Response>
     : amount;
   const normalizedStatus = status?.trim().toLowerCase() ?? "";
   const isReversalStatus = normalizedStatus === "2"
+    || (slug === "adbluemedia" && normalizedStatus === "0")
     || (gemiadHash && normalizedStatus === "rejected")
     || (slug === "clixwall" && ["reversal", "reversed", "chargeback"].includes(normalizedStatus));
 
@@ -278,16 +279,20 @@ async function handlePostback(req: NextRequest, slug: string): Promise<Response>
     ? 1
     : slug === "taprain"
     ? tapRainPayoutMultiplier
+    : slug === "adbluemedia"
+    ? Number(customCfg.currency_conversion_rate ?? 1000)
     : Number(customCfg.payout_multiplier ?? 1) || 1;
   const rateIsUserShare = slug === "clixwall" || gemiadHash || customCfg.rate_is_user_share === true;
-  const contributorShare = slug === "taprain"
+  const contributorShare = slug === "taprain" || slug === "adbluemedia"
     ? Number(provider.contributor_share_pct ?? 66) / 100
     : 0.66;
-  if (slug === "taprain" && (!Number.isFinite(contributorShare) || contributorShare < 0 || contributorShare > 1)) {
-    await writeLog(admin, slug, safeRawParams, "error", true, "Invalid TapRain contributor share");
+  if ((slug === "taprain" || slug === "adbluemedia")
+    && (!Number.isFinite(contributorShare) || contributorShare < 0 || contributorShare > 1
+      || (slug === "adbluemedia" && (!Number.isFinite(payoutMult) || payoutMult <= 0 || payoutMult > 1_000_000)))) {
+    await writeLog(admin, slug, safeRawParams, "error", true, "Invalid offerwall reward configuration");
     return new Response("Internal Server Error", { status: 500 });
   }
-  const calculatedUserCoins = slug === "taprain"
+  const calculatedUserCoins = slug === "taprain" || slug === "adbluemedia"
     ? creditedAmount * payoutMult * contributorShare
     : rateIsUserShare
     ? creditedAmount * payoutMult
