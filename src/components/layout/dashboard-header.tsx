@@ -125,7 +125,12 @@ const NAV_CATEGORIES = [
 ];
 
 function isNavItemActive(pathname: string, href: string) {
-  return href === "/dashboard" ? pathname === href : pathname.startsWith(href);
+  if (href === "/dashboard") return pathname === href;
+  if (href === "/dashboard/offerwalls") {
+    return pathname === href
+      || (pathname.startsWith(`${href}/`) && !pathname.startsWith(`${href}/adbluemedia`));
+  }
+  return pathname === href || pathname.startsWith(`${href}/`);
 }
 
 function DashboardCategoryNav({

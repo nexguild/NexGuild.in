@@ -207,6 +207,11 @@ async function handlePostback(req: NextRequest, slug: string): Promise<Response>
     }
   }
 
+  if (slug === "adbluemedia" && s1?.toLowerCase() === "s1test" && transId === "123" && normalizedStatus === "1") {
+    await writeLog(admin, slug, safeRawParams, "debug_ignored", false, "AdBlueMedia test callback acknowledged; no credit issued");
+    return new Response("OK", { status: 200 });
+  }
+
   // 4. Validate required fields
   if (!contributorId || !transId) {
     console.warn(`[postback/${slug}] missing contributor ID or trans_id`, { userId, s1, transId });
