@@ -37,13 +37,6 @@ interface TapRainOffersResponse {
   offers: TapRainOffer[];
 }
 
-interface AdBlueMediaOffer {
-  id: string;
-  name: string;
-  description: string | null;
-  entryUrl: string;
-}
-
 export default function ProviderExperiencePage({
   params,
 }: {
@@ -74,9 +67,6 @@ export default function ProviderExperiencePage({
   const [tapRainTitle, setTapRainTitle] = useState("TapRain offers");
   const [tapRainLoading, setTapRainLoading] = useState(false);
   const [tapRainError, setTapRainError] = useState<string | null>(null);
-  const [adBlueMediaOffers, setAdBlueMediaOffers] = useState<AdBlueMediaOffer[]>([]);
-  const [adBlueMediaLoading, setAdBlueMediaLoading] = useState(false);
-  const [adBlueMediaError, setAdBlueMediaError] = useState<string | null>(null);
   const [cpxFrameUrl, setCpxFrameUrl] = useState<string | null>(null);
   const [cpxFrameError, setCpxFrameError] = useState<string | null>(null);
 
@@ -96,6 +86,11 @@ export default function ProviderExperiencePage({
 
   useEffect(() => {
     async function init() {
+      if (providerSlug === "adbluemedia") {
+        router.replace("/dashboard/offerwalls");
+        return;
+      }
+
       const [{ data: { user } }, { data: { session } }] = await Promise.all([
         supabase.auth.getUser(),
         supabase.auth.getSession(),
@@ -222,33 +217,6 @@ export default function ProviderExperiencePage({
     return () => controller.abort();
   }, [provider?.slug, token]);
 
-  useEffect(() => {
-    if (provider?.slug !== "adbluemedia" || !token) return;
-    const controller = new AbortController();
-    setAdBlueMediaLoading(true);
-    setAdBlueMediaError(null);
-    fetch("/api/offerwall/adbluemedia/offers", {
-      headers: { Authorization: `Bearer ${token}` },
-      cache: "no-store",
-      signal: controller.signal,
-    })
-      .then(async (response) => {
-        const data = await response.json() as { offers?: AdBlueMediaOffer[]; error?: string };
-        if (!response.ok) throw new Error(data.error ?? "Unable to load partner offers");
-        if (!Array.isArray(data.offers)) throw new Error("The partner returned an invalid offer list");
-        setAdBlueMediaOffers(data.offers);
-      })
-      .catch((error: unknown) => {
-        if (controller.signal.aborted) return;
-        console.error("[offerwall/adbluemedia] Offer feed request failed:", error);
-        setAdBlueMediaError(error instanceof Error ? error.message : "Unable to load partner offers");
-      })
-      .finally(() => {
-        if (!controller.signal.aborted) setAdBlueMediaLoading(false);
-      });
-    return () => controller.abort();
-  }, [provider?.slug, token]);
-
   // script_tag providers: inject widget script after mount.
   // Exception: CPAGrip uses document.write which is blocked in async scripts —
   // instead we build a srcdoc HTML string and render it inside an <iframe>.
@@ -288,6 +256,8 @@ export default function ProviderExperiencePage({
     if (!provider?.embed_url_template || !userId) return null;
     return provider.embed_url_template.replace(/\{user_id\}/g, userId);
   }
+
+  if (providerSlug === "adbluemedia") return null;
 
   if (loading) {
     return (
@@ -359,7 +329,7 @@ export default function ProviderExperiencePage({
 
       {/* Widget — fills remaining height */}
       <div className="flex min-h-0 flex-1 flex-col">
-        {renderWidget(provider, trIframeUrl, trIframeLoading, embedUrl, cpagripFrameUrl, notikFrameUrl, clixwallFrameUrl, clixwallFrameError, tapRainOffers, tapRainTitle, tapRainLoading, tapRainError, adBlueMediaOffers, adBlueMediaLoading, adBlueMediaError, cpxFrameUrl, cpxFrameError, token)}
+        {renderWidget(provider, trIframeUrl, trIframeLoading, embedUrl, cpagripFrameUrl, notikFrameUrl, clixwallFrameUrl, clixwallFrameError, tapRainOffers, tapRainTitle, tapRainLoading, tapRainError, cpxFrameUrl, cpxFrameError, token)}
       </div>
     </div>
   );
@@ -378,9 +348,6 @@ function renderWidget(
   tapRainTitle: string,
   tapRainLoading: boolean,
   tapRainError: string | null,
-  adBlueMediaOffers: AdBlueMediaOffer[],
-  adBlueMediaLoading: boolean,
-  adBlueMediaError: string | null,
   cpxFrameUrl: string | null,
   cpxFrameError: string | null,
   token: string | null,
@@ -523,57 +490,6 @@ function renderWidget(
             </div>
           ) : (
             <p className="rounded-xl border border-dashed border-slate-300 bg-white px-4 py-8 text-center text-sm text-slate-500">No matching TapRain offers are available right now.</p>
-          )}
-        </div>
-      </div>
-    );
-  }
-
-  if (provider.slug === "adbluemedia") {
-    if (adBlueMediaLoading) {
-      return <div className="flex-1 flex items-center justify-center"><Loader2 className="h-6 w-6 animate-spin text-indigo-500" /></div>;
-    }
-    if (adBlueMediaError) {
-      return (
-        <div role="alert" className="flex-1 flex flex-col items-center justify-center gap-3 p-6 text-center">
-          <p className="font-semibold text-slate-800">Partner offers are unavailable</p>
-          <p className="max-w-md text-sm text-slate-500">{adBlueMediaError}</p>
-          <button type="button" onClick={() => window.location.reload()} className="inline-flex min-h-9 items-center gap-2 rounded-lg bg-indigo-600 px-3 text-xs font-bold text-white hover:bg-indigo-700">
-            <RefreshCw className="h-3.5 w-3.5" /> Try again
-          </button>
-        </div>
-      );
-    }
-    return (
-      <div className="min-h-0 flex-1 overflow-y-auto bg-slate-50 p-3 sm:p-6">
-        <div className="mx-auto max-w-6xl">
-          <div className="mb-3 flex items-end justify-between gap-3 sm:mb-5">
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-indigo-600 sm:text-xs">Personalized offers</p>
-              <h1 className="mt-1 text-lg font-black text-slate-900 sm:text-2xl">Partner Offers</h1>
-              <p className="mt-1 text-xs text-slate-500 sm:text-sm">Rewards are credited after the partner confirms a completion.</p>
-            </div>
-            <span className="shrink-0 rounded-full bg-white px-2.5 py-1 text-[10px] font-semibold text-slate-500 shadow-sm sm:text-xs">{adBlueMediaOffers.length} offers</span>
-          </div>
-          {adBlueMediaOffers.length ? (
-            <div className="grid gap-2.5 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
-              {adBlueMediaOffers.map((offer) => (
-                <article key={offer.id} className="flex min-w-0 flex-col rounded-xl border border-slate-200 bg-white p-3 shadow-sm sm:rounded-2xl sm:p-4">
-                  <div className="flex items-start gap-3">
-                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-100 to-teal-100 text-sm font-black text-indigo-700">{offer.name.slice(0, 1)}</span>
-                    <div className="min-w-0">
-                      <h2 className="line-clamp-2 text-sm font-extrabold leading-snug text-slate-900">{offer.name}</h2>
-                      {offer.description && <p className="mt-1 line-clamp-3 text-xs leading-relaxed text-slate-500">{offer.description}</p>}
-                    </div>
-                  </div>
-                  <a href={offer.entryUrl} target="_blank" rel="noopener noreferrer" className="mt-4 inline-flex min-h-10 items-center justify-center gap-1.5 rounded-lg bg-indigo-600 px-3 text-xs font-extrabold text-white hover:bg-indigo-700">
-                    View offer <ExternalLink className="h-3.5 w-3.5" />
-                  </a>
-                </article>
-              ))}
-            </div>
-          ) : (
-            <p className="rounded-xl border border-dashed border-slate-300 bg-white px-4 py-8 text-center text-sm text-slate-500">No matching partner offers are available right now.</p>
           )}
         </div>
       </div>

@@ -31,7 +31,6 @@ const PAGE_TITLES: Record<string, string> = {
   "/dashboard/surveys":       "Paid Surveys",
   "/dashboard/tasks":         "My Work",
   "/dashboard/offerwalls":    "Apps & Offers",
-  "/dashboard/offerwalls/adbluemedia": "Partner Offers",
   "/dashboard/earnings":      "Earnings",
   "/dashboard/wallet":        "Coin Balance",
   "/dashboard/store":         "Cashout & Rewards",
@@ -88,7 +87,6 @@ const NAV_CATEGORIES = [
       { label: "Paid Tasks", href: "/dashboard/opportunities" },
       { label: "Paid Surveys", href: "/dashboard/surveys" },
       { label: "Apps & Offers", href: "/dashboard/offerwalls" },
-      { label: "Partner Offers", href: "/dashboard/offerwalls/adbluemedia" },
       { label: "My Work", href: "/dashboard/tasks" },
     ],
   },
@@ -125,12 +123,9 @@ const NAV_CATEGORIES = [
 ];
 
 function isNavItemActive(pathname: string, href: string) {
-  if (href === "/dashboard") return pathname === href;
-  if (href === "/dashboard/offerwalls") {
-    return pathname === href
-      || (pathname.startsWith(`${href}/`) && !pathname.startsWith(`${href}/adbluemedia`));
-  }
-  return pathname === href || pathname.startsWith(`${href}/`);
+  return href === "/dashboard"
+    ? pathname === href
+    : pathname === href || pathname.startsWith(`${href}/`);
 }
 
 function DashboardCategoryNav({

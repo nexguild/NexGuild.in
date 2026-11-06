@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { createHmac } from "crypto";
+import { createHmac, timingSafeEqual } from "crypto";
 import { createClient } from "@supabase/supabase-js";
 import { createServerClient } from "@/lib/supabase-server";
 import { isValidNexcoinAmount, normalizeNexcoins } from "@/lib/nexcoins";
@@ -18,11 +18,16 @@ function computeHash(secret: string, urlStr: string): string {
 
 function verifyUrlHash(req: NextRequest, incomingHash: string): boolean {
   const secret = process.env.THEOREMREACH_SECRET_KEY;
-  if (!secret) return true; // not configured — skip in dev
+  if (!secret) {
+    console.error("[postback/theoremreach] THEOREMREACH_SECRET_KEY is not configured");
+    return false;
+  }
 
   const url = new URL(req.url);
   url.searchParams.delete("hash");
-  return computeHash(secret, url.toString()) === incomingHash;
+  const expected = Buffer.from(computeHash(secret, url.toString()));
+  const received = Buffer.from(incomingHash);
+  return expected.length === received.length && timingSafeEqual(expected, received);
 }
 
 async function logPostback(
@@ -133,9 +138,9 @@ async function handlePostback(req: NextRequest): Promise<Response> {
   if (hash) {
     hashValid = verifyUrlHash(req, hash);
     if (!hashValid) {
-      console.warn("[postback/theoremreach] hash validation failed", rawParams);
-      await logPostback(rawParams, false, "hash_invalid");
-      return new Response("OK", { status: 200 });
+      console.warn("[postback/theoremreach] hash validation failed");
+      await logPostback(rawParams, false, "hash_invalid", "TheoremReach signature did not match");
+      return new Response("Forbidden", { status: 403 });
     }
   }
 
@@ -144,7 +149,9 @@ async function handlePostback(req: NextRequest): Promise<Response> {
   const txId       = resolveField(rawParams, "tx_id", "trans_id", "transaction_id", "tid", "offer_transaction_id");
   const rewardStr  = resolveField(rawParams, "reward", "payout", "amount", "coins");
   const reward     = Number(rewardStr || "0");
-  const isReversal = rawParams.reversal === "true" || rawParams.reversal === "1";
+  const isReversal = rawParams.reversal === "true"
+    || rawParams.reversal === "1"
+    || rawParams.status?.trim() === "2";
   const screenout  = rawParams.screenout === "1";
 
   if (!userId || !txId) {

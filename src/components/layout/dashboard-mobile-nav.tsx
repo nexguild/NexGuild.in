@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  LayoutDashboard, Search, ClipboardList, Banknote, Sparkles, MoreHorizontal, Coins,
+  LayoutDashboard, Search, ClipboardList, Banknote, Sparkles, MoreHorizontal,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -13,7 +13,6 @@ const TABS = [
   { label: "My Work",       href: "/dashboard/tasks",          icon: ClipboardList },
   { label: "Cashout",       href: "/dashboard/store",           icon: Banknote },
   { label: "Paid Surveys", href: "/dashboard/surveys",         icon: Sparkles },
-  { label: "Offers",       href: "/dashboard/offerwalls/adbluemedia", icon: Coins },
   { label: "More",          href: "/dashboard/profile",        icon: MoreHorizontal },
 ];
 

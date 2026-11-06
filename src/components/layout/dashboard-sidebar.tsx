@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import {
   LayoutDashboard, Search, ClipboardList,
   TrendingUp, ShoppingBag, Gift, Users, Megaphone, Headphones, Sparkles,
-  User, Settings, LogOut, X, Wallet, Banknote, Coins,
+  User, Settings, LogOut, X, Wallet, Banknote,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { NexGuildLogo } from "@/components/ui/nexguild-logo";
@@ -28,7 +28,6 @@ const NAV_GROUPS = [
     items: [
       { label: "Paid Tasks", href: "/dashboard/opportunities", icon: Search },
       { label: "Paid Surveys", href: "/dashboard/surveys", icon: Sparkles },
-      { label: "Partner Offers", href: "/dashboard/offerwalls/adbluemedia", icon: Coins },
     ],
   },
   {
@@ -66,11 +65,7 @@ export function DashboardSidebar({ open, onClose }: DashboardSidebarProps) {
 
   function isActive(href: string) {
     if (href === "/dashboard") return pathname === "/dashboard";
-    if (href === "/dashboard/offerwalls") {
-      return pathname === href
-        || (pathname.startsWith(`${href}/`) && !pathname.startsWith(`${href}/adbluemedia`));
-    }
-    return pathname.startsWith(href);
+    return pathname === href || pathname.startsWith(`${href}/`);
   }
 
   function NavItem({ href, icon: Icon, label }: { href: string; icon: typeof LayoutDashboard; label: string }) {
