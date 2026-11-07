@@ -39,6 +39,7 @@ interface Offer {
   terms: string | null;
   confirmationTime: string | null;
   imageUrl: string | null;
+  activityType?: "game" | "app" | null;
   sourceName: string;
   providerName: string | null;
   kind: "diy" | "network";
@@ -103,10 +104,12 @@ function getHttpsUrl(value: unknown, providerDomain: string): URL | null {
   }
 }
 
-function getAnyHttpsUrl(value: unknown): URL | null {
+function getAnyHttpsUrl(value: unknown, upgradeHttp = false): URL | null {
   if (typeof value !== "string") return null;
   try {
-    const url = new URL(value);
+    const rawUrl = value.trim();
+    const url = new URL(upgradeHttp && rawUrl.startsWith("//") ? `https:${rawUrl}` : rawUrl);
+    if (upgradeHttp && url.protocol === "http:") url.protocol = "https:";
     return url.protocol === "https:" ? url : null;
   } catch {
     return null;
@@ -116,6 +119,15 @@ function getAnyHttpsUrl(value: unknown): URL | null {
 function toPositiveNumber(value: unknown): number | null {
   const number = typeof value === "number" ? value : Number(value);
   return Number.isFinite(number) && number > 0 ? number : null;
+}
+
+function getNotikActivityType(categories: unknown[]): "game" | "app" | null {
+  const normalizedCategories = categories.flatMap((category) =>
+    typeof category === "string" ? [category.trim().toLowerCase()] : [],
+  );
+  if (normalizedCategories.some((category) => /^(game|games|gaming)$/.test(category))) return "game";
+  if (normalizedCategories.some((category) => /^(app|apps|application|applications|software)$/.test(category))) return "app";
+  return null;
 }
 
 function cleanOfferText(value: string): string {
@@ -425,7 +437,7 @@ async function getTheoremReachOffers(
       createHmac("sha1", secretKey).update(unsignedEntryUrl).digest("base64url"),
     );
 
-    const imageUrl = getAnyHttpsUrl(item.image_url);
+    const imageUrl = getAnyHttpsUrl(item.image_url, true);
     const events = (item.events ?? []).flatMap((event) => {
       const eventPayout = toPositiveNumber(event.payout);
       if (!event.name || !eventPayout) return [];
@@ -564,6 +576,7 @@ async function getNotikOffers(
       terms: typeof item.terms === "string" ? cleanOfferText(item.terms) : null,
       confirmationTime: typeof item.confirmation_time === "string" ? cleanOfferText(item.confirmation_time) : null,
       imageUrl: imageUrl?.toString() ?? null,
+      activityType: getNotikActivityType(categories),
       sourceName: "Notik",
       providerName: "Notik",
       kind: "network",

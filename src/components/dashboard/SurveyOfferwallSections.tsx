@@ -9,6 +9,7 @@ import {
   Clock3,
   ExternalLink,
   Flame,
+  ImageOff,
   Info,
   Layers,
   RefreshCw,
@@ -52,6 +53,7 @@ interface FeaturedOffer {
   name: string;
   description: string | null;
   imageUrl: string | null;
+  activityType?: "game" | "app" | null;
   sourceName: string;
   providerName: string | null;
   kind: "diy" | "network";
@@ -229,16 +231,25 @@ export function SurveyOfferwallSections({ mode }: { mode: "surveys" | "offerwall
             </p>
           )}
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
-            {[featuredOffer, ...otherOffers].map((offer) => (
+            {[featuredOffer, ...otherOffers].map((offer) => {
+              return (
               <article key={offer.id} className="group flex min-w-0 flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm transition duration-200 hover:-translate-y-1 hover:border-teal-300 hover:shadow-xl">
-                <div className="relative flex h-36 w-full items-center justify-center overflow-hidden bg-gradient-to-br from-[#0A1628] via-[#12314A] to-teal-800 text-teal-100 sm:h-40">
+                <div className="relative flex h-32 w-full items-center justify-center overflow-hidden bg-[#0A1628] text-slate-300 sm:h-36">
+                  <div className="flex flex-col items-center gap-2 text-center">
+                    <ImageOff className="h-6 w-6 opacity-70" strokeWidth={1.5} />
+                    <span className="text-[10px] font-medium">
+                      {offer.activityType === "game" ? "Game preview unavailable" : offer.activityType === "app" ? "App preview unavailable" : "Preview unavailable"}
+                    </span>
+                  </div>
+                  {offer.activityType && (
+                    <span className="absolute left-3 top-3 rounded-full border border-white/15 bg-[#071321]/70 px-2.5 py-1 text-[9px] font-bold uppercase tracking-[0.14em] text-white/90 backdrop-blur-sm">
+                      {offer.activityType}
+                    </span>
+                  )}
                   {offer.imageUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={offer.imageUrl} alt="" className="absolute inset-0 h-full w-full object-cover transition duration-300 group-hover:scale-105" loading="lazy" />
-                  ) : (
-                    <Sparkles className="h-8 w-8 opacity-80" />
-                  )}
-                  <div aria-hidden className="absolute inset-0 bg-gradient-to-t from-[#071321]/85 via-[#071321]/10 to-black/20" />
+                    <img src={offer.imageUrl} alt="" onError={(event) => { event.currentTarget.style.display = "none"; }} className="absolute inset-0 h-full w-full object-cover transition duration-300 group-hover:scale-[1.02]" loading="lazy" />
+                  ) : null}
                   <span className="absolute bottom-3 right-3 inline-flex items-center gap-1 rounded-full bg-teal-300 px-3 py-1.5 text-xs font-extrabold text-slate-950 shadow-md">
                     <NexCoinIcon size={13} /> {formatCoins(offer.estimatedRewardCoins)}
                   </span>
@@ -280,7 +291,8 @@ export function SurveyOfferwallSections({ mode }: { mode: "surveys" | "offerwall
                   </div>
                 </div>
               </article>
-            ))}
+            );
+            })}
           </div>
         </>
       ) : (
