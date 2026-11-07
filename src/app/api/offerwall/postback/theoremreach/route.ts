@@ -196,11 +196,6 @@ async function handlePostback(req: NextRequest): Promise<Response> {
     paramKeys: Object.keys(rawParams).join(","),
   });
 
-  if (screenout && !isReversal) {
-    await logPostback(rawParams, hashValid, "debug_ignored", "Screenout callback; no reward credited");
-    return new Response("OK", { status: 200 });
-  }
-
   // ─── Reversal ─────────────────────────────────────────────────────────────
   if (isReversal) {
     const { data: provider, error: providerError } = await admin
