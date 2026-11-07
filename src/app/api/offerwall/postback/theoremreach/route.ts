@@ -16,16 +16,33 @@ function computeHash(secret: string, urlStr: string): string {
   return raw.replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "");
 }
 
-function verifyUrlHash(req: NextRequest, incomingHash: string): boolean {
+function getSigningUrl(req: NextRequest): string {
+  const rawUrl = req.url;
+  const queryStart = rawUrl.indexOf("?");
+  if (queryStart < 0) return rawUrl;
+
+  const rawQuery = rawUrl.slice(queryStart + 1).split("#", 1)[0];
+  const signedParams = rawQuery.split("&").filter((parameter) => {
+    const rawName = parameter.split("=", 1)[0].replace(/\+/g, " ");
+    try {
+      return decodeURIComponent(rawName).toLowerCase() !== "hash";
+    } catch {
+      return true;
+    }
+  });
+  const path = rawUrl.slice(0, queryStart);
+  return signedParams.length ? `${path}?${signedParams.join("&")}` : path;
+}
+
+function verifyUrlHash(req: NextRequest, incomingHash: string, rawBody: string): boolean {
   const secret = process.env.THEOREMREACH_SECRET_KEY;
   if (!secret) {
     console.error("[postback/theoremreach] THEOREMREACH_SECRET_KEY is not configured");
     return false;
   }
 
-  const url = new URL(req.url);
-  url.searchParams.delete("hash");
-  const expected = Buffer.from(computeHash(secret, url.toString()));
+  const signingString = getSigningUrl(req) + (req.method === "POST" ? rawBody : "");
+  const expected = Buffer.from(computeHash(secret, signingString));
   const received = Buffer.from(incomingHash);
   return expected.length === received.length && timingSafeEqual(expected, received);
 }
@@ -53,9 +70,10 @@ async function logPostback(
  * TheoremReach survey completions use GET/URL-params;
  * offer/offerwall completions often use POST with a JSON or form-encoded body.
  */
-async function extractParams(req: NextRequest): Promise<Record<string, string>> {
+async function extractParams(req: NextRequest): Promise<{ params: Record<string, string>; rawBody: string }> {
   const url    = new URL(req.url);
   const merged: Record<string, string> = Object.fromEntries(url.searchParams.entries());
+  let rawBody = "";
 
   // If this is a POST and the URL has no params (or is missing critical fields),
   // also try to parse the body so offer postbacks aren't silently dropped.
@@ -63,9 +81,10 @@ async function extractParams(req: NextRequest): Promise<Record<string, string>> 
     try {
       const contentType = req.headers.get("content-type") ?? "";
       let bodyParams: Record<string, string> = {};
+      rawBody = await req.text();
 
       if (contentType.includes("application/json")) {
-        const body = await req.json() as Record<string, unknown>;
+        const body = JSON.parse(rawBody) as Record<string, unknown>;
         if (body && typeof body === "object") {
           bodyParams = Object.fromEntries(
             Object.entries(body).map(([k, v]) => [k, String(v)])
@@ -73,14 +92,13 @@ async function extractParams(req: NextRequest): Promise<Record<string, string>> 
         }
       } else {
         // form-encoded or plain text — try URLSearchParams
-        const text = await req.text();
-        if (text.trim()) {
+        if (rawBody.trim()) {
           try {
-            bodyParams = Object.fromEntries(new URLSearchParams(text).entries());
+            bodyParams = Object.fromEntries(new URLSearchParams(rawBody).entries());
           } catch {
             // last resort: try JSON in text/plain
             try {
-              const parsed = JSON.parse(text) as Record<string, unknown>;
+              const parsed = JSON.parse(rawBody) as Record<string, unknown>;
               if (parsed && typeof parsed === "object") {
                 bodyParams = Object.fromEntries(
                   Object.entries(parsed).map(([k, v]) => [k, String(v)])
@@ -98,7 +116,7 @@ async function extractParams(req: NextRequest): Promise<Record<string, string>> 
     }
   }
 
-  return merged;
+  return { params: merged, rawBody };
 }
 
 /**
@@ -113,7 +131,7 @@ function resolveField(params: Record<string, string>, ...keys: string[]): string
 }
 
 async function handlePostback(req: NextRequest): Promise<Response> {
-  const rawParams = await extractParams(req);
+  const { params: rawParams, rawBody } = await extractParams(req);
 
   // Completely empty — log a minimal entry so we at least have a trace
   if (Object.keys(rawParams).length === 0) {
@@ -131,18 +149,22 @@ async function handlePostback(req: NextRequest): Promise<Response> {
     return new Response("OK", { status: 200 });
   }
 
-  // Hash verification — only for URL-based hashes (survey postbacks).
-  // Offer postbacks via POST body typically don't include a URL hash.
-  const hash      = rawParams.hash ?? "";
+  // TheoremReach requires the hash in the URL query. POST signatures also cover
+  // the exact raw request body.
+  const hash      = new URL(req.url).searchParams.get("hash") ?? "";
   let   hashValid: boolean | null = null;
-  if (hash) {
-    hashValid = verifyUrlHash(req, hash);
-    if (!hashValid) {
-      console.warn("[postback/theoremreach] hash validation failed");
-      await logPostback(rawParams, false, "hash_invalid", "TheoremReach signature did not match");
-      return new Response("Forbidden", { status: 403 });
-    }
+  if (!hash || !verifyUrlHash(req, hash, rawBody)) {
+    console.warn("[postback/theoremreach] hash validation failed");
+    const signingInput = req.method === "POST" ? "request URL plus raw POST body" : "request URL";
+    await logPostback(
+      rawParams,
+      false,
+      "hash_invalid",
+      hash ? `TheoremReach signature did not match (${signingInput})` : "Missing TheoremReach signature",
+    );
+    return new Response("Forbidden", { status: 403 });
   }
+  hashValid = true;
 
   // Resolve field names — TheoremReach uses different names for surveys vs offers
   const userId     = resolveField(rawParams, "user_id", "uid", "publisher_user_id");
@@ -151,8 +173,8 @@ async function handlePostback(req: NextRequest): Promise<Response> {
   const reward     = Number(rewardStr || "0");
   const isReversal = rawParams.reversal === "true"
     || rawParams.reversal === "1"
-    || rawParams.status?.trim() === "2";
-  const screenout  = rawParams.screenout === "1";
+    || reward < 0;
+  const screenout  = rawParams.screenout === "1" || rawParams.screenout === "true";
 
   if (!userId || !txId) {
     console.warn("[postback/theoremreach] missing user_id/tx_id — params:", JSON.stringify(rawParams));
@@ -166,6 +188,11 @@ async function handlePostback(req: NextRequest): Promise<Response> {
     method: req.method,
     paramKeys: Object.keys(rawParams).join(","),
   });
+
+  if (screenout && !isReversal) {
+    await logPostback(rawParams, hashValid, "debug_ignored", "Screenout callback; no reward credited");
+    return new Response("OK", { status: 200 });
+  }
 
   // ─── Reversal ─────────────────────────────────────────────────────────────
   if (isReversal) {
