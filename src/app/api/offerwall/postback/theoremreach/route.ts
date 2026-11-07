@@ -156,15 +156,8 @@ async function handlePostback(req: NextRequest): Promise<Response> {
   if (!hash || !verifyUrlHash(req, hash, rawBody)) {
     console.warn("[postback/theoremreach] hash validation failed");
     const signingInput = req.method === "POST" ? "request URL plus raw POST body" : "request URL";
-    const diagnosticParams = {
-      ...rawParams,
-      request_method: req.method,
-      signing_url: getSigningUrl(req),
-      forwarded_host: req.headers.get("x-forwarded-host") ?? "",
-      forwarded_proto: req.headers.get("x-forwarded-proto") ?? "",
-    };
     await logPostback(
-      diagnosticParams,
+      rawParams,
       false,
       "hash_invalid",
       hash ? `TheoremReach signature did not match (${signingInput})` : "Missing TheoremReach signature",
@@ -195,6 +188,11 @@ async function handlePostback(req: NextRequest): Promise<Response> {
     method: req.method,
     paramKeys: Object.keys(rawParams).join(","),
   });
+
+  if (screenout && !isReversal) {
+    await logPostback(rawParams, hashValid, "debug_ignored", "Screenout callback; no reward credited");
+    return new Response("OK", { status: 200 });
+  }
 
   // ─── Reversal ─────────────────────────────────────────────────────────────
   if (isReversal) {
