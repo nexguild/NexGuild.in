@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  LayoutDashboard, Search, ClipboardList,
+  LayoutDashboard, Search, ClipboardList, Gamepad2, Layers,
   TrendingUp, ShoppingBag, Gift, Users, Megaphone, Headphones, Sparkles,
   User, Settings, LogOut, X, Wallet, Banknote,
 } from "lucide-react";
@@ -28,6 +28,8 @@ const NAV_GROUPS = [
     items: [
       { label: "Paid Tasks", href: "/dashboard/opportunities", icon: Search },
       { label: "Paid Surveys", href: "/dashboard/surveys", icon: Sparkles },
+      { label: "Apps & Games", href: "/dashboard/offerwalls", icon: Layers },
+      { label: "Game Testing", href: "/dashboard/game-testing", icon: Gamepad2 },
     ],
   },
   {

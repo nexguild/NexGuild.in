@@ -45,7 +45,7 @@ export default function ProviderExperiencePage({
   const { "provider-slug": providerSlug } = use(params);
   const router = useRouter();
   const [returnTo, setReturnTo] = useState("/dashboard/offerwalls");
-  const returnLabel = returnTo === "/dashboard/surveys" ? "Paid Surveys" : "Apps & Offers";
+  const returnLabel = returnTo === "/dashboard/surveys" ? "Paid Surveys" : "Apps & Games";
 
   const [provider, setProvider] = useState<Provider | null>(null);
   const [userId, setUserId]     = useState<string | null>(null);

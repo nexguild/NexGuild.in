@@ -65,7 +65,7 @@ const DEFAULT_RULES = [
 const EARNING_OPTIONS = [
   { title: "Paid Tasks", description: "Complete paid work and challenges.", href: "#task-list", action: "Browse tasks", icon: ClipboardList, tone: "teal" },
   { title: "Paid Surveys", description: "Share your opinion and earn NexCoins.", href: "/dashboard/surveys", action: "Find surveys", icon: Sparkles, tone: "amber" },
-  { title: "Apps & Offers", description: "Try apps, play games, and complete partner offers.", href: "/dashboard/offerwalls", action: "Explore offers", icon: Layers, tone: "blue" },
+  { title: "Apps & Games", description: "Discover app installs, games, and more ways to earn.", href: "/dashboard/offerwalls", action: "Explore apps", icon: Layers, tone: "blue" },
   { title: "My Work", description: "Continue tasks and track your submissions.", href: "/dashboard/tasks", action: "View my work", icon: CheckCircle2, tone: "slate" },
 ] as const;
 

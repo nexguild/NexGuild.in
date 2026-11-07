@@ -880,18 +880,18 @@ export default function DashboardHome() {
             <div className="relative flex h-full flex-col">
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-teal-800">Surveys &amp; partner offers</p>
-                  <h3 className="mt-1.5 text-base font-semibold leading-6 text-[#173f38]">Explore partner offers</h3>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-teal-800">Surveys, apps &amp; games</p>
+                  <h3 className="mt-1.5 text-base font-semibold leading-6 text-[#173f38]">Explore apps &amp; games</h3>
                 </div>
                 <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-white bg-white/80 text-teal-700 shadow-sm">
                   <Layers className="h-5 w-5" />
                 </span>
               </div>
-              <p className="mt-2 text-xs leading-5 text-slate-600">A fresh mix of surveys, app installs, and partner offers. Rewards vary by activity.</p>
+              <p className="mt-2 text-xs leading-5 text-slate-600">A fresh mix of surveys, app installs, games, and other activities. Rewards vary by activity.</p>
               {!loading && liveOfferwalls.length > 0 ? (
                 <div className="mt-4 space-y-2">
                   {liveOfferwalls.slice(0, 3).map((provider) => (
-                    <Link key={provider.id} href="/dashboard/surveys" className="group flex items-center gap-2.5 rounded-xl border border-white/80 bg-white/80 p-2.5 transition hover:bg-white">
+                    <Link key={provider.id} href="/dashboard/offerwalls" className="group flex items-center gap-2.5 rounded-xl border border-white/80 bg-white/80 p-2.5 transition hover:bg-white">
                       <span className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-teal-50">
                         {provider.logo_url
                           ? <img src={provider.logo_url} alt="" className="h-full w-full object-contain p-1" />
@@ -904,7 +904,7 @@ export default function DashboardHome() {
                 </div>
               ) : (
                 <div className="mt-4 rounded-xl border border-white/80 bg-white/70 px-3 py-3 text-xs text-slate-600">
-                  {loading ? "Checking available partners…" : "Browse surveys to check today’s availability."}
+                  {loading ? "Checking available activities…" : "Browse apps and games to see what’s available."}
                 </div>
               )}
               <div className="mt-4 flex flex-wrap gap-2">
@@ -912,8 +912,8 @@ export default function DashboardHome() {
                 <span className="rounded-full border border-teal-900/5 bg-white/70 px-2.5 py-1 text-[10px] font-semibold text-teal-900/70">App offers</span>
                 <span className="rounded-full border border-teal-900/5 bg-white/70 px-2.5 py-1 text-[10px] font-semibold text-teal-900/70">More to explore</span>
               </div>
-              <Link href="/dashboard/surveys" className="mt-auto inline-flex items-center justify-center gap-2 rounded-xl bg-[#0f766e] px-4 py-3 text-sm font-bold text-white shadow-[0_6px_16px_rgba(15,118,110,0.18)] transition hover:-translate-y-0.5 hover:bg-[#0b625c] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-800">
-                Explore all surveys &amp; offers <ArrowRight className="h-4 w-4" />
+              <Link href="/dashboard/offerwalls" className="mt-auto inline-flex items-center justify-center gap-2 rounded-xl bg-[#0f766e] px-4 py-3 text-sm font-bold text-white shadow-[0_6px_16px_rgba(15,118,110,0.18)] transition hover:-translate-y-0.5 hover:bg-[#0b625c] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-800">
+                Explore apps &amp; games <ArrowRight className="h-4 w-4" />
               </Link>
             </div>
           </div>

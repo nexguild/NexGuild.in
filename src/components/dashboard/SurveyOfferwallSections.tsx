@@ -5,6 +5,7 @@ import Link from "next/link";
 import {
   ArrowRight,
   BarChart3,
+  ChevronDown,
   Clock3,
   ExternalLink,
   Flame,
@@ -90,7 +91,7 @@ function formatCoinsPerMinute(value: number) {
   return value.toLocaleString(undefined, { maximumFractionDigits: 1 });
 }
 
-export function SurveyOfferwallSections({ mode }: { mode: "surveys" | "offerwalls" }) {
+export function SurveyOfferwallSections({ mode }: { mode: "surveys" | "offerwalls" | "game-testing" }) {
   const [surveys, setSurveys] = useState<Survey[]>([]);
   const [offers, setOffers] = useState<FeaturedOffer[]>([]);
   const [offerwalls, setOfferwalls] = useState<OfferwallProvider[]>([]);
@@ -144,7 +145,7 @@ export function SurveyOfferwallSections({ mode }: { mode: "surveys" | "offerwall
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.access_token) {
-        setOfferwallsError("Please sign in again to view partner offers.");
+        setOfferwallsError("Please sign in again to view apps and games.");
         return;
       }
 
@@ -154,13 +155,13 @@ export function SurveyOfferwallSections({ mode }: { mode: "surveys" | "offerwall
         signal,
       });
       const result = await response.json() as OfferwallsResponse & { error?: string };
-      if (!response.ok) throw new Error(result.error ?? "Unable to load partner offers.");
+      if (!response.ok) throw new Error(result.error ?? "Unable to load apps and games.");
       if (!Array.isArray(result.providers)) throw new Error("Partner offerwalls returned an invalid response.");
       setOfferwalls(result.providers.filter((provider) => !provider.is_ad_network && provider.isLive));
       setOfferwallsError(null);
     } catch (error) {
       if (error instanceof DOMException && error.name === "AbortError") return;
-      setOfferwallsError(error instanceof Error ? error.message : "Unable to load partner offers.");
+      setOfferwallsError(error instanceof Error ? error.message : "Unable to load apps and games.");
     } finally {
       if (!signal?.aborted) setOfferwallsLoading(false);
     }
@@ -199,19 +200,19 @@ export function SurveyOfferwallSections({ mode }: { mode: "surveys" | "offerwall
   const featuredOffer = offers[0];
   const otherOffers = offers.slice(1);
   const featuredOffersSection = (
-    <section id="featured-offers" aria-labelledby="featured-offers-heading" className="order-3 scroll-mt-28 space-y-3">
+    <section id="featured-offers" aria-labelledby="featured-offers-heading" className="order-3 scroll-mt-28 space-y-5">
       <div className="flex flex-wrap items-end justify-between gap-2">
         <div>
-          <p className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.14em] text-teal-700 sm:text-xs"><Flame className="h-3.5 w-3.5" /> Picked for you</p>
-          <h2 id="featured-offers-heading" className="mt-1 text-lg font-extrabold text-slate-950 sm:text-xl">Featured activities</h2>
-          <p className="mt-1 text-xs text-slate-500">Try apps, play games, or complete other activities to earn.</p>
+          <p className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-[0.14em] text-teal-700"><Flame className="h-4 w-4" /> Picked for you</p>
+          <h2 id="featured-offers-heading" className="mt-1 text-xl font-extrabold text-slate-950 sm:text-2xl">Featured activities</h2>
+          <p className="mt-1 text-sm text-slate-600">Install apps, play games, and complete activities to earn.</p>
         </div>
-        <span className="text-[10px] text-slate-500 sm:text-xs">Estimated NexCoin rewards</span>
+        <span className="text-xs font-medium text-slate-500">Estimated NexCoin rewards</span>
       </div>
 
       {loading ? (
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3" aria-label="Loading featured activities">
-          {[0, 1, 2, 3].map((item) => <div key={item} className="h-48 animate-pulse rounded-xl bg-slate-200" />)}
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3" aria-label="Loading featured activities">
+          {[0, 1, 2, 3].map((item) => <div key={item} className="h-80 animate-pulse rounded-2xl bg-slate-200" />)}
         </div>
       ) : loadError ? (
         <div role="alert" className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-xs text-rose-800">
@@ -227,10 +228,10 @@ export function SurveyOfferwallSections({ mode }: { mode: "surveys" | "offerwall
               Some tasks could not be loaded. {errors.notik_offers && `Notik: ${errors.notik_offers}. `}{errors.theoremreach_offers && `TheoremReach: ${errors.theoremreach_offers}. `}{errors.mylead_campaigns && `MyLead: ${errors.mylead_campaigns}. `}Other tasks are still available below.
             </p>
           )}
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
             {[featuredOffer, ...otherOffers].map((offer) => (
-              <article key={offer.id} className="group flex min-w-0 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:border-teal-300 hover:shadow-lg">
-                <div className="relative flex h-32 w-full items-center justify-center overflow-hidden bg-gradient-to-br from-[#0A1628] via-[#12314A] to-teal-800 text-teal-100">
+              <article key={offer.id} className="group flex min-w-0 flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm transition duration-200 hover:-translate-y-1 hover:border-teal-300 hover:shadow-xl">
+                <div className="relative flex h-36 w-full items-center justify-center overflow-hidden bg-gradient-to-br from-[#0A1628] via-[#12314A] to-teal-800 text-teal-100 sm:h-40">
                   {offer.imageUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={offer.imageUrl} alt="" className="absolute inset-0 h-full w-full object-cover transition duration-300 group-hover:scale-105" loading="lazy" />
@@ -238,37 +239,33 @@ export function SurveyOfferwallSections({ mode }: { mode: "surveys" | "offerwall
                     <Sparkles className="h-8 w-8 opacity-80" />
                   )}
                   <div aria-hidden className="absolute inset-0 bg-gradient-to-t from-[#071321]/85 via-[#071321]/10 to-black/20" />
-                  <span className="absolute left-2 top-2 max-w-[90px] truncate rounded-full border border-white/20 bg-[#071321]/60 px-2 py-0.5 text-[9px] font-bold text-white backdrop-blur-sm">
-                    {offer.providerName && offer.providerName !== offer.sourceName
-                      ? `${offer.providerName} · ${offer.sourceName}`
-                      : offer.sourceName}
-                  </span>
-                  <span className="absolute bottom-2 right-2 inline-flex items-center gap-0.5 rounded-full bg-teal-300 px-2 py-0.5 text-[9px] font-extrabold text-slate-950 shadow-sm">
-                    <NexCoinIcon size={10} /> {formatCoins(offer.estimatedRewardCoins)}
+                  <span className="absolute bottom-3 right-3 inline-flex items-center gap-1 rounded-full bg-teal-300 px-3 py-1.5 text-xs font-extrabold text-slate-950 shadow-md">
+                    <NexCoinIcon size={13} /> {formatCoins(offer.estimatedRewardCoins)}
                   </span>
                 </div>
-                <div className="flex min-h-[112px] min-w-0 flex-1 flex-col p-2.5">
-                  <h3 className="mt-1.5 line-clamp-2 text-xs font-extrabold leading-snug text-slate-900">{offer.name}</h3>
-                  {offer.description && <p className="mt-1 line-clamp-2 whitespace-pre-line text-[10px] leading-snug text-slate-500">{offer.description}</p>}
+                <div className="flex min-h-[220px] min-w-0 flex-1 flex-col p-4 sm:p-5">
+                  <h3 className="line-clamp-2 text-base font-extrabold leading-snug text-slate-950">{offer.name}</h3>
+                  {offer.description && <p className="mt-2 line-clamp-3 whitespace-pre-line text-sm leading-5 text-slate-600">{offer.description}</p>}
                   {offer.events.length > 0 && (
-                    <p className="mt-1 text-[9px] font-semibold text-teal-700">
+                    <p className="mt-3 inline-flex w-fit items-center rounded-full bg-teal-50 px-2.5 py-1 text-xs font-semibold text-teal-800">
                       {offer.events.length} reward {offer.events.length === 1 ? "step" : "steps"}
                     </p>
                   )}
                   {(offer.description || offer.terms || offer.confirmationTime || offer.events.length > 0) && (
-                    <details className="mt-1.5 rounded-md bg-slate-50 px-2 py-1.5 text-[9px] text-slate-600">
-                      <summary className="cursor-pointer font-bold text-teal-800">
-                        {offer.events.length ? `View all ${offer.events.length} steps` : "View activity details"}
+                    <details className="group mt-3 rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-xs text-slate-600 open:bg-slate-50">
+                      <summary className="flex cursor-pointer list-none items-center justify-between gap-2 font-semibold text-slate-700 marker:content-none">
+                        <span>{offer.events.length ? `View all ${offer.events.length} steps` : "View activity details"}</span>
+                        <ChevronDown className="h-4 w-4 shrink-0 transition-transform group-open:rotate-180" />
                       </summary>
-                      <div className="mt-1.5 space-y-1.5 whitespace-pre-line leading-snug">
+                      <div className="mt-3 space-y-2 whitespace-pre-line border-t border-slate-200 pt-3 leading-relaxed">
                         {offer.description && <p>{offer.description}</p>}
                         {offer.terms && <p><span className="font-bold">Requirements:</span> {offer.terms}</p>}
                         {offer.confirmationTime && <p><span className="font-bold">Reward timing:</span> {offer.confirmationTime}</p>}
                         {offer.events.length > 0 && (
-                          <ol className="list-inside list-decimal space-y-1">
+                          <ol className="list-inside list-decimal space-y-1.5">
                             {offer.events.map((event, index) => (
                               <li key={`${event.name}-${index}`}>
-                                {event.name} — <span className="inline-flex items-center gap-0.5 font-semibold text-teal-700"><NexCoinIcon size={9} /> ~{formatCoins(event.estimatedRewardCoins)}</span>
+                                {event.name} — <span className="inline-flex items-center gap-1 font-semibold text-teal-700"><NexCoinIcon size={11} /> ~{formatCoins(event.estimatedRewardCoins)}</span>
                               </li>
                             ))}
                           </ol>
@@ -276,11 +273,10 @@ export function SurveyOfferwallSections({ mode }: { mode: "surveys" | "offerwall
                       </div>
                     </details>
                   )}
-                  <div className="mt-auto flex items-center justify-between gap-1 pt-2">
-                    <a href={offer.entryUrl} target="_blank" rel="noopener noreferrer" aria-label={`Try activity: ${offer.name}`} className="inline-flex h-7 items-center gap-1 rounded-md bg-teal-600 px-2 text-[9px] font-extrabold text-white transition hover:bg-teal-700">
-                      Try task <ExternalLink className="h-3 w-3" />
+                  <div className="mt-auto flex flex-wrap items-center justify-between gap-3 pt-5">
+                    <a href={offer.entryUrl} target="_blank" rel="noopener noreferrer" aria-label={`Try activity: ${offer.name}`} className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-teal-700 px-4 text-sm font-bold text-white shadow-sm transition hover:bg-teal-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700">
+                      Start activity <ExternalLink className="h-4 w-4" />
                     </a>
-                    <span className="text-[9px] font-semibold text-slate-500">via {offer.sourceName}</span>
                   </div>
                 </div>
               </article>
@@ -310,24 +306,30 @@ export function SurveyOfferwallSections({ mode }: { mode: "surveys" | "offerwall
               <Sparkles className="h-3.5 w-3.5" /> Your next reward starts here
             </p>
             <h1 className="mt-1.5 text-lg font-black leading-tight tracking-tight sm:text-2xl">
-              {mode === "surveys" ? "Answer questions. Earn rewards." : "Find apps, games, and offers."}
+              {mode === "surveys"
+                ? "Answer questions. Earn rewards."
+                : mode === "game-testing"
+                  ? "Install apps. Play games. Earn rewards."
+                  : "Explore apps, games, and more ways to earn."}
             </h1>
             <p className="mt-1 max-w-xl text-[10px] leading-relaxed text-slate-200 sm:text-xs">
               {mode === "surveys"
                 ? "Browse available survey partners, compare estimated rewards, and find a good fit."
-                : "Discover partner activities and launch the ones that interest you."}
+                : mode === "game-testing"
+                  ? "Install apps, play games, and complete activities to earn."
+                  : "Discover app installs, games, and other activities from our offer providers."}
             </p>
             <div className="mt-2.5 flex flex-wrap gap-2">
-              <Link href={mode === "surveys" ? "#survey-list" : "#featured-offers"} className="inline-flex h-7 items-center gap-1 rounded-lg bg-teal-300 px-2.5 text-[10px] font-extrabold text-slate-950 transition hover:bg-teal-200 sm:h-8 sm:text-xs">
-                {mode === "surveys" ? "Browse surveys" : "Find activities"} <ArrowRight className="h-3 w-3" />
+              <Link href={mode === "surveys" ? "#survey-list" : mode === "game-testing" ? "#featured-offers" : "#offerwall-list"} className="inline-flex h-7 items-center gap-1 rounded-lg bg-teal-300 px-2.5 text-[10px] font-extrabold text-slate-950 transition hover:bg-teal-200 sm:h-8 sm:text-xs">
+                {mode === "surveys" ? "Browse surveys" : mode === "game-testing" ? "Find activities" : "Browse partners"} <ArrowRight className="h-3 w-3" />
               </Link>
-              <Link href={mode === "surveys" ? "/dashboard/opportunities" : "#offerwall-list"} className="inline-flex h-7 items-center gap-1 rounded-lg border border-white/20 bg-white/10 px-2.5 text-[10px] font-bold text-white transition hover:bg-white/15 sm:h-8 sm:text-xs">
-                {mode === "surveys" ? "Explore tasks" : "Browse partners"} <ArrowRight className="h-3 w-3" />
+              <Link href={mode === "surveys" ? "/dashboard/opportunities" : mode === "game-testing" ? "/dashboard/offerwalls" : "/dashboard/game-testing"} className="inline-flex h-7 items-center gap-1 rounded-lg border border-white/20 bg-white/10 px-2.5 text-[10px] font-bold text-white transition hover:bg-white/15 sm:h-8 sm:text-xs">
+                {mode === "surveys" ? "Explore tasks" : mode === "game-testing" ? "Browse partners" : "Game testing"} <ArrowRight className="h-3 w-3" />
               </Link>
             </div>
           </div>
           <div className="relative flex h-[68px] w-[68px] shrink-0 items-center justify-center overflow-hidden rounded-xl border border-white/15 bg-gradient-to-br from-teal-400/20 via-[#12314A] to-[#0d9488] shadow-lg sm:h-24 sm:w-24 sm:rounded-2xl">
-              {mode === "offerwalls" && featuredOffer?.imageUrl ? (
+              {mode === "game-testing" && featuredOffer?.imageUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={featuredOffer.imageUrl} alt="" className="absolute inset-0 h-full w-full object-cover" />
             ) : (
@@ -335,13 +337,13 @@ export function SurveyOfferwallSections({ mode }: { mode: "surveys" | "offerwall
             )}
             <div aria-hidden className="absolute inset-0 bg-gradient-to-t from-[#071321]/65 to-transparent" />
             <span className="absolute bottom-1 left-0 right-0 text-center text-[7px] font-extrabold uppercase tracking-wide text-white sm:bottom-1.5 sm:text-[8px]">
-              {mode === "surveys" ? "Quick surveys" : "Earn more"}
+              {mode === "surveys" ? "Quick surveys" : mode === "game-testing" ? "Game testing" : "Partner offers"}
             </span>
           </div>
         </div>
       </header>
 
-      {mode === "offerwalls" && featuredOffersSection}
+      {mode === "game-testing" && featuredOffersSection}
 
       {mode === "offerwalls" && <section id="offerwall-list" aria-labelledby="offerwall-partners-heading" className="relative order-2 scroll-mt-28 overflow-hidden rounded-2xl border border-[#1e3a5f] bg-gradient-to-br from-[#0A1628] via-[#0d1f38] to-[#0d514d] p-3.5 shadow-[0_12px_30px_rgba(10,22,40,0.18)] sm:rounded-3xl sm:p-5">
         <div className="relative mb-3 flex items-start gap-3 sm:mb-4 sm:gap-3.5">
@@ -349,10 +351,10 @@ export function SurveyOfferwallSections({ mode }: { mode: "surveys" | "offerwall
             <Layers className="h-4 w-4 sm:h-5 sm:w-5" />
           </span>
           <div className="min-w-0">
-            <p className="text-[9px] font-extrabold uppercase tracking-[0.16em] text-teal-200 sm:text-[10px]">MORE TO EARN</p>
-            <h2 id="offerwall-partners-heading" className="mt-0.5 text-base font-extrabold tracking-tight text-white sm:text-lg">Explore apps, games &amp; offers</h2>
+            <p className="text-[9px] font-extrabold uppercase tracking-[0.16em] text-teal-200 sm:text-[10px]">APPS &amp; GAMES</p>
+            <h2 id="offerwall-partners-heading" className="mt-0.5 text-base font-extrabold tracking-tight text-white sm:text-lg">Explore apps, games &amp; more</h2>
             <p className="mt-1 max-w-2xl text-[10px] leading-relaxed text-slate-300 sm:text-xs">
-              Browse apps, games, sign-ups, and other activities from our available partners.
+              Install apps, play games, sign up, and complete activities to earn rewards. Select a provider to open its activities.
             </p>
           </div>
         </div>
@@ -378,7 +380,7 @@ export function SurveyOfferwallSections({ mode }: { mode: "surveys" | "offerwall
                     // The provider page falls back to the Offerwall Hub when storage is unavailable.
                   }
                 }}
-                aria-label={`Browse ${provider.name} activities`}
+                aria-label={`Open ${provider.name} activities`}
                 className="group flex min-w-0 flex-col overflow-hidden rounded-2xl border border-white/15 bg-white shadow-[0_4px_14px_rgba(0,0,0,0.18)] transition hover:-translate-y-0.5 hover:border-teal-300 hover:shadow-[0_10px_24px_rgba(20,184,166,0.18)]"
               >
                 <span className="relative flex h-[100px] items-center justify-center overflow-hidden bg-gradient-to-br from-[#0A1628] via-[#12314A] to-[#0d9488] sm:h-28">
@@ -398,7 +400,7 @@ export function SurveyOfferwallSections({ mode }: { mode: "surveys" | "offerwall
                     <span className="mt-0.5 block truncate text-[9px] text-slate-500">{provider.feature_tags.slice(0, 2).join(" · ") || "Apps, games & more"}</span>
                   </span>
                   <span className="inline-flex shrink-0 items-center gap-0.5 rounded-full bg-teal-100 px-2 py-1 text-[9px] font-extrabold text-teal-900 sm:px-2.5 sm:text-[10px]">
-                    Browse <ArrowRight className="h-3 w-3 transition group-hover:translate-x-0.5" />
+                    Open activities <ArrowRight className="h-3 w-3 transition group-hover:translate-x-0.5" />
                   </span>
                 </span>
               </Link>
