@@ -1,6 +1,7 @@
 import { createHash, createHmac } from "crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase-server";
+import { getProfileCountryCode } from "@/lib/countries";
 import { getMyLeadCampaignOffers, isMyLeadApiConfigured } from "@/lib/mylead-campaigns";
 import { normalizeNexcoins } from "@/lib/nexcoins";
 
@@ -45,6 +46,21 @@ interface Offer {
   rankScore: number;
   events: { name: string; estimatedRewardCoins: number }[];
   entryUrl: string;
+}
+
+interface NotikApiOffer {
+  offer_id?: string | number;
+  name?: string;
+  categories?: unknown[];
+  description1?: string | null;
+  description2?: string | null;
+  description3?: string | null;
+  terms?: string;
+  confirmation_time?: string;
+  image_url?: string;
+  payout?: number | string;
+  click_url?: string;
+  events?: Array<{ name?: string; payout?: number | string }>;
 }
 
 function getClientIp(req: NextRequest): string | null {
@@ -440,6 +456,7 @@ async function getTheoremReachOffers(
 async function getNotikOffers(
   req: NextRequest,
   userId: string,
+  profileCountry: string | null,
   provider: OfferwallProvider | undefined,
 ): Promise<Offer[]> {
   if (!provider?.is_active || provider.integration_type === "disabled") return [];
@@ -455,53 +472,67 @@ async function getNotikOffers(
 
   const ip = getClientIp(req);
   const userAgent = req.headers.get("user-agent");
-  if (!ip || !userAgent) throw new Error("Notik needs the visitor's IP address and browser information");
+  const countryCode = getCountryCode(req, profileCountry);
+  if (!ip || !userAgent || !countryCode) {
+    throw new Error("Notik needs the visitor's country, IP address, and browser information to filter activities");
+  }
+
+  const isIpad = /iPad/i.test(userAgent) || (/Macintosh/i.test(userAgent) && /Mobile/i.test(userAgent));
+  const deviceName = /iPhone/i.test(userAgent)
+    ? "iphone"
+    : isIpad
+      ? "ipad"
+      : "other";
+  const deviceType = isIpad || /Tablet|Kindle|Silk/i.test(userAgent) || (/Android/i.test(userAgent) && !/Mobile/i.test(userAgent))
+    ? "tablet"
+    : /iPhone|iPod|Android.*Mobile|Mobile/i.test(userAgent)
+      ? "mobile"
+      : "desktop";
+  const deviceOs = /iPhone|iPad|iPod/i.test(userAgent) || isIpad
+    ? "ios"
+    : /Android/i.test(userAgent)
+      ? "android"
+      : /Windows/i.test(userAgent)
+        ? "windows"
+        : /Macintosh|Mac OS X/i.test(userAgent)
+          ? "macosx"
+          : /Linux/i.test(userAgent)
+            ? "linux"
+            : null;
+  if (!deviceOs) throw new Error("Notik could not identify the visitor's device operating system");
 
   const params = new URLSearchParams({
     api_key: apiKey,
     pub_id: publisherId,
     app_id: appId,
     user_id: userId,
-    duration: "30d",
-    page: "1",
+    device_name: deviceName,
+    device_type: deviceType,
+    device_os: deviceOs,
+    country_code: countryCode,
+    user_agent: userAgent,
+    ip,
   });
-  const response = await fetch(`https://notik.me/api/v1/live-campaigns-for-user?${params}`, {
-    headers: {
-      Accept: "application/json",
-      "User-Agent": userAgent,
-      "X-Forwarded-For": ip,
-      "X-Real-IP": ip,
-    },
+  const response = await fetch(`https://notik.me/api/v1/get-offers/filtered?${params}`, {
+    headers: { Accept: "application/json" },
     signal: AbortSignal.timeout(12_000),
     cache: "no-store",
   });
   if (response.status === 401 || response.status === 403) {
-    throw new Error("Notik rejected the Live Offers API credentials or access");
+    throw new Error("Notik rejected the Filtered Offers API credentials or access");
   }
-  if (!response.ok) throw new Error(`Notik Live Offers returned HTTP ${response.status}`);
+  if (!response.ok) throw new Error(`Notik Filtered Offers API returned HTTP ${response.status}`);
 
   const result = await response.json() as {
     status?: string;
-    data?: Array<{
-      offer_id?: string | number;
-      name?: string;
-      categories?: unknown[];
-      description1?: string | null;
-      description2?: string | null;
-      description3?: string | null;
-      terms?: string;
-      confirmation_time?: string;
-      image_url?: string;
-      payout?: number | string;
-      click_url?: string;
-      events?: Array<{ name?: string; payout?: number | string }>;
-    }>;
+    data?: NotikApiOffer[];
+    offers?: NotikApiOffer[];
   };
-  if (result.status !== "success" || !Array.isArray(result.data)) {
-    throw new Error("Notik returned an invalid Live Offers response");
+  const items = Array.isArray(result.data) ? result.data : result.offers;
+  if ((result.status && result.status !== "success") || !Array.isArray(items)) {
+    throw new Error("Notik returned an invalid Filtered Offers response");
   }
 
-  const items = result.data;
   const conversionRate = toPositiveNumber(config.conversion_rate) ?? 660;
   return items.flatMap((item, index): Offer[] => {
     const entryUrl = getHttpsUrl(item.click_url, "notik.me");
@@ -574,30 +605,31 @@ export async function GET(req: NextRequest) {
   const myLeadProvider = providerRows.find((provider) => provider.slug === "mylead");
   const { data: profile, error: profileError } = await admin
     .from("profiles")
-    .select("country_code")
+    .select("country_code, country")
     .eq("id", user.id)
     .maybeSingle();
   if (profileError) console.error("[api/surveys] Profile lookup failed:", profileError.message);
+  const profileCountry = getProfileCountryCode(profile?.country_code, profile?.country);
 
   const [cpxResult, theoremReachResult, theoremReachOffersResult, notikOffersResult, myLeadCampaignsResult] = await Promise.all([
     getCpxSurveys(req, user.id, cpxProvider).then(
       (surveys) => ({ surveys, error: null as string | null }),
       (error: unknown) => ({ surveys: [] as Survey[], error: error instanceof Error ? error.message : "Unable to load CPX Research surveys" }),
     ),
-    getTheoremReachSurveys(req, user.id, profile?.country_code ?? null, theoremReachProvider).then(
+    getTheoremReachSurveys(req, user.id, profileCountry, theoremReachProvider).then(
       (surveys) => ({ surveys, error: null as string | null }),
       (error: unknown) => ({ surveys: [] as Survey[], error: error instanceof Error ? error.message : "Unable to load TheoremReach surveys" }),
     ),
-    getTheoremReachOffers(req, user.id, profile?.country_code ?? null, theoremReachProvider).then(
+    getTheoremReachOffers(req, user.id, profileCountry, theoremReachProvider).then(
       (offers) => ({ offers, error: null as string | null }),
       (error: unknown) => ({ offers: [] as Offer[], error: error instanceof Error ? error.message : "Unable to load TheoremReach offers" }),
     ),
-    getNotikOffers(req, user.id, notikProvider).then(
+    getNotikOffers(req, user.id, profileCountry, notikProvider).then(
       (offers) => ({ offers, error: null as string | null }),
       (error: unknown) => ({ offers: [] as Offer[], error: error instanceof Error ? error.message : "Unable to load Notik tasks" }),
     ),
     myLeadProvider?.is_active && isMyLeadApiConfigured()
-      ? getMyLeadCampaignOffers(user.id, getCountryCode(req, profile?.country_code ?? null)).then(
+      ? getMyLeadCampaignOffers(user.id, getCountryCode(req, profileCountry)).then(
         (offers) => ({ offers, error: null as string | null }),
         (error: unknown) => ({ offers: [] as Offer[], error: error instanceof Error ? error.message : "Unable to load MyLead campaigns" }),
       )
