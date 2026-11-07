@@ -91,7 +91,7 @@ function isLive(p: Provider) {
 }
 
 function PostbackUrlCell({ slug }: { slug: string }) {
-  const baseUrl = `https://nexguild.in/api/offerwall/postback/${slug}`;
+  const baseUrl = `https://www.nexguild.in/api/offerwall/postback/${slug}`;
   const url = slug === "adbluemedia"
     ? `${baseUrl}?secret=YOUR_SECRET&s1={s1}&trans_id={lead_id}&amount={payout}&status={status}&offer_id={offer_id}`
     : baseUrl;
