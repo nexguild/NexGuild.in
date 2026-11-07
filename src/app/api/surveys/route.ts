@@ -251,9 +251,12 @@ async function getTheoremReachSurveys(
 ): Promise<Survey[]> {
   if (!provider?.is_active) return [];
 
-  const apiKey = process.env.THEOREMREACH_API_KEY;
-  const secretKey = process.env.THEOREMREACH_SECRET_KEY;
-  const placementId = process.env.NEXT_PUBLIC_THEOREMREACH_PLACEMENT_ID;
+  const apiKey = provider.api_key?.trim();
+  const secretKey = provider.postback_secret?.trim();
+  const config = provider.custom_config ?? {};
+  const placementId = typeof config.placement_id === "string"
+    ? config.placement_id.trim()
+    : "e1870419-681e-4792-b66b-c59deb5479fe";
   if (!apiKey || !secretKey || !placementId) throw new Error("TheoremReach is not configured");
 
   const ip = getClientIp(req);
@@ -329,8 +332,8 @@ async function getTheoremReachOffers(
 ): Promise<Offer[]> {
   if (!provider?.is_active) return [];
 
-  const apiKey = process.env.THEOREMREACH_API_KEY;
-  const secretKey = process.env.THEOREMREACH_SECRET_KEY;
+  const apiKey = provider.api_key?.trim();
+  const secretKey = provider.postback_secret?.trim();
   if (!apiKey || !secretKey) throw new Error("TheoremReach Offers API is not configured");
 
   const ip = getClientIp(req);

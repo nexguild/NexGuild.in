@@ -22,22 +22,32 @@ export async function GET(req: NextRequest) {
   const { data: { user } } = await admin.auth.getUser(token);
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  // Read env vars directly — no intermediate variable for the secret key
-  // to ensure THEOREMREACH_SECRET_KEY is never confused with THEOREMREACH_API_KEY
-  const THEOREMREACH_API_KEY    = process.env.THEOREMREACH_API_KEY    ?? "";
-  const THEOREMREACH_SECRET_KEY = process.env.THEOREMREACH_SECRET_KEY ?? "";
-  const placementId             = process.env.NEXT_PUBLIC_THEOREMREACH_PLACEMENT_ID ?? "e1870419-681e-4792-b66b-c59deb5479fe";
-
-  if (!THEOREMREACH_API_KEY || !THEOREMREACH_SECRET_KEY) {
-    return NextResponse.json({ error: "TheoremReach not configured" }, { status: 503 });
+  const { data: provider, error } = await admin
+    .from("offerwall_providers")
+    .select("api_key, postback_secret, custom_config, is_active")
+    .eq("slug", "theoremreach")
+    .maybeSingle();
+  if (error) {
+    console.error("[theoremreach/surveys] Provider lookup failed:", error.message);
+    return NextResponse.json({ error: "TheoremReach configuration unavailable" }, { status: 503 });
   }
+
+  const apiKey = provider?.api_key?.trim();
+  const secretKey = provider?.postback_secret?.trim();
+  if (!provider?.is_active || !apiKey || !secretKey) {
+    return NextResponse.json({ error: "TheoremReach is not fully configured" }, { status: 503 });
+  }
+  const customConfig = provider.custom_config as Record<string, unknown> | null;
+  const placementId = typeof customConfig?.placement_id === "string" && customConfig.placement_id.trim()
+    ? customConfig.placement_id.trim()
+    : "e1870419-681e-4792-b66b-c59deb5479fe";
 
   const ip = getClientIp(req);
 
   // Documented params only: api_key, user_id, ip, country_code
   const base = "https://api.theoremreach.com/api/publishers/v1/surveys";
   const params = new URLSearchParams({
-    api_key:      THEOREMREACH_API_KEY,
+    api_key:      apiKey,
     user_id:      user.id,
     ip,
     country_code: "IN",
@@ -45,16 +55,9 @@ export async function GET(req: NextRequest) {
   const urlWithoutHash = `${base}?${params.toString()}`;
 
   // HMAC-SHA1 with UTF-8 string key, output as URL-safe base64 (no padding)
-  const rawHash   = createHmac("sha1", THEOREMREACH_SECRET_KEY).update(urlWithoutHash).digest("base64");
+  const rawHash   = createHmac("sha1", secretKey).update(urlWithoutHash).digest("base64");
   const hash      = rawHash.replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "");
   const finalUrl  = `${urlWithoutHash}&hash=${hash}`;
-
-  console.log("[theoremreach/surveys] hash_debug", {
-    api_key_prefix:    THEOREMREACH_API_KEY.slice(0, 6) + "****",
-    secret_key_prefix: THEOREMREACH_SECRET_KEY.slice(0, 4) + "****",
-    hash_b64url:       hash,
-    hmac_input:        urlWithoutHash.replace(THEOREMREACH_API_KEY, "[redacted]"),
-  });
 
   let trResponse: Response;
   try {
@@ -108,7 +111,7 @@ export async function GET(req: NextRequest) {
     url.searchParams.set("placement_id", placementId);
 
     const entryUrl  = url.toString();
-    const rawHash   = createHmac("sha1", THEOREMREACH_SECRET_KEY).update(entryUrl).digest("base64");
+    const rawHash   = createHmac("sha1", secretKey).update(entryUrl).digest("base64");
     const entryHash = rawHash.replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "");
 
     return {

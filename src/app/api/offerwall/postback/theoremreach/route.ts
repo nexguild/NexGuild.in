@@ -34,10 +34,8 @@ function getSigningUrl(req: NextRequest): string {
   return signedParams.length ? `${path}?${signedParams.join("&")}` : path;
 }
 
-function verifyUrlHash(req: NextRequest, incomingHash: string, rawBody: string): boolean {
-  const secret = process.env.THEOREMREACH_SECRET_KEY;
+function verifyUrlHash(req: NextRequest, incomingHash: string, rawBody: string, secret: string): boolean {
   if (!secret) {
-    console.error("[postback/theoremreach] THEOREMREACH_SECRET_KEY is not configured");
     return false;
   }
 
@@ -149,11 +147,26 @@ async function handlePostback(req: NextRequest): Promise<Response> {
     return new Response("OK", { status: 200 });
   }
 
+  const { data: provider, error: providerError } = await admin
+    .from("offerwall_providers")
+    .select("id, name, api_key, postback_secret, is_active")
+    .eq("slug", "theoremreach")
+    .maybeSingle();
+  if (providerError || !provider) {
+    console.error("[postback/theoremreach] provider configuration lookup failed:", providerError?.message);
+    await logPostback(rawParams, null, "error", providerError?.message ?? "provider not found");
+    return new Response("Provider configuration unavailable", { status: 503 });
+  }
+  if (!provider.is_active || !provider.postback_secret?.trim()) {
+    await logPostback(rawParams, null, "error", "TheoremReach is disabled or its postback secret is not configured");
+    return new Response("Provider configuration unavailable", { status: 503 });
+  }
+
   // TheoremReach requires the hash in the URL query. POST signatures also cover
   // the exact raw request body.
   const hash      = new URL(req.url).searchParams.get("hash") ?? "";
   let   hashValid: boolean | null = null;
-  if (!hash || !verifyUrlHash(req, hash, rawBody)) {
+  if (!hash || !verifyUrlHash(req, hash, rawBody, provider.postback_secret)) {
     console.warn("[postback/theoremreach] hash validation failed");
     const signingInput = req.method === "POST" ? "request URL plus raw POST body" : "request URL";
     await logPostback(
@@ -196,16 +209,6 @@ async function handlePostback(req: NextRequest): Promise<Response> {
 
   // ─── Reversal ─────────────────────────────────────────────────────────────
   if (isReversal) {
-    const { data: provider, error: providerError } = await admin
-      .from("offerwall_providers")
-      .select("id")
-      .eq("slug", "theoremreach")
-      .single();
-    if (providerError || !provider) {
-      await logPostback(rawParams, hashValid, "error", providerError?.message ?? "provider not found");
-      return new Response("Internal Server Error", { status: 500 });
-    }
-
     const { data: reversed, error: reversalError } = await admin.rpc("reverse_offerwall_conversion", {
       p_provider_id: provider.id,
       p_provider_transaction_id: txId,
@@ -236,18 +239,6 @@ async function handlePostback(req: NextRequest): Promise<Response> {
   if (reward <= 0) {
     console.log(`[postback/theoremreach] zero reward — ignoring (tx=${txId}, screenout=${screenout})`);
     await logPostback(rawParams, hashValid, "error", `zero reward (resolved reward='${rewardStr}')`);
-    return new Response("OK", { status: 200 });
-  }
-
-  const { data: provider, error: provErr } = await admin
-    .from("offerwall_providers")
-    .select("id, name")
-    .eq("slug", "theoremreach")
-    .single();
-
-  if (provErr || !provider) {
-    console.error("[postback/theoremreach] provider row not found:", provErr?.message);
-    await logPostback(rawParams, hashValid, "error", `provider lookup failed: ${provErr?.message}`);
     return new Response("OK", { status: 200 });
   }
 

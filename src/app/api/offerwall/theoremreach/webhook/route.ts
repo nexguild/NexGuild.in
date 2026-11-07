@@ -10,16 +10,28 @@ function computeHash(secret: string, urlStr: string): string {
 // TheoremReach reversal/ban webhook
 // Hash is computed over the request URL (not body), same base64url format
 export async function POST(req: NextRequest) {
-  const secret = process.env.THEOREMREACH_SECRET_KEY;
-  if (secret) {
-    const incomingHash = new URL(req.url).searchParams.get("hash") ?? "";
-    if (incomingHash) {
-      const urlForHash = new URL(req.url);
-      urlForHash.searchParams.delete("hash");
-      if (computeHash(secret, urlForHash.toString()) !== incomingHash) {
-        console.warn("[webhook/theoremreach] hash mismatch");
-        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-      }
+  const admin = createServerClient();
+  const { data: provider, error: providerError } = await admin
+    .from("offerwall_providers")
+    .select("id, postback_secret")
+    .eq("slug", "theoremreach")
+    .maybeSingle();
+  if (providerError || !provider) {
+    console.error("[webhook/theoremreach] provider lookup failed:", providerError?.message);
+    return NextResponse.json({ error: "Provider configuration unavailable" }, { status: 503 });
+  }
+
+  const incomingHash = new URL(req.url).searchParams.get("hash") ?? "";
+  if (incomingHash) {
+    const secret = provider.postback_secret?.trim();
+    if (!secret) {
+      return NextResponse.json({ error: "Provider signing secret is not configured" }, { status: 503 });
+    }
+    const urlForHash = new URL(req.url);
+    urlForHash.searchParams.delete("hash");
+    if (computeHash(secret, urlForHash.toString()) !== incomingHash) {
+      console.warn("[webhook/theoremreach] hash mismatch");
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
   }
 
@@ -43,17 +55,6 @@ export async function POST(req: NextRequest) {
 
   if (eventType !== "reversal" && eventType !== "ban") {
     return NextResponse.json({ ok: true });
-  }
-
-  const admin = createServerClient();
-  const { data: provider, error: providerError } = await admin
-    .from("offerwall_providers")
-    .select("id")
-    .eq("slug", "theoremreach")
-    .single();
-  if (providerError || !provider) {
-    console.error("[webhook/theoremreach] provider lookup failed:", providerError?.message);
-    return NextResponse.json({ error: "Provider configuration unavailable" }, { status: 500 });
   }
 
   for (const reversal of reversals) {
