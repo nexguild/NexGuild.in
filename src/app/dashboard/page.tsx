@@ -875,8 +875,8 @@ export default function DashboardHome() {
             )}
           </div>
 
-          <div className="relative overflow-hidden rounded-2xl border border-[#dcebe5] bg-[linear-gradient(155deg,#eff8f4_0%,#e6f1ec_100%)] p-5 shadow-[0_5px_20px_rgba(15,76,69,0.05)]">
-            <div aria-hidden className="absolute -right-12 -top-16 h-40 w-40 rounded-full bg-[#d6b66e]/20 blur-sm" />
+          <div className="animate-fade-slide-up relative overflow-hidden rounded-2xl border border-[#dcebe5] bg-[linear-gradient(155deg,#eff8f4_0%,#e6f1ec_100%)] p-5 shadow-[0_5px_20px_rgba(15,76,69,0.05)] transition-shadow duration-300 hover:shadow-[0_14px_32px_rgba(15,76,69,0.11)]" style={{ animationDelay: "180ms" }}>
+            <div aria-hidden className="motion-safe:animate-[glowPulse_6s_ease-in-out_infinite] absolute -right-12 -top-16 h-40 w-40 rounded-full bg-[#d6b66e]/20 blur-sm" />
             <div className="relative flex h-full flex-col">
               <div className="flex items-start justify-between gap-3">
                 <div>
@@ -890,8 +890,8 @@ export default function DashboardHome() {
               <p className="mt-2 text-xs leading-5 text-slate-600">A fresh mix of surveys, app installs, games, and other activities. Rewards vary by activity.</p>
               {!loading && liveOfferwalls.length > 0 ? (
                 <div className="mt-4 space-y-2">
-                  {liveOfferwalls.slice(0, 3).map((provider) => (
-                    <Link key={provider.id} href="/dashboard/offerwalls" className="group flex items-center gap-2.5 rounded-xl border border-white/80 bg-white/80 p-2.5 transition hover:bg-white">
+                  {liveOfferwalls.slice(0, 3).map((provider, index) => (
+                    <Link key={provider.id} href="/dashboard/offerwalls" style={{ animationDelay: `${240 + index * 80}ms` }} className="group animate-fade-slide-up flex items-center gap-2.5 rounded-xl border border-white/80 bg-white/80 p-2.5 transition duration-200 hover:-translate-y-0.5 hover:border-teal-200 hover:bg-white hover:shadow-sm">
                       <span className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-teal-50">
                         {provider.logo_url
                           ? <img src={provider.logo_url} alt="" className="h-full w-full object-contain p-1" />
