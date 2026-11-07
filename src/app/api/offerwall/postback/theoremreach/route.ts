@@ -13,7 +13,7 @@ const logAdmin = createClient(
 
 function computeHash(secret: string, urlStr: string): string {
   const raw = createHmac("sha1", secret).update(urlStr).digest("base64");
-  return raw.replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "");
+  return raw.replace(/\+/g, "-").replace(/\//g, "_").replace(/[=\r\n]/g, "");
 }
 
 function getSigningUrl(req: NextRequest): string {
