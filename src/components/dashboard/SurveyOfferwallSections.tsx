@@ -201,9 +201,8 @@ export function SurveyOfferwallSections({ mode }: { mode: "surveys" | "offerwall
     }
   }, [providerFilter, quickSurveysOnly, sortMode, surveys]);
 
-  const gameOffers = offers.filter((offer) => offer.activityType === "game" || offer.sourceName === "Perkox");
-  const featuredOffer = gameOffers[0];
-  const otherOffers = gameOffers.slice(1);
+  const featuredOffer = offers[0];
+  const otherOffers = offers.slice(1);
   const featuredOffersSection = (
     <section id="featured-offers" aria-labelledby="featured-offers-heading" className="order-3 scroll-mt-28 space-y-5">
       <div className="flex flex-wrap items-end justify-between gap-2">
