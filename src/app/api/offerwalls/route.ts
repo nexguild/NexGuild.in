@@ -57,10 +57,9 @@ export async function GET(req: NextRequest) {
       ? p.integration_type === "api"
         && !!p.api_key?.trim()
         && !!p.postback_secret?.trim()
-        && typeof p.custom_config?.app_id === "string"
-        && /^\d{1,20}$/.test(p.custom_config.app_id)
-        && p.custom_config.currency_rate_confirmed === true
-        && !!p.embed_url_template?.trim()
+        && /^\d{1,20}$/.test(String(p.custom_config?.app_id ?? ""))
+        && Number(p.custom_config?.conversion_rate) === 660
+        && p.custom_config?.currency_rate_confirmed === true
       : !!(p.api_key && p.api_key.trim().length > 0) || !!(p.embed_url_template && p.embed_url_template.trim().length > 0),
   }));
 

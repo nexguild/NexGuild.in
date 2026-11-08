@@ -610,13 +610,16 @@ async function getPerkoxOffers(
 
   const apiKey = provider.api_key?.trim();
   const config = provider.custom_config ?? {};
-  const conversionRate = toPositiveNumber(config.conversion_rate) ?? 660;
+  const conversionRate = Number(config.conversion_rate);
+  const appId = String(config.app_id ?? "");
   if (
     !apiKey ||
     !provider.postback_secret?.trim() ||
-    typeof config.app_id !== "string" ||
-    !/^\d{1,20}$/.test(config.app_id)
+    !/^\d{1,20}$/.test(appId)
   ) throw new Error("Perkox API, app, and postback credentials are not fully configured");
+  if (conversionRate !== 660) {
+    throw new Error("Set the Perkox currency conversion rate to 660 NexCoins per USD");
+  }
   if (config.currency_rate_confirmed !== true) {
     throw new Error("Confirm the Perkox app currency is set to NexCoin / NEXC / 660 before loading offers");
   }

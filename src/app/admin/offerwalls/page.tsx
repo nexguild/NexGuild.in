@@ -89,13 +89,53 @@ function isLive(p: Provider) {
     && hasCredentials
     && !!p.postback_secret?.trim()
     && /^\d{1,20}$/.test(String(p.custom_config?.app_id ?? ""))
-    && p.custom_config?.currency_rate_confirmed === true
-    && hasEmbedUrl;
+    && p.custom_config?.currency_rate_confirmed === true;
   return (hasNotikConfig
     || (p.slug !== "notik" && p.slug !== "adbluemedia" && p.slug !== "perkox" && (hasCredentials || hasEmbedUrl))
     || hasTapRainWall
     || hasAdBlueMediaConfig
     || hasPerkoxConfig) && p.is_active;
+}
+
+function getPerkoxSetupIssues(provider: {
+  integrationType: string;
+  apiKey: string;
+  postbackSecret: string;
+  appId: unknown;
+  conversionRate: unknown;
+  currencyRateConfirmed: unknown;
+}): string[] {
+  const issues: string[] = [];
+  if (provider.integrationType !== "api") issues.push("Integration Type must be API / Server-side");
+  if (!provider.apiKey.trim()) issues.push("API key is missing");
+  if (!provider.postbackSecret.trim()) issues.push("postback secret is missing");
+  if (!/^\d{1,20}$/.test(String(provider.appId ?? ""))) issues.push("numeric Perkox app ID is missing");
+  if (Number(provider.conversionRate) !== 660) issues.push("conversion_rate must be 660");
+  if (provider.currencyRateConfirmed !== true) issues.push("currency/rate confirmation is not enabled");
+  return issues;
+}
+
+function getPerkoxFormSetupIssues(form: ConfigForm): string[] {
+  let customConfig: Record<string, unknown> = {};
+  try {
+    if (form.custom_config.trim()) {
+      const parsed: unknown = JSON.parse(form.custom_config);
+      if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
+        return ["Custom Config must be a JSON object"];
+      }
+      customConfig = parsed as Record<string, unknown>;
+    }
+  } catch {
+    return ["Custom Config must be valid JSON"];
+  }
+  return getPerkoxSetupIssues({
+    integrationType: form.integration_type,
+    apiKey: form.api_key,
+    postbackSecret: form.postback_secret,
+    appId: customConfig.app_id,
+    conversionRate: customConfig.conversion_rate,
+    currencyRateConfirmed: customConfig.currency_rate_confirmed,
+  });
 }
 
 function PostbackUrlCell({ slug }: { slug: string }) {
@@ -394,8 +434,22 @@ export default function AdminOfferwallsPage() {
                       </td>
                       <td className="px-4 py-3 text-xs text-[var(--text-muted)] font-mono">{p.integration_type ?? "iframe"}</td>
                       <td className="px-4 py-3">
-                        <Badge variant={isLive(p) ? "success" : "neutral"}>
-                          {isLive(p) ? "🟢 Live" : "🔜 Coming Soon"}
+                        <Badge
+                          variant={isLive(p) ? "success" : "neutral"}
+                          title={p.slug === "perkox"
+                            ? (p.is_active
+                              ? getPerkoxSetupIssues({
+                                integrationType: p.integration_type,
+                                apiKey: p.api_key ?? "",
+                                postbackSecret: p.postback_secret ?? "",
+                                appId: p.custom_config?.app_id,
+                                conversionRate: p.custom_config?.conversion_rate,
+                                currencyRateConfirmed: p.custom_config?.currency_rate_confirmed,
+                              }).join("; ") || "Perkox is ready"
+                              : "Enable Perkox after completing its setup")
+                            : undefined}
+                        >
+                          {isLive(p) ? "🟢 Live" : p.slug === "perkox" && p.is_active ? "⚠ Setup Needed" : "🔜 Coming Soon"}
                         </Badge>
                       </td>
                       <td className="px-4 py-3 text-[var(--text-secondary)]">{p.contributor_share_pct}%</td>
@@ -477,8 +531,14 @@ export default function AdminOfferwallsPage() {
               {/* Status indicator */}
               <div className="flex items-center gap-3 text-sm flex-wrap">
                 <span className="text-[var(--text-secondary)]">Status after save:</span>
-                <Badge variant={(form.api_key.trim() || form.embed_url_template.trim()) && form.is_active ? "success" : "neutral"}>
-                  {(form.api_key.trim() || form.embed_url_template.trim()) && form.is_active ? "🟢 Live" : "🔜 Coming Soon"}
+                <Badge variant={configuring.slug === "perkox"
+                  ? getPerkoxFormSetupIssues(form).length === 0 && form.is_active ? "success" : "neutral"
+                  : (form.api_key.trim() || form.embed_url_template.trim()) && form.is_active ? "success" : "neutral"}>
+                  {configuring.slug === "perkox"
+                    ? !form.is_active ? "🔜 Coming Soon"
+                    : getPerkoxFormSetupIssues(form).length === 0 ? "🟢 Live"
+                    : "⚠ Setup Needed"
+                    : (form.api_key.trim() || form.embed_url_template.trim()) && form.is_active ? "🟢 Live" : "🔜 Coming Soon"}
                 </Badge>
                 <label className="flex items-center gap-1.5 cursor-pointer ml-auto">
                   <input type="checkbox" checked={form.is_active}
@@ -487,6 +547,11 @@ export default function AdminOfferwallsPage() {
                   <span className="text-xs text-[var(--text-secondary)]">Active</span>
                 </label>
               </div>
+              {configuring.slug === "perkox" && form.is_active && getPerkoxFormSetupIssues(form).length > 0 && (
+                <p className="text-xs text-amber-700 dark:text-amber-300">
+                  Perkox stays in setup until you add: {getPerkoxFormSetupIssues(form).join(", ")}.
+                </p>
+              )}
 
               {/* Name */}
               <div>
@@ -510,7 +575,11 @@ export default function AdminOfferwallsPage() {
                 <input type="text" value={form.api_key} onChange={(e) => setForm((f) => ({ ...f, api_key: e.target.value }))}
                   placeholder="Paste API key from provider dashboard"
                   className="w-full h-10 px-3 rounded-md border border-[var(--border-strong)] bg-[var(--surface-subtle)] text-sm text-[var(--text-primary)] font-mono focus:outline-none focus:ring-2 focus:ring-[var(--border-focus)] placeholder:font-sans placeholder:text-[var(--text-muted)]" />
-                <p className="text-xs text-[var(--text-muted)] mt-1">Non-empty key + Active = provider goes Live.</p>
+                <p className="text-xs text-[var(--text-muted)] mt-1">
+                  {configuring.slug === "perkox"
+                    ? "Perkox also needs a postback secret, numeric app ID, API integration type, and confirmed NexCoin currency rate."
+                    : "Non-empty key + Active = provider goes Live."}
+                </p>
               </div>
 
               {/* Postback Secret */}
@@ -567,6 +636,11 @@ export default function AdminOfferwallsPage() {
               {/* Custom Config */}
               <div>
                 <label className="block text-sm font-medium text-[var(--text-primary)] mb-1.5">Custom Config <span className="text-[var(--text-muted)] font-normal text-xs">JSON — script_tag providers</span></label>
+                {configuring.slug === "perkox" && (
+                  <p className="mb-2 rounded-md border border-amber-500/30 bg-amber-500/10 p-3 text-xs leading-relaxed text-[var(--text-secondary)]">
+                    Set <code>app_id</code> to the numeric ID of your new Perkox app and <code>conversion_rate</code> to <code>660</code>. Set <code>currency_rate_confirmed</code> to <code>true</code> only after confirming that app uses NexCoin / NEXC at 660 per USD. Keep <code>rate_is_user_share</code> set to <code>true</code>.
+                  </p>
+                )}
                 {configuring.slug === "adbluemedia" && (
                   <p className="mb-2 rounded-md border border-amber-500/30 bg-amber-500/10 p-3 text-xs leading-relaxed text-[var(--text-secondary)]">
                     Add AdBlueMedia as a regular offerwall (not an Ad Network) with integration type API / Server-side. Set this JSON to <code>{`{"publisher_id":"YOUR_NUMERIC_ID","currency_conversion_rate":1000}`}</code>, replacing the publisher ID with the numeric ID from AdBlueMedia&apos;s feed URL. Use its Offers API key above. Set a cryptographically random 64-character hexadecimal value in the Postback Secret field, then configure AdBlueMedia&apos;s Postback URL as:{" "}
