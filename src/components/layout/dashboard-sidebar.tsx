@@ -28,8 +28,8 @@ const NAV_GROUPS = [
     items: [
       { label: "Paid Tasks", href: "/dashboard/opportunities", icon: Search },
       { label: "Paid Surveys", href: "/dashboard/surveys", icon: Sparkles },
-      { label: "Apps & Games", href: "/dashboard/offerwalls", icon: Layers },
       { label: "Game Testing", href: "/dashboard/game-testing", icon: Gamepad2 },
+      { label: "Apps & Games", href: "/dashboard/offerwalls", icon: Layers },
     ],
   },
   {

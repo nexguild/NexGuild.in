@@ -3,7 +3,9 @@
 import { useEffect, useState, use } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ChevronLeft, ExternalLink, Layers, Loader2, RefreshCw } from "lucide-react";
+import {
+  ChevronLeft, ExternalLink, Layers, Loader2, RefreshCw,
+} from "lucide-react";
 import { NexCoinIcon } from "@/components/ui/nexcoin-icon";
 import { supabase } from "@/lib/supabase";
 import { applyWidgetConfig, buildScriptUrl, injectScript, type WidgetInitConfig } from "@/lib/offerwall-widget-inject";
@@ -50,6 +52,7 @@ export default function ProviderExperiencePage({
   const [provider, setProvider] = useState<Provider | null>(null);
   const [userId, setUserId]     = useState<string | null>(null);
   const [token, setToken]       = useState<string | null>(null);
+  const [perkoxClickId, setPerkoxClickId] = useState<string | null>(null);
   const [loading, setLoading]   = useState(true);
   const [notFound, setNotFound] = useState(false);
 
@@ -83,6 +86,10 @@ export default function ProviderExperiencePage({
       return;
     }
   }, [providerSlug]);
+
+  useEffect(() => {
+    if (provider?.slug === "perkox") setPerkoxClickId(crypto.randomUUID());
+  }, [provider?.slug]);
 
   useEffect(() => {
     async function init() {
@@ -254,7 +261,22 @@ export default function ProviderExperiencePage({
 
   function buildEmbedUrl(): string | null {
     if (!provider?.embed_url_template || !userId) return null;
-    return provider.embed_url_template.replace(/\{user_id\}/g, userId);
+    const template = provider.embed_url_template.replace(/\{user_id\}/g, userId);
+    if (provider.slug !== "perkox") return template;
+    if (!perkoxClickId) return null;
+    try {
+      const url = new URL(
+        template
+          .replace(/\{YOUR_PLAYER_ID\}/gi, userId)
+          .replace(/\{YOUR_CLICK_ID\}/gi, perkoxClickId),
+      );
+      if (url.protocol !== "https:" || url.hostname !== "perkwall.com") return null;
+      url.searchParams.set("player_id", userId);
+      url.searchParams.set("click_id", perkoxClickId);
+      return url.toString();
+    } catch {
+      return null;
+    }
   }
 
   if (providerSlug === "adbluemedia") return null;
@@ -329,7 +351,7 @@ export default function ProviderExperiencePage({
 
       {/* Widget — fills remaining height */}
       <div className="flex min-h-0 flex-1 flex-col">
-        {renderWidget(provider, trIframeUrl, trIframeLoading, embedUrl, cpagripFrameUrl, notikFrameUrl, clixwallFrameUrl, clixwallFrameError, tapRainOffers, tapRainTitle, tapRainLoading, tapRainError, cpxFrameUrl, cpxFrameError, token)}
+        {renderWidget(provider, trIframeUrl, trIframeLoading, embedUrl, perkoxClickId, cpagripFrameUrl, notikFrameUrl, clixwallFrameUrl, clixwallFrameError, tapRainOffers, tapRainTitle, tapRainLoading, tapRainError, cpxFrameUrl, cpxFrameError, token)}
       </div>
     </div>
   );
@@ -340,6 +362,7 @@ function renderWidget(
   trIframeUrl: string | null,
   trIframeLoading: boolean,
   embedUrl: string | null,
+  perkoxClickId: string | null,
   cpagripFrameUrl: string | null,
   notikFrameUrl: string | null,
   clixwallFrameUrl: string | null,
@@ -496,6 +519,29 @@ function renderWidget(
     );
   }
 
+  if (provider.slug === "perkox") {
+    if (!perkoxClickId) {
+      return <div className="flex-1 flex items-center justify-center"><Loader2 className="h-6 w-6 animate-spin text-indigo-500" /></div>;
+    }
+    if (!embedUrl) {
+      return (
+        <div role="alert" className="flex-1 flex flex-col items-center justify-center gap-2 p-6 text-center">
+          <p className="font-semibold text-slate-700">Perkox Direct Link is not configured correctly</p>
+          <p className="max-w-md text-sm text-slate-500">Configure an HTTPS Perkox link using the active app ID in Admin → Offerwalls.</p>
+        </div>
+      );
+    }
+    return (
+      <iframe
+        src={embedUrl}
+        className="flex-1 w-full border-0"
+        style={{ minHeight: widgetH, touchAction: "pan-y" }}
+        title="Perkox Offerwall"
+        allow="accelerometer; autoplay; clipboard-write"
+      />
+    );
+  }
+
   // CPAGrip: load from a real API-served HTML page so viewport meta and innerHTML
   // work correctly on Android (srcdoc + sandbox triggers Trusted Types blocks).
   if (provider.slug === "cpagrip") {
@@ -506,6 +552,7 @@ function renderWidget(
         </div>
       );
     }
+
     return (
       <iframe
         src={cpagripFrameUrl}

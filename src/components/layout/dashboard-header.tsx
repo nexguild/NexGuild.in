@@ -87,8 +87,8 @@ const NAV_CATEGORIES = [
     items: [
       { label: "Paid Tasks", href: "/dashboard/opportunities" },
       { label: "Paid Surveys", href: "/dashboard/surveys" },
-      { label: "Apps & Games", href: "/dashboard/offerwalls" },
       { label: "Game Testing", href: "/dashboard/game-testing" },
+      { label: "Apps & Games", href: "/dashboard/offerwalls" },
       { label: "My Work", href: "/dashboard/tasks" },
     ],
   },

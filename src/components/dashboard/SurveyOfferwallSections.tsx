@@ -201,8 +201,9 @@ export function SurveyOfferwallSections({ mode }: { mode: "surveys" | "offerwall
     }
   }, [providerFilter, quickSurveysOnly, sortMode, surveys]);
 
-  const featuredOffer = offers[0];
-  const otherOffers = offers.slice(1);
+  const gameOffers = offers.filter((offer) => offer.activityType === "game" || offer.sourceName === "Perkox");
+  const featuredOffer = gameOffers[0];
+  const otherOffers = gameOffers.slice(1);
   const featuredOffersSection = (
     <section id="featured-offers" aria-labelledby="featured-offers-heading" className="order-3 scroll-mt-28 space-y-5">
       <div className="flex flex-wrap items-end justify-between gap-2">
@@ -215,7 +216,7 @@ export function SurveyOfferwallSections({ mode }: { mode: "surveys" | "offerwall
       </div>
 
       {loading ? (
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3" aria-label="Loading featured activities">
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3" aria-label="Loading featured offers">
           {[0, 1, 2, 3].map((item) => <div key={item} className="h-80 animate-pulse rounded-2xl bg-slate-200" />)}
         </div>
       ) : loadError ? (
@@ -240,12 +241,12 @@ export function SurveyOfferwallSections({ mode }: { mode: "surveys" | "offerwall
                   <div className="flex flex-col items-center gap-2 text-center">
                     <ImageOff className="h-6 w-6 opacity-70" strokeWidth={1.5} />
                     <span className="text-[10px] font-medium">
-                      {offer.activityType === "game" ? "Game preview unavailable" : offer.activityType === "app" ? "App preview unavailable" : "Preview unavailable"}
+                      {offer.activityType === "game" ? "Game preview unavailable" : offer.activityType === "app" ? "App preview unavailable" : `${offer.sourceName} offer preview unavailable`}
                     </span>
                   </div>
-                  {offer.activityType && (
+                  {(offer.activityType || offer.sourceName === "Perkox") && (
                     <span className="absolute left-3 top-3 rounded-full border border-white/15 bg-[#071321]/70 px-2.5 py-1 text-[9px] font-bold uppercase tracking-[0.14em] text-white/90 backdrop-blur-sm">
-                      {offer.activityType}
+                      {offer.activityType ?? offer.sourceName}
                     </span>
                   )}
                   {offer.imageUrl ? (
