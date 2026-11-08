@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createHmac } from "crypto";
 import { createServerClient } from "@/lib/supabase-server";
+import { getTheoremReachExchangeRate } from "@/lib/theoremreach";
 
 export async function GET(req: NextRequest) {
   const token = req.headers.get("authorization")?.replace("Bearer ", "");
@@ -26,6 +27,13 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "TheoremReach is not fully configured" }, { status: 503 });
   }
   const customConfig = provider.custom_config as Record<string, unknown> | null;
+  let exchangeRate: number;
+  try {
+    exchangeRate = getTheoremReachExchangeRate(customConfig);
+  } catch (error) {
+    console.error("[offerwall/theoremreach/iframe-url] Invalid provider configuration:", error);
+    return NextResponse.json({ error: "TheoremReach exchange rate is invalid" }, { status: 503 });
+  }
   const partnerId = typeof customConfig?.placement_id === "string" && customConfig.placement_id.trim()
     ? customConfig.placement_id.trim()
     : "e1870419-681e-4792-b66b-c59deb5479fe";
@@ -40,7 +48,7 @@ export async function GET(req: NextRequest) {
     transaction_id:         transactionId,
     currency_name_plural:   "NexCoins",
     currency_name_singular: "NexCoin",
-    exchange_rate:          "660",
+    exchange_rate:          String(exchangeRate),
     external_id:            user.id,
     partner_id:             partnerId,
   });

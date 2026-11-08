@@ -3,6 +3,7 @@ import { createHmac, timingSafeEqual } from "crypto";
 import { createClient } from "@supabase/supabase-js";
 import { createServerClient } from "@/lib/supabase-server";
 import { isValidNexcoinAmount, normalizeNexcoins } from "@/lib/nexcoins";
+import { getTheoremReachExchangeRate } from "@/lib/theoremreach";
 
 // Dedicated service-role client for postback_logs writes — guaranteed to bypass RLS
 const logAdmin = createClient(
@@ -149,7 +150,7 @@ async function handlePostback(req: NextRequest): Promise<Response> {
 
   const { data: provider, error: providerError } = await admin
     .from("offerwall_providers")
-    .select("id, name, api_key, postback_secret, is_active")
+    .select("id, name, api_key, postback_secret, custom_config, is_active")
     .eq("slug", "theoremreach")
     .maybeSingle();
   if (providerError || !provider) {
@@ -157,8 +158,17 @@ async function handlePostback(req: NextRequest): Promise<Response> {
     await logPostback(rawParams, null, "error", providerError?.message ?? "provider not found");
     return new Response("Provider configuration unavailable", { status: 503 });
   }
-  if (!provider.is_active || !provider.postback_secret?.trim()) {
-    await logPostback(rawParams, null, "error", "TheoremReach is disabled or its postback secret is not configured");
+  if (!provider.is_active || !provider.api_key?.trim() || !provider.postback_secret?.trim()) {
+    await logPostback(rawParams, null, "error", "TheoremReach is disabled or its API credentials are not configured in Admin → Offerwalls");
+    return new Response("Provider configuration unavailable", { status: 503 });
+  }
+  const customConfig = provider.custom_config as Record<string, unknown> | null;
+  let exchangeRate: number;
+  try {
+    exchangeRate = getTheoremReachExchangeRate(customConfig);
+  } catch (error) {
+    console.error("[postback/theoremreach] Invalid provider configuration:", error);
+    await logPostback(rawParams, null, "error", "Invalid TheoremReach exchange rate in Admin → Offerwalls");
     return new Response("Provider configuration unavailable", { status: 503 });
   }
 
@@ -169,8 +179,19 @@ async function handlePostback(req: NextRequest): Promise<Response> {
   if (!hash || !verifyUrlHash(req, hash, rawBody, provider.postback_secret)) {
     console.warn("[postback/theoremreach] hash validation failed");
     const signingInput = req.method === "POST" ? "request URL plus raw POST body" : "request URL";
+    const signatureDiagnostics = {
+      signing_url: getSigningUrl(req),
+      host: req.headers.get("host"),
+      forwarded_host: req.headers.get("x-forwarded-host"),
+      forwarded_proto: req.headers.get("x-forwarded-proto"),
+      content_type: req.headers.get("content-type"),
+      post_body_bytes: Buffer.byteLength(rawBody),
+    };
     await logPostback(
-      rawParams,
+      {
+        ...rawParams,
+        _signature_diagnostics: JSON.stringify(signatureDiagnostics),
+      },
       false,
       "hash_invalid",
       hash ? `TheoremReach signature did not match (${signingInput})` : "Missing TheoremReach signature",
@@ -182,11 +203,14 @@ async function handlePostback(req: NextRequest): Promise<Response> {
   // Resolve field names — TheoremReach uses different names for surveys vs offers
   const userId     = resolveField(rawParams, "user_id", "uid", "publisher_user_id");
   const txId       = resolveField(rawParams, "tx_id", "trans_id", "transaction_id", "tid", "offer_transaction_id");
-  const rewardStr  = resolveField(rawParams, "reward", "payout", "amount", "coins");
-  const reward     = Number(rewardStr || "0");
+  const rewardStr = resolveField(rawParams, "reward", "payout", "amount", "coins");
+  const reward = Number(rewardStr || "0");
+  const currencyStr = resolveField(rawParams, "reward_amount_in_dollars", "currency");
+  const currencyUsd = currencyStr === "" ? null : Number(currencyStr);
   const isReversal = rawParams.reversal === "true"
     || rawParams.reversal === "1"
-    || reward < 0;
+    || reward < 0
+    || (currencyUsd !== null && currencyUsd < 0);
   const screenout  = rawParams.screenout === "1" || rawParams.screenout === "true";
 
   if (!userId || !txId) {
@@ -201,11 +225,6 @@ async function handlePostback(req: NextRequest): Promise<Response> {
     method: req.method,
     paramKeys: Object.keys(rawParams).join(","),
   });
-
-  if (screenout && !isReversal) {
-    await logPostback(rawParams, hashValid, "debug_ignored", "Screenout callback; no reward credited");
-    return new Response("OK", { status: 200 });
-  }
 
   // ─── Reversal ─────────────────────────────────────────────────────────────
   if (isReversal) {
@@ -235,15 +254,28 @@ async function handlePostback(req: NextRequest): Promise<Response> {
     return new Response("OK", { status: 200 });
   }
 
-  // ─── Completion ──────────────────────────────────────────────────────────
-  if (reward <= 0) {
-    console.log(`[postback/theoremreach] zero reward — ignoring (tx=${txId}, screenout=${screenout})`);
-    await logPostback(rawParams, hashValid, "error", `zero reward (resolved reward='${rewardStr}')`);
+  // `reward_amount_in_dollars` (or legacy `currency`) is the actual USD value;
+  // `reward` is TheoremReach's already-rounded app-currency amount.
+  const userCoinsBeforeNormalize = currencyUsd !== null
+    ? currencyUsd * exchangeRate
+    : reward;
+  if (
+    !Number.isFinite(userCoinsBeforeNormalize)
+    || userCoinsBeforeNormalize <= 0
+    || (currencyUsd !== null && currencyUsd < 0)
+  ) {
+    console.log(`[postback/theoremreach] no payable reward — ignoring (tx=${txId}, screenout=${screenout})`);
+    await logPostback(
+      rawParams,
+      hashValid,
+      screenout ? "screenout_no_reward" : "error",
+      `no positive reward (currency='${currencyStr}', reward='${rewardStr}')`,
+    );
     return new Response("OK", { status: 200 });
   }
 
-  // Exchange rate in TheoremReach dashboard = 660, so reward IS the user's coin amount
-  const userCoins = normalizeNexcoins(reward);
+  // Screenouts with a positive partial amount are payable. Zero-value screenouts above stay uncredited.
+  const userCoins = normalizeNexcoins(userCoinsBeforeNormalize);
   if (!isValidNexcoinAmount(userCoins)) {
     await logPostback(rawParams, hashValid, "error", "reward amount is invalid or exceeds the supported range");
     return new Response("OK", { status: 200 });
@@ -258,6 +290,10 @@ async function handlePostback(req: NextRequest): Promise<Response> {
     p_raw_payload: {
       query: rawParams,
       screenout,
+      currency_usd: currencyUsd,
+      exchange_rate: exchangeRate,
+      reward_source: currencyUsd !== null ? "usd_currency" : "app_currency_reward",
+      calculated_nexcoins: userCoins,
     },
     p_provider_name: provider.name,
   });
