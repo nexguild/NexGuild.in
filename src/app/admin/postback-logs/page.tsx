@@ -25,7 +25,7 @@ const ACTION_STYLES: Record<string, string> = {
   error:         "bg-red-500/15   text-red-400   border-red-500/20",
 };
 
-const PROVIDERS  = ["theoremreach", "cpx_research", "mylead", "clixwall", "clickwall", "cpagrip", "monlix", "gemiad"];
+const PROVIDERS  = ["theoremreach", "cpx_research", "mylead", "perkox", "clixwall", "clickwall", "cpagrip", "monlix", "gemiad"];
 const ACTIONS    = ["credited", "duplicate", "reversed", "debug_ignored", "hash_invalid", "error"];
 
 function csvCell(value: unknown) {

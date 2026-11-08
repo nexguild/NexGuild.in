@@ -20,9 +20,10 @@ function extractParams(q: URLSearchParams, body: Record<string, unknown>, paramM
     return fromBody || null;
   }
   return {
-    userId:         get("user_id") ?? (slug === "clixwall" ? get("u") : null),
-    transId:        get("trans_id") ?? get("transaction_id"),
-    amount:         parseFloat(get("amount") ?? get("user_payout") ?? get("reward") ?? "0") || 0,
+    userId:         get("user_id") ?? (slug === "perkox" ? get("player_id") : slug === "clixwall" ? get("u") : null),
+    transId:        get("trans_id") ?? get("transaction_id") ?? (slug === "perkox" ? get("click_id") : null),
+    clickId:        get("click_id"),
+    amount:         parseFloat(get("amount") ?? get("user_payout") ?? get("reward") ?? (slug === "perkox" ? get("reward_amount") : null) ?? "0") || 0,
     userPayoutUsd:  parseFloat(get("user_payout_usd") ?? "0") || 0,
     payout:         parseFloat(get("payout") ?? "0") || 0,
     status:         get("status") ?? (slug === "clixwall" ? get("s") : null),
@@ -113,7 +114,21 @@ async function handlePostback(req: NextRequest, slug: string): Promise<Response>
   const paramMap: ParamMap = (provider.postback_param_map as ParamMap | null) ?? {};
   const customCfg = (provider.custom_config as Record<string, unknown> | null) ?? {};
   const gemiadHash = slug === "gemiad" && customCfg.hash_algorithm === "sha256-user-offer-tx-secret";
-  const { userId, transId, amount, userPayoutUsd, payout, status, offerId, type, hash, s1, rewardedTxnId, incomingSecret } = extractParams(q, bodyObj, paramMap, slug);
+  const {
+    userId,
+    transId: parsedTransId,
+    clickId,
+    amount,
+    userPayoutUsd,
+    payout,
+    status,
+    offerId,
+    type,
+    hash,
+    s1,
+    rewardedTxnId,
+    incomingSecret,
+  } = extractParams(q, bodyObj, paramMap, slug);
   const safeRawParams = {
     ...redactSensitiveParams(Object.fromEntries(q.entries())),
     ...redactSensitiveParams(bodyObj),
@@ -124,6 +139,9 @@ async function handlePostback(req: NextRequest, slug: string): Promise<Response>
       || String(bodyObj[paramMap[key] ?? key] ?? bodyObj[key] ?? "").trim(),
     ),
   ) ?? "missing";
+  const transId = slug === "perkox" && clickId && offerId
+    ? `perkox:${clickId}:${offerId}`
+    : parsedTransId;
 
   // 3. Auth — hash-format or simple secret
   const hashFormat = (provider.hash_format as string | null) ?? null;
@@ -153,7 +171,8 @@ async function handlePostback(req: NextRequest, slug: string): Promise<Response>
   const isReversalStatus = normalizedStatus === "2"
     || (slug === "adbluemedia" && normalizedStatus === "0")
     || (gemiadHash && normalizedStatus === "rejected")
-    || (slug === "clixwall" && ["reversal", "reversed", "chargeback"].includes(normalizedStatus));
+    || (slug === "clixwall" && ["reversal", "reversed", "chargeback"].includes(normalizedStatus))
+    || (slug === "perkox" && ["reversal", "reversed", "chargeback", "rejected"].includes(normalizedStatus));
 
   if (notikHmac) {
     if (!verifyNotikHash(req.url, provider.postback_secret, hash)) {
@@ -207,6 +226,11 @@ async function handlePostback(req: NextRequest, slug: string): Promise<Response>
     }
   }
 
+  if (slug === "perkox" && !status) {
+    await writeLog(admin, slug, safeRawParams, "error", true, "Missing Perkox conversion status");
+    return new Response("Missing Perkox conversion status", { status: 400 });
+  }
+
   if (slug === "adbluemedia" && s1?.toLowerCase() === "s1test" && transId === "123" && normalizedStatus === "1") {
     await writeLog(admin, slug, safeRawParams, "debug_ignored", false, "AdBlueMedia test callback acknowledged; no credit issued");
     return new Response("OK", { status: 200 });
@@ -217,6 +241,10 @@ async function handlePostback(req: NextRequest, slug: string): Promise<Response>
     console.warn(`[postback/${slug}] missing contributor ID or trans_id`, { userId, s1, transId });
     await writeLog(admin, slug, Object.fromEntries(q.entries()), "error", hashAuthenticated ? true : null, "Missing user_id or transaction ID");
     return new Response("Bad Request", { status: 400 });
+  }
+  if (slug === "perkox" && (!clickId || !offerId)) {
+    await writeLog(admin, slug, safeRawParams, "error", null, "Missing Perkox click ID or offer ID");
+    return new Response("Missing Perkox click ID or offer ID", { status: 400 });
   }
 
   if (slug === "taprain" && !status) {
@@ -258,8 +286,10 @@ async function handlePostback(req: NextRequest, slug: string): Promise<Response>
     ?? (slug === "clixwall" ? "Credit" : "1");
   const isClixwallCreditStatus = slug === "clixwall"
     && ["credit", "1", "completed"].includes(normalizedStatus);
+  const isPerkoxCreditStatus = slug === "perkox"
+    && ["1", "approved", "completed", "success"].includes(normalizedStatus);
   const isGemiadCreditStatus = gemiadHash && normalizedStatus === "completed";
-  if (status && normalizedStatus !== creditStatusValue.trim().toLowerCase() && !isClixwallCreditStatus && !isGemiadCreditStatus) {
+  if (status && normalizedStatus !== creditStatusValue.trim().toLowerCase() && !isClixwallCreditStatus && !isPerkoxCreditStatus && !isGemiadCreditStatus) {
     await writeLog(admin, slug, { user_id: userId, trans_id: transId, amount, status, type }, "debug_ignored", hashAuthenticated ? true : null);
     return new Response("OK", { status: 200 });
   }
@@ -287,7 +317,7 @@ async function handlePostback(req: NextRequest, slug: string): Promise<Response>
     : slug === "adbluemedia"
     ? Number(customCfg.currency_conversion_rate ?? 1000)
     : Number(customCfg.payout_multiplier ?? 1) || 1;
-  const rateIsUserShare = slug === "clixwall" || gemiadHash || customCfg.rate_is_user_share === true;
+  const rateIsUserShare = slug === "clixwall" || slug === "perkox" || gemiadHash || customCfg.rate_is_user_share === true;
   const contributorShare = slug === "taprain" || slug === "adbluemedia"
     ? Number(provider.contributor_share_pct ?? 66) / 100
     : 0.66;

@@ -45,6 +45,7 @@ interface SurveyResponse {
     theoremreach_offers: string | null;
     notik_offers: string | null;
     mylead_campaigns: string | null;
+    perkox_offers: string | null;
   };
 }
 
@@ -105,6 +106,7 @@ export function SurveyOfferwallSections({ mode }: { mode: "surveys" | "offerwall
     theoremreach_offers: null,
     notik_offers: null,
     mylead_campaigns: null,
+    perkox_offers: null,
   });
   const [sortMode, setSortMode] = useState<SortMode>("Recommended");
   const [providerFilter, setProviderFilter] = useState<ProviderFilter>("All surveys");
@@ -225,9 +227,9 @@ export function SurveyOfferwallSections({ mode }: { mode: "surveys" | "offerwall
         </div>
       ) : featuredOffer ? (
         <>
-          {(errors.theoremreach_offers || errors.notik_offers || errors.mylead_campaigns) && (
+          {(errors.theoremreach_offers || errors.notik_offers || errors.mylead_campaigns || errors.perkox_offers) && (
             <p role="status" className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[10px] leading-relaxed text-amber-900 sm:text-xs">
-              Some tasks could not be loaded. {errors.notik_offers && `Notik: ${errors.notik_offers}. `}{errors.theoremreach_offers && `TheoremReach: ${errors.theoremreach_offers}. `}{errors.mylead_campaigns && `MyLead: ${errors.mylead_campaigns}. `}Other tasks are still available below.
+              Some tasks could not be loaded. {errors.notik_offers && `Notik: ${errors.notik_offers}. `}{errors.theoremreach_offers && `TheoremReach: ${errors.theoremreach_offers}. `}{errors.mylead_campaigns && `MyLead: ${errors.mylead_campaigns}. `}{errors.perkox_offers && `Perkox: ${errors.perkox_offers}. `}Other tasks are still available below.
             </p>
           )}
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
@@ -299,7 +301,7 @@ export function SurveyOfferwallSections({ mode }: { mode: "surveys" | "offerwall
         <div className="rounded-xl border border-dashed border-slate-300 bg-white/70 px-4 py-5 text-center">
           <p className="text-sm font-bold text-slate-800">No featured tasks showing right now</p>
           <p className="mt-1 text-xs leading-relaxed text-slate-500">Choose a partner below to browse its available activities.</p>
-          {(errors.theoremreach_offers || errors.notik_offers || errors.mylead_campaigns) && <p role="status" className="mt-2 text-xs text-amber-800">{errors.notik_offers && `Notik: ${errors.notik_offers} `}{errors.theoremreach_offers && `TheoremReach: ${errors.theoremreach_offers} `}{errors.mylead_campaigns && `MyLead: ${errors.mylead_campaigns}`}</p>}
+          {(errors.theoremreach_offers || errors.notik_offers || errors.mylead_campaigns || errors.perkox_offers) && <p role="status" className="mt-2 text-xs text-amber-800">{errors.notik_offers && `Notik: ${errors.notik_offers} `}{errors.theoremreach_offers && `TheoremReach: ${errors.theoremreach_offers} `}{errors.mylead_campaigns && `MyLead: ${errors.mylead_campaigns} `}{errors.perkox_offers && `Perkox: ${errors.perkox_offers}`}</p>}
         </div>
       )}
       <p className="text-[10px] leading-relaxed text-slate-500">

@@ -84,16 +84,26 @@ function isLive(p: Provider) {
     && hasCredentials
     && !!p.postback_secret?.trim()
     && /^\d{1,20}$/.test(String(p.custom_config?.publisher_id ?? ""));
+  const hasPerkoxConfig = p.slug === "perkox"
+    && p.integration_type === "api"
+    && hasCredentials
+    && !!p.postback_secret?.trim()
+    && /^\d{1,20}$/.test(String(p.custom_config?.app_id ?? ""))
+    && p.custom_config?.currency_rate_confirmed === true
+    && hasEmbedUrl;
   return (hasNotikConfig
-    || (p.slug !== "notik" && p.slug !== "adbluemedia" && (hasCredentials || hasEmbedUrl))
+    || (p.slug !== "notik" && p.slug !== "adbluemedia" && p.slug !== "perkox" && (hasCredentials || hasEmbedUrl))
     || hasTapRainWall
-    || hasAdBlueMediaConfig) && p.is_active;
+    || hasAdBlueMediaConfig
+    || hasPerkoxConfig) && p.is_active;
 }
 
 function PostbackUrlCell({ slug }: { slug: string }) {
   const baseUrl = `https://www.nexguild.in/api/offerwall/postback/${slug}`;
   const url = slug === "adbluemedia"
     ? `${baseUrl}?secret=YOUR_SECRET&s1={s1}&trans_id={lead_id}&amount={payout}&status={status}&offer_id={offer_id}`
+    : slug === "perkox"
+    ? `${baseUrl}?secret=YOUR_SECRET&player_id={player_id}&click_id={click_id}&offer_id={offer_id}&reward_amount={reward_amount}&payout={payout}&status={status}`
     : baseUrl;
   const [copied, setCopied] = useState(false);
   function copy() {

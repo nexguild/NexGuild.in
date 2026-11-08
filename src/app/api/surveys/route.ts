@@ -1,4 +1,4 @@
-import { createHash, createHmac } from "crypto";
+import { createHash, createHmac, randomUUID } from "crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase-server";
 import { getProfileCountryCode } from "@/lib/countries";
@@ -62,6 +62,17 @@ interface NotikApiOffer {
   payout?: number | string;
   click_url?: string;
   events?: Array<{ name?: string; payout?: number | string }>;
+}
+
+interface PerkoxApiOffer {
+  id?: string | number;
+  name?: string;
+  thumbnail?: string;
+  description?: string;
+  payout?: number | string;
+  points?: number | string;
+  link?: string;
+  preview_link?: string;
 }
 
 function getClientIp(req: NextRequest): string | null {
@@ -588,6 +599,103 @@ async function getNotikOffers(
   });
 }
 
+async function getPerkoxOffers(
+  req: NextRequest,
+  userId: string,
+  provider: OfferwallProvider | undefined,
+): Promise<Offer[]> {
+  if (!provider?.is_active || provider.integration_type === "disabled") return [];
+
+  const apiKey = provider.api_key?.trim();
+  const config = provider.custom_config ?? {};
+  const conversionRate = toPositiveNumber(config.conversion_rate) ?? 660;
+  if (
+    !apiKey ||
+    !provider.postback_secret?.trim() ||
+    typeof config.app_id !== "string" ||
+    !/^\d{1,20}$/.test(config.app_id)
+  ) throw new Error("Perkox API, app, and postback credentials are not fully configured");
+  if (config.currency_rate_confirmed !== true) {
+    throw new Error("Confirm the Perkox app currency is set to NexCoin / NEXC / 660 before loading offers");
+  }
+
+  const params = new URLSearchParams({
+    api_key: apiKey,
+    player_id: userId,
+    click_id: randomUUID(),
+  });
+  const ip = getClientIp(req);
+  const userAgent = req.headers.get("user-agent");
+  if (ip) params.set("player_ip", ip);
+  if (userAgent) params.set("user_agent", userAgent);
+
+  const response = await fetch(`https://api.perkox.com/offerwall/api/offers?${params}`, {
+    headers: { Accept: "application/json" },
+    signal: AbortSignal.timeout(12_000),
+    cache: "no-store",
+  });
+  if (response.status === 401 || response.status === 403) {
+    throw new Error("Perkox rejected the Offerwall API credentials or access");
+  }
+  if (!response.ok) throw new Error(`Perkox Offerwall API returned HTTP ${response.status}`);
+
+  const result = await response.json() as {
+    success?: boolean;
+    data?: {
+      hot_offers?: { data?: PerkoxApiOffer[] };
+      offers?: { data?: PerkoxApiOffer[] };
+    };
+  };
+  const hotOffers = result.data?.hot_offers?.data;
+  const regularOffers = result.data?.offers?.data;
+  if (result.success !== true || !Array.isArray(hotOffers) || !Array.isArray(regularOffers)) {
+    throw new Error("Perkox returned an invalid Offerwall API response");
+  }
+
+  const rankedOffers = [
+    ...hotOffers.map((offer, index) => ({ offer, rankScore: hotOffers.length - index })),
+    ...regularOffers.map((offer, index) => ({ offer, rankScore: regularOffers.length - index })),
+  ];
+
+  return rankedOffers.flatMap(({ offer, rankScore }): Offer[] => {
+    let entryUrl: URL;
+    try {
+      entryUrl = new URL(offer.link ?? "");
+    } catch {
+      return [];
+    }
+    if (
+      entryUrl.protocol !== "https:" ||
+      (entryUrl.hostname !== "perkoxtracker.com" && !entryUrl.hostname.endsWith(".perkoxtracker.com"))
+    ) return [];
+
+    const id = offer.id === undefined ? "" : String(offer.id);
+    const name = typeof offer.name === "string" ? cleanOfferText(offer.name.trim()) : "";
+    const payout = toPositiveNumber(offer.payout);
+    const points = offer.points === undefined
+      ? (payout ? normalizeNexcoins(payout * conversionRate) : null)
+      : toPositiveNumber(offer.points);
+    if (!id || !name || !points) return [];
+
+    const imageUrl = getAnyHttpsUrl(offer.thumbnail);
+    return [{
+      id: `perkox-${id}`,
+      name,
+      description: typeof offer.description === "string" ? cleanOfferText(offer.description) : null,
+      terms: null,
+      confirmationTime: null,
+      imageUrl: imageUrl?.toString() ?? null,
+      sourceName: "Perkox",
+      providerName: "Perkox",
+      kind: "network",
+      estimatedRewardCoins: normalizeNexcoins(points),
+      rankScore,
+      events: [],
+      entryUrl: entryUrl.toString(),
+    }];
+  });
+}
+
 export async function GET(req: NextRequest) {
   const token = req.headers.get("authorization")?.replace(/^Bearer\s+/i, "");
   if (!token) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -599,7 +707,7 @@ export async function GET(req: NextRequest) {
       admin
         .from("offerwall_providers")
         .select("slug, name, is_active, integration_type, api_key, postback_secret, custom_config")
-        .in("slug", ["cpx_research", "theoremreach", "notik", "mylead"]),
+        .in("slug", ["cpx_research", "theoremreach", "notik", "mylead", "perkox"]),
     ]);
   if (authError || !user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   if (providerError) {
@@ -616,6 +724,7 @@ export async function GET(req: NextRequest) {
   );
   const notikProvider = providerRows.find((provider) => provider.slug === "notik");
   const myLeadProvider = providerRows.find((provider) => provider.slug === "mylead");
+  const perkoxProvider = providerRows.find((provider) => provider.slug === "perkox");
   const { data: profile, error: profileError } = await admin
     .from("profiles")
     .select("country_code, country")
@@ -624,7 +733,7 @@ export async function GET(req: NextRequest) {
   if (profileError) console.error("[api/surveys] Profile lookup failed:", profileError.message);
   const profileCountry = getProfileCountryCode(profile?.country_code, profile?.country);
 
-  const [cpxResult, theoremReachResult, theoremReachOffersResult, notikOffersResult, myLeadCampaignsResult] = await Promise.all([
+  const [cpxResult, theoremReachResult, theoremReachOffersResult, notikOffersResult, myLeadCampaignsResult, perkoxOffersResult] = await Promise.all([
     getCpxSurveys(req, user.id, cpxProvider).then(
       (surveys) => ({ surveys, error: null as string | null }),
       (error: unknown) => ({ surveys: [] as Survey[], error: error instanceof Error ? error.message : "Unable to load CPX Research surveys" }),
@@ -647,6 +756,12 @@ export async function GET(req: NextRequest) {
         (error: unknown) => ({ offers: [] as Offer[], error: error instanceof Error ? error.message : "Unable to load MyLead campaigns" }),
       )
       : Promise.resolve({ offers: [] as Offer[], error: null as string | null }),
+    perkoxProvider?.is_active
+      ? getPerkoxOffers(req, user.id, perkoxProvider).then(
+        (offers) => ({ offers, error: null as string | null }),
+        (error: unknown) => ({ offers: [] as Offer[], error: error instanceof Error ? error.message : "Unable to load Perkox activities" }),
+      )
+      : Promise.resolve({ offers: [] as Offer[], error: null as string | null }),
   ]);
 
   const surveys = [...cpxResult.surveys, ...theoremReachResult.surveys]
@@ -661,6 +776,7 @@ export async function GET(req: NextRequest) {
     theoremreach_offers: theoremReachProvider?.is_active ? theoremReachOffersResult.error : null,
     notik_offers: notikProvider?.is_active ? notikOffersResult.error : null,
     mylead_campaigns: myLeadProvider?.is_active && isMyLeadApiConfigured() ? myLeadCampaignsResult.error : null,
+    perkox_offers: perkoxProvider?.is_active ? perkoxOffersResult.error : null,
   };
 
   return NextResponse.json(
@@ -670,6 +786,7 @@ export async function GET(req: NextRequest) {
         theoremReachOffersResult.offers.sort((a, b) => b.rankScore - a.rankScore),
         notikOffersResult.offers,
         myLeadCampaignsResult.offers.sort((a, b) => b.rankScore - a.rankScore),
+        perkoxOffersResult.offers.sort((a, b) => b.rankScore - a.rankScore),
       ),
       errors,
     },

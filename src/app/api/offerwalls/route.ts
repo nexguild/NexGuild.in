@@ -53,6 +53,14 @@ export async function GET(req: NextRequest) {
         && !!p.custom_config.app_id.trim()
         && typeof p.custom_config?.publisher_id === "string"
         && !!p.custom_config.publisher_id.trim()
+      : p.slug === "perkox"
+      ? p.integration_type === "api"
+        && !!p.api_key?.trim()
+        && !!p.postback_secret?.trim()
+        && typeof p.custom_config?.app_id === "string"
+        && /^\d{1,20}$/.test(p.custom_config.app_id)
+        && p.custom_config.currency_rate_confirmed === true
+        && !!p.embed_url_template?.trim()
       : !!(p.api_key && p.api_key.trim().length > 0) || !!(p.embed_url_template && p.embed_url_template.trim().length > 0),
   }));
 
