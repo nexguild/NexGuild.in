@@ -36,8 +36,8 @@ const STATUS_STYLES: Record<string, string> = {
 
 export default function NexCoinsPage() {
   const [nexcoins, setNexcoins] = useState<number | null>(null);
-  const [totalEarned, setTotalEarned] = useState(0);
-  const [totalSpent, setTotalSpent] = useState(0);
+  const [totalEarned, setTotalEarned] = useState<number | null>(null);
+  const [totalSpent, setTotalSpent] = useState<number | null>(null);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [vouchers, setVouchers] = useState<VoucherRequest[]>([]);
   const [loading, setLoading] = useState(true);
@@ -51,6 +51,8 @@ export default function NexCoinsPage() {
         { data: profileData },
         { data: txData },
         { data: voucherData },
+        lifetimeEarnedResult,
+        lifetimeSpentResult,
       ] = await Promise.all([
         supabase.from("profiles").select("nexcoins").eq("id", user.id).single(),
         supabase
@@ -64,14 +66,35 @@ export default function NexCoinsPage() {
           .select("id, voucher_type, voucher_value, coins_spent, charged_coins, status, requested_at, delivered_at")
           .eq("contributor_id", user.id)
           .order("requested_at", { ascending: false }),
+        supabase.rpc("get_my_lifetime_earned"),
+        supabase.rpc("get_my_lifetime_spent"),
       ]);
 
       setNexcoins(profileData?.nexcoins ?? 0);
 
       const txList = txData ?? [];
       setTransactions(txList);
-      setTotalEarned(txList.filter((t) => t.type === "earned").reduce((s, t) => s + t.amount, 0));
-      setTotalSpent(txList.filter((t) => t.type === "redeemed").reduce((s, t) => s + Math.abs(t.amount), 0));
+      const earned = Number(lifetimeEarnedResult.data);
+      if (lifetimeEarnedResult.error) {
+        console.error("[wallet] lifetime earned lookup failed:", lifetimeEarnedResult.error.message);
+        setTotalEarned(null);
+      } else if (!Number.isFinite(earned)) {
+        console.error("[wallet] lifetime earned lookup returned an invalid amount:", lifetimeEarnedResult.data);
+        setTotalEarned(null);
+      } else {
+        setTotalEarned(earned);
+      }
+
+      const spent = Number(lifetimeSpentResult.data);
+      if (lifetimeSpentResult.error) {
+        console.error("[wallet] lifetime spent lookup failed:", lifetimeSpentResult.error.message);
+        setTotalSpent(null);
+      } else if (!Number.isFinite(spent) || spent < 0) {
+        console.error("[wallet] lifetime spent lookup returned an invalid amount:", lifetimeSpentResult.data);
+        setTotalSpent(null);
+      } else {
+        setTotalSpent(spent);
+      }
       setVouchers(voucherData ?? []);
       setLoading(false);
     }
@@ -127,16 +150,16 @@ export default function NexCoinsPage() {
             <TrendingUp className="h-3.5 w-3.5 text-green-600" />
             <span className="text-xs text-green-600">Total Earned</span>
           </div>
-          <p className="text-xl font-extrabold text-green-700">{loading ? "—" : formatNexcoins(totalEarned)}</p>
-          <p className="mt-0.5 text-xs text-green-500">From tasks &amp; offers</p>
+          <p className="text-xl font-extrabold text-green-700">{loading || totalEarned === null ? "—" : formatNexcoins(totalEarned)}</p>
+          <p className="mt-0.5 text-xs text-green-500">Lifetime credits, net of reversals</p>
         </div>
         <div className="rounded-2xl border border-amber-100 bg-amber-50 p-4 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
           <div className="mb-2 flex items-center gap-1.5">
             <ShoppingBag className="h-3.5 w-3.5 text-amber-700" />
             <span className="text-xs text-amber-700">Total Spent</span>
           </div>
-          <p className="text-xl font-extrabold text-amber-800">{loading ? "—" : formatNexcoins(totalSpent)}</p>
-          <p className="mt-0.5 text-xs text-amber-700/70">Redeemed for vouchers</p>
+          <p className="text-xl font-extrabold text-amber-800">{loading || totalSpent === null ? "—" : formatNexcoins(totalSpent)}</p>
+          <p className="mt-0.5 text-xs text-amber-700/70">Vouchers and payouts</p>
         </div>
       </div>
 
