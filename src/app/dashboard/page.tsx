@@ -345,7 +345,7 @@ export default function DashboardHome() {
   const [submissionMeta, setSubmissionMeta] = useState<Record<string, SubmissionMeta>>({});
   const [tasksDone, setTasksDone]           = useState(0);
   const [approvalRate, setApprovalRate]     = useState<number | null>(null);
-  const [totalEarned, setTotalEarned]       = useState(0);
+  const [totalEarned, setTotalEarned]       = useState<number | null>(null);
   const [todayApproved, setTodayApproved]   = useState(0);
   const [chartData, setChartData]           = useState<{ label: string; value: number }[]>([]);
   const [notifications, setNotifications]   = useState<Notification[]>([]);
@@ -438,6 +438,7 @@ export default function DashboardHome() {
         { count: approvedCount },
         { count: reviewedCount },
         { data: txData },
+        lifetimeEarnedResult,
         { data: notifData },
         { data: streakSettings },
         { data: streakDaysData },
@@ -450,6 +451,7 @@ export default function DashboardHome() {
         supabase.from("submissions").select("*", { count: "exact", head: true }).eq("contributor_id", user.id).eq("status", "approved"),
         supabase.from("submissions").select("*", { count: "exact", head: true }).eq("contributor_id", user.id).in("status", ["approved", "rejected"]),
         supabase.from("coin_transactions").select("amount, created_at, source").eq("contributor_id", user.id).eq("type", "earned").gte("created_at", sevenDaysAgo + "T00:00:00"),
+        supabase.rpc("get_my_lifetime_earned"),
         supabase.from("notifications").select("id, title, message, type, created_at").eq("user_id", user.id).order("created_at", { ascending: false }).limit(8),
         supabase.from("platform_settings").select("key, value").in("key", ["streak_daily_bonus", "streak_day7_bonus", "streak_tasks_required_per_day", "nexcoin_per_usd"]),
         supabase.from("streak_days").select("day_date, tasks_completed, target_met, reward_claimed, reward_amount").eq("contributor_id", user.id).in("day_date", datesToFetch),
@@ -497,7 +499,16 @@ export default function DashboardHome() {
       setApprovalRate(reviewed > 0 ? Math.round((approved / reviewed) * 100) : null);
 
       const txRows = (txData ?? []) as CoinTx[];
-      setTotalEarned(txRows.reduce((s, r) => s + (r.amount ?? 0), 0));
+      const lifetimeEarned = Number(lifetimeEarnedResult.data);
+      if (lifetimeEarnedResult.error) {
+        console.error("[dashboard] lifetime earned lookup failed:", lifetimeEarnedResult.error.message);
+        setTotalEarned(null);
+      } else if (!Number.isFinite(lifetimeEarned) || lifetimeEarned < 0) {
+        console.error("[dashboard] lifetime earned lookup returned an invalid amount:", lifetimeEarnedResult.data);
+        setTotalEarned(null);
+      } else {
+        setTotalEarned(lifetimeEarned);
+      }
       setLoginRewardClaimed(txRows.some(r => r.source === "daily_login" && r.created_at.startsWith(today)));
 
       const todayTaskTx = txRows.filter(r => r.created_at.startsWith(today) && (r.source === "task" || r.source == null));
@@ -600,12 +611,14 @@ export default function DashboardHome() {
 
   /* ── Count-up animated values (FIX 4) ──────────────────────────── */
   const countCoins  = useCountUp(profile?.nexcoins ?? 0);
-  const countEarned = useCountUp(totalEarned);
+  const countEarned = useCountUp(totalEarned ?? 0);
   const countDone   = useCountUp(tasksDone);
   const displayCoins = countCoins < (profile?.nexcoins ?? 0) ? Math.floor(countCoins) : countCoins;
-  const displayEarned = countEarned < totalEarned
-    ? Math.floor(countEarned)
-    : countEarned;
+  const displayEarned = totalEarned === null
+    ? null
+    : countEarned < totalEarned
+      ? Math.floor(countEarned)
+      : countEarned;
   const estimatedUsd = (profile?.nexcoins ?? 0) / nexcoinPerUsd;
   const featuredTasks = tasks
     .filter((task) => (task.required_level ?? 1) <= userLevel)
@@ -791,7 +804,7 @@ export default function DashboardHome() {
                 <div className="mt-4 grid grid-cols-2 gap-3">
                   <div className="rounded-xl border border-white/10 bg-black/[0.12] px-3 py-2.5">
                     <p className="text-[10px] font-medium uppercase tracking-wider text-white/45">Lifetime earned</p>
-                    <p className="mt-1 flex min-w-0 items-center gap-1.5 overflow-hidden text-sm font-bold text-white/90"><NexCoinIcon size={15} /><span className="truncate tabular-nums">{loading ? "—" : formatNexcoins(displayEarned)}</span></p>
+                    <p className="mt-1 flex min-w-0 items-center gap-1.5 overflow-hidden text-sm font-bold text-white/90"><NexCoinIcon size={15} /><span className="truncate tabular-nums">{loading || displayEarned === null ? "—" : formatNexcoins(displayEarned)}</span></p>
                   </div>
                   <div className="rounded-xl border border-white/10 bg-black/[0.12] px-3 py-2.5">
                     <p className="text-[10px] font-medium uppercase tracking-wider text-white/45">Current streak</p>
@@ -971,7 +984,7 @@ export default function DashboardHome() {
           },
           {
             label: "Total Earned",
-            value: loading ? "—" : formatNexcoins(displayEarned),
+            value: loading || displayEarned === null ? "—" : formatNexcoins(displayEarned),
             sub: "Lifetime coins earned",
             icon: <NexCoinIcon size={18} />,
             topBorder: "border-t-[#c4a15a]",
