@@ -206,6 +206,7 @@ function exportCsv(txs: Transaction[]) {
 /* ─── Page ───────────────────────────────────────────────────────── */
 export default function EarningsPage() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [transactionCount, setTransactionCount] = useState<number | null>(null);
   const [pending, setPending]           = useState<PendingSubmission[]>([]);
   const [nexcoins, setNexcoins]         = useState<number>(0);
   const [loading, setLoading]           = useState(true);
@@ -222,13 +223,13 @@ export default function EarningsPage() {
       if (!user) return;
 
       const [
-        { data: txns, error: txnErr },
+        { data: txns, count: txnCount, error: txnErr },
         { data: subs },
         { data: profile },
       ] = await Promise.all([
         supabase
           .from("coin_transactions")
-          .select("id, amount, type, source, description, created_at")
+          .select("id, amount, type, source, description, created_at", { count: "exact" })
           .eq("contributor_id", user.id)
           .eq("type", "earned")
           .order("created_at", { ascending: false }),
@@ -248,6 +249,11 @@ export default function EarningsPage() {
       if (txnErr) console.error("coin_transactions fetch error:", txnErr.message);
 
       setTransactions((txns as Transaction[]) ?? []);
+      if (txnErr) {
+        setTransactionCount(null);
+      } else {
+        setTransactionCount(txnCount);
+      }
       setPending((subs as unknown as PendingSubmission[]) ?? []);
       setNexcoins((profile as { nexcoins: number | null } | null)?.nexcoins ?? 0);
       setLoading(false);
@@ -312,7 +318,7 @@ export default function EarningsPage() {
             <ReceiptText className="h-3.5 w-3.5 text-green-600" />
             <span className="text-xs text-green-600">Transactions</span>
           </div>
-          <p className="text-xl font-extrabold text-green-700">{loading ? "—" : transactions.length}</p>
+          <p className="text-xl font-extrabold text-green-700">{loading || transactionCount === null ? "—" : transactionCount.toLocaleString()}</p>
           <p className="mt-0.5 text-xs text-green-500">All time</p>
         </div>
       </div>
